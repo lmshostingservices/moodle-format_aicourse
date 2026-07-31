@@ -1,0 +1,4821 @@
+/* ============================================================
+   AI COURSE FORMAT - Mobile-First Responsive Design
+   Version: 1.3.10 | Moodle 4 & 5 Compatible
+   
+   v1.3.10: Fix flexbox layout - don't force display:block on flex children
+   ============================================================ */
+
+/* =============================================================
+   CRITICAL: THEME HEIGHT OVERRIDE FIX
+   Many themes (wombat, etc.) set height: 100vh on page containers
+   which cuts off course content. This fix ensures content is visible.
+   Key insight: Don't break flex layout by forcing display:block!
+   ============================================================= */
+
+/* Override height:100vh on body itself - most critical fix */
+html.format-aicourse,
+body.format-aicourse {
+    height: auto !important;
+    min-height: 100vh !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+}
+
+/* Override fixed heights on all container elements */
+body.format-aicourse #page,
+body.format-aicourse #page-content,
+body.format-aicourse #region-main,
+body.format-aicourse #region-main-box,
+body.format-aicourse #topofscroll,
+body.format-aicourse .main-inner,
+body.format-aicourse .course-content,
+body.format-aicourse [role="main"],
+body.format-aicourse .wombat-incourse-content,
+body.format-aicourse .incourse-main-content {
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+}
+
+/* Course index drawer must be scrollable - don't apply overflow:visible */
+body.format-aicourse .drawer,
+body.format-aicourse .drawers .drawer-left,
+body.format-aicourse [data-region="fixed-drawer"],
+body.format-aicourse .drawer-content-wrapper {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+}
+
+/* Flex children should grow but NOT have fixed height */
+body.format-aicourse #page-content,
+body.format-aicourse #region-main-box,
+body.format-aicourse #topofscroll,
+body.format-aicourse .main-inner {
+    flex: 1 1 auto !important;
+    /* DO NOT set display:block - it breaks the flex layout! */
+}
+
+/* Ensure format container displays (but NOT .course-content - cardview needs to hide it) */
+body.format-aicourse .format-aicourse-container {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: relative !important;
+}
+
+/* Cards containers must always be visible */
+body.format-aicourse .aicourse-cards-container,
+body.format-aicourse .aicourse-activity-cards-container {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+body.format-aicourse .aicourse-cards-grid,
+body.format-aicourse .aicourse-activity-cards-grid {
+    display: grid !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* =============================================================
+   HIDE DEFAULT MOODLE ACTIVITY PAGE HEADER & COMPLETION INFO
+   When hero banner is shown, hide duplicate Moodle elements
+   ============================================================= */
+
+/* Hide the activity icon that appears above content (Moodle 4.x/5.x) */
+body.format-aicourse.path-mod .activityiconcontainer,
+body.format-aicourse.path-mod .page-header-headings .activityiconcontainer,
+body.format-aicourse.path-mod #page-header .activityiconcontainer,
+body.format-aicourse.path-mod .activity-header .activityiconcontainer,
+body.format-aicourse.path-mod #region-main > .activityiconcontainer,
+body.format-aicourse.path-mod #region-main-box .activityiconcontainer:first-child {
+    display: none !important;
+}
+
+/* Hide standalone activity icons at top of page */
+body.format-aicourse.path-mod #region-main > a[href*="/mod/"] > img.activityicon,
+body.format-aicourse.path-mod #region-main > .activity-icon,
+body.format-aicourse.path-mod #region-main-box > a[href*="/mod/"] > img.activityicon {
+    display: none !important;
+}
+
+/* Hide completion info panels.
+   FIX-ACTIVITY-INFO (v1.7.54): Only hide the completion-specific sub-panels (.completion-info,
+   .automatic-completion-conditions) — the hero banner already renders those.
+   The outer .activity-information wrapper (which also contains .activity-dates with due dates,
+   quiz open/close times, attempts allowed etc.) is RESTORED so teachers and students can
+   see assignment due dates and quiz settings at a glance without opening Settings. */
+.path-mod .completion-info,
+.path-mod [data-region="completion-info"],
+.path-mod .automatic-completion-conditions {
+    display: none !important;
+}
+
+/* =============================================================
+   GRADER RESTORE RULES (v1.7.56)
+   Graders (teachers / non-editing teachers) on activity pages do NOT receive the
+   hero banner, so the elements hidden above must be restored for them.
+   aicourse-is-grader is now a PHP body class (page_set_course) so these rules
+   apply immediately — no flash of hidden content.
+   ============================================================= */
+
+/* Restore activity icon container for graders on activity pages */
+body.format-aicourse.path-mod.aicourse-is-grader .activityiconcontainer,
+body.format-aicourse.path-mod.aicourse-is-grader .page-header-headings .activityiconcontainer,
+body.format-aicourse.path-mod.aicourse-is-grader #page-header .activityiconcontainer,
+body.format-aicourse.path-mod.aicourse-is-grader .activity-header .activityiconcontainer,
+body.format-aicourse.path-mod.aicourse-is-grader #region-main > .activityiconcontainer,
+body.format-aicourse.path-mod.aicourse-is-grader #region-main-box .activityiconcontainer:first-child {
+    display: block !important;
+}
+
+/* Restore standalone activity icons for graders */
+body.format-aicourse.path-mod.aicourse-is-grader #region-main > a[href*="/mod/"] > img.activityicon,
+body.format-aicourse.path-mod.aicourse-is-grader #region-main > .activity-icon,
+body.format-aicourse.path-mod.aicourse-is-grader #region-main-box > a[href*="/mod/"] > img.activityicon {
+    display: inline-block !important;
+}
+
+/* Restore page header activity title for graders.
+   Hiding rule specificity: (0,1,5,2) — this override uses (0,1,7,2) to win. */
+body.path-mod.format-aicourse.aicourse-is-grader.aicourse-clean-view:not(.editing):not(.editingon):not(.editing-mode) #page-header h1 {
+    display: block !important;
+}
+
+/* =============================================================
+   SHARED GUTTER VARIABLES - Mobile-First
+   ============================================================= */
+:root {
+    --aicourse-gutter: 12px;
+    /* Light grey hero background - modern, doesn't clash with navbar */
+    --aicourse-hero-bg: #f8fafc;
+    --aicourse-hero-text: var(--primary, #194866);
+}
+
+@media (min-width: 576px) {
+    :root {
+        --aicourse-gutter: 14px;
+    }
+}
+
+@media (min-width: 768px) {
+    :root {
+        --aicourse-gutter: 18px;
+    }
+}
+
+@media (min-width: 992px) {
+    :root {
+        --aicourse-gutter: 22px;
+    }
+}
+
+/* =============================================================
+   GRADER: HIDE HERO BANNER (v1.7.61)
+   Belt-and-suspenders CSS fallback. The aicourse-is-grader body class is
+   added early via PHP (page_set_course) for ALL teacher archetypes.
+   This CSS rule ensures the banner never appears for graders regardless of
+   which PHP code path rendered it — teachers need to see Submissions and
+   Grade buttons on activity pages without the hero banner obscuring them.
+   ============================================================= */
+body.aicourse-is-grader .aicourse-hero-sticky-wrap {
+    display: none !important;
+}
+
+/* =============================================================
+   HERO WRAPPER (Non-sticky, positioned as high as possible)
+   ============================================================= */
+.aicourse-hero-sticky-wrap {
+    position: relative;
+    z-index: 1;
+    min-height: 52px;
+    margin-top: 20px;
+    margin-bottom: 28px;
+}
+
+/* Left-aligned hero banner (matches page content alignment) */
+.aicourse-hero-sticky-wrap.aicourse-hero-align-left {
+    margin-left: 0;
+    margin-right: auto;
+}
+
+/* =============================================================
+   HERO BANNER – FINAL POLISHED
+   ============================================================= */
+.aicourse-hero-banner {
+    position: relative;
+    top: 0;
+
+    min-height: 52px;
+    /* IMPORTANT: no height constraints - let content grow naturally */
+    max-height: none;
+    height: auto;
+    width: 100%;
+    box-sizing: border-box;
+    margin-top: 0;
+    margin-bottom: 0;
+
+    display: flex;
+    align-items: center;
+
+    background: var(--aicourse-hero-bg);
+    border-radius: 6px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+    border: 1px solid rgba(0,0,0,.06);
+
+    overflow: hidden;
+    background-size: cover;
+    background-position: center;
+
+    transition:
+        box-shadow 200ms ease,
+        min-height 200ms ease,
+        background-color 200ms ease;
+}
+
+/* Add padding above course content to create space for hero */
+body.format-aicourse .course-content,
+body.format-aicourse #region-main .course-content {
+    padding-top: 8px !important;
+}
+
+/* Page header top spacing - reduced for tighter layout */
+body.format-aicourse #page #page-header,
+body.format-aicourse #page-header {
+    max-width: none;
+    display: block;
+    margin-bottom: 4px;
+    margin-top: 0;
+    padding-top: 0;
+}
+
+/* =============================================================
+   HIDE COURSE TITLE & NAVIGATION FOR STUDENTS
+   Hidden by default, shown only in edit mode for teachers
+   Moodle 4.x/5.x safe: uses aicourse-clean-view body class + :not() selectors
+   ============================================================= */
+
+/* Moodle 5 optimized: Use body class added early via PHP (prevents FOUC) */
+body.aicourse-clean-view.format-aicourse:not(.editing):not(.editingon):not(.editing-mode) #page-header h1,
+body.aicourse-clean-view.format-aicourse:not(.editing):not(.editingon):not(.editing-mode) .secondary-navigation {
+    display: none !important;
+}
+
+/* Fallback for edge cases: standard selectors */
+body.format-aicourse:not(.editing):not(.editingon):not(.editing-mode) #page-header h1 {
+    display: none !important;
+}
+
+/* Secondary navigation (Course/Settings/Participants/Grades tabs) stays visible at all times.
+   Teachers need access to Settings, Participants, Grades etc. without turning on edit mode. */
+
+/* FIX-SUBMISSIONS-NAV (v1.7.55 / v1.7.62): On activity pages (mod-*) the secondary
+   navigation must always be visible for ALL users. Moodle adds body class path-mod AND
+   path-mod-{type} (e.g. path-mod-assign). Both selectors are included so this rule fires
+   even if a future Moodle version drops the generic path-mod class.
+   SPECIFICITY: Both rules beat the hide rule at (0,6,1) with (0,7,1) each. */
+body.path-mod.format-aicourse.aicourse-clean-view:not(.editing):not(.editingon):not(.editing-mode) .secondary-navigation,
+body[class*="path-mod-"].format-aicourse.aicourse-clean-view:not(.editing):not(.editingon):not(.editing-mode) .secondary-navigation {
+    display: flex !important;
+}
+
+/* FIX-GRADER-NAV (v1.7.55): Non-editing teachers (graders) also need the secondary
+   navigation visible on section pages and the course home — it contains Grades and
+   Participants tabs they use daily. The hook adds body class aicourse-is-grader via JS
+   when the user has grade/report:viewall capability but not moodle/course:update.
+   SPECIFICITY FIX: Old rule had (0,2,1). Now (0,7,1) to beat the hiding rule at (0,6,1). */
+body.aicourse-is-grader.format-aicourse.aicourse-clean-view:not(.editing):not(.editingon):not(.editing-mode) .secondary-navigation {
+    display: flex !important;
+}
+
+/* Breadcrumb always visible - hero banner provides additional context but breadcrumb stays */
+
+/* =============================================================
+   HIDE COURSE INDEX - CONTROLLED VIA BODY CLASS
+   The aicourse-hideindex class is added by PHP/JS based on course settings
+   (Bitmask: 1=home, 2=section, 4=activity)
+   ============================================================= */
+
+/* Hide course index when aicourse-hideindex class is present */
+body.aicourse-hideindex:not(.editing):not(.editingon):not(.editing-mode) .drawer-left,
+body.aicourse-hideindex:not(.editing):not(.editingon):not(.editing-mode) #courseindex,
+body.aicourse-hideindex:not(.editing):not(.editingon):not(.editing-mode) [data-region="course-index"] {
+    display: none !important;
+}
+
+/* Breadcrumb visible on section and activity pages at all times */
+
+/* More menu visible at all times alongside the rest of the secondary navigation */
+
+/* Minimize header spacing when title is hidden - get hero as high as possible */
+body.format-aicourse:not(.editing):not(.editingon):not(.editing-mode) #page-header {
+    padding-top: 0.5rem;
+    padding-bottom: 0;
+    margin-bottom: 0;
+}
+
+/* Restore everything when editing (supports all Moodle 4.x/5.x edit mode classes) */
+body.format-aicourse.editing #page-header h1,
+body.format-aicourse.editingon #page-header h1,
+body.format-aicourse.editing-mode #page-header h1 {
+    display: block !important;
+}
+
+body.format-aicourse.editing .secondary-navigation,
+body.format-aicourse.editingon .secondary-navigation,
+body.format-aicourse.editing-mode .secondary-navigation {
+    display: flex !important;
+}
+
+/* =============================================================
+   BUG-ACF-DROPDOWN-CLIP (v1.7.40): In edit mode, Moodle injects native action menus
+   (3-dot menus, "Add activity" dropdowns) as children of section/activity elements
+   inside .aicourse-card. The card has overflow:hidden AND transform:translateZ(0)
+   which together (a) clip the absolutely-positioned dropdown to the card's bounds
+   and (b) create a new CSS stacking context that prevents the dropdown from
+   appearing above other content — so clicks on 3-dot menus appeared to do nothing.
+   Fix: remove both overflow clipping and transform stacking context in edit mode.
+   ============================================================= */
+body.editing .aicourse-card,
+body.editingon .aicourse-card,
+body.editing-mode .aicourse-card {
+    overflow: visible !important;
+    transform: none !important;
+}
+
+/* Depth + slight compression when scrolled */
+body.format-aicourse.scrolled .aicourse-hero-banner,
+body.scrolled .aicourse-hero-banner {
+    min-height: 46px;
+    box-shadow: 0 4px 12px rgba(0,0,0,.08);
+}
+
+/* =============================================================
+   ACTIVITY & SECTION PAGE HERO STYLES (injected via before_footer hook)
+   Same styling as course home page for consistency
+   ============================================================= */
+
+/* Ensure #region-main has proper top padding on activity pages */
+body.path-mod #region-main {
+    padding-top: 8px;
+}
+
+/* Activity pages - consistent margin */
+body.path-mod .aicourse-hero-sticky-wrap {
+    position: relative;
+    z-index: 1;
+    min-height: 52px;
+    margin-top: 20px;
+    margin-bottom: 28px;
+}
+
+/* Section pages - add top margin (breadcrumbs hidden so needs more space) */
+.pagetype-course-section .aicourse-hero-sticky-wrap {
+    position: relative;
+    z-index: 1;
+    min-height: 52px;
+    margin-top: 20px;
+    margin-bottom: 28px;
+}
+
+body.path-mod .aicourse-hero-banner,
+.pagetype-course-section .aicourse-hero-banner {
+    position: relative;
+    min-height: 52px;
+    max-height: none;
+    height: auto;
+    width: 100%;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    background: var(--aicourse-hero-bg);
+    border-radius: 6px;
+    box-shadow: 0 2px 6px rgba(0,0,0,.12);
+    overflow: hidden;
+    background-size: cover;
+    background-position: center;
+}
+
+/* Small screens - tighter margins */
+@media (max-width: 575px) {
+    .aicourse-hero-sticky-wrap,
+    body.path-mod .aicourse-hero-sticky-wrap,
+    .pagetype-course-section .aicourse-hero-sticky-wrap {
+        margin-top: 0;
+        margin-bottom: 12px;
+    }
+    
+    .aicourse-hero-banner::before {
+        display: none;
+    }
+}
+
+/* =============================================================
+   DARK MODE HERO (automatic, clean)
+   ============================================================= */
+@media (prefers-color-scheme: dark) {
+    body.format-aicourse {
+        --aicourse-hero-bg: #1e293b;
+        --aicourse-hero-text: #f1f5f9;
+    }
+
+    .aicourse-hero-banner {
+        box-shadow: 0 4px 12px rgba(0,0,0,.4);
+        border-color: rgba(255,255,255,0.1);
+    }
+
+    .aicourse-hero-overlay {
+        background-color: rgba(0,0,0,0.45);
+    }
+
+    .aicourse-hero-progress {
+        background: rgba(255,255,255,0.08);
+        border-color: rgba(255,255,255,0.15);
+    }
+
+    .aicourse-hero-home,
+    .aicourse-hero-nav {
+        background: rgba(255,255,255,0.1);
+        border-color: rgba(255,255,255,0.2);
+    }
+
+    .aicourse-hero-home svg,
+    .aicourse-hero-nav svg {
+        stroke: #f1f5f9;
+    }
+}
+
+/* Manual dark-mode toggle support */
+body.dark-mode {
+    --aicourse-hero-bg: #1e293b;
+    --aicourse-hero-text: #f1f5f9;
+}
+
+body.dark-mode .aicourse-hero-banner {
+    box-shadow: 0 4px 12px rgba(0,0,0,.4);
+    border-color: rgba(255,255,255,0.1);
+}
+
+body.dark-mode .aicourse-hero-overlay {
+    background-color: rgba(0,0,0,0.45);
+}
+
+body.dark-mode .aicourse-hero-progress {
+    background: rgba(255,255,255,0.08);
+    border-color: rgba(255,255,255,0.15);
+}
+
+body.dark-mode .aicourse-hero-home,
+body.dark-mode .aicourse-hero-nav {
+    background: rgba(255,255,255,0.1);
+    border-color: rgba(255,255,255,0.2);
+}
+
+body.dark-mode .aicourse-hero-home svg,
+body.dark-mode .aicourse-hero-nav svg {
+    stroke: #f1f5f9;
+}
+
+/* =============================================================
+   REDUCED MOTION (accessibility)
+   ============================================================= */
+@media (prefers-reduced-motion: reduce) {
+    .aicourse-hero-banner,
+    body.format-aicourse .course-content .collapse,
+    body.format-aicourse .course-content-item-content {
+        transition: none !important;
+    }
+}
+
+/* =============================================================
+   HERO CONTENT ELEMENTS
+   ============================================================= */
+
+/* Overlay only appears when there's a background image (non-image-mode fallback) */
+/* v1.7.25: Overlay darkened 0.65→0.80 for improved text legibility. */
+.aicourse-hero-banner[style*="background-image"] .aicourse-hero-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.80);
+    display: block;
+}
+
+.aicourse-hero-overlay {
+    display: none;
+}
+
+/* =============================================================
+   IMAGE MODE — World-class immersive cinematic hero.
+   Triggered automatically when a course image is set.
+   No image = clean compact banner remains (no changes).
+   ============================================================= */
+
+@keyframes aicourse-hero-fadein {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* =============================================================
+   BANNER BACKGROUND IMAGE LAYER
+   Isolated child div carries background-image so CSS can scale
+   it independently on hover without moving any visible content.
+   ============================================================= */
+.aicourse-hero-bg-img {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    border-radius: inherit;
+    z-index: 0;
+    /* Smooth scale-up on hover; GPU-composited for 60 fps */
+    transition: transform 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    will-change: transform;
+}
+
+/* Hover: subtle parallax-style zoom — content stays completely still */
+.aicourse-hero-banner.aicourse-hero-has-image:hover .aicourse-hero-bg-img,
+.aicourse-hero-banner.aicourse-hero-has-image:focus-within .aicourse-hero-bg-img {
+    transform: scale(1.04);
+}
+
+/* Respect the user's reduced-motion system preference */
+@media (prefers-reduced-motion: reduce) {
+    .aicourse-hero-bg-img {
+        transition: none !important;
+    }
+}
+
+/* Banner shell */
+.aicourse-hero-banner.aicourse-hero-has-image {
+    min-height: 148px;
+    align-items: stretch;
+    border: none;
+    border-radius: 8px;
+    overflow: hidden; /* clips the hover-zoom bg-img scale correctly */
+    box-shadow:
+        0 2px 8px rgba(0,0,0,0.12),
+        0 8px 28px rgba(0,0,0,0.18),
+        0 24px 56px rgba(0,0,0,0.14);
+    /* isolation:isolate creates a self-contained stacking context so
+       Moodle-injected edit-mode elements inside the banner DOM (course admin blocks,
+       bulk-action toolbars, etc.) are confined within the banner's own stacking
+       context and cannot float above the content layer. */
+    isolation: isolate;
+    z-index: 1;
+}
+
+@media (min-width: 576px) {
+    .aicourse-hero-banner.aicourse-hero-has-image {
+        min-height: 175px;
+    }
+}
+
+@media (min-width: 768px) {
+    .aicourse-hero-banner.aicourse-hero-has-image {
+        min-height: 200px;
+    }
+}
+
+@media (min-width: 992px) {
+    .aicourse-hero-banner.aicourse-hero-has-image {
+        min-height: 228px;
+    }
+}
+
+/* ::before accent bar removed — a brand-colour stripe fights the image. */
+.aicourse-hero-banner.aicourse-hero-has-image::before {
+    display: none;
+}
+
+/* v1.7.27: Dual-axis gradient overlay.
+   Bottom gradient: transparent → rich for text readability at the bottom.
+   Left gradient: subtle left-side darkening so the title (bottom-left) is
+   always readable even on bright images with no dark edge on the left. */
+.aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-overlay {
+    position: absolute;
+    inset: 0;
+    display: block;
+    z-index: 1;
+    background:
+        linear-gradient(90deg,
+            rgba(0,0,0,0.42) 0%,
+            rgba(0,0,0,0.14) 40%,
+            rgba(0,0,0,0.00) 68%
+        ),
+        linear-gradient(180deg,
+            rgba(0,0,0,0.00)  0%,
+            rgba(0,0,0,0.00) 28%,
+            rgba(0,0,0,0.52) 62%,
+            rgba(0,0,0,0.84) 100%
+        );
+}
+
+/* Content column — stacked, anchored to bottom, fade-in on load */
+.aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-content {
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: flex-start;
+    min-height: inherit;
+    padding: 24px var(--aicourse-gutter) 28px;
+    gap: 6px;
+    animation: aicourse-hero-fadein 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.08s both;
+}
+
+/* ICONS: pinned top-right — glass pill anchors icons on any image colour */
+.aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-icons {
+    position: absolute;
+    top: 14px;
+    right: var(--aicourse-gutter);
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding: 4px 6px;
+    background: rgba(0,0,0,0.30);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.14);
+}
+
+.aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-icons a,
+.aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-icons button {
+    background: transparent;
+    border: none;
+    color: rgba(255,255,255,0.88) !important;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 150ms ease, color 150ms ease;
+    padding: 0;
+}
+
+.aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-icons a:hover,
+.aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-icons button:hover {
+    background: rgba(255,255,255,0.18);
+    color: #fff !important;
+}
+
+.aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-icons svg {
+    stroke: currentColor;
+    width: 22px !important;
+    height: 22px !important;
+    filter: none;
+    flex-shrink: 0;
+}
+
+.aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-icons a:hover svg,
+.aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-icons button:hover svg {
+    stroke: currentColor;
+}
+
+/* COURSE LABEL PILL: shortname badge above the title */
+.aicourse-hero-course-label {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 11px;
+    background: rgba(255,255,255,0.18);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.32);
+    border-radius: 100px;
+    font-size: 10px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 1.4px;
+    text-transform: uppercase;
+    line-height: 1.6;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+}
+
+/* Section/course icon white */
+.aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-section-icon {
+    stroke: rgba(255,255,255,0.78);
+    opacity: 1;
+    width: 26px;
+    height: 26px;
+}
+
+/* Activity type icon white */
+.aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-activity-icon {
+    filter: brightness(0) invert(1);
+    opacity: 0.85;
+    width: 26px;
+    height: 26px;
+}
+
+/* TITLE WRAP */
+.aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-title-wrap {
+    gap: 10px;
+    flex-shrink: 0;
+    align-items: flex-start;
+}
+
+/* TITLE: bold, fully visible — override base ellipsis/nowrap completely */
+.aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-title {
+    font-size: 1.35rem !important;
+    font-weight: 800;
+    color: #fff !important;
+    letter-spacing: -0.02em;
+    text-shadow:
+        0 1px 4px rgba(0,0,0,0.70),
+        0 4px 20px rgba(0,0,0,0.45),
+        0 8px 40px rgba(0,0,0,0.30);
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: unset !important;
+    line-height: 1.15;
+}
+
+@media (min-width: 576px) {
+    .aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-title {
+        font-size: 1.55rem !important;
+    }
+}
+
+@media (min-width: 768px) {
+    .aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-title {
+        font-size: 1.75rem !important;
+    }
+}
+
+@media (min-width: 992px) {
+    .aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-title {
+        font-size: 1.9rem !important;
+        max-width: 76%;
+    }
+}
+
+/* SUMMARY: 2-line CSS clamp, elegant */
+.aicourse-hero-summary {
+    color: rgba(255,255,255,0.80);
+    font-size: 0.93rem;
+    font-weight: 400;
+    line-height: 1.55;
+    margin: 0;
+    padding: 0;
+    max-width: 640px;
+    text-shadow: 0 1px 5px rgba(0,0,0,0.50);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* Section label — prominent, same 3-D shadow stack as the title */
+.aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-section-label {
+    color: #fff !important;
+    opacity: 1 !important;
+    font-size: 11px;
+    letter-spacing: 1.1px;
+    text-shadow:
+        0 1px 4px rgba(0,0,0,0.90),
+        0 3px 12px rgba(0,0,0,0.65),
+        0 6px 24px rgba(0,0,0,0.40);
+}
+
+/* NAV + PROGRESS ROW: no background shape — elements float over image overlay */
+.aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-nav-progress {
+    flex-shrink: 0;
+    align-self: stretch;
+    gap: 10px;
+}
+
+/* NAV ARROWS: circular frosted buttons */
+.aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-nav {
+    width: 34px;
+    height: 34px;
+    background: rgba(0,0,0,0.32);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-radius: 50% !important;
+    border: 1px solid rgba(255,255,255,0.22);
+    color: #fff !important;
+    opacity: 1;
+    transition: background 150ms ease, transform 150ms ease;
+}
+
+.aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-nav:hover {
+    background: rgba(255,255,255,0.22);
+    transform: scale(1.10);
+    opacity: 1;
+}
+
+.aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-nav:active {
+    transform: scale(0.94);
+}
+
+.aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-nav svg {
+    stroke: #fff;
+    width: 18px;
+    height: 18px;
+}
+
+.aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-nav-spacer {
+    width: 34px;
+    height: 34px;
+    flex-shrink: 0;
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* PROGRESS RING text */
+.aicourse-hero-banner.aicourse-hero-has-image .aicourse-progress-ring-text {
+    color: #fff;
+    font-weight: 800;
+    font-size: 13px !important;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.60);
+}
+
+/* IMAGE MODE: progress ring is larger and more prominent than the compact non-image variant.
+   !important beats all the responsive breakpoint overrides in the cascade below. */
+.aicourse-hero-banner.aicourse-hero-has-image .aicourse-progress-ring-container {
+    width: 60px !important;
+    height: 60px !important;
+}
+
+/* PROGRESS WIDGET: fully transparent — no shape, no blur, no border, no padding */
+.aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-progress {
+    background: transparent;
+    border: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    box-shadow: none;
+    padding: 0;
+    gap: 6px;
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center;
+}
+
+/* PROGRESS BAR track */
+.aicourse-hero-banner.aicourse-hero-has-image .aicourse-progress-bar-track {
+    background: rgba(255,255,255,0.20);
+}
+
+/* PROGRESS BAR fill — uses theme primary colour */
+.aicourse-hero-banner.aicourse-hero-has-image .aicourse-progress-bar-fill {
+    background: var(--primary, #194866);
+}
+
+/* PROGRESS BAR label */
+.aicourse-hero-banner.aicourse-hero-has-image .aicourse-progress-bar-label {
+    color: #fff;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.75);
+}
+
+/* COMPLETION LABEL */
+.aicourse-hero-banner.aicourse-hero-has-image .aicourse-completion-label {
+    color: #fff;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.75);
+}
+
+/* IMAGE MODE: completion ring strokes must be white — CSS base rule overrides the inline SVG
+   stroke colours rendered by PHP. These overrides restore visibility on the dark overlay. */
+.aicourse-hero-banner.aicourse-hero-has-image .aicourse-completion-ring.aicourse-completion-pending circle {
+    stroke: rgba(255,255,255,0.85);
+}
+.aicourse-hero-banner.aicourse-hero-has-image .aicourse-completion-ring.aicourse-completion-pending path {
+    stroke: rgba(255,255,255,0.70);
+}
+
+/* IMAGE MODE: completion ring container — larger to match the more immersive banner */
+.aicourse-hero-banner.aicourse-hero-has-image .aicourse-completion-ring-container {
+    width: 54px !important;
+    height: 54px !important;
+}
+
+/* IMAGE MODE: completion label text */
+.aicourse-hero-banner.aicourse-hero-has-image .aicourse-completion-label {
+    font-size: 15px;
+}
+
+/* IMAGE MODE: progress ring background track — use a white wash instead of near-invisible dark */
+.aicourse-hero-banner.aicourse-hero-has-image .aicourse-progress-ring-bg {
+    stroke: rgba(255,255,255,0.25) !important;
+}
+
+/* ACTIVITY NUMBER CIRCLES — numbered dots showing activity progress in section view */
+.aicourse-activity-number-circles {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-wrap: wrap;
+    max-width: 240px;
+}
+
+.aicourse-activity-number {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1;
+    text-decoration: none !important;
+    flex-shrink: 0;
+    transition: transform 150ms ease, background 150ms ease;
+    box-sizing: border-box;
+    /* Default (no completion or not started): white outlined circle */
+    background: transparent;
+    border: 2px solid rgba(255,255,255,0.70);
+    color: rgba(255,255,255,0.90);
+}
+
+.aicourse-activity-number:hover,
+a.aicourse-activity-number:hover {
+    transform: scale(1.15);
+    background: rgba(255,255,255,0.18);
+    text-decoration: none !important;
+}
+
+/* Completed: solid green — hover must keep green, not wash out to white */
+.aicourse-activity-number.aicourse-number-completed:hover,
+a.aicourse-activity-number.aicourse-number-completed:hover {
+    background: #357a32;
+    border: none;
+    color: #fff;
+}
+
+/* Completed: solid green, no border needed — flat fill */
+.aicourse-activity-number.aicourse-number-completed {
+    background: #357a32;
+    border: none;
+    color: #fff;
+}
+
+/* In-progress: amber outline */
+.aicourse-activity-number.aicourse-number-in_progress {
+    border-color: #f59e0b;
+    color: rgba(255,255,255,0.90);
+    background: rgba(245,158,11,0.20);
+}
+
+/* No completion tracking on this activity: dimmer white */
+.aicourse-activity-number.aicourse-number-no_completion {
+    border-color: rgba(255,255,255,0.40);
+    color: rgba(255,255,255,0.55);
+}
+
+/* NON-IMAGE mode: use primary colour scheme instead of white */
+.aicourse-hero-banner:not(.aicourse-hero-has-image) .aicourse-activity-number {
+    border-color: rgba(0,0,0,0.35);
+    color: rgba(0,0,0,0.65);
+}
+/* Completed circles sit on dark green (#357a32) — flat fill, no border, stays green on hover */
+.aicourse-hero-banner:not(.aicourse-hero-has-image) .aicourse-activity-number.aicourse-number-completed {
+    background: #357a32;
+    border: none;
+    color: #fff;
+}
+.aicourse-hero-banner:not(.aicourse-hero-has-image) .aicourse-activity-number.aicourse-number-completed:hover,
+.aicourse-hero-banner:not(.aicourse-hero-has-image) a.aicourse-activity-number.aicourse-number-completed:hover {
+    background: #357a32;
+    border: none;
+    color: #fff;
+}
+.aicourse-hero-banner:not(.aicourse-hero-has-image) .aicourse-activity-number.aicourse-number-in_progress {
+    border-color: #d97706;
+    color: #d97706;
+    background: rgba(217,119,6,0.10);
+}
+.aicourse-hero-banner:not(.aicourse-hero-has-image) .aicourse-activity-number.aicourse-number-no_completion {
+    border-color: rgba(0,0,0,0.20);
+    color: rgba(0,0,0,0.35);
+}
+
+.aicourse-hero-content {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    padding: 8px var(--aicourse-gutter);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    flex-wrap: nowrap;
+    box-sizing: border-box;
+}
+
+/* Title group: section label stacked above activity title */
+.aicourse-hero-title-group {
+    display: flex;
+    flex-direction: column;
+    flex: 0 1 auto;
+    min-width: 0;
+    gap: 0;
+    line-height: 1;
+}
+
+/* Section label above activity title */
+.aicourse-hero-section-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--aicourse-hero-text);
+    opacity: 0.55;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 1px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Hero title wrapper for icon + title */
+.aicourse-hero-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 0 1 auto;
+    min-width: 0;
+}
+
+/* Activity icon in hero banner (Moodle activity type icon) */
+.aicourse-hero-activity-icon {
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+    /* Use dark icon color to match hero text on light background */
+    filter: brightness(0) saturate(100%);
+    opacity: 0.7;
+}
+
+/* Section/Course icon in hero banner (SVG icon) */
+.aicourse-hero-section-icon {
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+    stroke: var(--aicourse-hero-text);
+    opacity: 0.9;
+}
+
+.aicourse-hero-title {
+    flex: 1 1 auto;
+    min-width: 0;
+    margin: 0;
+    font-size: 1rem !important; /* 16px min for mobile-first */
+    font-weight: 600;
+    color: var(--aicourse-hero-text);
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+    text-shadow: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Progress section - visible on all devices for mobile-first design */
+.aicourse-hero-progress {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+    padding: 4px 8px;
+    background: rgba(0, 0, 0, 0.04);
+    border-radius: 4px;
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+/* Progress Ring */
+.aicourse-progress-ring-container {
+    position: relative;
+    width: 34px;
+    height: 34px;
+    flex-shrink: 0;
+}
+
+.aicourse-progress-ring {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    /* Enable GPU acceleration for smoother rendering */
+    transform: translateZ(0);
+    backface-visibility: hidden;
+}
+
+.aicourse-progress-ring circle {
+    /* Smooth anti-aliased circles */
+    shape-rendering: geometricPrecision;
+}
+
+.aicourse-progress-ring-fill {
+    shape-rendering: geometricPrecision;
+}
+
+.aicourse-progress-ring-bg {
+    shape-rendering: geometricPrecision;
+}
+
+.aicourse-progress-ring-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 2;
+    font-size: 8px;
+    font-weight: 700;
+    color: var(--aicourse-hero-text);
+    text-shadow: none;
+    letter-spacing: -0.02em;
+    transition: color 0.3s ease;
+}
+
+/* Pulse + glow animation for progress increase */
+@keyframes aicourse-pulse {
+    0%   { box-shadow: 0 0 0 0 rgba(53, 122, 50, 0.5); }
+    70%  { box-shadow: 0 0 0 10px rgba(53, 122, 50, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(53, 122, 50, 0); }
+}
+
+.aicourse-progress-ring-container.pulse {
+    animation: aicourse-pulse 0.8s ease-out;
+    border-radius: 50%;
+}
+
+.aicourse-progress-ring-fill.glow {
+    filter: drop-shadow(0 0 6px rgba(53, 122, 50, 0.8));
+    transition: filter 0.4s ease, stroke-dashoffset 0.8s ease-out;
+}
+
+/* Completed state - Solid green circle with white tick */
+.aicourse-progress-ring-container.completed {
+    background: #357a32;
+    border-radius: 50%;
+    border: 2px solid #357a32;
+}
+
+.aicourse-progress-ring-container.completed .aicourse-progress-ring {
+    display: none;
+}
+
+.aicourse-progress-ring-container.completed .aicourse-progress-ring-bg {
+    stroke: transparent;
+}
+
+.aicourse-progress-ring-container.completed .aicourse-progress-ring-fill {
+    stroke: transparent;
+}
+
+.aicourse-progress-ring-container.completed .aicourse-progress-ring-text {
+    color: #fff;
+    font-size: 7px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+/* Checkmark icon when complete */
+.aicourse-progress-complete {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+}
+.aicourse-progress-complete svg {
+    width: 18px;
+    height: 18px;
+    stroke: #fff;
+    stroke-width: 2.5;
+}
+
+/* Activity Dots */
+.aicourse-activity-dots {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+    max-width: 100px;
+}
+
+.aicourse-activity-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 200ms ease;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.aicourse-activity-dot:hover {
+    transform: scale(1.3);
+    box-shadow: 0 0 6px rgba(255, 255, 255, 0.5);
+}
+
+/* Status Colors */
+.aicourse-dot-not_started {
+    background: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+.aicourse-dot-in_progress {
+    background: #f59e0b;
+    border-color: #fbbf24;
+    animation: pulse-amber 2s infinite;
+}
+
+@keyframes pulse-amber {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); }
+    50% { box-shadow: 0 0 0 3px rgba(245, 158, 11, 0); }
+}
+
+.aicourse-dot-completed {
+    background: #357a32;
+    border-color: #2d6829;
+}
+
+/* =============================================================
+   HERO PROGRESS BAR (replaces activity dots)
+   ============================================================= */
+.aicourse-progress-bar-container {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+    min-width: 80px;
+    max-width: 200px;
+}
+
+.aicourse-progress-bar-track {
+    width: 100%;
+    height: 2px;
+    background: rgba(0, 0, 0, 0.08);
+    border-radius: 1px;
+    overflow: hidden;
+}
+
+.aicourse-progress-bar-fill {
+    height: 100%;
+    background: #357a32;
+    border-radius: 1px;
+    width: 0%;
+    will-change: width;
+}
+
+.aicourse-progress-bar-label {
+    font-size: 14px;
+    color: var(--aicourse-hero-text);
+    opacity: 0.85;
+    white-space: nowrap;
+}
+
+/* Responsive progress bar */
+@media (min-width: 576px) {
+    .aicourse-progress-bar-container {
+        min-width: 100px;
+        max-width: 180px;
+    }
+    .aicourse-progress-bar-track {
+        height: 2px;
+    }
+    .aicourse-progress-bar-label {
+        font-size: 14px;
+    }
+}
+
+@media (min-width: 768px) {
+    .aicourse-progress-bar-container {
+        min-width: 120px;
+        max-width: 220px;
+    }
+}
+
+@media (min-width: 992px) {
+    .aicourse-progress-bar-container {
+        min-width: 160px;
+        max-width: 280px;
+    }
+    .aicourse-progress-bar-track {
+        height: 2px;
+        border-radius: 1px;
+    }
+    .aicourse-progress-bar-fill {
+        border-radius: 1px;
+    }
+}
+
+/* Dark mode progress bar */
+@media (prefers-color-scheme: dark) {
+    .aicourse-progress-bar-track {
+        background: rgba(255, 255, 255, 0.12);
+    }
+}
+
+body.dark-mode .aicourse-progress-bar-track {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+/* =============================================================
+   ACTIVITY COMPLETION RING (for activity pages)
+   ============================================================= */
+.aicourse-completion-ring-container {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+}
+
+.aicourse-completion-ring {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.aicourse-completion-ring.aicourse-completion-done circle,
+.aicourse-completion-ring.aicourse-completion-done path {
+    stroke: #357a32;
+}
+
+.aicourse-completion-ring.aicourse-completion-pending circle {
+    stroke: rgba(0, 0, 0, 0.15);
+}
+
+.aicourse-completion-ring.aicourse-completion-pending path {
+    stroke: rgba(0, 0, 0, 0.25);
+}
+
+/* Completion requirements text */
+.aicourse-completion-requirements {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+    min-width: 80px;
+    max-width: 280px;
+}
+
+.aicourse-completion-label {
+    font-size: 14px;
+    color: var(--aicourse-hero-text);
+    opacity: 0.9;
+    line-height: 1.4;
+}
+
+/* Hero completion toggle button (manual completion) */
+.aicourse-hero-completion-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    padding: 0;
+    cursor: default;
+    border-radius: 50%;
+}
+
+.aicourse-hero-completion-toggle.aicourse-loading {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.aicourse-hero-completion-pending .aicourse-completion-ring-container {
+    opacity: 0.9;
+}
+
+.aicourse-completion-clickable {
+    cursor: pointer;
+}
+
+/* Grade display for activities requiring grades */
+.aicourse-grade-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.15);
+    border: 2px solid rgba(255, 255, 255, 0.4);
+}
+
+.aicourse-grade-text {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--aicourse-hero-text);
+    text-align: center;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+/* Responsive completion display */
+@media (min-width: 576px) {
+    .aicourse-completion-label {
+        font-size: 13px;
+    }
+}
+
+@media (min-width: 992px) {
+    .aicourse-completion-requirements {
+        max-width: 320px;
+    }
+    .aicourse-completion-label {
+        font-size: 14px;
+    }
+}
+
+/* Dark mode completion ring */
+@media (prefers-color-scheme: dark) {
+    .aicourse-completion-ring.aicourse-completion-pending circle {
+        stroke: rgba(255, 255, 255, 0.2);
+    }
+    .aicourse-completion-ring.aicourse-completion-pending path {
+        stroke: rgba(255, 255, 255, 0.3);
+    }
+}
+
+body.dark-mode .aicourse-completion-ring.aicourse-completion-pending circle {
+    stroke: rgba(255, 255, 255, 0.2);
+}
+
+body.dark-mode .aicourse-completion-ring.aicourse-completion-pending path {
+    stroke: rgba(255, 255, 255, 0.3);
+}
+
+/* Home Icon Button */
+/* Navigation + Progress container (Previous | Progress+Dots | Next) */
+.aicourse-hero-nav-progress {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1 1 auto;
+    justify-content: center;
+    min-width: 0;
+}
+
+/* Nav buttons - clean ghost style */
+.aicourse-hero-nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    color: var(--aicourse-hero-text) !important;
+    text-decoration: none !important;
+    transition: background 200ms ease;
+    flex-shrink: 0;
+    opacity: 0.7;
+}
+
+.aicourse-hero-nav:hover {
+    background: rgba(0, 0, 0, 0.08);
+    opacity: 1;
+}
+
+.aicourse-hero-nav:active {
+    background: rgba(0, 0, 0, 0.12);
+}
+
+.aicourse-hero-nav svg {
+    width: 24px;
+    height: 24px;
+    stroke: var(--aicourse-hero-text);
+}
+
+/* Spacer to maintain layout when prev/next doesn't exist */
+.aicourse-hero-nav-spacer {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+}
+
+/* Home, Grades, and Back buttons - clean ghost style */
+.aicourse-hero-home,
+.aicourse-hero-grades,
+.aicourse-hero-back {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    color: var(--aicourse-hero-text) !important;
+    text-decoration: none !important;
+    transition: background 200ms ease;
+    flex-shrink: 0;
+    opacity: 0.7;
+}
+
+.aicourse-hero-home:hover,
+.aicourse-hero-grades:hover,
+.aicourse-hero-back:hover {
+    background: rgba(0, 0, 0, 0.08);
+    opacity: 1;
+}
+
+.aicourse-hero-home:active,
+.aicourse-hero-grades:active,
+.aicourse-hero-back:active {
+    background: rgba(0, 0, 0, 0.12);
+}
+
+.aicourse-hero-home svg,
+.aicourse-hero-grades svg,
+.aicourse-hero-back svg {
+    width: 24px;
+    height: 24px;
+    stroke: var(--aicourse-hero-text);
+}
+
+/* =============================================================
+   TABLET AND UP (min-width: 576px)
+   ============================================================= */
+@media (min-width: 576px) {
+    .aicourse-hero-banner {
+        min-height: 48px;
+        border-radius: 5px;
+        top: 10px;
+    }
+    
+    .aicourse-hero-content {
+        padding: 8px var(--aicourse-gutter);
+        gap: 10px;
+    }
+    
+    .aicourse-hero-title {
+        font-size: 1rem !important; /* 16px */
+        flex: 0 1 auto;
+        max-width: 200px;
+    }
+    
+    .aicourse-hero-progress {
+        display: flex;
+        padding: 4px 8px;
+        gap: 8px;
+    }
+    
+    .aicourse-progress-ring-container {
+        width: 38px;
+        height: 38px;
+    }
+    
+    .aicourse-progress-ring-text {
+        font-size: 9px;
+    }
+    
+    .aicourse-activity-dots {
+        max-width: 120px;
+        gap: 5px;
+    }
+    
+    .aicourse-activity-dot {
+        width: 11px;
+        height: 11px;
+    }
+    
+    .aicourse-hero-home,
+    .aicourse-hero-grades,
+    .aicourse-hero-back,
+    .aicourse-hero-nav,
+    .aicourse-hero-nav-spacer,
+    .aicourse-hero-ai-btn,
+    .aicourse-hero-report-btn {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .aicourse-hero-home svg,
+    .aicourse-hero-grades svg,
+    .aicourse-hero-back svg,
+    .aicourse-hero-nav svg,
+    .aicourse-hero-ai-btn svg,
+    .aicourse-hero-report-btn svg {
+        width: 24px;
+        height: 24px;
+    }
+}
+
+/* =============================================================
+   DESKTOP (min-width: 768px)
+   ============================================================= */
+@media (min-width: 768px) {
+    .aicourse-hero-banner {
+        min-height: 52px;
+        border-radius: 6px;
+        top: 12px;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+    }
+    
+    .aicourse-hero-content {
+        padding: 10px var(--aicourse-gutter);
+        gap: 14px;
+    }
+    
+    .aicourse-hero-title {
+        font-size: 1.1rem !important; /* ~18px */
+        max-width: 280px;
+    }
+    
+    .aicourse-hero-progress {
+        gap: 10px;
+        padding: 5px 10px;
+    }
+    
+    .aicourse-progress-ring-container {
+        width: 42px;
+        height: 42px;
+    }
+    
+    .aicourse-progress-ring-text {
+        font-size: 10px;
+    }
+    
+    .aicourse-activity-dots {
+        max-width: 160px;
+        gap: 6px;
+    }
+    
+    .aicourse-activity-dot {
+        width: 12px;
+        height: 12px;
+        border-width: 1.5px;
+    }
+    
+    .aicourse-hero-home,
+    .aicourse-hero-grades,
+    .aicourse-hero-back,
+    .aicourse-hero-nav,
+    .aicourse-hero-nav-spacer,
+    .aicourse-hero-ai-btn,
+    .aicourse-hero-report-btn {
+        width: 42px;
+        height: 42px;
+    }
+    
+    .aicourse-hero-home svg,
+    .aicourse-hero-grades svg,
+    .aicourse-hero-back svg,
+    .aicourse-hero-nav svg,
+    .aicourse-hero-ai-btn svg,
+    .aicourse-hero-report-btn svg {
+        width: 24px;
+        height: 24px;
+    }
+}
+
+/* =============================================================
+   LARGE DESKTOP (min-width: 992px)
+   ============================================================= */
+@media (min-width: 992px) {
+    .aicourse-hero-banner {
+        min-height: 56px;
+        top: 14px;
+    }
+    
+    .aicourse-hero-content {
+        padding: 12px var(--aicourse-gutter);
+        gap: 18px;
+    }
+    
+    .aicourse-hero-title {
+        font-size: 1.2rem !important; /* ~19px */
+        max-width: 350px;
+    }
+    
+    .aicourse-hero-progress {
+        gap: 12px;
+        padding: 6px 12px;
+    }
+    
+    .aicourse-progress-ring-container {
+        width: 48px;
+        height: 48px;
+    }
+    
+    .aicourse-progress-ring-text {
+        font-size: 11px;
+    }
+    
+    .aicourse-activity-dots {
+        max-width: 200px;
+        gap: 6px;
+    }
+    
+    .aicourse-activity-dot {
+        width: 14px;
+        height: 14px;
+    }
+    
+    .aicourse-hero-home,
+    .aicourse-hero-grades,
+    .aicourse-hero-back,
+    .aicourse-hero-nav,
+    .aicourse-hero-nav-spacer,
+    .aicourse-hero-ai-btn,
+    .aicourse-hero-report-btn {
+        width: 44px;
+        height: 44px;
+    }
+    
+    .aicourse-hero-home svg,
+    .aicourse-hero-grades svg,
+    .aicourse-hero-back svg,
+    .aicourse-hero-nav svg,
+    .aicourse-hero-ai-btn svg,
+    .aicourse-hero-report-btn svg {
+        width: 24px;
+        height: 24px;
+    }
+}
+
+/* =============================================================
+   ACTIVITY PAGE OVERRIDES
+   ============================================================= */
+
+/* Remove grey background from activity headers */
+body.format-aicourse .path-mod .activity-header:not(:empty) {
+    background-color: transparent;
+}
+
+/* =============================================================
+   COURSE CONTENT ALIGNMENT
+   ============================================================= */
+
+/* Align sections with hero left edge */
+body.format-aicourse ul.aicourse,
+body.format-aicourse .course-content ul.aicourse,
+body.format-aicourse #region-main ul.aicourse {
+    padding-left: var(--aicourse-gutter) !important;
+    padding-right: var(--aicourse-gutter) !important;
+}
+
+/* Remove Moodle hierarchy indent for clean alignment */
+body.format-aicourse .section-item,
+body.format-aicourse .section-item > .content,
+body.format-aicourse .section-item > .content > ul.section,
+body.format-aicourse ul.section,
+body.format-aicourse .course-content .section {
+    padding-left: 0 !important;
+    margin-left: 0 !important;
+}
+
+/* Section header left padding - breathing room for chevron circle */
+body.format-aicourse .course-section-header {
+    padding-left: 12px !important;
+    margin-left: 0 !important;
+}
+
+/* Activity list alignment */
+body.format-aicourse .activity-grid,
+body.format-aicourse .section .activity-wrapper,
+body.format-aicourse .section ul.section {
+    padding-left: 0 !important;
+    margin-left: 0 !important;
+}
+
+/* Section titles align with hero */
+body.format-aicourse .sectionname,
+body.format-aicourse .section-title,
+body.format-aicourse h3.sectionname,
+body.format-aicourse .course-section-header h3 {
+    padding-left: 0 !important;
+    margin-left: 0 !important;
+}
+
+/* =============================================================
+   CORE ALIGNMENT – STABLE
+   ============================================================= */
+
+/* Activity rows */
+body.format-aicourse .activity-grid {
+    align-items: center;
+}
+
+/* Icons + completion */
+body.format-aicourse .activity-icon,
+body.format-aicourse .activity-completion {
+    align-self: center !important;
+}
+
+/* Text alignment */
+body.format-aicourse .activity-instance,
+body.format-aicourse .activityname {
+    display: flex;
+    align-items: center;
+}
+
+/* Typography scale - 14px for all activity titles */
+body.format-aicourse .activityname a {
+    font-size: 14px !important;
+}
+
+/* =============================================================
+   MAIN CONTENT – Section titles: primary color, 16px (bigger than 14px activity)
+   ============================================================= */
+body.format-aicourse .course-section-header .sectionname,
+body.format-aicourse .course-section-header .inplaceeditable,
+body.format-aicourse .course-section-header .inplaceeditable a,
+body.format-aicourse .course-section-header h3,
+body.format-aicourse .course-section-header h3.sectionname,
+body.format-aicourse .section-header-content .sectionname,
+body.format-aicourse .course-content .sectionname,
+body.format-aicourse .course-content h3.sectionname,
+body.format-aicourse .sectionname,
+body.format-aicourse .sectionname a,
+body.format-aicourse .section-title .sectionname,
+body.format-aicourse h3.sectionname {
+    color: var(--primary, #2563eb) !important;
+    font-size: 16px !important;
+    font-weight: 600 !important;
+}
+
+/* =============================================================
+   SECTION COLLAPSE – Use Moodle/Bootstrap native behavior
+   Do NOT override display property - let Bootstrap handle it
+   ============================================================= */
+
+/* Only add subtle fade transition when visible */
+body.format-aicourse .course-content .collapse.show {
+    opacity: 1;
+    transition: opacity 200ms ease;
+}
+
+/* Smooth content reveal */
+body.format-aicourse .course-content-item-content.show {
+    opacity: 1;
+}
+
+/* =============================================================
+   COURSE INDEX — CLEAN REBUILD (Minimal & Stable)
+   ============================================================= */
+
+:root {
+    --ci-grey-soft: #f3f4f6;
+    --ci-grey-line: #e5e7eb;
+    --ci-radius: 6px;
+}
+
+/* -------------------------------------------------------------
+   SECTION CONTAINERS
+------------------------------------------------------------- */
+body.format-aicourse .courseindex-section {
+    border-bottom: 1px solid var(--ci-grey-line);
+    padding: 6px 0;
+}
+
+body.format-aicourse .courseindex-section:last-child {
+    border-bottom: none;
+}
+
+/* -------------------------------------------------------------
+   SECTION HEADER ROW
+------------------------------------------------------------- */
+body.format-aicourse .courseindex-section > div:first-child {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px;
+    border-radius: var(--ci-radius);
+}
+
+/* Hover background (section) */
+body.format-aicourse .courseindex-section > div:first-child:hover {
+    background: var(--ci-grey-soft);
+}
+
+/* Selected section background */
+body.format-aicourse .courseindex-section.pageitem > div:first-child,
+body.format-aicourse .courseindex-section[data-selected="true"] > div:first-child {
+    background: var(--ci-grey-soft);
+}
+
+/* -------------------------------------------------------------
+   SECTION TITLES (16px, primary)
+------------------------------------------------------------- */
+body.format-aicourse .courseindex-sectionname,
+body.format-aicourse .courseindex-sectionname a {
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.3;
+    color: var(--primary, #2563eb);
+    flex: 1 1 auto;
+    min-width: 0;
+    text-decoration: none;
+}
+
+/* -------------------------------------------------------------
+   ACTIVITY ROWS
+------------------------------------------------------------- */
+body.format-aicourse .courseindex-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px;
+    border-radius: var(--ci-radius);
+    border: 1px solid transparent; /* Prevent layout shift on hover */
+}
+
+/* Hover background for non-selected activities - no layout shift */
+body.format-aicourse .courseindex-item:hover {
+    background: var(--ci-grey-soft);
+    border-color: transparent; /* Keep transparent to prevent jump */
+}
+
+/* Selected activity background - override theme amber with our grey */
+body.format-aicourse .courseindex-item.pageitem,
+body.format-aicourse .courseindex-item[data-selected="true"] {
+    background: var(--ci-grey-soft) !important;
+}
+
+/* Remove ALL hover effects on selected activity - comprehensive override */
+body.format-aicourse .courseindex-item.pageitem:hover,
+body.format-aicourse .courseindex-item[data-selected="true"]:hover,
+body.format-aicourse .courseindex-item.pageitem:focus,
+body.format-aicourse .courseindex-item[data-selected="true"]:focus,
+body.format-aicourse .courseindex-item.pageitem:focus-within,
+body.format-aicourse .courseindex-item[data-selected="true"]:focus-within {
+    background: var(--ci-grey-soft) !important;
+    outline: none !important;
+    border: 1px solid transparent !important;
+    box-shadow: none !important;
+}
+
+/* Remove blue rectangle overlay from pseudo-elements on hover */
+body.format-aicourse .courseindex-item.pageitem::before,
+body.format-aicourse .courseindex-item[data-selected="true"]::before,
+body.format-aicourse .courseindex-item.pageitem::after,
+body.format-aicourse .courseindex-item[data-selected="true"]::after,
+body.format-aicourse .courseindex-item.pageitem:hover::before,
+body.format-aicourse .courseindex-item[data-selected="true"]:hover::before,
+body.format-aicourse .courseindex-item.pageitem:hover::after,
+body.format-aicourse .courseindex-item[data-selected="true"]:hover::after {
+    display: none !important;
+    background: transparent !important;
+    opacity: 0 !important;
+}
+
+/* Remove hover effects on ALL child elements inside selected activity */
+body.format-aicourse .courseindex-item.pageitem:hover *,
+body.format-aicourse .courseindex-item[data-selected="true"]:hover *,
+body.format-aicourse .courseindex-item.pageitem *:hover,
+body.format-aicourse .courseindex-item[data-selected="true"] *:hover {
+    background: transparent !important;
+    outline: none !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+}
+
+/* Remove hover effects on selected activity links */
+body.format-aicourse .courseindex-item.pageitem a:hover,
+body.format-aicourse .courseindex-item[data-selected="true"] a:hover,
+body.format-aicourse .courseindex-item.pageitem a:focus,
+body.format-aicourse .courseindex-item[data-selected="true"] a:focus {
+    background: transparent !important;
+    outline: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    text-decoration: none !important;
+}
+
+/* Remove any inner link pseudo-element overlays */
+body.format-aicourse .courseindex-item.pageitem a::before,
+body.format-aicourse .courseindex-item[data-selected="true"] a::before,
+body.format-aicourse .courseindex-item.pageitem a::after,
+body.format-aicourse .courseindex-item[data-selected="true"] a::after,
+body.format-aicourse .courseindex-item.pageitem a:hover::before,
+body.format-aicourse .courseindex-item[data-selected="true"] a:hover::before,
+body.format-aicourse .courseindex-item.pageitem a:hover::after,
+body.format-aicourse .courseindex-item[data-selected="true"] a:hover::after {
+    display: none !important;
+    background: transparent !important;
+    opacity: 0 !important;
+}
+
+/* -------------------------------------------------------------
+   ACTIVITY TITLES (14px)
+------------------------------------------------------------- */
+body.format-aicourse .courseindex-item a,
+body.format-aicourse .courseindex-item .text-truncate {
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.3;
+    color: inherit;
+    text-decoration: none;
+}
+
+/* Selected activity text - ensure visibility with !important */
+body.format-aicourse .courseindex-item.pageitem a,
+body.format-aicourse .courseindex-item[data-selected="true"] a,
+body.format-aicourse .courseindex-item.pageitem .text-truncate,
+body.format-aicourse .courseindex-item[data-selected="true"] .text-truncate {
+    color: var(--primary, #2563eb) !important;
+    font-weight: 600;
+}
+
+/* Selected activity icons (drag handle, etc) - darker color for visibility on light grey background */
+body.format-aicourse .courseindex-item.pageitem .dragicon,
+body.format-aicourse .courseindex-item[data-selected="true"] .dragicon,
+body.format-aicourse .courseindex-item.pageitem .drag-handle,
+body.format-aicourse .courseindex-item[data-selected="true"] .drag-handle,
+body.format-aicourse .courseindex-item.pageitem [data-drag-type],
+body.format-aicourse .courseindex-item[data-selected="true"] [data-drag-type],
+body.format-aicourse .courseindex-item.pageitem .courseindex-draghandle,
+body.format-aicourse .courseindex-item[data-selected="true"] .courseindex-draghandle,
+body.format-aicourse .courseindex-item.pageitem i.fa-grip-vertical,
+body.format-aicourse .courseindex-item[data-selected="true"] i.fa-grip-vertical,
+body.format-aicourse .courseindex-item.pageitem i.icon,
+body.format-aicourse .courseindex-item[data-selected="true"] i.icon {
+    color: #6b7280 !important;
+}
+
+/* -------------------------------------------------------------
+   COMPLETION ICONS IN COURSE INDEX - Always visible (even in edit mode)
+   Moodle hides these by default in edit mode, we want them visible
+------------------------------------------------------------- */
+body.format-aicourse .courseindex .completioninfo,
+body.format-aicourse .courseindex [data-region="completioninfo"],
+body.format-aicourse .courseindex .completion-icon,
+body.format-aicourse .courseindex .courseindex-completion,
+body.format-aicourse.editing .courseindex .completioninfo,
+body.format-aicourse.editing .courseindex [data-region="completioninfo"],
+body.format-aicourse.editing .courseindex .completion-icon,
+body.format-aicourse.editing .courseindex .courseindex-completion,
+body.editing.format-aicourse .courseindex .completioninfo,
+body.editing.format-aicourse .courseindex [data-region="completioninfo"],
+body.editing.format-aicourse .courseindex .completion-icon,
+body.editing.format-aicourse .courseindex .courseindex-completion {
+    display: inline-flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* Ensure the completion icons have proper sizing */
+body.format-aicourse .courseindex .completioninfo img,
+body.format-aicourse .courseindex .completioninfo svg,
+body.format-aicourse .courseindex .completioninfo i {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+}
+
+/* -------------------------------------------------------------
+   CHEVRONS (icon-only, no background) - COURSE INDEX ONLY
+------------------------------------------------------------- */
+body.format-aicourse .courseindex .btn.btn-icon,
+body.format-aicourse .courseindex .icons-collapse-expand,
+body.format-aicourse .courseindex-chevron {
+    width: 24px !important;
+    height: 24px !important;
+    min-width: 24px !important;
+    min-height: 24px !important;
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: none !important;
+}
+
+/* Chevron icon */
+body.format-aicourse .courseindex .btn.btn-icon i,
+body.format-aicourse .courseindex .icons-collapse-expand i,
+body.format-aicourse .courseindex-chevron i {
+    font-size: 14px;
+    color: #6b7280;
+}
+
+/* -------------------------------------------------------------
+   CHEVRON - COURSE INDEX SIDEBAR
+   Moodle uses .collapsed-icon (fa-chevron-right) and 
+   .expanded-icon (fa-chevron-down) with native visibility toggle.
+   We just ensure no transforms interfere with native behavior.
+------------------------------------------------------------- */
+
+/* Remove any transforms that might rotate icons incorrectly */
+body.format-aicourse .courseindex i,
+body.format-aicourse .courseindex .fa,
+body.format-aicourse .courseindex [class*="fa-"] {
+    transform: none !important;
+}
+
+/* -------------------------------------------------------------
+   REMOVE UNWANTED MOODLE STYLES (SAFE)
+------------------------------------------------------------- */
+body.format-aicourse .courseindex * {
+    box-shadow: none;
+    outline: none;
+}
+
+/* =============================================================
+   CHEVRON – Main Content Area (with circle background)
+   ============================================================= */
+body.format-aicourse .icons-collapse-expand {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
+    border-radius: 50%;
+    border: 1px solid #e5e7eb;
+    background: #f8fafc;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-sizing: border-box;
+    cursor: pointer;
+    transition: box-shadow 200ms ease;
+}
+
+body.format-aicourse .icons-collapse-expand:hover {
+    outline: none !important;
+    box-shadow: 0 0 0 2px rgba(25,72,102,.35);
+}
+
+/* Main page section collapse chevrons */
+body.format-aicourse .course-section-header .icons-collapse-expand,
+body.format-aicourse .section-header-content .icons-collapse-expand,
+body.format-aicourse .course-content .icons-collapse-expand {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
+    border-radius: 50%;
+    border: 1px solid #e5e7eb;
+    background: #f8fafc;
+}
+
+/* =============================================================
+   STICKY FOOTER
+   ============================================================= */
+body.format-aicourse,
+body.format-aicourse #page {
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: 100vh !important;
+}
+
+body.format-aicourse #page-wrapper,
+body.format-aicourse .pagelayout-course #page,
+body.format-aicourse .pagelayout-incourse #page {
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: 100vh !important;
+}
+
+body.format-aicourse #page-content,
+body.format-aicourse #region-main-box,
+body.format-aicourse #topofscroll,
+body.format-aicourse .main-inner {
+    flex: 1 0 auto !important;
+}
+
+body.format-aicourse #footer,
+body.format-aicourse #page-footer,
+body.format-aicourse footer,
+body.format-aicourse .footer {
+    flex-shrink: 0 !important;
+    margin-top: auto !important;
+}
+
+body.format-aicourse .drawers,
+body.format-aicourse #page.drawers {
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: 100vh !important;
+}
+
+body.format-aicourse .drawers .main-inner,
+body.format-aicourse #page.drawers .main-inner {
+    flex: 1 0 auto !important;
+}
+
+/* Academi theme fixes */
+body.format-aicourse.theme-academi #page,
+body.format-aicourse[class*="theme_academi"] #page {
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: 100vh !important;
+}
+
+body.format-aicourse.theme-academi #page-content,
+body.format-aicourse[class*="theme_academi"] #page-content {
+    flex: 1 0 auto !important;
+}
+
+body.format-aicourse #footer .footer-bottom,
+body.format-aicourse .footer-bottom {
+    width: 100% !important;
+}
+
+/* =============================================================
+   BEAUTIFUL SECTION CARDS - World-Class Design
+   Matches hero banner styling with smooth animations
+   ============================================================= */
+
+.aicourse-cards-container {
+    margin-top: 24px;
+}
+
+/* General section (Section 0) rendered inline above section cards */
+.aicourse-general-section {
+    margin-bottom: 32px;
+    padding-bottom: 28px;
+    border-bottom: 1px solid var(--aicourse-border, rgba(0,0,0,0.08));
+}
+
+.aicourse-general-summary {
+    font-size: 0.95rem;
+    line-height: 1.65;
+    color: var(--aicourse-text, inherit);
+    margin-bottom: 16px;
+}
+
+/* Activity cards nested inside general section — inherit container spacing, no double padding */
+.aicourse-general-section .aicourse-activity-cards-container {
+    padding: 0;
+    margin-top: 0;
+    max-width: none;
+}
+
+@media (prefers-color-scheme: dark) {
+    .aicourse-general-section {
+        border-bottom-color: rgba(255,255,255,0.08);
+    }
+}
+
+/* Dark mode class variant */
+.dark .aicourse-general-section,
+body.aicourse-dark .aicourse-general-section {
+    border-bottom-color: rgba(255,255,255,0.08);
+}
+
+.aicourse-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(1, 1fr);
+    gap: 16px;
+}
+
+/* Tablet: 2 columns */
+@media (min-width: 576px) {
+    .aicourse-cards-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+    }
+}
+
+/* Desktop: 3 columns */
+@media (min-width: 992px) {
+    .aicourse-cards-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 24px;
+    }
+}
+
+/* Large desktop: 4 columns */
+@media (min-width: 1200px) {
+    .aicourse-cards-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+/* Individual Card */
+.aicourse-card {
+    position: relative;
+    background: #ffffff;
+    border-radius: 16px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    box-shadow: 
+        0 1px 2px rgba(0, 0, 0, 0.04),
+        0 3px 8px rgba(0, 0, 0, 0.05),
+        0 8px 20px rgba(0, 0, 0, 0.04);
+    transition: 
+        transform 300ms cubic-bezier(0.34, 1.56, 0.64, 1),
+        box-shadow 300ms ease,
+        border-color 300ms ease;
+    overflow: hidden;
+    will-change: transform;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Premium gradient accent strip along top edge */
+.aicourse-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--primary, #194866) 0%, rgba(25, 118, 210, 0.45) 100%);
+    border-radius: 16px 16px 0 0;
+    opacity: 0.65;
+    transition: opacity 300ms ease;
+    z-index: 2;
+}
+
+.aicourse-card:hover {
+    transform: translateY(-7px);
+    box-shadow: 
+        0 2px 4px rgba(0, 0, 0, 0.04),
+        0 8px 20px rgba(0, 0, 0, 0.09),
+        0 20px 44px rgba(0, 0, 0, 0.10),
+        0 32px 60px rgba(0, 0, 0, 0.05);
+    border-color: rgba(25, 72, 102, 0.18);
+}
+
+.aicourse-card:hover::before {
+    opacity: 1;
+}
+
+.aicourse-card:active {
+    transform: translateY(-3px);
+    box-shadow: 
+        0 2px 6px rgba(0, 0, 0, 0.06),
+        0 8px 18px rgba(0, 0, 0, 0.08);
+    transition-duration: 100ms;
+}
+
+/* Card Link - only contains title, no top padding since header above has it */
+.aicourse-card .aicourse-card-link {
+    display: flex;
+    flex-direction: column;
+    padding: 0 16px 12px 16px; /* No top - header above; 12px bottom before footer */
+    min-height: auto;
+    text-decoration: none;
+    color: inherit;
+}
+
+.aicourse-card .aicourse-card-link:hover {
+    text-decoration: none;
+}
+
+/* Card Header - consistent padding with link and footer */
+.aicourse-card .aicourse-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 12px;
+    padding: 16px 16px 0 16px; /* Match link's left/right padding */
+    margin-bottom: 12px;
+}
+
+/* Section Icon Wrapper - tinted background, no border */
+.aicourse-card-icon-wrap {
+    position: relative;
+    z-index: 5;
+    flex-shrink: 0;
+    width: 46px;
+    height: 46px;
+    padding: 9px;
+    border: none;
+    border-radius: 13px;
+    background: rgba(25, 72, 102, 0.10);
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 300ms cubic-bezier(0.34, 1.56, 0.64, 1), background 300ms ease;
+}
+
+/* Empty icon wrapper - dashed border only for empty state */
+.aicourse-card-icon-wrap.aicourse-icon-empty {
+    background: rgba(0, 0, 0, 0.04);
+    border: 2px dashed rgba(0, 0, 0, 0.20);
+    color: rgba(0, 0, 0, 0.35);
+}
+
+/* Selected icon wrapper */
+.aicourse-card-icon-wrap.aicourse-icon-selected {
+    background: rgba(25, 72, 102, 0.10);
+}
+
+/* UX-ACF-EDITBTNS: Card edit buttons — always visible for editors.
+   PHP ($canedit gate) controls who gets this element in the DOM.
+   Old approach used body.editing to show/hide, but that was tied to the
+   now-removed edit-mode → Topics renderer fallback (UX-ACF-EDITMODE-WIPE).
+   Buttons now always render for canedit users with a subtle hover reveal. */
+.aicourse-card-edit-buttons {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 15;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity 150ms ease;
+}
+
+.aicourse-card:hover .aicourse-card-edit-buttons {
+    opacity: 1;
+}
+
+.aicourse-card-delete,
+.aicourse-card-duplicate,
+.aicourse-card-settings {
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    border-radius: 50%;
+    color: #9ca3af;
+    cursor: pointer;
+    padding: 0;
+    text-decoration: none;
+    transition: all 150ms ease;
+}
+
+.aicourse-card-settings:hover {
+    background: #f0fdf4;
+    color: #16a34a;
+    transform: scale(1.15);
+}
+
+.aicourse-card-settings:active {
+    transform: scale(0.9);
+    background: #16a34a;
+    color: white;
+}
+
+.aicourse-card-settings svg {
+    width: 14px;
+    height: 14px;
+}
+
+.aicourse-card-delete svg,
+.aicourse-card-duplicate svg {
+    width: 14px;
+    height: 14px;
+}
+
+.aicourse-card-delete:hover {
+    background: #fef2f2;
+    color: #dc2626;
+    transform: scale(1.15);
+}
+
+.aicourse-card-delete:active {
+    transform: scale(0.9);
+    background: #dc2626;
+    color: white;
+}
+
+.aicourse-card-duplicate:hover {
+    background: #eff6ff;
+    color: #2563eb;
+    transform: scale(1.15);
+}
+
+.aicourse-card-duplicate:active {
+    transform: scale(0.9);
+    background: #2563eb;
+    color: white;
+}
+
+/* ICON-UX-v1.7.46: Icon column wrapper — flex column holding the icon box + always-visible label.
+   The col carries the click trigger and data attrs (data-courseid, data-sectionid).
+   This replaces the old approach of putting those on the inner icon-wrap. */
+.aicourse-icon-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    flex-shrink: 0;
+}
+
+/* Always-visible "Add icon" / "Change icon" text label for editors */
+.aicourse-icon-change-label {
+    display: block;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--primary, #194866);
+    opacity: 0.6;
+    line-height: 1;
+    white-space: nowrap;
+    pointer-events: none;
+    transition: opacity 150ms ease;
+}
+
+.aicourse-icon-col:hover .aicourse-icon-change-label {
+    opacity: 1;
+}
+
+/* UX-ACF-ICONPICKER: Editable icon col — always clickable for editors.
+   PHP ($canedit gate) controls who gets the aicourse-card-icon-editable class. */
+.aicourse-card-icon-editable {
+    position: relative;
+    cursor: pointer;
+}
+
+/* Highlight the icon box on col hover */
+.aicourse-card-icon-editable:hover .aicourse-card-icon-wrap {
+    border-color: var(--primary, #194866) !important;
+    box-shadow: 0 0 0 3px rgba(25, 72, 102, 0.12);
+}
+
+.aicourse-card-icon-editable:hover .aicourse-card-icon {
+    transform: scale(1.1);
+}
+
+
+/* Inner icon container - fixed 24x24, no padding, no border */
+body.format-aicourse .aicourse-card .aicourse-card-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+    padding: 0 !important;
+    border: none !important;
+    color: var(--primary, #194866);
+    background: transparent;
+    box-sizing: border-box;
+}
+
+body.format-aicourse .aicourse-card .aicourse-card-icon svg {
+    width: 24px !important;
+    height: 24px !important;
+    min-width: 24px !important;
+    min-height: 24px !important;
+    max-width: 24px !important;
+    max-height: 24px !important;
+    flex-shrink: 0 !important;
+    flex-grow: 0 !important;
+}
+
+/* Legacy icon classes - kept for backwards compatibility */
+.aicourse-card-icon-empty {
+    color: rgba(0, 0, 0, 0.35);
+}
+
+.aicourse-card-icon-selected {
+    /* Icon inherits color from wrapper */
+}
+
+/* Hover on wrapper — spring-bouncy scale + slight rotate */
+.aicourse-card:hover .aicourse-card-icon-wrap {
+    transform: scale(1.10) rotate(-4deg);
+    background: rgba(25, 72, 102, 0.17);
+}
+
+.aicourse-card:hover .aicourse-card-icon-wrap.aicourse-icon-selected {
+    background: rgba(25, 72, 102, 0.17);
+}
+
+.aicourse-card:hover .aicourse-card-icon-wrap.aicourse-icon-empty {
+    background: rgba(0, 0, 0, 0.07);
+    color: rgba(0, 0, 0, 0.5);
+}
+
+/* Estimated Time - Centered at top of card */
+body.format-aicourse .aicourse-card .aicourse-card-time {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    background: rgba(0, 0, 0, 0.04);
+    border-radius: 8px;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    color: var(--aicourse-hero-text, #374151);
+    font-size: 13px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: background 200ms ease;
+    box-sizing: border-box;
+}
+
+.aicourse-card:hover .aicourse-card-time {
+    background: rgba(0, 0, 0, 0.06);
+    text-decoration: none;
+}
+
+body.format-aicourse .aicourse-card .aicourse-card-time svg {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    opacity: 0.7;
+    stroke: var(--aicourse-hero-text, #374151);
+}
+
+/* Card Title - Must override Moodle's .sectionname 16px rule */
+.aicourse-card-title,
+body.format-aicourse .aicourse-card-title,
+body.format-aicourse .aicourse-card-title.sectionname,
+body.format-aicourse .aicourse-section-card .aicourse-card-title,
+body.format-aicourse .aicourse-section-card .sectionname {
+    flex: 1;
+    margin: 0;
+    min-height: 38px; /* Ensures consistent card heights (2 lines worth) */
+    font-size: var(--aicourse-card-title-size, 14px) !important;
+    font-weight: 600 !important;
+    line-height: 1.35 !important;
+    color: var(--aicourse-hero-text, #1f2937) !important;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* Card Footer - Consistent padding with header and link */
+.aicourse-card-footer {
+    margin-top: auto;
+    padding: 12px 16px 16px 16px; /* Match link's 16px left/right padding */
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.aicourse-card-footer-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    min-width: 0;
+}
+
+.aicourse-card .aicourse-activity-count {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--aicourse-muted, #6b7280);
+    text-decoration: none;
+    transition: color 150ms ease;
+}
+
+.aicourse-activity-count:hover {
+    color: var(--primary, #194866);
+}
+
+/* Progress Badge - Base styles */
+.aicourse-progress-badge,
+.aicourse-progress-badge-complete {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 12px;
+    flex-shrink: 0;
+    text-decoration: none;
+    transition: transform 150ms ease, box-shadow 150ms ease;
+}
+
+.aicourse-progress-badge {
+    background: rgba(0, 0, 0, 0.05);
+    color: var(--aicourse-muted, #6b7280);
+}
+
+.aicourse-progress-badge-complete {
+    background: rgba(53, 122, 50, 0.12);
+    color: #166534;
+}
+
+.aicourse-progress-badge:hover,
+.aicourse-progress-badge-complete:hover {
+    transform: scale(1.05);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Activity Dots in Cards - Compact */
+.aicourse-card .aicourse-card-dots {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.aicourse-card .aicourse-card-dot {
+    display: block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    cursor: pointer;
+    transition: transform 150ms ease, box-shadow 150ms ease;
+    text-decoration: none;
+}
+
+.aicourse-card .aicourse-card-dots-more {
+    font-size: 13px;
+    color: var(--aicourse-muted, #6b7280);
+    margin-left: 2px;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.aicourse-card-dots-more:hover {
+    color: var(--primary, #194866);
+    text-decoration: underline;
+}
+
+.aicourse-card-dot.aicourse-dot-completed {
+    background: #357a32;
+    border-color: #2d6829;
+}
+
+.aicourse-card-dot.aicourse-dot-in_progress {
+    background: #f59e0b;
+    border-color: #d97706;
+    animation: aicourse-pulse 2s ease-in-out infinite;
+}
+
+.aicourse-card-dot.aicourse-dot-not_started {
+    background: rgba(0, 0, 0, 0.1);
+    border-color: rgba(0, 0, 0, 0.15);
+}
+
+.aicourse-card-dot:hover {
+    transform: scale(1.25);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+}
+
+@keyframes aicourse-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+
+/* =============================================================
+   CARD ENTRY ANIMATIONS - staggered fade-up on page load
+   ============================================================= */
+@keyframes aicourse-card-enter {
+    from {
+        opacity: 0;
+        transform: translateY(22px) scale(0.97);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.aicourse-cards-grid .aicourse-card {
+    animation: aicourse-card-enter 440ms cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+.aicourse-cards-grid .aicourse-card:nth-child(1)  { animation-delay: 0ms; }
+.aicourse-cards-grid .aicourse-card:nth-child(2)  { animation-delay: 65ms; }
+.aicourse-cards-grid .aicourse-card:nth-child(3)  { animation-delay: 130ms; }
+.aicourse-cards-grid .aicourse-card:nth-child(4)  { animation-delay: 195ms; }
+.aicourse-cards-grid .aicourse-card:nth-child(5)  { animation-delay: 250ms; }
+.aicourse-cards-grid .aicourse-card:nth-child(6)  { animation-delay: 300ms; }
+.aicourse-cards-grid .aicourse-card:nth-child(7)  { animation-delay: 340ms; }
+.aicourse-cards-grid .aicourse-card:nth-child(8)  { animation-delay: 370ms; }
+.aicourse-cards-grid .aicourse-card:nth-child(n+9) { animation-delay: 390ms; }
+
+.aicourse-activity-cards-grid .aicourse-activity-card {
+    animation: aicourse-card-enter 400ms cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+.aicourse-activity-cards-grid .aicourse-activity-card:nth-child(1)  { animation-delay: 0ms; }
+.aicourse-activity-cards-grid .aicourse-activity-card:nth-child(2)  { animation-delay: 55ms; }
+.aicourse-activity-cards-grid .aicourse-activity-card:nth-child(3)  { animation-delay: 110ms; }
+.aicourse-activity-cards-grid .aicourse-activity-card:nth-child(4)  { animation-delay: 165ms; }
+.aicourse-activity-cards-grid .aicourse-activity-card:nth-child(5)  { animation-delay: 215ms; }
+.aicourse-activity-cards-grid .aicourse-activity-card:nth-child(6)  { animation-delay: 255ms; }
+.aicourse-activity-cards-grid .aicourse-activity-card:nth-child(7)  { animation-delay: 285ms; }
+.aicourse-activity-cards-grid .aicourse-activity-card:nth-child(8)  { animation-delay: 310ms; }
+.aicourse-activity-cards-grid .aicourse-activity-card:nth-child(n+9) { animation-delay: 330ms; }
+
+/* Hide traditional SECTION LIST when cards are shown on course home
+   IMPORTANT: Do NOT hide .course-content itself - cards are inside it!
+   Only hide the ul/li section list, NOT the format-aicourse-container with cards */
+body.format-aicourse.aicourse-cardview .course-content > ul.aicourse,
+body.format-aicourse.aicourse-cardview .course-content > ul.topics,
+body.format-aicourse.aicourse-cardview .course-content > ul.sections,
+body.format-aicourse.aicourse-cardview .course-content > .topics,
+body.format-aicourse.aicourse-cardview .course-content > .sections,
+body.format-aicourse.aicourse-cardview [data-for="course_sectionlist"],
+body.format-aicourse.aicourse-cardview .section-summary,
+body.format-aicourse.aicourse-cardview .course-section {
+    display: none !important;
+}
+
+/* Hide standard activity list when activity cards mode is enabled
+   Same principle: hide the list, NOT the container */
+body.format-aicourse.aicourse-activitycards .course-content > ul.aicourse,
+body.format-aicourse.aicourse-activitycards .course-content > ul.topics,
+body.format-aicourse.aicourse-activitycards .course-content > ul.sections,
+body.format-aicourse.aicourse-activitycards [data-for="course_sectionlist"],
+body.format-aicourse.aicourse-activitycards .section-summary,
+body.format-aicourse.aicourse-activitycards .course-section {
+    display: none !important;
+}
+
+/* Hide course index when disabled - BUT show in edit mode */
+body.format-aicourse.aicourse-hideindex:not(.editing):not(.editingon):not(.editing-mode) .courseindex,
+body.format-aicourse.aicourse-hideindex:not(.editing):not(.editingon):not(.editing-mode) [data-region="courseindex"],
+body.format-aicourse.aicourse-hideindex:not(.editing):not(.editingon):not(.editing-mode) #theme_boost-drawers-courseindex,
+body.format-aicourse.aicourse-hideindex:not(.editing):not(.editingon):not(.editing-mode) .drawer-left,
+body.format-aicourse.aicourse-hideindex:not(.editing):not(.editingon):not(.editing-mode) [data-region="fixed-drawer"].drawer-left {
+    display: none !important;
+    width: 0 !important;
+}
+
+/* Center content when course index is hidden - BUT not in edit mode */
+body.format-aicourse.aicourse-hideindex:not(.editing):not(.editingon):not(.editing-mode) #page.drawers,
+body.format-aicourse.aicourse-hideindex:not(.editing):not(.editingon):not(.editing-mode) .drawers {
+    margin-left: 0 !important;
+    padding-left: 0 !important;
+}
+
+body.format-aicourse.aicourse-hideindex:not(.editing):not(.editingon):not(.editing-mode) #page-content,
+body.format-aicourse.aicourse-hideindex:not(.editing):not(.editingon):not(.editing-mode) .main-inner,
+body.format-aicourse.aicourse-hideindex:not(.editing):not(.editingon):not(.editing-mode) #region-main-box,
+body.format-aicourse.aicourse-hideindex:not(.editing):not(.editingon):not(.editing-mode) #region-main {
+    margin-left: auto !important;
+    margin-right: auto !important;
+    max-width: 1400px !important;
+}
+
+/* Remove left drawer space in Boost theme - BUT not in edit mode */
+body.format-aicourse.aicourse-hideindex:not(.editing):not(.editingon):not(.editing-mode).drawer-open-left #page.drawers,
+body.format-aicourse.aicourse-hideindex:not(.editing):not(.editingon):not(.editing-mode) .show-drawer-left #page.drawers {
+    margin-left: 0 !important;
+}
+
+/* Center the cards container specifically - BUT not in edit mode */
+body.format-aicourse.aicourse-hideindex:not(.editing):not(.editingon):not(.editing-mode) .aicourse-cards-container,
+body.format-aicourse.aicourse-hideindex:not(.editing):not(.editingon):not(.editing-mode) .aicourse-activity-cards-container,
+body.format-aicourse.aicourse-hideindex:not(.editing):not(.editingon):not(.editing-mode) .format-aicourse-container {
+    max-width: 1400px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: var(--aicourse-gutter);
+    padding-right: var(--aicourse-gutter);
+}
+
+/* Override Boost drawer toggle state classes - BUT not in edit mode */
+body.format-aicourse.aicourse-hideindex:not(.editing):not(.editingon):not(.editing-mode).show-drawer-left,
+body.format-aicourse.aicourse-hideindex:not(.editing):not(.editingon):not(.editing-mode).drawer-open-left {
+    --drawer-left-width: 0px !important;
+}
+
+/* Dark mode card styling */
+@media (prefers-color-scheme: dark) {
+    .aicourse-card {
+        background: #1e293b;
+        border-color: rgba(255, 255, 255, 0.10);
+    }
+    
+    .aicourse-card:hover {
+        border-color: rgba(255, 255, 255, 0.18);
+        box-shadow: 
+            0 2px 4px rgba(0, 0, 0, 0.20),
+            0 8px 20px rgba(0, 0, 0, 0.30),
+            0 20px 44px rgba(0, 0, 0, 0.30),
+            0 32px 60px rgba(0, 0, 0, 0.20),
+            0 0 0 1px rgba(255,255,255,0.06);
+    }
+    
+    .aicourse-card-title {
+        color: #f1f5f9;
+    }
+    
+    .aicourse-card-time {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(255, 255, 255, 0.1);
+        color: #e2e8f0;
+    }
+    
+    .aicourse-card-time svg {
+        stroke: #e2e8f0;
+    }
+    
+    .aicourse-card-footer {
+        border-top-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    .aicourse-card-progress-text {
+        color: #f1f5f9;
+    }
+    
+    .aicourse-card-dot.aicourse-dot-not_started {
+        background: rgba(255, 255, 255, 0.15);
+        border-color: rgba(255, 255, 255, 0.25);
+    }
+}
+
+body.dark-mode .aicourse-card {
+    background: #1e293b;
+    border-color: rgba(255, 255, 255, 0.10);
+}
+
+body.dark-mode .aicourse-card:hover {
+    border-color: rgba(255, 255, 255, 0.18);
+    box-shadow: 
+        0 2px 4px rgba(0, 0, 0, 0.20),
+        0 8px 20px rgba(0, 0, 0, 0.30),
+        0 20px 44px rgba(0, 0, 0, 0.30),
+        0 32px 60px rgba(0, 0, 0, 0.20),
+        0 0 0 1px rgba(255,255,255,0.06);
+}
+
+body.dark-mode .aicourse-card-title {
+    color: #f1f5f9;
+}
+
+body.dark-mode .aicourse-card-time {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: #e2e8f0;
+}
+
+body.dark-mode .aicourse-card-footer {
+    border-top-color: rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode .aicourse-card-progress-text {
+    color: #f1f5f9;
+}
+
+/* =============================================================
+   HERO ICONS CONTAINER
+   ============================================================= */
+.aicourse-hero-icons {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+/* =============================================================
+   ACTIVITY CARDS - Beautiful cards for activities in a section
+   ============================================================= */
+
+.aicourse-activity-cards-container {
+    margin-top: 24px;
+}
+
+.aicourse-activity-cards-header {
+    margin-bottom: 20px;
+}
+
+.aicourse-activity-cards-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--aicourse-muted, #6b7280);
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.aicourse-activity-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(1, 1fr);
+    gap: 12px;
+}
+
+/* Tablet: 2 columns */
+@media (min-width: 576px) {
+    .aicourse-activity-cards-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+}
+
+/* Desktop: 3 columns */
+@media (min-width: 992px) {
+    .aicourse-activity-cards-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+    }
+}
+
+/* Large desktop: 4 columns */
+@media (min-width: 1200px) {
+    .aicourse-activity-cards-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+/* Individual Activity Card */
+.aicourse-activity-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    background: #ffffff;
+    border-radius: 14px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    box-shadow: 
+        0 1px 2px rgba(0, 0, 0, 0.04),
+        0 3px 8px rgba(0, 0, 0, 0.05),
+        0 6px 16px rgba(0, 0, 0, 0.03);
+    transition: 
+        transform 300ms cubic-bezier(0.34, 1.56, 0.64, 1),
+        box-shadow 300ms ease,
+        border-color 300ms ease;
+    text-decoration: none !important;
+    color: inherit !important;
+    will-change: transform;
+    -webkit-font-smoothing: antialiased;
+}
+
+.aicourse-activity-card:hover {
+    transform: translateY(-5px) scale(1.010);
+    box-shadow: 
+        0 2px 4px rgba(0, 0, 0, 0.04),
+        0 8px 20px rgba(0, 0, 0, 0.09),
+        0 18px 36px rgba(0, 0, 0, 0.08),
+        0 28px 50px rgba(0, 0, 0, 0.04);
+    border-color: rgba(25, 72, 102, 0.18);
+    text-decoration: none !important;
+}
+
+.aicourse-activity-card:active {
+    transform: translateY(-2px) scale(1.004);
+    transition-duration: 100ms;
+}
+
+/* Card Icon */
+.aicourse-activity-card-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background: rgba(25, 72, 102, 0.09);
+    border-radius: 11px;
+    flex-shrink: 0;
+    transition: transform 300ms cubic-bezier(0.34, 1.56, 0.64, 1), background 300ms ease;
+}
+
+.aicourse-activity-card:hover .aicourse-activity-card-icon {
+    transform: scale(1.12) rotate(-5deg);
+    background: rgba(25, 72, 102, 0.16);
+}
+
+.aicourse-activity-card-icon img {
+    width: 22px;
+    height: 22px;
+    object-fit: contain;
+}
+
+/* Card Body - Contains name and footer */
+.aicourse-activity-card-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.aicourse-activity-card-name,
+h4.aicourse-activity-card-name,
+body.format-aicourse .aicourse-activity-card-name,
+body.format-aicourse h4.aicourse-activity-card-name {
+    margin: 0 0 4px 0 !important;
+    font-size: var(--aicourse-card-title-size, 14px) !important;
+    font-weight: 600 !important;
+    line-height: 1.3 !important;
+    color: var(--aicourse-hero-text, #1f2937) !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Compact footer with type and status badge */
+.aicourse-activity-card-footer {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.aicourse-activity-card-type {
+    font-size: 11px;
+    color: #9ca3af;
+    text-transform: capitalize;
+}
+
+/* Compact status badge - pill style like section cards */
+.aicourse-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+}
+
+/* Not Started badge */
+.aicourse-status-badge-not_started {
+    background: rgba(0, 0, 0, 0.05);
+    color: #9ca3af;
+}
+
+/* In Progress badge */
+.aicourse-status-badge-in_progress {
+    background: rgba(245, 158, 11, 0.12);
+    color: #b45309;
+}
+
+/* Completed badge - green */
+.aicourse-status-badge-completed {
+    background: rgba(53, 122, 50, 0.15);
+    color: #166534;
+}
+
+.aicourse-status-badge-completed svg {
+    stroke: #166534;
+}
+
+/* Completed card — green border tint + green icon bg */
+.aicourse-activity-status-completed {
+    border-color: rgba(53, 122, 50, 0.28);
+}
+
+.aicourse-activity-status-completed .aicourse-activity-card-icon {
+    background: rgba(53, 122, 50, 0.11);
+}
+
+.aicourse-activity-status-completed:hover .aicourse-activity-card-icon {
+    background: rgba(53, 122, 50, 0.20);
+}
+
+/* In Progress card — amber border tint + amber icon bg */
+.aicourse-activity-status-in_progress {
+    border-color: rgba(245, 158, 11, 0.28);
+}
+
+.aicourse-activity-status-in_progress .aicourse-activity-card-icon {
+    background: rgba(245, 158, 11, 0.11);
+}
+
+.aicourse-activity-status-in_progress:hover .aicourse-activity-card-icon {
+    background: rgba(245, 158, 11, 0.20);
+}
+
+/* Manual Completion Toggle Button */
+.aicourse-completion-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 200ms ease;
+    flex-shrink: 0;
+    margin-left: auto;
+}
+
+.aicourse-completion-toggle-pending {
+    background: rgba(0, 0, 0, 0.05);
+    color: #6b7280;
+}
+
+.aicourse-completion-toggle-pending:hover {
+    background: rgba(53, 122, 50, 0.15);
+    color: #166534;
+}
+
+.aicourse-completion-toggle-done {
+    background: rgba(53, 122, 50, 0.12);
+    color: #166534;
+}
+
+.aicourse-completion-toggle-done:hover {
+    background: rgba(53, 122, 50, 0.2);
+}
+
+.aicourse-toggle-check {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.aicourse-toggle-check svg {
+    stroke: currentColor;
+}
+
+.aicourse-completion-toggle.aicourse-loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+/* Hide toggle label on small screens */
+@media (max-width: 575px) {
+    .aicourse-toggle-label {
+        display: none;
+    }
+    .aicourse-completion-toggle {
+        padding: 8px;
+    }
+}
+
+/* Compact badge on small screens */
+@media (max-width: 575px) {
+    .aicourse-status-badge {
+        padding: 1px 4px;
+        font-size: 9px;
+    }
+}
+
+/* =============================================================
+   EMPTY STATE - When no activities or sections
+   ============================================================= */
+.aicourse-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 24px;
+    text-align: center;
+    color: #6b7280;
+    background: rgba(0, 0, 0, 0.02);
+    border-radius: 12px;
+    margin: 16px 0;
+}
+
+.aicourse-empty-state svg {
+    color: #9ca3af;
+    margin-bottom: 12px;
+}
+
+.aicourse-empty-state p {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.5;
+    max-width: 320px;
+}
+
+/* Dark mode activity cards */
+@media (prefers-color-scheme: dark) {
+    .aicourse-activity-cards-title {
+        color: #f1f5f9;
+    }
+    
+    .aicourse-activity-card {
+        background: #1e293b;
+        border-color: rgba(255, 255, 255, 0.10);
+    }
+    
+    .aicourse-activity-card:hover {
+        border-color: rgba(255, 255, 255, 0.18);
+        box-shadow: 
+            0 2px 4px rgba(0, 0, 0, 0.20),
+            0 8px 20px rgba(0, 0, 0, 0.30),
+            0 18px 36px rgba(0, 0, 0, 0.25),
+            0 0 0 1px rgba(255,255,255,0.05);
+    }
+    
+    .aicourse-activity-card-icon {
+        background: rgba(255, 255, 255, 0.10);
+    }
+    
+    .aicourse-activity-card:hover .aicourse-activity-card-icon {
+        background: rgba(255, 255, 255, 0.18);
+    }
+    
+    .aicourse-activity-card-name {
+        color: #f1f5f9;
+    }
+    
+    .aicourse-activity-card-type {
+        color: #94a3b8;
+    }
+    
+    .aicourse-status-badge-not_started {
+        background: rgba(255, 255, 255, 0.08);
+        color: #94a3b8;
+    }
+    
+    .aicourse-status-badge-in_progress {
+        background: rgba(245, 158, 11, 0.2);
+        color: #fbbf24;
+    }
+    
+    .aicourse-status-badge-completed {
+        background: rgba(53, 122, 50, 0.2);
+        color: #6bc768;
+    }
+    
+    .aicourse-status-badge-completed svg {
+        stroke: #6bc768;
+    }
+}
+
+body.dark-mode .aicourse-activity-cards-title {
+    color: #f1f5f9;
+}
+
+body.dark-mode .aicourse-activity-card {
+    background: #1e293b;
+    border-color: rgba(255, 255, 255, 0.10);
+}
+
+body.dark-mode .aicourse-activity-card:hover {
+    border-color: rgba(255, 255, 255, 0.18);
+    box-shadow: 
+        0 2px 4px rgba(0, 0, 0, 0.20),
+        0 8px 20px rgba(0, 0, 0, 0.30),
+        0 18px 36px rgba(0, 0, 0, 0.25),
+        0 0 0 1px rgba(255,255,255,0.05);
+}
+
+body.dark-mode .aicourse-activity-card-icon {
+    background: rgba(255, 255, 255, 0.10);
+}
+
+body.dark-mode .aicourse-activity-card:hover .aicourse-activity-card-icon {
+    background: rgba(255, 255, 255, 0.18);
+}
+
+body.dark-mode .aicourse-card-icon-wrap {
+    background: rgba(255, 255, 255, 0.10);
+}
+
+body.dark-mode .aicourse-card:hover .aicourse-card-icon-wrap {
+    background: rgba(255, 255, 255, 0.18);
+}
+
+body.dark-mode .aicourse-activity-card-name {
+    color: #f1f5f9;
+}
+
+body.dark-mode .aicourse-activity-card-type {
+    color: #94a3b8;
+}
+
+body.dark-mode .aicourse-status-badge-not_started {
+    background: rgba(255, 255, 255, 0.08);
+    color: #94a3b8;
+}
+
+body.dark-mode .aicourse-status-badge-in_progress {
+    background: rgba(245, 158, 11, 0.2);
+    color: #fbbf24;
+}
+
+body.dark-mode .aicourse-status-badge-completed {
+    background: rgba(53, 122, 50, 0.2);
+    color: #6bc768;
+}
+
+body.dark-mode .aicourse-status-badge-completed svg {
+    stroke: #6bc768;
+}
+
+/* =============================================================
+   ICON PICKER MODAL
+   ============================================================= */
+.aicourse-icon-picker-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.aicourse-icon-picker-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+}
+
+/* ICON-UX-v1.7.46: Wider modal, search bar, category groupings, icon labels */
+.aicourse-icon-picker-content {
+    position: relative;
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+    max-width: 560px;
+    max-height: 82vh;
+    width: 100%;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.aicourse-icon-picker-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    flex-shrink: 0;
+}
+
+.aicourse-icon-picker-header h4 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.aicourse-icon-picker-close {
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 8px;
+    font-size: 20px;
+    color: #64748b;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 150ms ease;
+}
+
+.aicourse-icon-picker-close:hover {
+    background: rgba(0, 0, 0, 0.1);
+    color: #1e293b;
+}
+
+/* Search bar */
+.aicourse-icon-picker-search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    flex-shrink: 0;
+}
+
+.aicourse-icon-search-icon {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    color: #94a3b8;
+}
+
+.aicourse-icon-search-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 13px;
+    color: #1e293b;
+    placeholder-color: #94a3b8;
+}
+
+.aicourse-icon-search-input::placeholder {
+    color: #94a3b8;
+}
+
+/* Scrollable body wrapping categories */
+.aicourse-icon-picker-body {
+    overflow-y: auto;
+    flex: 1;
+    padding: 8px 0 12px;
+}
+
+/* Category wrapper */
+.aicourse-icon-picker-category {
+    padding: 0 16px 4px;
+}
+
+.aicourse-icon-picker-category-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #94a3b8;
+    padding: 10px 0 6px;
+}
+
+/* Icon grid — 7 columns by default */
+.aicourse-icon-picker-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+}
+
+/* Remove icon special grid — single row */
+.aicourse-icon-picker-grid--remove {
+    grid-template-columns: auto;
+    margin-bottom: 4px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+}
+
+/* Icon picker items: flex column, icon + label stacked */
+.aicourse-icon-picker-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    width: 100%;
+    padding: 8px 4px 6px;
+    border: 2px solid transparent;
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.03);
+    color: #475569;
+    cursor: pointer;
+    transition: all 150ms ease;
+    min-height: 62px;
+}
+
+.aicourse-icon-picker-item:hover {
+    border-color: var(--primary, #194866);
+    color: var(--primary, #194866);
+    background: rgba(25, 72, 102, 0.08);
+    transform: scale(1.06);
+}
+
+.aicourse-icon-picker-item:active {
+    transform: scale(0.95);
+}
+
+.aicourse-icon-picker-item.selected {
+    border-color: var(--primary, #194866);
+    background: rgba(25, 72, 102, 0.12);
+    color: var(--primary, #194866);
+}
+
+.aicourse-icon-picker-item svg {
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+}
+
+/* Icon name label below each icon */
+.aicourse-icon-picker-label {
+    font-size: 9px;
+    font-weight: 500;
+    line-height: 1.2;
+    text-align: center;
+    color: inherit;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+/* "Remove icon" button — wider, red tones */
+.aicourse-icon-remove-btn {
+    flex-direction: row;
+    gap: 6px;
+    width: auto;
+    padding: 6px 14px;
+    min-height: auto;
+    background: rgba(220, 38, 38, 0.06);
+    border-color: rgba(220, 38, 38, 0.2);
+    color: #dc2626;
+}
+
+.aicourse-icon-remove-btn:hover {
+    background: rgba(220, 38, 38, 0.12);
+    border-color: #dc2626;
+    color: #dc2626;
+    transform: scale(1.02);
+}
+
+.aicourse-icon-remove-btn .aicourse-icon-picker-label {
+    font-size: 11px;
+    font-weight: 600;
+}
+
+/* Responsive icon picker */
+@media (max-width: 575px) {
+    .aicourse-icon-picker-grid {
+        grid-template-columns: repeat(5, 1fr);
+        gap: 5px;
+    }
+
+    .aicourse-icon-picker-item {
+        min-height: 54px;
+    }
+
+    .aicourse-icon-picker-item svg {
+        width: 18px;
+        height: 18px;
+    }
+}
+
+/* Dark mode icon picker */
+@media (prefers-color-scheme: dark) {
+    .aicourse-icon-picker-content {
+        background: #1e293b;
+    }
+    
+    .aicourse-icon-picker-header {
+        border-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    .aicourse-icon-picker-header h4 {
+        color: #f1f5f9;
+    }
+    
+    .aicourse-icon-picker-close {
+        background: rgba(255, 255, 255, 0.1);
+        color: #94a3b8;
+    }
+    
+    .aicourse-icon-picker-close:hover {
+        background: rgba(255, 255, 255, 0.15);
+        color: #f1f5f9;
+    }
+    
+    .aicourse-icon-picker-item {
+        background: rgba(255, 255, 255, 0.05);
+        color: #94a3b8;
+    }
+    
+    .aicourse-icon-picker-item:hover {
+        background: rgba(100, 150, 200, 0.15);
+        color: #60a5fa;
+        border-color: #60a5fa;
+    }
+}
+
+body.dark-mode .aicourse-icon-picker-content {
+    background: #1e293b;
+}
+
+body.dark-mode .aicourse-icon-picker-header {
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode .aicourse-icon-picker-header h4 {
+    color: #f1f5f9;
+}
+
+body.dark-mode .aicourse-icon-picker-close {
+    background: rgba(255, 255, 255, 0.1);
+    color: #94a3b8;
+}
+
+/* Search bar dark mode */
+body.dark-mode .aicourse-icon-picker-search {
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+body.dark-mode .aicourse-icon-search-input {
+    color: #f1f5f9;
+}
+
+body.dark-mode .aicourse-icon-search-input::placeholder {
+    color: #475569;
+}
+
+/* Category heading dark mode */
+body.dark-mode .aicourse-icon-picker-category-label {
+    color: #475569;
+}
+
+/* Grid separator dark mode */
+body.dark-mode .aicourse-icon-picker-grid--remove {
+    border-bottom-color: rgba(255, 255, 255, 0.07);
+}
+
+body.dark-mode .aicourse-icon-picker-item {
+    background: rgba(255, 255, 255, 0.05);
+    color: #94a3b8;
+}
+
+body.dark-mode .aicourse-icon-picker-item:hover {
+    background: rgba(100, 150, 200, 0.15);
+    color: #60a5fa;
+    border-color: #60a5fa;
+}
+
+body.dark-mode .aicourse-icon-remove-btn {
+    background: rgba(220, 38, 38, 0.1);
+    border-color: rgba(220, 38, 38, 0.3);
+    color: #f87171;
+}
+
+body.dark-mode .aicourse-icon-remove-btn:hover {
+    background: rgba(220, 38, 38, 0.2);
+    border-color: #f87171;
+    color: #f87171;
+}
+
+/* Icon-col label dark mode */
+body.dark-mode .aicourse-icon-change-label {
+    color: #60a5fa;
+}
+
+/* Dark mode section icons - wrapper has border, icon has color */
+@media (prefers-color-scheme: dark) {
+    .aicourse-card-icon-wrap {
+        border-color: #60a5fa;
+    }
+    
+    .aicourse-card-icon {
+        color: #60a5fa;
+    }
+    
+    .aicourse-card-icon-wrap.aicourse-icon-empty {
+        border-color: rgba(255, 255, 255, 0.2);
+        color: rgba(255, 255, 255, 0.3);
+    }
+}
+
+body.dark-mode .aicourse-card-icon-wrap {
+    border-color: #60a5fa;
+}
+
+body.dark-mode .aicourse-card-icon {
+    color: #60a5fa;
+}
+
+body.dark-mode .aicourse-card-icon-wrap.aicourse-icon-empty {
+    border-color: rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.3);
+}
+
+/* =============================================================
+   AI COURSE ASSISTANT CHATBOX
+   Premium SaaS-style floating chatbox
+   ============================================================= */
+/* AI Tutor button - distinctive gradient style to stand out */
+.aicourse-hero-ai-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
+    border: none;
+    border-radius: 10px;
+    color: #fff;
+    cursor: pointer;
+    transition: all 200ms ease;
+    flex-shrink: 0;
+    padding: 0;
+    box-shadow: 0 2px 8px rgba(139, 92, 246, 0.4);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Subtle shine animation */
+.aicourse-hero-ai-btn::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(
+        45deg,
+        transparent 40%,
+        rgba(255, 255, 255, 0.15) 50%,
+        transparent 60%
+    );
+    animation: ai-btn-shine 3s ease-in-out infinite;
+}
+
+@keyframes ai-btn-shine {
+    0% { transform: translateX(-100%) rotate(45deg); }
+    100% { transform: translateX(100%) rotate(45deg); }
+}
+
+.aicourse-hero-ai-btn:hover {
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #9333ea 100%);
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.5);
+}
+
+.aicourse-hero-ai-btn:active {
+    transform: scale(0.98);
+    box-shadow: 0 2px 6px rgba(139, 92, 246, 0.4);
+}
+
+/* Selected state when chatbox is open */
+.aicourse-hero-ai-btn.active,
+.aicourse-hero-ai-btn[aria-expanded="true"] {
+    background: linear-gradient(135deg, #4338ca 0%, #6d28d9 50%, #7e22ce 100%);
+    box-shadow: 0 4px 16px rgba(139, 92, 246, 0.6);
+}
+
+.aicourse-hero-ai-btn.active:hover,
+.aicourse-hero-ai-btn[aria-expanded="true"]:hover {
+    background: linear-gradient(135deg, #3730a3 0%, #5b21b6 50%, #6b21a8 100%);
+}
+
+/* SVG icon styling */
+.aicourse-hero-ai-btn svg {
+    width: 22px;
+    height: 22px;
+    stroke: #fff;
+    fill: none;
+    position: relative;
+    z-index: 1;
+}
+
+/* No special active state for AI button - user preference */
+
+/* AI Report button - for teachers */
+.aicourse-hero-report-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    background: rgba(16, 185, 129, 0.15);
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: #10b981;
+    text-decoration: none;
+}
+
+.aicourse-hero-report-btn:hover {
+    background: rgba(16, 185, 129, 0.25);
+    color: #10b981;
+}
+
+.aicourse-hero-report-btn:active {
+    background: rgba(16, 185, 129, 0.35);
+}
+
+.aicourse-hero-report-btn svg {
+    width: 24px;
+    height: 24px;
+    stroke: currentColor;
+}
+
+.aicourse-ai-chatbox {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 380px;
+    max-width: calc(100vw - 40px);
+    height: 500px;
+    max-height: calc(100vh - 100px);
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    z-index: 99999;
+    animation: aicourse-chatbox-slide-up 0.3s ease;
+}
+
+@keyframes aicourse-chatbox-slide-up {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.aicourse-ai-chatbox-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    color: #fff;
+}
+
+.aicourse-ai-chatbox-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+    font-size: 15px;
+}
+
+.aicourse-ai-chatbox-title svg {
+    opacity: 0.9;
+}
+
+.aicourse-ai-chatbox-close {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: #fff;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+
+.aicourse-ai-chatbox-close:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.aicourse-ai-chatbox-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    background: #f8fafc;
+}
+
+.aicourse-ai-message {
+    max-width: 85%;
+    animation: aicourse-msg-fade-in 0.2s ease;
+}
+
+@keyframes aicourse-msg-fade-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.aicourse-ai-message-user {
+    align-self: flex-end;
+}
+
+.aicourse-ai-message-bot {
+    align-self: flex-start;
+}
+
+.aicourse-ai-message-content {
+    padding: 12px 16px;
+    border-radius: 16px;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.aicourse-ai-message-user .aicourse-ai-message-content {
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    color: #fff;
+    border-bottom-right-radius: 4px;
+}
+
+.aicourse-ai-message-bot .aicourse-ai-message-content {
+    background: #fff;
+    color: #1e293b;
+    border: 1px solid #e2e8f0;
+    border-bottom-left-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.aicourse-ai-chatbox-input {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    padding: 12px 16px;
+    background: #fff;
+    border-top: 1px solid #e2e8f0;
+}
+
+.aicourse-ai-chatbox-input textarea {
+    flex: 1;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 14px;
+    resize: none;
+    max-height: 100px;
+    line-height: 1.4;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.aicourse-ai-chatbox-input textarea:focus {
+    border-color: #6366f1;
+}
+
+.aicourse-ai-send-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    flex-shrink: 0;
+}
+
+.aicourse-ai-send-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.aicourse-ai-send-btn:active {
+    transform: scale(0.95);
+}
+
+/* Loading dots animation */
+.aicourse-ai-dots {
+    display: inline-flex;
+    gap: 4px;
+}
+
+.aicourse-ai-dots span {
+    width: 8px;
+    height: 8px;
+    background: #6366f1;
+    border-radius: 50%;
+    animation: aicourse-dots-bounce 1.4s infinite ease-in-out both;
+}
+
+.aicourse-ai-dots span:nth-child(1) { animation-delay: -0.32s; }
+.aicourse-ai-dots span:nth-child(2) { animation-delay: -0.16s; }
+.aicourse-ai-dots span:nth-child(3) { animation-delay: 0s; }
+
+@keyframes aicourse-dots-bounce {
+    0%, 80%, 100% { transform: scale(0); }
+    40% { transform: scale(1); }
+}
+
+/* Quick action buttons */
+.aicourse-ai-quick-actions {
+    padding: 0 4px 8px 4px;
+}
+
+.aicourse-ai-quick-label {
+    font-size: 11px;
+    color: #64748b;
+    font-weight: 500;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.aicourse-ai-quick-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.aicourse-ai-quick-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 10px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #6366f1;
+    background: rgba(99, 102, 241, 0.08);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    border-radius: 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.aicourse-ai-quick-btn:hover {
+    background: rgba(99, 102, 241, 0.15);
+    border-color: rgba(99, 102, 241, 0.4);
+    transform: translateY(-1px);
+}
+
+.aicourse-ai-quick-btn:active {
+    transform: translateY(0);
+}
+
+.aicourse-ai-quick-btn svg {
+    flex-shrink: 0;
+    opacity: 0.8;
+}
+
+/* Dark mode quick actions */
+@media (prefers-color-scheme: dark) {
+    .aicourse-ai-quick-label {
+        color: #94a3b8;
+    }
+    
+    .aicourse-ai-quick-btn {
+        color: #a5b4fc;
+        background: rgba(99, 102, 241, 0.15);
+        border-color: rgba(99, 102, 241, 0.3);
+    }
+    
+    .aicourse-ai-quick-btn:hover {
+        background: rgba(99, 102, 241, 0.25);
+        border-color: rgba(99, 102, 241, 0.5);
+    }
+}
+
+body.dark-mode .aicourse-ai-quick-label {
+    color: #94a3b8;
+}
+
+body.dark-mode .aicourse-ai-quick-btn {
+    color: #a5b4fc;
+    background: rgba(99, 102, 241, 0.15);
+    border-color: rgba(99, 102, 241, 0.3);
+}
+
+body.dark-mode .aicourse-ai-quick-btn:hover {
+    background: rgba(99, 102, 241, 0.25);
+    border-color: rgba(99, 102, 241, 0.5);
+}
+
+/* Mobile responsive */
+@media (max-width: 480px) {
+    .aicourse-ai-chatbox {
+        bottom: 0;
+        right: 0;
+        width: 100%;
+        max-width: 100%;
+        height: 70vh;
+        border-radius: 16px 16px 0 0;
+    }
+    
+    .aicourse-ai-quick-buttons {
+        gap: 4px;
+    }
+    
+    .aicourse-ai-quick-btn {
+        padding: 5px 8px;
+        font-size: 11px;
+    }
+}
+
+/* Dark mode */
+@media (prefers-color-scheme: dark) {
+    .aicourse-ai-chatbox {
+        background: #1e293b;
+    }
+    
+    .aicourse-ai-chatbox-messages {
+        background: #0f172a;
+    }
+    
+    .aicourse-ai-message-bot .aicourse-ai-message-content {
+        background: #334155;
+        color: #f1f5f9;
+        border-color: #475569;
+    }
+    
+    .aicourse-ai-chatbox-input {
+        background: #1e293b;
+        border-color: #334155;
+    }
+    
+    .aicourse-ai-chatbox-input textarea {
+        background: #0f172a;
+        color: #f1f5f9;
+        border-color: #334155;
+    }
+    
+    .aicourse-ai-chatbox-input textarea::placeholder {
+        color: #64748b;
+    }
+}
+
+body.dark-mode .aicourse-ai-chatbox {
+    background: #1e293b;
+}
+
+body.dark-mode .aicourse-ai-chatbox-messages {
+    background: #0f172a;
+}
+
+body.dark-mode .aicourse-ai-message-bot .aicourse-ai-message-content {
+    background: #334155;
+    color: #f1f5f9;
+    border-color: #475569;
+}
+
+body.dark-mode .aicourse-ai-chatbox-input {
+    background: #1e293b;
+    border-color: #334155;
+}
+
+body.dark-mode .aicourse-ai-chatbox-input textarea {
+    background: #0f172a;
+    color: #f1f5f9;
+    border-color: #334155;
+}
+
+/* === EDIT MODE: Add right padding so timing badge doesn't overlap delete button === */
+body.editing .aicourse-card-header,
+body.editingon .aicourse-card-header,
+body.editing-mode .aicourse-card-header {
+    padding-right: 28px;
+}
+
+/* === HIDE COURSE INDEX (comprehensive Moodle 4.x/5.x selectors) === */
+body.aicourse-hideindex .drawer-left,
+body.aicourse-hideindex .drawer.drawer-left,
+body.aicourse-hideindex #theme_boost-drawers-courseindex,
+body.aicourse-hideindex [data-region="courseindex"],
+body.aicourse-hideindex #courseindex,
+body.aicourse-hideindex .courseindex,
+body.aicourse-hideindex .course-index,
+body.aicourse-hideindex .course-index-drawer,
+body.aicourse-hideindex aside[data-region="blocks-drawer"] .courseindex-section {
+    display: none !important;
+}
+
+/* Also hide the toggle button for the course index drawer */
+body.aicourse-hideindex [data-action="toggle-drawer"][data-targetid="theme_boost-drawers-courseindex"],
+body.aicourse-hideindex button[data-toggler="courseindex"] {
+    display: none !important;
+}
+
+/* =============================================================
+   AI TUTOR RATING BUTTONS
+   ============================================================= */
+.aicourse-ai-rating {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.aicourse-ai-rate-btn {
+    background: transparent;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    opacity: 0.7;
+}
+
+.aicourse-ai-rate-btn:hover {
+    opacity: 1;
+    transform: scale(1.1);
+    background: rgba(99, 102, 241, 0.1);
+    border-color: rgba(99, 102, 241, 0.3);
+}
+
+.aicourse-ai-rate-btn:active {
+    transform: scale(0.95);
+}
+
+.aicourse-ai-rating-done {
+    font-size: 12px;
+    color: #6366f1;
+    font-weight: 500;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+/* Dark mode rating */
+@media (prefers-color-scheme: dark) {
+    .aicourse-ai-rating {
+        border-top-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    .aicourse-ai-rate-btn {
+        border-color: rgba(255, 255, 255, 0.15);
+    }
+    
+    .aicourse-ai-rate-btn:hover {
+        background: rgba(99, 102, 241, 0.2);
+        border-color: rgba(99, 102, 241, 0.4);
+    }
+    
+    .aicourse-ai-rating-done {
+        color: #a5b4fc;
+        border-top-color: rgba(255, 255, 255, 0.1);
+    }
+}
+
+body.dark-mode .aicourse-ai-rating {
+    border-top-color: rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode .aicourse-ai-rate-btn {
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+body.dark-mode .aicourse-ai-rate-btn:hover {
+    background: rgba(99, 102, 241, 0.2);
+    border-color: rgba(99, 102, 241, 0.4);
+}
+
+body.dark-mode .aicourse-ai-rating-done {
+    color: #a5b4fc;
+    border-top-color: rgba(255, 255, 255, 0.1);
+}
+
+/* =============================================================
+   ADD SECTION CARD (edit mode only — dotted rectangle)
+   ============================================================= */
+/* UX-ACF-ADDSECTION: Add Section card — always displayed when in DOM.
+   PHP ($canedit gate) controls who gets this element. Old approach used
+   body.editing to reveal it, but edit mode removed the card view entirely
+   (UX-ACF-EDITMODE-WIPE), so the button was always hidden. Now editors
+   can add a section directly from the card view without toggling edit mode. */
+.aicourse-add-section-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    min-height: 140px;
+    background: transparent;
+    border: 2px dashed rgba(0, 0, 0, 0.18);
+    border-radius: 12px;
+    color: #9ca3af;
+    cursor: pointer;
+    padding: 24px 16px;
+    box-sizing: border-box;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    transition:
+        border-color 180ms ease,
+        color 180ms ease,
+        background 180ms ease;
+}
+
+.aicourse-add-section-card:hover {
+    border-color: var(--primary, #1a4b6e);
+    color: var(--primary, #1a4b6e);
+    background: rgba(var(--primary-rgb, 25, 72, 102), 0.04);
+}
+
+.aicourse-add-section-card:active {
+    transform: scale(0.97);
+    background: rgba(var(--primary-rgb, 25, 72, 102), 0.08);
+}
+
+.aicourse-add-section-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.55;
+    transition: opacity 180ms ease;
+}
+
+.aicourse-add-section-card:hover .aicourse-add-section-icon {
+    opacity: 1;
+}
+
+.aicourse-add-section-label {
+    line-height: 1.2;
+}
+
+.aicourse-add-section-card.aicourse-add-section-loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+/* =====================================================================
+   AI BANNER GENERATION MODAL
+   ===================================================================== */
+
+/* Overlay */
+.aicourse-bgen-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 100000;
+    background: rgba(0, 0, 0, 0.72);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+/* Card */
+.aicourse-bgen-card {
+    background: #1a1b2e;
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-radius: 14px;
+    width: 100%;
+    max-width: 460px;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.55), 0 4px 16px rgba(0, 0, 0, 0.4);
+    overflow: hidden;
+    color: #e8e9f0;
+    font-family: inherit;
+}
+
+/* Header */
+.aicourse-bgen-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 20px 22px 18px;
+    background: linear-gradient(135deg, #1e2040 0%, #252745 100%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    position: relative;
+}
+
+.aicourse-bgen-header-icon {
+    width: 46px;
+    height: 46px;
+    flex-shrink: 0;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #6c63ff 0%, #9b59b6 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+}
+
+.aicourse-bgen-header-text {
+    flex: 1;
+    min-width: 0;
+}
+
+.aicourse-bgen-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: #fff;
+    margin: 0 0 2px;
+    letter-spacing: -0.2px;
+}
+
+.aicourse-bgen-subtitle {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.55);
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 500;
+}
+
+.aicourse-bgen-close {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    background: rgba(255, 255, 255, 0.08);
+    border: none;
+    border-radius: 6px;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.6);
+    cursor: pointer;
+    transition: background 180ms ease, color 180ms ease;
+    padding: 0;
+}
+
+.aicourse-bgen-close:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+}
+
+/* Body */
+.aicourse-bgen-body {
+    padding: 22px;
+}
+
+/* Course name display */
+.aicourse-bgen-course-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: #a78bfa;
+    margin-bottom: 12px;
+    padding: 8px 12px;
+    background: rgba(167, 139, 250, 0.10);
+    border-radius: 7px;
+    border: 1px solid rgba(167, 139, 250, 0.18);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.aicourse-bgen-course-name::before {
+    content: "Course: ";
+    color: rgba(255, 255, 255, 0.45);
+    font-weight: 400;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+/* Description */
+.aicourse-bgen-desc {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.65);
+    line-height: 1.6;
+    margin: 0 0 18px;
+}
+
+/* Cost box */
+.aicourse-bgen-cost-box {
+    background: linear-gradient(135deg, rgba(108, 99, 255, 0.15) 0%, rgba(155, 89, 182, 0.15) 100%);
+    border: 1px solid rgba(108, 99, 255, 0.28);
+    border-radius: 9px;
+    padding: 14px 16px;
+    margin-bottom: 22px;
+    text-align: center;
+}
+
+.aicourse-bgen-cost-amount {
+    font-size: 22px;
+    font-weight: 800;
+    color: #a78bfa;
+    letter-spacing: -0.5px;
+    margin-bottom: 3px;
+}
+
+.aicourse-bgen-cost-detail {
+    font-size: 12.5px;
+    color: rgba(255, 255, 255, 0.50);
+}
+
+/* Actions row */
+.aicourse-bgen-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+.aicourse-bgen-btn {
+    padding: 9px 18px;
+    border-radius: 7px;
+    border: none;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 150ms ease, transform 100ms ease;
+    font-family: inherit;
+    line-height: 1;
+}
+
+.aicourse-bgen-btn:active {
+    transform: scale(0.97);
+}
+
+.aicourse-bgen-btn-cancel {
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.70);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+}
+
+.aicourse-bgen-btn-cancel:hover {
+    background: rgba(255, 255, 255, 0.13);
+    color: #fff;
+}
+
+.aicourse-bgen-btn-generate {
+    background: linear-gradient(135deg, #6c63ff 0%, #9b59b6 100%);
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.aicourse-bgen-btn-generate:hover {
+    opacity: 0.90;
+}
+
+.aicourse-bgen-btn-done {
+    background: linear-gradient(135deg, #27ae60 0%, #1e8449 100%);
+    color: #fff;
+    padding: 9px 26px;
+}
+
+.aicourse-bgen-btn-done:hover {
+    opacity: 0.90;
+}
+
+.aicourse-bgen-btn-retry {
+    background: linear-gradient(135deg, #6c63ff 0%, #9b59b6 100%);
+    color: #fff;
+}
+
+/* Loading state */
+.aicourse-bgen-state-center {
+    text-align: center;
+    padding: 10px 0 8px;
+}
+
+.aicourse-bgen-spinner {
+    width: 44px;
+    height: 44px;
+    margin: 0 auto 16px;
+    border: 3.5px solid rgba(255, 255, 255, 0.10);
+    border-top-color: #a78bfa;
+    border-radius: 50%;
+    animation: aicourse-bgen-spin 0.8s linear infinite;
+}
+
+@keyframes aicourse-bgen-spin {
+    to { transform: rotate(360deg); }
+}
+
+.aicourse-bgen-loading-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #e8e9f0;
+    margin: 0 0 8px;
+}
+
+.aicourse-bgen-loading-sub {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.50);
+    line-height: 1.6;
+    margin: 0;
+}
+
+/* Success state */
+.aicourse-bgen-preview-wrap {
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 16px;
+    background: rgba(255, 255, 255, 0.05);
+    line-height: 0;
+}
+
+.aicourse-bgen-preview-img {
+    width: 100%;
+    height: 100px;
+    object-fit: cover;
+    display: block;
+    border-radius: 8px;
+}
+
+.aicourse-bgen-preview-badge {
+    position: absolute;
+    bottom: 8px;
+    left: 8px;
+    background: rgba(39, 174, 96, 0.92);
+    color: #fff;
+    font-size: 11.5px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 20px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    backdrop-filter: blur(4px);
+}
+
+.aicourse-bgen-success-msg {
+    font-size: 13.5px;
+    color: rgba(255, 255, 255, 0.60);
+    line-height: 1.55;
+    margin: 0 0 18px;
+}
+
+/* Error state */
+.aicourse-bgen-error-icon {
+    margin-bottom: 12px;
+    color: #e74c3c;
+}
+
+.aicourse-bgen-error-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #e8e9f0;
+    margin: 0 0 8px;
+}
+
+.aicourse-bgen-error-msg {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.55);
+    line-height: 1.6;
+    margin: 0 0 18px;
+}
+
+/* ── Delete Banner Confirmation Modal ──────────────────────────────────── */
+
+.aicourse-bdel-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 99999;
+    padding: 20px;
+}
+
+.aicourse-bdel-card {
+    background: #1e1e2e;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 32px 28px 24px;
+    max-width: 400px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5);
+}
+
+.aicourse-bdel-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: rgba(239, 68, 68, 0.15);
+    color: #f87171;
+    margin: 0 auto 16px;
+}
+
+.aicourse-bdel-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #fff;
+    margin: 0 0 10px;
+    line-height: 1.3;
+}
+
+.aicourse-bdel-desc {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.6);
+    line-height: 1.6;
+    margin: 0 0 20px;
+}
+
+.aicourse-bdel-errmsg {
+    font-size: 13px;
+    color: #f87171;
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: 8px;
+    padding: 8px 12px;
+    margin: 0 0 16px;
+    text-align: left;
+}
+
+.aicourse-bdel-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.aicourse-bdel-btn-confirm {
+    background: #ef4444 !important;
+    border-color: #ef4444 !important;
+    color: #fff !important;
+    flex: 1;
+}
+
+.aicourse-bdel-btn-confirm:hover {
+    background: #dc2626 !important;
+    border-color: #dc2626 !important;
+}
+
+.aicourse-bdel-btn-confirm:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Trash icon button — subtle red tint on hover to signal destructive action */
+.aicourse-hero-ai-btn.aicourse-ai-delete-banner:hover {
+    color: #f87171;
+}
+
+/* ===== Section description on section cards (v1.7.41) ===== */
+.aicourse-card-summary {
+    margin: 0 16px 12px;
+    font-size: 0.8rem;
+    line-height: 1.5;
+    color: var(--aicourse-text-secondary, #6b7280);
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+body.dark-mode .aicourse-card-summary {
+    color: #9ca3af;
+}
+
+/* ===== Section description on section activity page (v1.7.41) ===== */
+.format-aicourse-section-summary {
+    padding: 14px 20px;
+    font-size: 0.95rem;
+    line-height: 1.65;
+    color: var(--bs-body-color, #374151);
+}
+.format-aicourse-section-summary p:last-child {
+    margin-bottom: 0;
+}
+body.dark-mode .format-aicourse-section-summary {
+    color: #d1d5db;
+}
