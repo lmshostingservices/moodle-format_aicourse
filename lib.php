@@ -1,4 +1,19 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot . '/course/lib.php');
@@ -6,12 +21,14 @@ require_once($CFG->dirroot . '/course/format/topics/lib.php');
 require_once($CFG->libdir . '/completionlib.php');
 
 class format_aicourse extends format_topics {
-
     /**
      * Called on EVERY page where this course format is relevant.
      * Only adds body classes - hero injection is handled separately via CSS + JS.
      * Kept minimal to avoid PHP fatal errors from function calls too early.
-     */
+ * @package    format_aicourse
+ * @copyright  2026 LMS-Labs
+ * @license    http://www.gnu.org/licenses/gpl-3.0.html GNU GPL v3 or later
+ */
     public function page_set_course(\moodle_page $page) {
         parent::page_set_course($page);
         
@@ -2307,7 +2324,7 @@ function format_aicourse_render_ai_chatbox_script($course) {
     }
     
     $script = '<script>
-(function() {
+(function () {
     var chatbox = document.getElementById("aicourse-ai-chatbox");
     var closeBtn = document.getElementById("aicourse-ai-close");
     var sendBtn = document.getElementById("aicourse-ai-send");
@@ -2356,7 +2373,7 @@ function format_aicourse_render_ai_chatbox_script($course) {
         var history = loadChatHistory();
         if (history.length > 0) {
             isFirstMessage = false; // Not first message if we have history
-            history.forEach(function(msg) {
+            history.forEach(function (msg) {
                 addMessageFromHistory(msg.content, msg.isUser, msg.chatid);
             });
             hideQuickActions();
@@ -2396,8 +2413,8 @@ function format_aicourse_render_ai_chatbox_script($course) {
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
             body: body
         })
-        .then(function(r) { return r.json(); })
-        .then(function(data) {
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
             if (data.success && data.context) {
                 window.AICOURSE_ACTIVITY_CONTEXT = data.context;
                 console.log("[AI Tutor] Activity context loaded:", data.context.type, data.context.questions?.length || 0, "questions");
@@ -2423,7 +2440,7 @@ function format_aicourse_render_ai_chatbox_script($course) {
                 updateWelcomeMessage();
             }
         })
-        .catch(function(e) {
+        .catch(function (e) {
             console.warn("[AI Tutor] Failed to fetch activity context:", e);
         });
     }
@@ -2480,9 +2497,9 @@ function format_aicourse_render_ai_chatbox_script($course) {
         updateQuizContext();
         
         // Update when navigating between questions (standard quiz)
-        document.addEventListener("click", function(e) {
+        document.addEventListener("click", function (e) {
             if (e.target.closest(".qnbutton")) {
-                setTimeout(function() {
+                setTimeout(function () {
                     updateQuizContext();
                     var slot = document.querySelector(".qnbutton.current")?.getAttribute("data-slot");
                     if (slot) fetchActivityContext(slot);
@@ -2518,7 +2535,7 @@ function format_aicourse_render_ai_chatbox_script($course) {
     
     function updateButtonState(isOpen) {
         var btns = document.querySelectorAll(".aicourse-hero-ai-btn");
-        btns.forEach(function(btn) {
+        btns.forEach(function (btn) {
             if (isOpen) {
                 btn.classList.add("active");
                 btn.setAttribute("aria-expanded", "true");
@@ -2550,7 +2567,7 @@ function format_aicourse_render_ai_chatbox_script($course) {
     }
     
     // Use event delegation for dynamically injected elements
-    document.addEventListener("click", function(e) {
+    document.addEventListener("click", function (e) {
         // Toggle chatbox on AI button click
         var toggleTarget = e.target.closest(".aicourse-ai-toggle, .aicourse-hero-ai-btn");
         if (toggleTarget && !e.target.closest(".aicourse-ai-chatbox-close")) {
@@ -2660,7 +2677,7 @@ function format_aicourse_render_ai_chatbox_script($course) {
         
         // Add all questions from activity context (fetched from server)
         if (window.AICOURSE_ACTIVITY_CONTEXT && window.AICOURSE_ACTIVITY_CONTEXT.questions && window.AICOURSE_ACTIVITY_CONTEXT.questions.length > 0) {
-            var allQuestions = window.AICOURSE_ACTIVITY_CONTEXT.questions.map(function(q) {
+            var allQuestions = window.AICOURSE_ACTIVITY_CONTEXT.questions.map(function (q) {
                 return "Q" + q.slot + ": " + q.text.substring(0, 200);
             }).join(" | ");
             body += "&allquestions=" + encodeURIComponent(allQuestions);
@@ -2671,10 +2688,10 @@ function format_aicourse_render_ai_chatbox_script($course) {
             headers: {"Content-Type": "application/x-www-form-urlencoded"},
             body: body
         })
-        .then(function(r) {
+        .then(function (r) {
             return r.json();
         })
-        .then(function(data) {
+        .then(function (data) {
             hideLoading();
             isLoading = false;
             if (data.success) {
@@ -2683,7 +2700,7 @@ function format_aicourse_render_ai_chatbox_script($course) {
                 addMessage(data.error || "' . get_string('aiassistant_error', 'format_aicourse') . '", false);
             }
         })
-        .catch(function(err) {
+        .catch(function (err) {
             hideLoading();
             isLoading = false;
             addMessage("' . get_string('aiassistant_error', 'format_aicourse') . '", false);
@@ -2691,7 +2708,7 @@ function format_aicourse_render_ai_chatbox_script($course) {
     }
     
     // Use event delegation for send button click
-    document.addEventListener("click", function(e) {
+    document.addEventListener("click", function (e) {
         var sendTarget = e.target.closest("#aicourse-ai-send, .aicourse-ai-send-btn");
         if (sendTarget) {
             e.preventDefault();
@@ -2700,7 +2717,7 @@ function format_aicourse_render_ai_chatbox_script($course) {
     });
     
     // Use event delegation for keydown on input
-    document.addEventListener("keydown", function(e) {
+    document.addEventListener("keydown", function (e) {
         if (e.target && e.target.id === "aicourse-ai-input") {
             if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
@@ -2710,7 +2727,7 @@ function format_aicourse_render_ai_chatbox_script($course) {
     });
     
     // Use event delegation for auto-resize on input
-    document.addEventListener("input", function(e) {
+    document.addEventListener("input", function (e) {
         if (e.target && e.target.id === "aicourse-ai-input") {
             e.target.style.height = "auto";
             e.target.style.height = Math.min(e.target.scrollHeight, 100) + "px";
@@ -2718,7 +2735,7 @@ function format_aicourse_render_ai_chatbox_script($course) {
     });
     
     // Handle rating button clicks
-    document.addEventListener("click", function(e) {
+    document.addEventListener("click", function (e) {
         var rateBtn = e.target.closest(".aicourse-ai-rate-btn");
         if (!rateBtn) return;
         
