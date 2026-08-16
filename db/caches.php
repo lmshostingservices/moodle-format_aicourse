@@ -18,12 +18,21 @@
  * Cache definitions for format_aicourse.
  *
  * coursecontent: Caches the full course content array built by
- * format_aicourse_get_course_content_for_ai(). Keyed by "courseid_userid".
- * TTL 10 minutes — invalidated on course/module updates via
- * format_aicourse_course_updated() hook.
+ * \format_aicourse\local\contentindex::get_course_content_for_ai(), which is what the AI Tutor answers from.
+ * Keyed by "courseid_userid", because the content is filtered by what the given user is
+ * allowed to see.
+ *
+ * TTL is 10 minutes. In addition, the whole definition is purged by the event observers
+ * registered in db/events.php whenever a module or section is created, updated or deleted,
+ * or the course itself is updated, so the tutor never answers from content that no longer
+ * matches the course. See \format_aicourse\observer.
+ *
+ * The purge is definition wide rather than per course: the MUC application store cannot
+ * enumerate or pattern match keys, so a targeted delete would require a key index maintained
+ * on the write side in lib.php.
  *
  * @package    format_aicourse
- * @copyright  2026 Essay Grader AI
+ * @copyright  2026 LMS-Labs
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 

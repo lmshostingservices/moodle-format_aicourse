@@ -1,0 +1,90 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template format_aicourse/chatbox
+
+    The AI Tutor chat panel. Rendered once per page inside the hero banner and hidden until the
+    AI Tutor button in the hero is pressed.
+
+    It is an ARIA dialog: role="dialog" aria-modal="true" and aria-labelledby pointing at its own
+    title. The message list is a role="log" aria-live="polite" region so replies, errors and the
+    "Thinking…" state are announced, and it carries dir="auto" so a reply in a different script
+    keeps its base direction. Opening, closing, the Tab focus trap, Escape and focus restoration
+    are provided by format_aicourse/chatbox. Every SVG in here is decorative and therefore carries
+    aria-hidden="true" focusable="false"; the icon-only close and send buttons have aria-labels.
+
+    Classes required for JS:
+    * aicourse-ai-chatbox - the panel root; shown/hidden by format_aicourse/chatbox.
+    * aicourse-ai-chatbox-close - closes the panel.
+    * aicourse-ai-quick-btn - fills the textarea with a canned prompt and sends it.
+    * aicourse-ai-send-btn - sends the current textarea contents.
+    * aicourse-ai-message, aicourse-ai-message-bot, aicourse-ai-message-content - matched by
+      format_aicourse/chatbox when it updates the welcome message.
+
+    Data attributes required for JS:
+    * data-prompt - on each quick action button, the key of the canned prompt to send. One of
+      structure, concepts, workplace, practice, checklist.
+
+    Element ids required for JS:
+    * aicourse-ai-chatbox, aicourse-ai-close, aicourse-ai-messages, aicourse-ai-welcome,
+      aicourse-ai-quick-actions, aicourse-ai-input, aicourse-ai-send.
+
+    Context variables required for this template:
+    * closelabel string Accessible name of the close button.
+    * inputlabel string Visually hidden label of the question textarea.
+    * placeholder string Placeholder of the question textarea.
+    * sendlabel string Accessible name and tooltip of the send button.
+    * welcome string PRE-ESCAPED greeting. It is the aiassistant_welcome_name /
+      aiassistant_welcome_section / aiassistant_welcome_activity language string, which
+      legitimately contains <strong>, resolved with $a values that have already been through
+      format_string(). It is therefore rendered with a triple mustache.
+
+    Example context (json):
+    {
+        "closelabel": "Close",
+        "inputlabel": "Your question for the AI Tutor",
+        "placeholder": "Ask a question about the course...",
+        "sendlabel": "Send message",
+        "welcome": "Hi Sam! I see you're working on <strong>Week 1 quiz</strong>. What would you like help with?"
+    }
+}}
+<div id="aicourse-ai-chatbox" class="aicourse-ai-chatbox" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="aicourse-ai-chatbox-title">
+<div class="aicourse-ai-chatbox-header">
+<div class="aicourse-ai-chatbox-title" id="aicourse-ai-chatbox-title"><svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="m9 15 2 2 4-4"/></svg><span>{{#str}} aiassistant, format_aicourse {{/str}}</span></div>
+<button type="button" class="aicourse-ai-chatbox-close" id="aicourse-ai-close" aria-label="{{closelabel}}"><span aria-hidden="true">&times;</span></button>
+</div>
+<div class="aicourse-ai-chatbox-messages" id="aicourse-ai-messages" role="log" aria-live="polite" aria-relevant="additions" dir="auto">
+<div class="aicourse-ai-message aicourse-ai-message-bot" id="aicourse-ai-welcome">
+<div class="aicourse-ai-message-content">{{{welcome}}}</div>
+</div>
+<div class="aicourse-ai-quick-actions" id="aicourse-ai-quick-actions">
+<div class="aicourse-ai-quick-label">{{#str}} aiassistant_quick_label, format_aicourse {{/str}}</div>
+<div class="aicourse-ai-quick-buttons">
+<button type="button" class="aicourse-ai-quick-btn" data-prompt="structure"><svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18M3 12h18"/></svg>{{#str}} aiassistant_quick_structure, format_aicourse {{/str}}</button>
+<button type="button" class="aicourse-ai-quick-btn" data-prompt="concepts"><svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>{{#str}} aiassistant_quick_concepts, format_aicourse {{/str}}</button>
+<button type="button" class="aicourse-ai-quick-btn" data-prompt="workplace"><svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7h-9M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/></svg>{{#str}} aiassistant_quick_workplace, format_aicourse {{/str}}</button>
+<button type="button" class="aicourse-ai-quick-btn" data-prompt="practice"><svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>{{#str}} aiassistant_quick_practice, format_aicourse {{/str}}</button>
+<button type="button" class="aicourse-ai-quick-btn" data-prompt="checklist"><svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="m9 14 2 2 4-4"/></svg>{{#str}} aiassistant_quick_checklist, format_aicourse {{/str}}</button>
+</div>
+</div>
+</div>
+<div class="aicourse-ai-chatbox-input">
+<label class="accesshide" for="aicourse-ai-input">{{inputlabel}}</label>
+<textarea id="aicourse-ai-input" dir="auto" rows="1" placeholder="{{placeholder}}"></textarea>
+<button type="button" id="aicourse-ai-send" class="aicourse-ai-send-btn" aria-label="{{sendlabel}}" title="{{sendlabel}}"><svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg></button>
+</div>
+</div>

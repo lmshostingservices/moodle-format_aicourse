@@ -15,19 +15,24 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * format_aicourse file.
+ * Version details for the AI Course Format.
  *
  * @package    format_aicourse
  * @copyright  2026 LMS-Labs
- * @license    http://www.gnu.org/licenses/gpl-3.0.html GNU GPL v3 or later
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component    = 'format_aicourse';
-$plugin->version   = 2026072300;
-$plugin->requires     = 2022041900;
-$plugin->supported    = [400, 500];
+$plugin->version      = 2026081702;
+// Moodle 4.4 (2024042200) is the true minimum: db/hooks.php registers a callback for
+// \core\hook\output\before_standard_footer_html_generation, which was only introduced in
+// Moodle 4.4 (see lib/upgrade.txt, "=== 4.4 ==="). The plugin's hero banner and AI Tutor
+// injection depend entirely on that hook. \core_external\external_api (used in lib.php)
+// arrived earlier, in Moodle 4.2, so 4.4 covers it as well.
+$plugin->requires     = 2024042200;
+$plugin->supported    = [404, 500];
 $plugin->maturity     = MATURITY_STABLE;
-$plugin->release      = '1.7.74'; // FIX-ACF-EDITMODE (v1.7.70): Gate section card edit controls (rename/duplicate/delete buttons, icon picker, add-section card) by $PAGE->user_is_editing() in addition to capability check. Edit mode OFF now shows exactly the student view (banner + cards, no edit UI). Edit mode ON restores all edit controls. The card layout itself always renders (preserving the UX-ACF-EDITMODE-WIPE fix). Moodle 4.4 specific issue — Moodle 5 was already working correctly. // SAVEPOINT-BUMP v1.7.67: no-op savepoint marker for clean upgrade path. No DB schema changes.; // v1.7.66: FORCE-UPGRADE — version bump to force Moodle to re-register the plugin at the correct directory path (course/format/aicourse/), resolving err_unexpected_plugin_rootdir on uninstall. No code or DB changes. // v1.7.65: CARDS-ALIGN — Removed padding: 0 var(--aicourse-gutter) and max-width/margin centering from both .aicourse-cards-container and .aicourse-activity-cards-container. Same gutter-indent issue as the hero wrapper (v1.7.63) — the 22px horizontal padding on each side was pushing section cards and activity cards away from both edges. Both containers now fill the natural width of their parent. CSS-only. No PHP/AMD/DB changes. No savepoint required. // FIX-CAP-VIEWALL (v1.7.64): Replaced invalid capability string 'grade/report:viewall' with correct 'moodle/grade:viewall' in all three has_capability() calls in lib.php. PHP-only. No CSS/AMD/DB changes. No savepoint required.
+$plugin->release      = '2.1.4';
 $plugin->dependencies = [];

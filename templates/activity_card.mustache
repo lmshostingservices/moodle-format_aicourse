@@ -1,0 +1,78 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template format_aicourse/activity_card
+
+    A single card in the activity grid. Two shapes share the same wrapper: a normal activity, which
+    shows the module icon and a completion status badge, and a mod_subsection card, which shows an
+    inline list glyph and navigates to the delegated child section.
+
+    Completion status is never conveyed by colour alone: the link's accessible name repeats the
+    status in words, and the badge shows it as visible text. The module icon and the badge tick are
+    decorative and carry aria-hidden="true" focusable="false" (the <img> also has an empty alt).
+
+    Classes required for JS:
+    * aicourse-activity-card
+
+    Data attributes required for JS:
+    * data-cmid - read by amd/src/courseformat.js.
+    * data-for="cmitem" and data-id - the attributes core_courseformat's reactive state manager
+      binds to so activity move/visibility mutations can update the card.
+
+    Context variables required for this template:
+    * issubsection bool True when this card links to a delegated mod_subsection section.
+    * cmid int Course module ID.
+    * url string Unescaped target URL.
+    * status string Completion status slug: completed, in_progress or not_started.
+    * haslabel bool True when the link should carry an aria-label.
+    * cardlabel string Accessible name of the link, combining activity name and status.
+    * iconurl string Unescaped module icon URL; unused for a subsection card.
+    * name string PRE-ESCAPED activity or section name (already through format_string()); rendered
+      with a triple mustache so the entities format_string() produced are not escaped twice.
+    * typename string Localised module type label.
+    * iscompleted bool True when the tick should be drawn in the status badge.
+    * statuslabel string Localised completion status; unused for a subsection card.
+    * badgeclass string CSS class of the status badge; unused for a subsection card.
+
+    Example context (json):
+    {
+        "issubsection": false,
+        "cmid": 12,
+        "url": "https://example.org/mod/page/view.php?id=12",
+        "status": "completed",
+        "haslabel": true,
+        "cardlabel": "What is machine learning? (Completed)",
+        "iconurl": "https://example.org/theme/image.php/boost/page/1/monologo",
+        "name": "What is machine learning?",
+        "typename": "Page",
+        "iscompleted": true,
+        "statuslabel": "Completed",
+        "badgeclass": "aicourse-status-badge-completed"
+    }
+}}
+<a href="{{url}}" class="aicourse-activity-card aicourse-activity-status-{{status}}" data-cmid="{{cmid}}"{{#haslabel}} aria-label="{{cardlabel}}"{{/haslabel}} data-for="cmitem" data-id="{{cmid}}">
+<div class="aicourse-activity-card-icon">{{#issubsection}}<svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/><path d="M14 4h7"/><path d="M14 9h7"/><path d="M14 15h7"/><path d="M14 20h7"/></svg>{{/issubsection}}{{^issubsection}}<img src="{{iconurl}}" alt="" aria-hidden="true" />{{/issubsection}}</div>
+<div class="aicourse-activity-card-body">
+<h3 class="aicourse-activity-card-name">{{{name}}}</h3>
+<div class="aicourse-activity-card-footer">
+<span class="aicourse-activity-card-type">{{typename}}</span>
+{{^issubsection}}
+<span class="aicourse-status-badge {{badgeclass}}">{{#iscompleted}}<svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>{{/iscompleted}}{{statuslabel}}</span>
+{{/issubsection}}
+</div>
+</div>
+</a>

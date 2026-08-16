@@ -1,3 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  This plugin bundles no third party libraries.
+
+  amd/build/courseformat.min.js and its source map are the compiled output of the plugin's
+  own amd/src/courseformat.js and are not third party code. All icons are inline SVG authored
+  for this plugin, all styles are in the plugin's own styles.css, and nothing is loaded from a
+  CDN at runtime. This file is therefore intentionally empty.
+-->
 <libraries>
 </libraries>

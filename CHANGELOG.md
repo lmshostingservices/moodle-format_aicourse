@@ -2,6 +2,143 @@
 
 All notable changes to this plugin will be documented in this file.
 
+## [2.1.2] - 2026-08-16
+
+### Added
+
+- **"Show activities on cards" course setting.** A new course-level format option,
+  `showactivitiesoncards`, **off by default**. With it off the section cards render exactly as
+  before — the template emits no extra markup at all, so a default course is unchanged to the
+  pixel. With it on, each section card lists that section's activities beneath the summary: one
+  compact row per activity carrying the activity name and its completion state, capped at four
+  with a `+N` overflow link into the section, following the `+N` idiom the card's progress dots
+  already use. The list is a real `<ul>`; each link's accessible name carries the activity name,
+  the section name (so the link on one card is distinguishable from the identically-named link on
+  the next) and the completion state, and the state marker differs in shape as well as colour.
+  Visibility uses the same predicate as the rest of the plugin —
+  `activityinfo::cm_counts_as_content()` plus `$cm->uservisible` — so a learner can never see an
+  activity here that they cannot see elsewhere. The footer stays pinned by
+  `margin-block-start: auto`, so cards in a row still end level.
+- **Per-course override for sharing assessment answers with the AI Tutor.** The site setting
+  `format_aicourse/shareassessmentanswers` becomes a three-value select whose stored values are
+  unchanged, so no site's behaviour changes on upgrade: `0` = never share (still the default),
+  `1` = always share in every course (what a site that ticked the old checkbox holds), `2` = let
+  each course decide. A new course-level option, also `shareassessmentanswers` and defaulting to
+  no, is consulted only in state `2`. **The site setting is the ceiling** — a course can never opt
+  into something the site has not permitted, and the check lives in exactly one place,
+  `contentindex::may_share_assessment_answers()`, which now takes the course id. Callers with no
+  course in hand get the safe answer: do not share. The AI index cache key carries the EFFECTIVE
+  resolved value, so two courses with different per-course settings can never be served each
+  other's index, and turning sharing off can never keep serving an answer-bearing one.
+
+### Fixed
+
+- The course settings form emitted a developer-level debugging message because
+  `bannerimage_help` was never defined, although `create_edit_form_elements()` asked for it.
+
+## [2.0.0] - 2026-08-15
+
+The first release prepared against the Moodle Plugins Directory approval checklist. This is a
+large release: it fixes a headline rendering bug, closes three security issues, replaces a
+false privacy declaration with a real one, and completes accessibility, internationalisation
+and visual-design passes across the whole plugin.
+
+**Minimum Moodle version raised to 4.4** (`$plugin->requires = 2024042200`). The plugin
+registers a callback for `\core\hook\output\before_standard_footer_html_generation`, which was
+introduced in Moodle 4.4; the previously declared minimum of 4.0 was never actually supported.
+`$plugin->supported` is now `[404, 500]`.
+
+`$plugin->release` is now a plain semantic version. The release history that had accumulated
+inside that string has been moved into this file, where it belongs.
+
+### Fixed
+
+- **General section no longer disappears from the course home page.** A General section (section
+  0) containing only a label, or a label plus activities, rendered as empty. The General section
+  and all of its activities, labels included, now always render inline above the section cards.
+  Covered by a Behat regression test in `tests/behat/course_cards.feature`.
+
+### Security
+
+- **Course AI Tutor report access control.** `report.php` did not enforce a capability, so any
+  user who could guess the URL could read every question every student in the course had asked.
+  It now requires `format/aicourse:viewreport` in the course context. That capability is
+  declared with `RISK_PERSONAL`.
+- **Answer-key leakage.** The activity-context endpoint returned quiz question data including
+  correct answers to any caller. Access is now checked against the calling user's visibility of
+  the activity before any question data is returned.
+- **Chat-correction forgery.** The `correctchat` action accepted any chat id in the course and
+  wrote the caller's id into `correctedby` without a capability check appropriate to the action.
+  Correction is now a distinct, auditable operation, and a new `format/aicourse:correctresponses`
+  capability (`RISK_XSS | RISK_PERSONAL`) exists to govern it.
+- **Debug endpoint removed.** `diag.php`, an unauthenticated diagnostic dump, has been deleted
+  from the plugin.
+
+### Added
+
+- **Real privacy provider.** `\format_aicourse\privacy\provider` previously implemented
+  `null_provider` and the lang pack claimed the plugin stored no personal data. Both were false.
+  It now implements `metadata\provider`, `request\plugin\provider` and
+  `request\core_userlist_provider`, declaring both database tables field by field and declaring
+  the outbound transfer to lms-labs.com via `add_external_location_link()`. Export, per-user
+  delete, per-context delete and bulk user delete are all implemented against the course context.
+  Where a user appears only as the author of a correction on another user's row, the row is kept
+  and the `correctedby` / `timecorrected` attribution is nulled instead.
+- **Cache invalidation that actually runs.** `db/caches.php` claimed the `coursecontent` cache
+  was invalidated by a `format_aicourse_course_updated()` hook that did not exist, so the AI
+  Tutor could answer from content up to ten minutes stale with no way to refresh it. A new
+  `db/events.php` registers `\format_aicourse\observer` against `course_module_created`,
+  `course_module_updated`, `course_module_deleted`, `course_section_updated`, `course_updated`
+  and `course_deleted`, and the cache is now purged whenever course content changes.
+- **Course deletion cleanup.** Deleting a course now removes its rows from
+  `format_aicourse_chats` and `format_aicourse_ai_memory`, which previously survived the course.
+- **New capabilities.** `format/aicourse:useaitutor` (`RISK_PERSONAL`) makes it possible to stop
+  a role from sending data to the external AI service, and `format/aicourse:correctresponses`
+  governs writing a correction onto another user's response. `format/aicourse:viewreport` gained
+  `RISK_PERSONAL`.
+- **Database indexes.** `courseid_userid_idx` and `courseid_timecreated_idx` on
+  `format_aicourse_chats`, matching how the reports and the privacy provider actually query it,
+  plus a foreign key on `correctedby`. `db/upgrade.php`, which previously did nothing, now
+  applies them, and repairs the tables on sites where an early release created them at runtime
+  instead of from `install.xml`.
+- **Documentation.** A real `README.md` covering features, requirements, both installation
+  routes, every site setting and course option, the external-service disclosure, the privacy and
+  GDPR position, and an accessibility statement. `LICENSE` now contains the full GPLv3 text
+  rather than an eleven-line summary.
+- **Test suite.** `tests/privacy/provider_test.php` covers metadata, context discovery, export
+  and all three deletion paths. `tests/format_aicourse_test.php` covers the section icon
+  get/set round trip. `tests/behat/course_cards.feature` covers the General section regression,
+  section card rendering, and edit controls appearing only in edit mode.
+
+### Changed
+
+- **Full accessibility pass (WCAG 2.1 AA).** The section icon picker trigger and the card action
+  controls are real buttons with accessible names and keyboard activation; the chat send button
+  has an accessible name; completion status is no longer conveyed by colour alone and is carried
+  in the accessible name of each activity number; progress rings expose `role="progressbar"` with
+  correct ARIA values matching the visible text; navigation chevrons and the return link name
+  their destination; decorative SVGs are `aria-hidden` and out of the tab order; the section grid
+  is a labelled region; focus is moved to a sensible neighbour after a card is deleted.
+- **Complete visual redesign.** Reworked section and activity cards, hero banner, chat panel,
+  icon picker and reports, with a consistent design-token set, a proper dark-mode variant, and
+  contrast meeting 4.5:1 for text and 3:1 for UI components throughout.
+- **Internationalisation pass.** Every user-visible string in `lib.php`, `ajax.php`, `report.php`,
+  `admin_report.php` and `amd/src/courseformat.js` now comes from the language pack: the AI
+  banner and remove-banner modals, all AJAX error messages, the CSV export headers and values,
+  icon and category labels, hero button tooltips and the chat welcome messages. Sentences built
+  by concatenation (section numbers, estimated time, activity counts, grade fractions,
+  percentages, "return to section") are now single strings with placeholders, so word order is
+  translatable. Byte-based `substr`/`strlen`/`strtoupper`/`ucfirst` on user text replaced with
+  `core_text` equivalents. Dates now use `core_langconfig` strftime strings and `userdate()`
+  rather than server-timezone `date()`. Names are rendered with `fullname()`.
+- **Language file rebuilt.** Sorted alphabetically per the Moodle coding style, with the standard
+  header, and with the false `privacy:metadata` string removed and replaced by a full set of
+  `privacy:metadata:*` declarations.
+- `db/caches.php` documentation corrected to describe what the cache actually does and how it is
+  actually invalidated.
+- `thirdpartylibs.xml` verified: the plugin bundles no third-party code, and the file now records
+  that explicitly.
+
 ## [1.7.47] - 2026-04-28
 
 ### Fixed

@@ -15,11 +15,14 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * format_aicourse file.
+ * Hook callbacks for the AI Course Format.
+ *
+ * Requires Moodle 4.4 or later: \core\hook\output\before_standard_footer_html_generation
+ * was introduced in 4.4 as the replacement for the deprecated standard_footer_html() callback.
  *
  * @package    format_aicourse
  * @copyright  2026 LMS-Labs
- * @license    http://www.gnu.org/licenses/gpl-3.0.html GNU GPL v3 or later
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();

@@ -1,0 +1,66 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template format_aicourse/chatbox_message
+
+    One bubble in the AI Tutor conversation: either the learner's question or the tutor's answer.
+    Rendered client-side by format_aicourse/chatbox and appended to the role="log" message list, so
+    every bubble is announced as it arrives.
+
+    SECURITY: `content` is either what the learner typed, something replayed out of sessionStorage
+    or the raw answer returned by the third-party AI service. It is NEVER trusted and is always
+    rendered with a double mustache, so any markup in it is escaped to text. There is no
+    triple-mustache value in this template.
+
+    The bubble carries dir="auto" so an answer in a different script keeps its base direction. The
+    thumb glyphs on the rating buttons are decorative, so each button carries an explicit
+    aria-label as well as a title.
+
+    Classes required for JS:
+    * aicourse-ai-rating - the rating control; format_aicourse/chatbox reads data-chatid from it
+      and replaces its contents with a thank-you once a rating has been sent.
+    * aicourse-ai-rate-btn - a rating button.
+
+    Data attributes required for JS:
+    * data-chatid - on .aicourse-ai-rating, the id of the stored chat message being rated.
+    * data-rate - on each rating button, 1 for helpful and -1 for not helpful.
+
+    Context variables required for this template:
+    * content string The message text. Untrusted; always escaped.
+    * isuser bool True for the learner's own message, false for a tutor answer.
+    * rateable bool True when thumbs up / thumbs down should be offered. Only ever true for a
+      tutor answer that has a chatid.
+    * chatid string The id used when submitting a rating. Only used when rateable is true.
+    * helpfullabel string Accessible name and tooltip of the thumbs up button.
+    * nothelpfullabel string Accessible name and tooltip of the thumbs down button.
+    * restored bool True when this bubble was replayed from the stored conversation, in which case
+      a "restored" note replaces the rating buttons.
+    * restoredlabel string The "restored from history" note. Only used when restored is true.
+
+    Example context (json):
+    {
+        "content": "Start by summarising the brief in your own words.",
+        "isuser": false,
+        "rateable": true,
+        "chatid": "42",
+        "helpfullabel": "This answer was helpful",
+        "nothelpfullabel": "This answer was not helpful",
+        "restored": false,
+        "restoredlabel": "Restored from history"
+    }
+}}
+<div class="aicourse-ai-message {{#isuser}}aicourse-ai-message-user{{/isuser}}{{^isuser}}aicourse-ai-message-bot{{/isuser}}"><div class="aicourse-ai-message-content" dir="auto">{{content}}</div>{{#rateable}}<div class="aicourse-ai-rating" data-chatid="{{chatid}}"><button type="button" class="aicourse-ai-rate-btn" data-rate="1" title="{{helpfullabel}}" aria-label="{{helpfullabel}}">&#128077;</button><button type="button" class="aicourse-ai-rate-btn" data-rate="-1" title="{{nothelpfullabel}}" aria-label="{{nothelpfullabel}}">&#128078;</button></div>{{/rateable}}{{#restored}}<div class="aicourse-ai-rating aicourse-ai-rating-done">{{restoredlabel}}</div>{{/restored}}</div>

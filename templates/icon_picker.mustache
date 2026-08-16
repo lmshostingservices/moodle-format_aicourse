@@ -1,0 +1,120 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template format_aicourse/icon_picker
+
+    The section card icon picker modal. Rendered once per course page for editing teachers and
+    hidden until the icon button on a section card opens it.
+
+    It is an ARIA dialog: role="dialog" aria-modal="true" and aria-labelledby pointing at its own
+    <h2>. Opening, closing, the focus trap, Escape and focus restoration are provided by
+    format_aicourse/courseformat, which registers the modal with its shared dialog helper. Every
+    SVG in here is decorative and therefore carries aria-hidden="true" focusable="false"; the
+    accessible name of each icon button is its visible label.
+
+    Classes required for JS:
+    * aicourse-icon-picker-modal - the modal root; shown/hidden by format_aicourse/courseformat.
+    * aicourse-icon-picker-backdrop - click target that closes the modal.
+    * aicourse-icon-picker-content - the element the dialog role and focus trap are applied to.
+    * aicourse-icon-picker-close - closes the modal.
+    * aicourse-icon-search-input - the live search field.
+    * aicourse-icon-picker-category - a category group; hidden when its icons are all filtered out.
+    * aicourse-icon-picker-item - a selectable icon; also the roving keyboard-navigation target.
+    * aicourse-icon-picker-label - the visible label, matched against the search term.
+    * aicourse-icon-remove-btn - the "remove the icon from this section" item.
+
+    Data attributes required for JS:
+    * data-category - the untranslated category slug the search filter compares against. The
+      pseudo-category "__remove__" holds the Remove option.
+    * data-icon - the icon key saved against the section, or "__clear__" to remove the icon.
+
+    Context variables required for this template:
+    * closelabel string Accessible name of the close button.
+    * searchlabel string Label and placeholder of the search field.
+    * removelabel string Label of the "remove icon" option.
+    * categories array Icon categories, in display order.
+        * key string Untranslated category slug, emitted as data-category.
+        * label string Localised category heading.
+        * icons array The icons in this category.
+            * key string Icon key, emitted as data-icon.
+            * label string Localised icon label.
+            * svg string PRE-ESCAPED SVG child markup from
+              \format_aicourse\local\icons::get_library(). This is plugin-defined constant markup,
+              never user input, so it is rendered with a triple mustache.
+
+    Example context (json):
+    {
+        "closelabel": "Close",
+        "searchlabel": "Search icons…",
+        "removelabel": "Remove icon",
+        "categories": [
+            {
+                "key": "numbers",
+                "label": "Numbers",
+                "icons": [
+                    {
+                        "key": "num-1",
+                        "label": "1",
+                        "svg": "<text x=\"12\" y=\"16\" text-anchor=\"middle\" font-size=\"14\">1</text>"
+                    }
+                ]
+            },
+            {
+                "key": "achievement",
+                "label": "Achievement",
+                "icons": [
+                    {
+                        "key": "star",
+                        "label": "Star",
+                        "svg": "<circle cx=\"12\" cy=\"12\" r=\"9\" fill=\"none\" stroke=\"currentColor\"/>"
+                    }
+                ]
+            }
+        ]
+    }
+}}
+<div class="aicourse-icon-picker-modal" id="aicourse-icon-picker" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="aicourse-icon-picker-title">
+<div class="aicourse-icon-picker-backdrop"></div>
+<div class="aicourse-icon-picker-content">
+<div class="aicourse-icon-picker-header">
+<h2 id="aicourse-icon-picker-title">{{#str}} selecticon, format_aicourse {{/str}}</h2>
+<button type="button" class="aicourse-icon-picker-close" aria-label="{{closelabel}}"><span aria-hidden="true">&times;</span></button>
+</div>
+<div class="aicourse-icon-picker-search">
+<svg aria-hidden="true" focusable="false" class="aicourse-icon-search-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+<label class="accesshide" for="aicourse-icon-search">{{searchlabel}}</label>
+<input type="text" id="aicourse-icon-search" class="aicourse-icon-search-input" placeholder="{{searchlabel}}" autocomplete="off" />
+</div>
+<div class="aicourse-icon-picker-body">
+<div class="aicourse-icon-picker-category" data-category="__remove__">
+<div class="aicourse-icon-picker-grid aicourse-icon-picker-grid--remove">
+<button type="button" class="aicourse-icon-picker-item aicourse-icon-remove-btn" data-icon="__clear__" title="{{removelabel}}"><svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg><span class="aicourse-icon-picker-label">{{removelabel}}</span></button>
+</div>
+</div>
+{{#categories}}
+<div class="aicourse-icon-picker-category" data-category="{{key}}">
+<div class="aicourse-icon-picker-category-label">{{label}}</div>
+<div class="aicourse-icon-picker-grid">
+{{#icons}}
+<button type="button" class="aicourse-icon-picker-item" data-icon="{{key}}"><svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">{{{svg}}}</svg><span class="aicourse-icon-picker-label">{{label}}</span></button>
+{{/icons}}
+</div>
+</div>
+{{/categories}}
+</div>
+</div>
+</div>

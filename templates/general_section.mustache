@@ -1,0 +1,86 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template format_aicourse/general_section
+
+    The General section (section 0) rendered inline above the AI Course card grid.
+
+    Two shapes are possible. When a teacher is editing, or when the format is not in card mode, the
+    whole section is handed to core's own section output class and the result is dropped in
+    verbatim, so teachers keep every edit control and students see exactly what core would show.
+    Otherwise the section is drawn as a heading, an optional summary and the activity card grid.
+
+    The heading is a real <h2> so the <h3> card titles below sit at the correct depth under the
+    page <h1>; when the teacher has not renamed the section it is hidden visually with the core
+    .accesshide class rather than dropped, so the heading outline stays intact.
+
+    Classes required for JS:
+    * None.
+
+    Data attributes required for JS:
+    * None.
+
+    Context variables required for this template:
+    * hasoutput bool False when there is genuinely nothing to show; the template then emits nothing.
+    * usecoresection bool True when corecontent should be used instead of the card rendering.
+    * corecontent string PRE-ESCAPED HTML rendered by core's section output class. Rendered with a
+      triple mustache because it is already rendered, escaped markup.
+    * headingclass string CSS classes of the section heading.
+    * sectionname string PRE-ESCAPED section name (already through format_string()); rendered with
+      a triple mustache so the entities format_string() produced are not escaped twice.
+    * hassummary bool True when the section has a summary to show.
+    * summary string PRE-ESCAPED summary HTML (already through format_text() with the course
+      context, so it is cleaned and filtered); rendered with a triple mustache.
+    * activitycards object|null Context for format_aicourse/activity_cards, or null when the
+      section has no content modules.
+
+    Example context (json):
+    {
+        "hasoutput": true,
+        "usecoresection": false,
+        "corecontent": "",
+        "headingclass": "aicourse-general-heading accesshide",
+        "sectionname": "General",
+        "hassummary": true,
+        "summary": "<p>Welcome to the course.</p>",
+        "activitycards": {
+            "regionlabel": "General",
+            "showheading": false,
+            "sectionname": "General",
+            "cards": [],
+            "hascontentrows": false,
+            "contentrows": [],
+            "isempty": false,
+            "sectionid": 34,
+            "notfound": false
+        }
+    }
+}}
+{{#hasoutput}}
+<div class="aicourse-general-section">
+{{#usecoresection}}{{{corecontent}}}{{/usecoresection}}
+{{^usecoresection}}
+<h2 class="{{headingclass}}">{{{sectionname}}}</h2>
+{{#hassummary}}
+<div class="aicourse-general-summary">{{{summary}}}</div>
+{{/hassummary}}
+{{#activitycards}}
+{{> format_aicourse/activity_cards }}
+{{/activitycards}}
+{{/usecoresection}}
+</div>
+{{/hasoutput}}

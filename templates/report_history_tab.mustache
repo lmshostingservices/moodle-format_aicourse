@@ -1,0 +1,317 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template format_aicourse/report_history_tab
+
+    The "Chat History" tab of the per-course AI Tutor report.
+
+    SECURITY: rows[].question, rows[].response and rows[].correction are raw student and AI
+    generated text. They are rendered with a DOUBLE mustache, which is what escapes them. Changing
+    any of them to a triple mustache would be a stored cross-site scripting hole, because a student
+    can put arbitrary markup in a question.
+
+    Classes required for JS (format_aicourse/report):
+    * aicourse-chat-table on the results table — the module attaches its one delegated listener
+      to it and does nothing at all when it is absent (the empty state renders no table).
+    * aicourse-rating-btn, and its helpful / not-helpful state classes, which the module swaps
+      in place after a successful rating rather than reloading the page.
+    * aicourse-chat-response on the response cell — the module inserts or replaces the
+      aicourse-chat-correction block inside it after a successful correction.
+    * aicourse-correction-form on the disclosure panel, opened and closed with the HTML `hidden`
+      attribute.
+    * aicourse-row-updated is added to the <tr> the module has just written to and removed again
+      on animationend; it is a state class only, never rendered by this template.
+
+    Data attributes required for JS (format_aicourse/report, bootstrapped by
+    format_aicourse\output\report\historytab::require_js()):
+    * data-action="rate" with data-chatid and data-rating on the two rating buttons.
+    * data-action="togglecorrection" with data-chatid and aria-controls on the disclosure buttons.
+    * data-action="savecorrection" with data-chatid on the save button.
+    * data-region="correctiontext" with data-chatid on the correction textarea.
+
+    Context variables required for this template:
+    * hasgroupsnotice bool True when the viewer is restricted to their own groups.
+    * groupsnotice string PRE-ESCAPED markup from core's notification output component.
+    * stats array Headline counters, each with value (string) and label (string).
+    * filterform object The filter form.
+      * action string Form action URL.
+      * courseid int Course id, carried in a hidden field.
+      * sort string Current sort key, carried in a hidden field.
+      * dir string Current sort direction, carried in a hidden field.
+      * perpage int Current rows per page, carried in a hidden field.
+      * search string Current search text.
+      * hasgroups bool True when the course has at least one group the viewer may filter by.
+      * useroptions|groupoptions|ratingoptions array Each entry has value, label and selected.
+      * reseturl string URL that clears every filter.
+    * showingtext string "Showing x-y of z" summary.
+    * perpageselect string PRE-ESCAPED markup from core's single_select output component.
+    * tablecaption string Accessible name of the results table.
+    * columns array Header cells, each with label, sortable, issorted, ariasort, isascending,
+      isdescending, sorturl and sortlabel.
+    * hasrows bool True when the current page has at least one row.
+    * rows array One entry per chat record: id, avatar (PRE-ESCAPED core user_picture markup),
+      hasavatar, fullname, question, response, hascorrection, correction, correctionshort, date,
+      ishelpful, isnothelpful, canrate.
+      the viewer did not write. Only reaches the page when a row has canrate false.
+    * emptytitle string Heading of the empty state.
+    * hasemptydesc bool True when the empty state has a body paragraph to show.
+    * emptydesc string Body of the empty state.
+    * pagingbar string PRE-ESCAPED markup from core's paging_bar output component.
+
+    Example context (json):
+    {
+        "hasgroupsnotice": false,
+        "groupsnotice": "",
+        "stats": [
+            {"value": "12", "label": "Total Questions"},
+            {"value": "7", "label": "Marked Helpful"},
+            {"value": "1", "label": "Corrected Responses"}
+        ],
+        "filterform": {
+            "action": "https://example.org/course/format/aicourse/report.php",
+            "courseid": 2,
+            "sort": "timecreated",
+            "dir": "DESC",
+            "perpage": 20,
+            "search": "",
+            "hasgroups": true,
+            "useroptions": [{"value": 0, "label": "All Students", "selected": true}],
+            "groupoptions": [{"value": 0, "label": "All Groups", "selected": true}],
+            "ratingoptions": [{"value": "", "label": "All Ratings", "selected": true}],
+            "reseturl": "https://example.org/course/format/aicourse/report.php?id=2&tab=history"
+        },
+        "showingtext": "Showing 1-1 of 1 records",
+        "perpageselect": "",
+        "tablecaption": "AI Tutor questions and responses for this course",
+        "columns": [
+            {
+                "label": "Student", "sortable": true, "issorted": false, "ariasort": "none",
+                "isascending": false, "isdescending": false,
+                "sorturl": "#student", "sortlabel": "Sort by Student"
+            },
+            {
+                "label": "Question", "sortable": false, "issorted": false, "ariasort": "none",
+                "isascending": false, "isdescending": false, "sorturl": "", "sortlabel": ""
+            }
+        ],
+        "hasrows": true,
+        "rows": [
+            {
+                "id": 5,
+                "avatar": "",
+                "hasavatar": false,
+                "fullname": "Alice Adams",
+                "question": "What is a light year?",
+                "response": "A light year is the distance light travels in one year.",
+                "hascorrection": false,
+                "correction": "",
+                "correctionshort": "",
+                "date": "1/02/26, 09:14",
+                "ishelpful": true,
+                "isnothelpful": false,
+                "canrate": true
+            }
+        ],
+        "emptytitle": "No chat history yet",
+        "hasemptydesc": true,
+        "emptydesc": "Students have not asked any questions yet.",
+        "pagingbar": ""
+    }
+}}
+{{#hasgroupsnotice}}{{{groupsnotice}}}{{/hasgroupsnotice}}
+
+<div class="aicourse-stats-row">
+    {{#stats}}
+    <div class="aicourse-stat-card">
+        <div class="aicourse-stat-value">{{value}}</div>
+        <div class="aicourse-stat-label">{{label}}</div>
+    </div>
+    {{/stats}}
+</div>
+
+{{#filterform}}
+<form method="get" action="{{action}}" class="aicourse-filter-form">
+    <input type="hidden" name="id" value="{{courseid}}">
+    <input type="hidden" name="tab" value="history">
+    <input type="hidden" name="sort" value="{{sort}}">
+    <input type="hidden" name="dir" value="{{dir}}">
+    <input type="hidden" name="perpage" value="{{perpage}}">
+    <fieldset class="aicourse-filters">
+        <legend class="sr-only">{{#str}} filter {{/str}}</legend>
+
+        <label class="sr-only" for="aicourse-filteruser">{{#str}} aireport_student, format_aicourse {{/str}}</label>
+        <select id="aicourse-filteruser" name="filteruser" class="aicourse-filter-select">
+            {{#useroptions}}
+            <option value="{{value}}"{{#selected}} selected{{/selected}}>{{label}}</option>
+            {{/useroptions}}
+        </select>
+
+        {{#hasgroups}}
+        <label class="sr-only" for="aicourse-filtergroup">{{#str}} aireport_all_groups, format_aicourse {{/str}}</label>
+        <select id="aicourse-filtergroup" name="filtergroup" class="aicourse-filter-select">
+            {{#groupoptions}}
+            <option value="{{value}}"{{#selected}} selected{{/selected}}>{{label}}</option>
+            {{/groupoptions}}
+        </select>
+        {{/hasgroups}}
+
+        <label class="sr-only" for="aicourse-filterrating">{{#str}} aireport_rating, format_aicourse {{/str}}</label>
+        <select id="aicourse-filterrating" name="filterrating" class="aicourse-filter-select">
+            {{#ratingoptions}}
+            <option value="{{value}}"{{#selected}} selected{{/selected}}>{{label}}</option>
+            {{/ratingoptions}}
+        </select>
+
+        <label class="sr-only" for="aicourse-search">{{#str}} aireport_search, format_aicourse {{/str}}</label>
+        <input id="aicourse-search" type="search" name="search" class="aicourse-filter-input"
+            placeholder="{{#str}} aireport_search, format_aicourse {{/str}}" value="{{search}}">
+
+        <button type="submit" class="aicourse-correction-btn btn btn-primary">
+            {{#str}} aireport_apply, format_aicourse {{/str}}
+        </button>
+        <a href="{{reseturl}}" class="aicourse-correction-btn btn btn-secondary">
+            {{#str}} admin_report_reset, format_aicourse {{/str}}
+        </a>
+    </fieldset>
+</form>
+{{/filterform}}
+
+<div class="aicourse-report-toolbar">
+    <p class="aicourse-report-count">{{showingtext}}</p>
+    <div class="aicourse-report-perpage">{{{perpageselect}}}</div>
+</div>
+
+{{#hasrows}}
+<table class="aicourse-chat-table">
+    <caption>{{tablecaption}}</caption>
+    <thead>
+        <tr>
+            {{#columns}}
+            <th scope="col" aria-sort="{{ariasort}}">
+                {{#sortable}}
+                <a href="{{sorturl}}" class="aicourse-sort-link" aria-label="{{sortlabel}}">
+                    <span>{{label}}</span>
+                    {{#isascending}}<span aria-hidden="true">&#9650;</span>{{/isascending}}
+                    {{#isdescending}}<span aria-hidden="true">&#9660;</span>{{/isdescending}}
+                </a>
+                {{/sortable}}
+                {{^sortable}}{{label}}{{/sortable}}
+            </th>
+            {{/columns}}
+        </tr>
+    </thead>
+    <tbody>
+        {{#rows}}
+        <tr>
+            <td>
+                <div class="aicourse-chat-user">
+                    {{#hasavatar}}{{{avatar}}}{{/hasavatar}}
+                    <span class="aicourse-chat-username">{{fullname}}</span>
+                </div>
+            </td>
+            <td class="aicourse-chat-question">{{question}}</td>
+            <td class="aicourse-chat-response">
+                <div>{{response}}</div>
+                {{#hascorrection}}
+                <div class="aicourse-chat-correction">
+                    <strong>{{#str}} aireport_correction, format_aicourse {{/str}}</strong>
+                    <div>{{correctionshort}}</div>
+                </div>
+                {{/hascorrection}}
+            </td>
+            <td class="aicourse-chat-date">{{date}}</td>
+            <td>
+                {{#canrate}}
+                <div class="aicourse-chat-rating" role="group"
+                    aria-label="{{#str}} aireport_rating, format_aicourse {{/str}}">
+                    <button type="button" class="aicourse-rating-btn{{#ishelpful}} helpful{{/ishelpful}}"
+                        data-action="rate" data-chatid="{{id}}" data-rating="1"
+                        aria-label="{{#str}} aireport_filter_helpful, format_aicourse {{/str}}"
+                        aria-pressed="{{#ishelpful}}true{{/ishelpful}}{{^ishelpful}}false{{/ishelpful}}">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                            fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false">
+                            <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/>
+                        </svg>
+                    </button>
+                    <button type="button" class="aicourse-rating-btn{{#isnothelpful}} not-helpful{{/isnothelpful}}"
+                        data-action="rate" data-chatid="{{id}}" data-rating="-1"
+                        aria-label="{{#str}} aireport_filter_nothelpful, format_aicourse {{/str}}"
+                        aria-pressed="{{#isnothelpful}}true{{/isnothelpful}}{{^isnothelpful}}false{{/isnothelpful}}">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                            fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false">
+                            <path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"/>
+                        </svg>
+                    </button>
+                </div>
+                {{/canrate}}
+                {{^canrate}}{{!
+                    ACF-FIX-2.1: on the teacher report almost every row belongs to a learner. The
+                    rating is the LEARNER's judgement of the AI answer and is the signal this report
+                    exists to surface, so a teacher must not be able to overwrite it. It is shown
+                    read-only here. Teachers give their own feedback through the Correct action,
+                    which is scoped by capability rather than by row ownership.
+                }}
+                <span class="aicourse-chat-rating aicourse-chat-rating-readonly">
+                    <span class="aicourse-rating-state{{#ishelpful}} helpful{{/ishelpful}}{{#isnothelpful}} not-helpful{{/isnothelpful}}">
+                        {{#ishelpful}}{{#str}} aireport_rating_learner_helpful, format_aicourse {{/str}}{{/ishelpful}}
+                        {{#isnothelpful}}{{#str}} aireport_rating_learner_nothelpful, format_aicourse {{/str}}{{/isnothelpful}}
+                        {{^ishelpful}}{{^isnothelpful}}{{#str}} aireport_rating_learner_none, format_aicourse {{/str}}{{/isnothelpful}}{{/ishelpful}}
+                    </span>
+                </span>
+                {{/canrate}}
+            </td>
+            <td>
+                <button type="button" class="aicourse-correction-btn" data-action="togglecorrection"
+                    data-chatid="{{id}}" aria-expanded="false" aria-controls="aicourse-correction-{{id}}">
+                    {{#str}} aireport_correct, format_aicourse {{/str}}
+                </button>
+                <div class="aicourse-correction-form" id="aicourse-correction-{{id}}" hidden>
+                    <label for="aicourse-correction-text-{{id}}">
+                        {{#str}} aireport_correction, format_aicourse {{/str}}
+                    </label>
+                    <textarea class="aicourse-correction-textarea" id="aicourse-correction-text-{{id}}"
+                        data-region="correctiontext" data-chatid="{{id}}"
+                        placeholder="{{#str}} aireport_correction_placeholder, format_aicourse {{/str}}">{{correction}}</textarea>
+                    <div class="aicourse-correction-actions">
+                        <button type="button" class="aicourse-correction-btn btn btn-primary"
+                            data-action="savecorrection" data-chatid="{{id}}">
+                            {{#str}} aireport_save, format_aicourse {{/str}}
+                        </button>
+                        <button type="button" class="aicourse-correction-btn btn btn-secondary"
+                            data-action="togglecorrection" data-chatid="{{id}}"
+                            aria-controls="aicourse-correction-{{id}}">
+                            {{#str}} aireport_cancel, format_aicourse {{/str}}
+                        </button>
+                    </div>
+                </div>
+            </td>
+        </tr>
+        {{/rows}}
+    </tbody>
+</table>
+<div class="aicourse-pagination">{{{pagingbar}}}</div>
+{{/hasrows}}
+{{^hasrows}}
+<div class="aicourse-empty-state">
+    <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="1.5" aria-hidden="true" focusable="false">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+    </svg>
+    <h3 class="h5">{{emptytitle}}</h3>
+    {{#hasemptydesc}}<p>{{emptydesc}}</p>{{/hasemptydesc}}
+</div>
+{{/hasrows}}

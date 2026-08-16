@@ -1,0 +1,109 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template format_aicourse/report_index
+
+    The AI Tutor report index: one card per course using this course format, with its AI tutor
+    totals and a link to the per-course report.
+
+    Classes required for JS:
+    * None.
+
+    Data attributes required for JS:
+    * None.
+
+    index.php uses pagelayout `admin`, so this markup never carries the format-aicourse body
+    class. Its styling hangs off the plugin-owned .aitutor-report-index root, which carries the
+    plugin's design tokens for exactly that reason (styles.css sections 2-5 and 21c).
+
+    Context variables required for this template:
+    * title string Page heading, from the language pack. It is NOT printed here: Moodle's page
+      header already emits it as the page <h1>, so each course card title is an <h2> directly under
+      it and no level is skipped.
+    * hascourses bool True when at least one course uses this format.
+    * courses array One entry per course.
+      * fullname string Course full name, already filtered by format_string() but NOT escaped, so
+        it is rendered with a double mustache.
+      * shortname string Course short name, same handling as fullname.
+      * reporturl string URL of the per-course report.
+      * stats array Three counters, each with value (string) and label (string).
+    * emptytitle string Heading of the empty state.
+    * emptydesc string Body of the empty state.
+    * viewlabel string Label of the per-course report link.
+    * adminreporturl string URL of the site-wide report.
+    * adminreportlabel string Label of the site-wide report link.
+
+    Example context (json):
+    {
+        "title": "AI Tutor Report",
+        "hascourses": true,
+        "courses": [
+            {
+                "fullname": "Introduction to Astrophysics",
+                "shortname": "ASTRO101",
+                "reporturl": "https://example.org/course/format/aicourse/report.php?id=2",
+                "stats": [
+                    {"value": "12", "label": "Total Questions"},
+                    {"value": "7", "label": "Marked Helpful"},
+                    {"value": "1", "label": "Corrected Responses"}
+                ]
+            }
+        ],
+        "emptytitle": "No courses using AI Course Format",
+        "emptydesc": "Change a course format to AI Course Format to enable the AI Tutor.",
+        "viewlabel": "View Report",
+        "adminreporturl": "https://example.org/course/format/aicourse/admin_report.php",
+        "adminreportlabel": "View all AI Tutor Q&A"
+    }
+}}
+<div class="aitutor-report-index">
+    <div class="aitutor-report-header">
+        <a href="{{adminreporturl}}" class="aitutor-course-btn btn btn-outline-primary">
+            {{adminreportlabel}}
+        </a>
+    </div>
+
+    {{#hascourses}}
+    <div class="aitutor-course-grid">
+        {{#courses}}
+        <div class="aitutor-course-card">
+            <h2>{{fullname}}</h2>
+            <p>{{shortname}}</p>
+            <div class="aitutor-course-stats">
+                {{#stats}}
+                <div class="aitutor-course-stat">
+                    <div class="aitutor-course-stat-value">{{value}}</div>
+                    <div class="aitutor-course-stat-label">{{label}}</div>
+                </div>
+                {{/stats}}
+            </div>
+            <a href="{{reporturl}}" class="aitutor-course-btn btn btn-primary">{{viewlabel}}</a>
+        </div>
+        {{/courses}}
+    </div>
+    {{/hascourses}}
+    {{^hascourses}}
+    <div class="aitutor-empty-state">
+        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="1.5" aria-hidden="true" focusable="false">
+            <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/>
+        </svg>
+        <h2>{{emptytitle}}</h2>
+        <p>{{emptydesc}}</p>
+    </div>
+    {{/hascourses}}
+</div>

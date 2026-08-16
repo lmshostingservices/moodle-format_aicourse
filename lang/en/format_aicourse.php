@@ -15,270 +15,423 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * format_aicourse file.
+ * Strings for component 'format_aicourse', language 'en'.
+ *
+ * Keys are kept in alphabetical order, as required by the Moodle coding style.
  *
  * @package    format_aicourse
+ * @category   string
  * @copyright  2026 LMS-Labs
- * @license    http://www.gnu.org/licenses/gpl-3.0.html GNU GPL v3 or later
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$string['pluginname'] = 'AI Course Format';
-$string['currentsection'] = 'This section';
-$string['sectionname'] = 'Section';
-$string['section0name'] = 'General';
-$string['page-course-view-aicourse'] = 'Any course main page in AI Course format';
-$string['page-course-view-aicourse-x'] = 'Any course page in AI Course format';
-$string['hidefromothers'] = 'Hide section';
-$string['showfromothers'] = 'Show section';
-$string['privacy:metadata'] = 'The AI Course Format plugin does not store any personal data.';
-
-// Hero banner strings.
-$string['courseprogress'] = 'Course Progress';
-$string['gotocourse'] = 'Course Home';
-$string['completedof'] = '{$a->completed} of {$a->total} activities completed';
-
-// Navigation strings.
-$string['previousactivity'] = 'Previous activity';
-$string['nextactivity'] = 'Next activity';
-$string['previoussection'] = 'Previous section';
-$string['nextsection'] = 'Next section';
-
-// Settings strings.
-$string['showherobanner'] = 'Show hero banner';
-$string['showherobanner_desc'] = 'Display a sticky hero banner at the top of the course page with course image, title, and progress.';
-$string['showherobanner_help'] = 'When enabled, a beautiful sticky hero banner appears at the top of the course page featuring the course image, title, and real-time progress tracking. The banner uses glassmorphism effects and stays visible as students scroll.';
-$string['shownavchevrons'] = 'Show navigation chevrons';
-$string['shownavchevrons_desc'] = 'Display elegant chevron arrows for navigating between activities.';
-$string['shownavchevrons_help'] = 'When enabled, elegant navigation chevrons appear on the left and right sides of activity pages, allowing students to quickly move between activities without returning to the course page.';
-$string['herobannerheight'] = 'Hero banner height';
-$string['herobannerheight_desc'] = 'Maximum height of the hero banner in pixels.';
-$string['herobannerheight_help'] = 'Set the maximum height of the hero banner in pixels. A smaller value (140-180px) creates a compact, professional look while a larger value (200-300px) makes the course image more prominent.';
-$string['herobannerwidth'] = 'Hero banner width';
-$string['herobannerwidth_desc'] = 'Maximum width of the hero banner in pixels. Set to 0 for full width.';
-$string['herobannerwidth_help'] = 'Set the maximum width of the hero banner in pixels to match your theme\'s content width. For example, if your Moodle theme has a 1200px content area, set this to 1200. Set to 0 (default) for full width up to 1400px.';
-$string['herobanneralign'] = 'Hero banner alignment';
-$string['herobanneralign_desc'] = 'Horizontal alignment of the hero banner when a custom width is set.';
-$string['herobanneralign_help'] = 'Choose whether the hero banner is centred or left-aligned on the page. Left-aligned is useful when you want the banner to line up with the left edge of your page content.';
-$string['herobanneralign_center'] = 'Centre';
-$string['herobanneralign_left'] = 'Left';
-
-$string['cardtitlesize'] = 'Card title text size';
-$string['cardtitlesize_desc'] = 'Font size for card titles in pixels. Default is 14.';
-$string['cardtitlesize_help'] = 'Set the font size for section card and activity card titles in pixels. For example, enter 12 for smaller titles or 16 for larger. Default is 14px.';
-
-// Course index settings.
-$string['showcourseindex'] = 'Show course index sidebar';
-$string['showcourseindex_desc'] = 'Choose where the course index navigation sidebar appears.';
-$string['showcourseindex_help'] = 'The course index sidebar appears on the left side, allowing quick navigation between sections and activities. Choose which pages should display it.';
-$string['courseindex_none'] = 'Hide on all pages';
-$string['courseindex_home'] = 'Course home only';
-$string['courseindex_section'] = 'Section pages only';
-$string['courseindex_home_section'] = 'Course home + Section pages';
-$string['courseindex_activity'] = 'Activity pages only';
-$string['courseindex_home_activity'] = 'Course home + Activity pages';
-$string['courseindex_section_activity'] = 'Section + Activity pages';
-$string['courseindex_all'] = 'All pages (home, section, activity)';
-
-// Display mode settings.
-$string['displayascards'] = 'Section display mode';
-$string['displayascards_desc'] = 'Choose how sections are displayed on the course home page.';
-$string['displayascards_help'] = 'Choose between traditional section view (expandable sections with activities listed) or beautiful card view (modern cards with progress tracking, estimated time, and activity dots).';
-$string['displayassections'] = 'Traditional sections';
-$string['displayascardsoption'] = 'Beautiful cards';
-
-// Activity display mode settings.
+$string['activities'] = 'activities';
+$string['activity'] = 'activity';
+$string['activitydisplaycards'] = 'Beautiful activity cards';
 $string['activitydisplaymode'] = 'Activity display mode';
-$string['activitydisplaymode_desc'] = 'Choose how activities are displayed within sections.';
 $string['activitydisplaymode_help'] = 'Choose between traditional Moodle activity list or beautiful card view with status badges and icons.';
 $string['activitydisplaystandard'] = 'Standard Moodle list';
-$string['activitydisplaycards'] = 'Beautiful activity cards';
-
-// Card view strings.
-$string['estimatedtime'] = 'Est. time';
-$string['minutesshort'] = 'min';
-$string['hoursshort'] = 'hr';
-$string['sectionprogress'] = 'Section progress';
-$string['viewsection'] = 'View section';
-$string['activity'] = 'activity';
-$string['activities'] = 'activities';
-$string['viewallactivities'] = 'View all activities';
-
-// Activity card strings.
-$string['backtosection'] = 'Back to Section';
-$string['returntosection'] = 'Return to Section';
-$string['notstarted'] = 'Not Started';
-$string['inprogress'] = 'In Progress';
-$string['completed'] = 'Completed';
-$string['noactivitiesinsection'] = 'This section is empty. Add activities to get started.';
-$string['sectionnotfound'] = 'Section not found.';
-$string['nosectionsincourse'] = 'This course has no sections yet.';
-
-// Icon picker strings.
-$string['selecticon'] = 'Select icon';
+$string['activitynumberstatus'] = 'Activity {$a->num}: {$a->name} ({$a->status})';
+$string['activitytype_activities'] = 'Learning Activities';
+$string['activitytype_content'] = 'Learning Content';
+$string['activitytype_knowledgecheck'] = 'Knowledge Check';
+$string['activitytype_slides'] = 'Learning Slides';
+$string['activitywithstatus'] = '{$a->name} ({$a->status})';
 $string['addicon'] = 'Add icon';
-$string['changeicon'] = 'Change icon';
-$string['removeicon'] = 'Remove icon';
-$string['searchicons'] = 'Search icons…';
+$string['addiconfor'] = 'Add an icon for {$a}';
 $string['addsection'] = 'Add section';
-$string['deletesection'] = 'Delete section';
-$string['deletesectionconfirm'] = 'Are you sure you want to delete this section? This action cannot be undone.';
-$string['duplicatesection'] = 'Duplicate section';
-$string['iconsaved'] = 'Icon saved';
-$string['iconsaveerror'] = 'Error saving icon';
-
-// Activity completion requirement strings.
-$string['nocompletion'] = 'No completion tracking';
-$string['completionrequirement_manual'] = 'Mark as done';
-$string['completionrequirement_view'] = 'View activity';
-$string['completionrequirement_gradeany'] = 'Receive a grade';
-$string['completionrequirement_gradepass'] = 'Required grade {$a}';
-$string['completionrequirement_grade100'] = 'Required grade 100%';
-$string['completionrequirement_auto'] = 'Complete activity';
-
-// AI Tutor strings.
+$string['admin_report_all'] = 'All';
+$string['admin_report_all_courses'] = 'All courses';
+$string['admin_report_answered'] = 'Answered';
+$string['admin_report_answered_only'] = 'Answered only';
+$string['admin_report_col_activity'] = 'Activity';
+$string['admin_report_col_activityid'] = 'Activity ID';
+$string['admin_report_col_course'] = 'Course';
+$string['admin_report_col_email'] = 'Email';
+$string['admin_report_col_refused'] = 'Refused';
+$string['admin_report_export_csv'] = 'Export CSV';
+$string['admin_report_filter_capped'] = 'Showing the first {$a} entries only.';
+$string['admin_report_filter_course'] = 'Course';
+$string['admin_report_filter_datefrom'] = 'From date';
+$string['admin_report_filter_dateto'] = 'To date';
+$string['admin_report_filter_rating'] = 'Rating';
+$string['admin_report_filter_refused'] = 'Response type';
+$string['admin_report_filter_student'] = 'Student';
+$string['admin_report_filter_unrated'] = 'Unrated';
+$string['admin_report_link'] = 'AI Tutor Q&A Report';
+$string['admin_report_no_filtered'] = 'No records match the current filters.';
+$string['admin_report_refused'] = 'Refused';
+$string['admin_report_refused_only'] = 'Refused only';
+$string['admin_report_reset'] = 'Reset';
+$string['admin_report_search'] = 'Search questions / responses';
+$string['admin_report_show_less'] = 'Show less';
+$string['admin_report_show_more'] = 'Show more';
+$string['admin_report_showing'] = 'Showing {$a->from}–{$a->to} of {$a->total} records';
+$string['admin_report_stat_courses'] = 'Active Courses';
+$string['admin_report_stat_helpful'] = 'Rated Helpful';
+$string['admin_report_stat_refused'] = 'Refused (academic integrity)';
+$string['admin_report_stat_students'] = 'Active Students';
+$string['admin_report_stat_total'] = 'Total Questions (all time)';
+$string['admin_report_table_caption'] = 'AI Tutor questions and responses from every course on this site';
+$string['admin_report_title'] = 'AI Tutor — All Q&A (Site-wide)';
+$string['admin_report_view'] = 'View all AI Tutor Q&A';
 $string['aiassistant'] = 'AI Tutor';
-$string['aiassistant_welcome'] = 'Hi! I\'m your AI Tutor. I\'ve learned all the content in this course and can answer your questions. Ask me anything about the course material!';
-$string['aiassistant_welcome_name'] = 'Hi {$a}! I\'m your AI Tutor for this course. What would you like help with today?';
-$string['aiassistant_welcome_activity'] = 'Hi {$a->name}! I see you\'re working on <strong>{$a->activity}</strong>. What would you like help with?';
-$string['aiassistant_welcome_section'] = 'Hi {$a->name}! I see you\'re in <strong>{$a->section}</strong>. What would you like help with?';
-$string['aiassistant_placeholder'] = 'Ask a question about the course...';
 $string['aiassistant_error'] = 'Sorry, I couldn\'t process your question. Please try again.';
-$string['aiassistant_nocredits'] = 'AI credits are required to use the AI Tutor. Please contact your administrator.';
-$string['aiassistant_notconfigured'] = 'AI Tutor is not configured. Please set up the Site ID and API Key in the plugin settings.';
-$string['aiassistant_settings_desc'] = 'Configure the AI Tutor connection. If you have the AI Grader Central Config plugin installed, these settings are optional as it will use the central configuration.';
-
-// AI Tutor Quick Actions.
-$string['aiassistant_quick_label'] = 'Quick help:';
-$string['aiassistant_quick_structure'] = 'How to structure';
-$string['aiassistant_quick_concepts'] = 'Explain concepts';
-$string['aiassistant_quick_workplace'] = 'Workplace examples';
-$string['aiassistant_quick_practice'] = 'Practice questions';
-$string['aiassistant_quick_checklist'] = 'Checklist';
-$string['aiassistant_prompt_structure'] = 'Can you help me understand how to structure my response for {activity}? I don\'t need an answer, just guidance on the format and what sections to include.';
-$string['aiassistant_prompt_concepts'] = 'Can you explain the key concepts I need to understand for this activity? Break it down in simple terms.';
-$string['aiassistant_prompt_workplace'] = 'Can you give me a real workplace example that relates to this activity? I want to understand how this applies in a real job.';
-$string['aiassistant_prompt_practice'] = 'Can you give me a practice question or scenario to help me prepare? Something similar to what I need to do.';
-$string['aiassistant_prompt_checklist'] = 'Can you give me a checklist of things I should include or check before I submit my work?';
+$string['aiassistant_input_label'] = 'Your question for the AI Tutor';
 $string['aiassistant_locked'] = 'You\'ve already submitted this assignment. I can\'t help with answers now, but I can help you reflect on feedback, identify learning gaps, or prepare for future tasks. What would you like to explore?';
+$string['aiassistant_notconfigured'] = 'AI Tutor is not configured. Please set up the Site ID and API Key in the plugin settings.';
+$string['aiassistant_placeholder'] = 'Ask a question about the course...';
+$string['aiassistant_prompt_checklist'] = 'Can you give me a checklist of things I should include or check before I submit my work?';
+$string['aiassistant_prompt_concepts'] = 'Can you explain the key concepts I need to understand for this activity? Break it down in simple terms.';
+$string['aiassistant_prompt_practice'] = 'Can you give me a practice question or scenario to help me prepare? Something similar to what I need to do.';
+$string['aiassistant_prompt_structure'] = 'Can you help me understand how to structure my response for {activity}? I don\'t need an answer, just guidance on the format and what sections to include.';
+$string['aiassistant_prompt_workplace'] = 'Can you give me a real workplace example that relates to this activity? I want to understand how this applies in a real job.';
+$string['aiassistant_quick_checklist'] = 'Checklist';
+$string['aiassistant_quick_concepts'] = 'Explain concepts';
+$string['aiassistant_quick_label'] = 'Quick help:';
+$string['aiassistant_quick_practice'] = 'Practice questions';
+$string['aiassistant_quick_structure'] = 'How to structure';
+$string['aiassistant_quick_workplace'] = 'Workplace examples';
+$string['aiassistant_rate_helpful'] = 'This answer was helpful';
+$string['aiassistant_rate_nothelpful'] = 'This answer was not helpful';
 $string['aiassistant_rating_thanks'] = 'Thanks for the feedback!';
-
-// AI Tutor enable/disable toggle.
-$string['enabletutor'] = 'Enable AI Tutor';
-$string['enabletutor_desc'] = 'When enabled, the AI Tutor chat bubble is shown to students and teachers on course and activity pages using AI Course Format. Uncheck to hide the tutor completely across all courses.';
-
-// Settings strings.
-$string['siteid'] = 'Site ID';
-$string['siteid_desc'] = 'Your Moodle site URL (e.g., https://yourmoodle.com). This is used to identify your site with the AI Grader service.';
-$string['apikey'] = 'API Key';
-$string['apikey_desc'] = 'Your API Key from the Essay Grader AI dashboard (lms-labs.com). Required for the AI Tutor to function.';
-$string['displaysettings'] = 'Default Display Settings';
-$string['displaysettings_desc'] = 'Default settings for new courses using AI Course Format.';
-
-// AI Report strings.
+$string['aiassistant_restored'] = 'Restored from history';
+$string['aiassistant_send'] = 'Send message';
+$string['aiassistant_settings_desc'] = 'Configure the AI Tutor connection. If you have the AI Grader Central Config plugin installed, these settings are optional as it will use the central configuration.';
+$string['aiassistant_thinking'] = 'Thinking…';
+$string['aiassistant_thisactivity'] = 'this activity';
+$string['aiassistant_welcome'] = 'Hi! I\'m your AI Tutor. I\'ve learned all the content in this course and can answer your questions. Ask me anything about the course material!';
+$string['aiassistant_welcome_activity'] = 'Hi {$a->name}! I see you\'re working on <strong>{$a->activity}</strong>. What would you like help with?';
+$string['aiassistant_welcome_name'] = 'Hi {$a}! I\'m your AI Tutor for this course. What would you like help with today?';
+$string['aiassistant_welcome_question'] = 'I see you\'re on question {$a->num}. This question is about {$a->topic}. How can I help you think it through?';
+$string['aiassistant_welcome_questionnotopic'] = 'I see you\'re on question {$a}. How can I help you think it through?';
+$string['aiassistant_welcome_section'] = 'Hi {$a->name}! I see you\'re in <strong>{$a->section}</strong>. What would you like help with?';
+$string['aicourse:correctresponses'] = 'Correct an AI Tutor response';
+$string['aicourse:useaitutor'] = 'Use the AI Tutor';
+$string['aicourse:view'] = 'View AI Course Format';
+$string['aicourse:viewreport'] = 'View AI Course Format reports';
 $string['aireport'] = 'AI Tutor Report';
-$string['aireport_content'] = 'Course Content';
-$string['aireport_history'] = 'Chat History';
-$string['aireport_sections'] = 'Sections';
+$string['aireport_actions'] = 'Actions';
 $string['aireport_activities'] = 'Activities';
-$string['aireport_characters'] = 'Characters Learned';
-$string['aireport_course_summary'] = 'Course Summary';
-$string['aireport_learned_content'] = 'Content Learned by AI';
-$string['aireport_learned'] = 'AI has learned this content';
-$string['aireport_total_questions'] = 'Total Questions';
-$string['aireport_helpful'] = 'Marked Helpful';
-$string['aireport_corrected'] = 'Corrected Responses';
-$string['aireport_all_students'] = 'All Students';
 $string['aireport_all_groups'] = 'All Groups';
 $string['aireport_all_ratings'] = 'All Ratings';
+$string['aireport_all_students'] = 'All Students';
+$string['aireport_apply'] = 'Apply Filters';
+$string['aireport_cancel'] = 'Cancel';
+$string['aireport_characters'] = 'Characters Learned';
+$string['aireport_chattable_caption'] = 'AI Tutor questions and responses for this course';
+$string['aireport_content'] = 'Course Content';
+$string['aireport_correct'] = 'Correct';
+$string['aireport_corrected'] = 'Corrected Responses';
+$string['aireport_correction'] = 'Correction';
+$string['aireport_correction_placeholder'] = 'Enter the correct answer to retrain the AI...';
+$string['aireport_correction_saved'] = 'Correction saved.';
+$string['aireport_course_summary'] = 'Course Summary';
+$string['aireport_date'] = 'Date';
+$string['aireport_filter_corrected'] = 'Corrected Only';
 $string['aireport_filter_helpful'] = 'Helpful Only';
 $string['aireport_filter_nothelpful'] = 'Not Helpful Only';
-$string['aireport_filter_corrected'] = 'Corrected Only';
-$string['aireport_search'] = 'Search questions or responses...';
-$string['aireport_apply'] = 'Apply Filters';
+$string['aireport_helpful'] = 'Marked Helpful';
+$string['aireport_history'] = 'Chat History';
+$string['aireport_learned'] = 'AI has learned this content';
+$string['aireport_learned_content'] = 'Content Learned by AI';
 $string['aireport_no_chats'] = 'No chat history yet';
 $string['aireport_no_chats_desc'] = 'Students haven\'t asked any questions to the AI Tutor yet.';
 $string['aireport_nocourses'] = 'No courses using AI Course Format';
 $string['aireport_nocourses_desc'] = 'Change a course format to AI Course Format to enable the AI Tutor.';
-$string['aireport_view'] = 'View Report';
-$string['aireport_student'] = 'Student';
+$string['aireport_nocoursesummary'] = 'No course summary';
 $string['aireport_question'] = 'Question';
-$string['aireport_response'] = 'AI Response';
-$string['aireport_date'] = 'Date';
+$string['aireport_rate_ownonly'] = 'Only the person who asked the question can rate the answer.';
 $string['aireport_rating'] = 'Rating';
-$string['aireport_actions'] = 'Actions';
-$string['aireport_correct'] = 'Correct';
-$string['aireport_correction'] = 'Correction';
-$string['aireport_correction_placeholder'] = 'Enter the correct answer to retrain the AI...';
+$string['aireport_rating_learner_helpful'] = 'Learner: helpful';
+$string['aireport_rating_learner_none'] = 'Learner: not rated';
+$string['aireport_rating_learner_nothelpful'] = 'Learner: not helpful';
+$string['aireport_rating_saved'] = 'Rating saved.';
+$string['aireport_response'] = 'AI Response';
 $string['aireport_save'] = 'Save';
-$string['aireport_cancel'] = 'Cancel';
-
-// Navigation strings.
-$string['grades'] = 'My Grades';
-$string['aicourse:view'] = 'View AI Course Format';
-$string['aicourse:viewreport'] = 'View AI Course Format reports';
-
-// Admin Q&A report strings.
-$string['admin_report_title']         = 'AI Tutor — All Q&A (Site-wide)';
-$string['admin_report_link']          = 'AI Tutor Q&A Report';
-$string['admin_report_view']          = 'View all AI Tutor Q&A';
-$string['admin_report_stat_total']    = 'Total Questions (all time)';
-$string['admin_report_stat_helpful']  = 'Rated Helpful';
-$string['admin_report_stat_refused']  = 'Refused (academic integrity)';
-$string['admin_report_stat_courses']  = 'Active Courses';
-$string['admin_report_stat_students'] = 'Active Students';
-$string['admin_report_search']        = 'Search questions / responses';
-$string['admin_report_filter_course'] = 'Course';
-$string['admin_report_all_courses']   = 'All courses';
-$string['admin_report_filter_student']= 'Student';
-$string['admin_report_filter_rating'] = 'Rating';
-$string['admin_report_filter_unrated']= 'Unrated';
-$string['admin_report_filter_refused']= 'Response type';
-$string['admin_report_all']           = 'All';
-$string['admin_report_refused_only']  = 'Refused only';
-$string['admin_report_answered_only'] = 'Answered only';
-$string['admin_report_filter_datefrom'] = 'From date';
-$string['admin_report_filter_dateto']   = 'To date';
-$string['admin_report_reset']         = 'Reset';
-$string['admin_report_export_csv']    = 'Export CSV';
-$string['admin_report_showing']       = 'Showing {$a->from}–{$a->to} of {$a->total} records';
-$string['admin_report_col_course']    = 'Course';
-$string['admin_report_col_activity']  = 'Activity';
-$string['admin_report_col_refused']   = 'Refused';
-$string['admin_report_refused']       = 'Refused';
-$string['admin_report_answered']      = 'Answered';
-$string['admin_report_show_more']     = 'Show more';
-$string['admin_report_show_less']     = 'Show less';
-$string['admin_report_no_filtered']   = 'No records match the current filters.';
-
-// ── Banner image upload (v1.7.4) ─────────────────────────────────────────────
-$string['bannerimageheader'] = 'Course Banner Image';
-
+$string['aireport_search'] = 'Search questions or responses...';
+$string['aireport_sections'] = 'Sections';
+$string['aireport_student'] = 'Student';
+$string['aireport_total_questions'] = 'Total Questions';
+$string['aireport_unknownuser'] = 'Unknown user';
+$string['aireport_view'] = 'View Report';
+$string['apikey'] = 'API Key';
+$string['apikey_desc'] = 'Your API Key from the Essay Grader AI dashboard (lms-labs.com). Required for the AI Tutor to function.';
+$string['backtosection'] = 'Back to Section';
+$string['bannerdel_confirm'] = 'Remove image';
+$string['bannerdel_desc'] = 'The banner image will be permanently removed from this course. You can generate or upload a new one at any time.';
+$string['bannerdel_error'] = 'Failed to remove banner. Please try again.';
+$string['bannerdel_removed'] = 'Banner image removed';
+$string['bannerdel_removing'] = 'Removing';
+$string['bannerdel_title'] = 'Remove banner image?';
+$string['bannergen_applied'] = 'Banner applied to your course';
+$string['bannergen_cost'] = '{$a} credits';
+$string['bannergen_costdetail'] = 'One-time generation cost';
+$string['bannergen_desc'] = 'AI reads your course name and generates a cinematic, full-width banner image tailored to your course subject. The image is automatically cropped and optimised for your course header, then saved directly to your course.';
+$string['bannergen_failed'] = 'Generation failed. Please try again.';
+$string['bannergen_failedtitle'] = 'Generation failed';
+$string['bannergen_generate'] = 'Generate banner';
+$string['bannergen_loadingsub'] = 'AI is crafting a cinematic banner for your course. This takes 15-40 seconds - please wait.';
+$string['bannergen_loadingtitle'] = 'Generating your banner';
+$string['bannergen_previewalt'] = 'Generated course banner';
+$string['bannergen_retry'] = 'Try again';
+$string['bannergen_subtitle'] = 'Powered by Google Imagen 4 Ultra';
+$string['bannergen_success'] = 'Your AI banner has been saved to the course.';
+$string['bannergen_title'] = 'Generate AI banner';
 $string['bannerimage'] = 'Upload banner image';
-$string['bannerimage_help'] = 'Upload a custom banner image that appears in the large hero panel at the top of your course.
-
-<strong>Recommended aspect ratio: 16:5</strong> (e.g. 1920 × 600 px or 1600 × 500 px).
-This ratio produces a beautiful panoramic banner that fills the hero at all screen sizes without cropping off important content.
-
-Other ratios that work well:
-<ul>
-<li>16:6 (e.g. 1920 × 720) — slightly taller, more visual impact</li>
-<li>16:9 (e.g. 1920 × 1080) — standard HD; top and bottom will be cropped on wider screens</li>
-<li>3:1 (e.g. 1800 × 600) — ultra-wide cinematic strip</li>
-</ul>
-
-Practical guidelines:
-<ul>
-<li>Minimum size: 1200 × 375 px — smaller images will look blurry on high-DPI screens</li>
-<li>Place key subjects in the <strong>centre</strong> of the frame — edges may be cropped on mobile</li>
-<li>Choose images with good contrast so the white text overlay remains readable</li>
-<li>Dark or moody images work best; bright white backgrounds can reduce text contrast</li>
-<li>The plugin automatically adds a cinematic gradient overlay, so a plain dark overlay is not required</li>
-</ul>
-
-If no custom image is uploaded the course overview image (set in Course Settings → Overview files) is used instead.';
-
-$string['bannerimage_ratio_title']   = 'Recommended ratio: 16:5';
-$string['bannerimage_ratio_hint']    = 'Ideal image size is 1920 × 600 px (or 1600 × 500 px minimum). Centre your subject — edges may be cropped on narrow screens. Dark or high-contrast images give the best result with the white text overlay.';
+$string['bannerimage_help'] = 'Upload one image to use as this course\'s hero banner. It replaces the course image on the course home page and on every section page. Landscape images work best - around 1920 x 600 pixels, at most 5 MB, in JPG, PNG or WebP. Leave it empty to fall back to the course image, or generate one with AI from the course page.';
 $string['bannerimage_ratio_formats'] = 'Accepted formats: JPG · PNG · WebP  ·  Maximum file size: 5 MB  ·  One image per course.';
+$string['bannerimage_ratio_hint'] = 'Ideal image size is 1920 × 600 px (or 1600 × 500 px minimum). Centre your subject — edges may be cropped on narrow screens. Dark or high-contrast images give the best result with the white text overlay.';
+$string['bannerimage_ratio_title'] = 'Recommended ratio: 16:5';
+$string['bannerimageheader'] = 'Course Banner Image';
+$string['cachedef_coursecontent'] = 'Course content index used by the AI Tutor';
+$string['cardactivitiesmore'] = 'View all activities in {$a}';
+$string['cardactivitylabel'] = '{$a->name}, {$a->section}';
+$string['cardactivitystatuslabel'] = '{$a->name}, {$a->section} ({$a->status})';
+$string['cardtitlesize'] = 'Card title text size';
+$string['cardtitlesize_help'] = 'Set the font size for section card and activity card titles in pixels. For example, enter 12 for smaller titles or 16 for larger. Default is 14px.';
+$string['changeicon'] = 'Change icon';
+$string['changeiconfor'] = 'Change the icon for {$a}';
+$string['completed'] = 'Completed';
+$string['completedof'] = '{$a->completed} of {$a->total} activities completed';
+$string['completionrequirement_auto'] = 'Complete activity';
+$string['completionrequirement_grade100'] = 'Required grade 100%';
+$string['completionrequirement_gradeany'] = 'Receive a grade';
+$string['completionrequirement_gradepass'] = 'Required grade {$a}';
+$string['completionrequirement_gradepasspct'] = 'Required grade {$a}%';
+$string['completionrequirement_manual'] = 'Mark as done';
+$string['completionrequirement_view'] = 'View activity';
+$string['courseindex_activity'] = 'Activity pages only';
+$string['courseindex_all'] = 'All pages (home, section, activity)';
+$string['courseindex_home'] = 'Course home only';
+$string['courseindex_home_activity'] = 'Course home + Activity pages';
+$string['courseindex_home_section'] = 'Course home + Section pages';
+$string['courseindex_none'] = 'Hide on all pages';
+$string['courseindex_section'] = 'Section pages only';
+$string['courseindex_section_activity'] = 'Section + Activity pages';
+$string['courseprogress'] = 'Course Progress';
+$string['coursesectionsregion'] = 'Course sections';
+$string['currentsection'] = 'This section';
+$string['dbrepair_completed'] = 'Database repair completed: {$a}';
+$string['dbrepair_norepairs'] = 'No repairs needed';
+$string['defaultgreetingname'] = 'there';
+$string['deletesection'] = 'Delete section';
+$string['deletesectionconfirm'] = 'Are you sure you want to delete this section? This action cannot be undone.';
+$string['deletesectionnamed'] = 'Delete section: {$a}';
+$string['displayascards'] = 'Section display mode';
+$string['displayascards_desc'] = 'Choose how sections are displayed on the course home page.';
+$string['displayascards_help'] = 'Choose between traditional section view (expandable sections with activities listed) or beautiful card view (modern cards with progress tracking, estimated time, and activity dots).';
+$string['displayascardsoption'] = 'Beautiful cards';
+$string['displayassections'] = 'Traditional sections';
+$string['displaysettings'] = 'Default Display Settings';
+$string['displaysettings_desc'] = 'Defaults applied to new courses that use the AI Course Format. Each course can override them in its own course settings.';
+$string['duplicatesection'] = 'Duplicate section';
+$string['duplicatesectionnamed'] = 'Duplicate section: {$a}';
+$string['editsectionnamed'] = 'Edit section: {$a}';
+$string['enabletutor'] = 'Enable AI Tutor';
+$string['enabletutor_desc'] = 'When enabled, the AI Tutor chat bubble is shown to students and teachers on course and activity pages using AI Course Format. Uncheck to hide the tutor completely across all courses.';
+$string['error_activitynotfound'] = 'That activity could not be found.';
+$string['error_activitynotvisible'] = 'You do not have access to this activity.';
+$string['error_addsectionfailed'] = 'The section could not be added.';
+$string['error_bannerfailed'] = 'The banner image could not be generated. Please try again.';
+$string['error_bannerinvalidimage'] = 'The generated banner image could not be read.';
+$string['error_bannernoimage'] = 'The AI service did not return an image.';
+$string['error_bannersavefailed'] = 'The banner image could not be saved to this course.';
+$string['error_bannertoolarge'] = 'The generated banner image is too large to be stored.';
+$string['error_cannotdeletegeneral'] = 'The General section cannot be deleted.';
+$string['error_cannotdeletesection'] = 'This section cannot be deleted.';
+$string['error_cannotduplicategeneral'] = 'The General section cannot be duplicated.';
+$string['error_chatlogunavailable'] = 'Your question was answered, but it could not be saved to the chat history.';
+$string['error_chatnotfound'] = 'That chat entry could not be found.';
+$string['error_correctionfailed'] = 'The correction could not be saved. Please try again.';
+$string['error_deletesectionfailed'] = 'The section could not be deleted.';
+$string['error_duplicatesectionfailed'] = 'The section could not be duplicated.';
+$string['error_guestnotallowed'] = 'Guest users cannot use the AI Tutor.';
+$string['error_invalidicon'] = 'That icon is not available.';
+$string['error_invalidrating'] = 'That rating value is not valid.';
+$string['error_invalidsection'] = 'That section number is not valid.';
+$string['error_memoryunavailable'] = 'The AI Tutor could not update what it remembers about this activity.';
+$string['error_permissiondenied'] = 'You do not have permission to perform this action.';
+$string['error_questionrequired'] = 'Please enter a question.';
+$string['error_ratingfailed'] = 'The rating could not be saved. Please try again.';
+$string['error_sectionnotfound'] = 'The requested section could not be found.';
+$string['error_toomanyrequests'] = 'You have made too many requests. Please wait a moment and try again.';
+$string['error_unknownaction'] = 'Unknown action requested.';
+$string['estimatedtime'] = 'Est. time';
+$string['estimatedtimefor'] = 'Estimated time {$a}';
+$string['esttime_h'] = '{$a} hr';
+$string['esttime_hm'] = '{$a->hours} hr {$a->mins} min';
+$string['esttime_m'] = '{$a} min';
+$string['externalservice'] = 'External AI service';
+$string['externalservice_desc'] = 'When a user asks the AI Tutor a question, this plugin sends their user ID, their first name, the course ID and name, the question text and the text content of the course to <a href="https://lms-labs.com">lms-labs.com</a>, which is operated by LMS-Labs outside your Moodle site. Nothing is sent unless both a Site ID and an API Key are set below and a user actively asks a question. Set "Enable AI Tutor" to No to stop all transmission. See the plugin privacy policy and Site administration &gt; Users &gt; Privacy and policies &gt; Plugin privacy registry for the full field list.';
+$string['generatebannerimage'] = 'Generate AI banner image';
+$string['gotocourse'] = 'Course Home';
+$string['gradefraction'] = '{$a->current}/{$a->max}';
+$string['gradefractionnone'] = '-/{$a}';
+$string['grades'] = 'My Grades';
+$string['herobanneralign'] = 'Hero banner alignment';
+$string['herobanneralign_center'] = 'Centre';
+$string['herobanneralign_help'] = 'Choose whether the hero banner is centred or left-aligned on the page. Left-aligned is useful when you want the banner to line up with the left edge of your page content.';
+$string['herobanneralign_left'] = 'Left';
+$string['herobannerheight'] = 'Hero banner height';
+$string['herobannerheight_help'] = 'Set the maximum height of the hero banner in pixels. A smaller value (140-180px) creates a compact, professional look while a larger value (200-300px) makes the course image more prominent.';
+$string['herobannerwidth'] = 'Hero banner width';
+$string['herobannerwidth_help'] = 'Set the maximum width of the hero banner in pixels to match your theme\'s content width. For example, if your Moodle theme has a 1200px content area, set this to 1200. Set to 0 (default) for full width up to 1400px.';
+$string['hidefromothers'] = 'Hide section';
+$string['hoursshort'] = 'hr';
+$string['icon_alert_triangle'] = 'Warning triangle';
+$string['icon_award'] = 'Award';
+$string['icon_book'] = 'Book';
+$string['icon_book_open'] = 'Open book';
+$string['icon_briefcase'] = 'Briefcase';
+$string['icon_calendar'] = 'Calendar';
+$string['icon_check_circle'] = 'Tick in a circle';
+$string['icon_clipboard'] = 'Clipboard';
+$string['icon_clock'] = 'Clock';
+$string['icon_file_text'] = 'Text document';
+$string['icon_flag'] = 'Flag';
+$string['icon_folder'] = 'Folder';
+$string['icon_graduation'] = 'Graduation cap';
+$string['icon_hard_hat'] = 'Hard hat';
+$string['icon_heart'] = 'Heart';
+$string['icon_help_circle'] = 'Question mark in a circle';
+$string['icon_home'] = 'Home';
+$string['icon_info'] = 'Information';
+$string['icon_laptop'] = 'Laptop';
+$string['icon_layers'] = 'Layers';
+$string['icon_lightbulb'] = 'Light bulb';
+$string['icon_lock'] = 'Padlock';
+$string['icon_map_pin'] = 'Map pin';
+$string['icon_message'] = 'Message';
+$string['icon_monitor'] = 'Monitor';
+$string['icon_package'] = 'Package';
+$string['icon_pen'] = 'Pen';
+$string['icon_play_circle'] = 'Play button';
+$string['icon_rocket'] = 'Rocket';
+$string['icon_settings'] = 'Settings';
+$string['icon_shield'] = 'Shield';
+$string['icon_shield_check'] = 'Shield with a tick';
+$string['icon_star'] = 'Star';
+$string['icon_target'] = 'Target';
+$string['icon_trophy'] = 'Trophy';
+$string['icon_user'] = 'Person';
+$string['icon_users'] = 'People';
+$string['icon_wrench'] = 'Spanner';
+$string['icon_zap'] = 'Lightning bolt';
+$string['iconcategory_achievement'] = 'Achievement';
+$string['iconcategory_education'] = 'Education';
+$string['iconcategory_general'] = 'General';
+$string['iconcategory_numbers'] = 'Numbers';
+$string['iconcategory_people'] = 'People';
+$string['iconcategory_safety'] = 'Safety & compliance';
+$string['iconcategory_work'] = 'Work & industry';
+$string['iconnumber'] = 'Number {$a}';
+$string['iconsaved'] = 'Icon saved';
+$string['iconsaveerror'] = 'Error saving icon';
+$string['inprogress'] = 'In Progress';
+$string['js_completionerror'] = 'Failed to update completion status';
+$string['js_done'] = 'Done';
+$string['js_iconremoved'] = 'Icon removed';
+$string['js_iconsfound'] = '{$a} icons found';
+$string['js_progressannounce'] = 'Course progress: {$a}%';
+$string['js_sectionadded'] = 'Section added';
+$string['js_sectionadderror'] = 'Failed to add section';
+$string['js_sectiondeleted'] = 'Section deleted successfully';
+$string['js_sectiondeleteerror'] = 'Failed to delete section';
+$string['js_sectionduplicated'] = 'Section duplicated successfully';
+$string['js_sectionduplicateerror'] = 'Failed to duplicate section';
+$string['labelseparator'] = ', ';
+$string['listseparator'] = ' • ';
+$string['markasdonefor'] = 'Mark {$a} as done';
+$string['markasdoneundo'] = 'Mark {$a} as not done';
+$string['minutesshort'] = 'min';
+$string['nactivities'] = '{$a} activities';
+$string['nextactivity'] = 'Next activity';
+$string['nextactivitynamed'] = 'Next activity: {$a}';
+$string['nextsection'] = 'Next section';
+$string['nextsectionnamed'] = 'Next section: {$a}';
+$string['noactivitiesinsection'] = 'This section is empty. Add activities to get started.';
+$string['nocompletion'] = 'No completion tracking';
+$string['nosectionsincourse'] = 'This course has no sections yet.';
+$string['notstarted'] = 'Not Started';
+$string['nsections'] = '{$a} modules';
+$string['oneactivity'] = '1 activity';
+$string['onesection'] = '1 module';
+$string['page-course-view-aicourse'] = 'Any course main page in AI Course format';
+$string['page-course-view-aicourse-x'] = 'Any course page in AI Course format';
+$string['percentcomplete'] = '{$a}% complete';
+$string['percentvalue'] = '{$a}%';
+$string['pluginname'] = 'AI Course Format';
+$string['previousactivity'] = 'Previous activity';
+$string['previousactivitynamed'] = 'Previous activity: {$a}';
+$string['previoussection'] = 'Previous section';
+$string['previoussectionnamed'] = 'Previous section: {$a}';
+$string['privacy:metadata:format_aicourse_ai_memory'] = 'A short rolling summary, held per user and per activity, of the topics the user has previously asked the AI Tutor about. It is used to give continuity between tutoring sessions and never stores answers to assessed work.';
+$string['privacy:metadata:format_aicourse_ai_memory:activityid'] = 'The ID of the course module the memory relates to.';
+$string['privacy:metadata:format_aicourse_ai_memory:courseid'] = 'The ID of the course the memory relates to.';
+$string['privacy:metadata:format_aicourse_ai_memory:memory'] = 'The summary of the topics the user has previously asked about.';
+$string['privacy:metadata:format_aicourse_ai_memory:timeupdated'] = 'The time the memory was last updated.';
+$string['privacy:metadata:format_aicourse_ai_memory:userid'] = 'The ID of the user the memory belongs to.';
+$string['privacy:metadata:format_aicourse_chats'] = 'A record of every question asked of the AI Tutor, the answer the AI gave, and any correction a teacher later applied to that answer.';
+$string['privacy:metadata:format_aicourse_chats:activityid'] = 'The ID of the course module the question was asked from, or 0 if it was asked from the course home page.';
+$string['privacy:metadata:format_aicourse_chats:correctedby'] = 'The ID of the teacher who wrote the correction.';
+$string['privacy:metadata:format_aicourse_chats:correction'] = 'A correction written by a teacher to replace or amend the AI response.';
+$string['privacy:metadata:format_aicourse_chats:courseid'] = 'The ID of the course the question was asked in.';
+$string['privacy:metadata:format_aicourse_chats:locked'] = 'Whether the related activity had already been submitted, in which case the AI Tutor answers in reflection mode only.';
+$string['privacy:metadata:format_aicourse_chats:question'] = 'The full text of the question the user asked the AI Tutor.';
+$string['privacy:metadata:format_aicourse_chats:questionslot'] = 'The quiz question slot number the question relates to, where the user asked from within a quiz.';
+$string['privacy:metadata:format_aicourse_chats:rating'] = 'The rating the user gave the AI response: helpful, not helpful, or unrated.';
+$string['privacy:metadata:format_aicourse_chats:refused'] = 'Whether the AI declined to answer in order to protect academic integrity.';
+$string['privacy:metadata:format_aicourse_chats:response'] = 'The full text of the answer the AI Tutor returned.';
+$string['privacy:metadata:format_aicourse_chats:timecorrected'] = 'The time the correction was written.';
+$string['privacy:metadata:format_aicourse_chats:timecreated'] = 'The time the question was asked.';
+$string['privacy:metadata:format_aicourse_chats:userid'] = 'The ID of the user who asked the question.';
+$string['privacy:metadata:lms_labs_ai'] = 'To generate a tutor response, the AI Course Format sends the user\'s question together with the surrounding course content to the LMS-Labs AI service (lms-labs.com), which is operated outside Moodle. No data is sent unless a Site ID and API Key have been configured by an administrator and a user actively asks the AI Tutor a question. Setting "Enable AI Tutor" to No stops all transmission.';
+$string['privacy:metadata:lms_labs_ai:activityname'] = 'The name of the activity the user was viewing when the question was asked.';
+$string['privacy:metadata:lms_labs_ai:coursecontext'] = 'The text content of the course (section names, activity names, descriptions, slide text and quiz question wording) that the AI needs in order to answer in context. Correct answers, answer feedback and essay marking guides are only included if the site setting \'Share assessment answers with the AI Tutor\' permits it, either for the whole site or, where the administrator has delegated the decision, for this individual course. It is set to never share by default.';
+$string['privacy:metadata:lms_labs_ai:courseid'] = 'The ID of the course the question was asked in.';
+$string['privacy:metadata:lms_labs_ai:coursename'] = 'The full name of the course the question was asked in.';
+$string['privacy:metadata:lms_labs_ai:priortutormemory'] = 'The stored summary of the topics this user previously asked about in this activity.';
+$string['privacy:metadata:lms_labs_ai:question'] = 'The full text of the question the user asked.';
+$string['privacy:metadata:lms_labs_ai:questionslot'] = 'The quiz question slot number the user was working on, if any.';
+$string['privacy:metadata:lms_labs_ai:questiontext'] = 'The text of the quiz question the user was working on, if any.';
+$string['privacy:metadata:lms_labs_ai:sectionname'] = 'The name of the course section the user was viewing when the question was asked.';
+$string['privacy:metadata:lms_labs_ai:siteurl'] = 'The URL of this Moodle site, used by the service to identify the subscription the request belongs to.';
+$string['privacy:metadata:lms_labs_ai:studentname'] = 'The first name of the user asking the question, so that the AI can address them by name.';
+$string['privacy:metadata:lms_labs_ai:userid'] = 'The ID of the user asking the question.';
+$string['privacy:path:chats'] = 'AI Tutor conversations';
+$string['privacy:path:corrections'] = 'AI Tutor corrections written by you';
+$string['privacy:path:memory'] = 'AI Tutor memory';
+$string['removebannerimage'] = 'Remove banner image';
+$string['removeicon'] = 'Remove icon';
+$string['returntosection'] = 'Return to Section';
+$string['returntosectionnamed'] = 'Return to section: {$a}';
+$string['searchicons'] = 'Search icons…';
+$string['section0name'] = 'General';
+$string['sectionname'] = 'Section';
+$string['sectionnotfound'] = 'Section not found.';
+$string['sectionnumber'] = 'Section {$a}';
+$string['sectionprogress'] = 'Section progress';
+$string['selecticon'] = 'Select icon';
+$string['shareanswers_always'] = 'Always share, in every course';
+$string['shareanswers_never'] = 'Never share';
+$string['shareanswers_percourse'] = 'Let each course decide';
+$string['shareassessmentanswers'] = 'Share assessment answers with the AI Tutor';
+$string['shareassessmentanswers_desc'] = 'The AI Tutor answers from an index of each course that is sent to the external AI service. This setting decides whether that index also includes the correct answers to quiz and knowledge check questions, the answer options, the per-option feedback, the slide answers and the essay marking guide ("information for graders") that learners never see.<br /><br /><strong>Never share</strong> (the default) keeps every answer key inside your Moodle site.<br /><strong>Always share, in every course</strong> sends answer keys for every course on this site.<br /><strong>Let each course decide</strong> keeps answer keys back unless a teacher turns "Share assessment answers with the AI Tutor" on in that individual course\'s settings; this setting is always the ceiling, so a course can never share what you have not permitted here.<br /><br /><strong>Leave this on "Never share" unless you have a specific reason to change it, and have confirmed that your AI provider agreement permits assessment answers to leave your Moodle site.</strong> With it off the tutor still receives every question\'s wording, so it can discuss the topic and point learners at the right material - it simply does not hold the answer key.';
+$string['shareassessmentanswers_help'] = 'The AI Tutor answers from an index of this course that is sent to an external AI service. When this is set to Yes, that index also includes the correct answers to this course\'s quiz and knowledge check questions, the answer options, the per-option feedback, the slide answers and the essay marking guide ("information for graders") that learners never see.<br /><br /><strong>This setting only takes effect if your site administrator has set "Share assessment answers with the AI Tutor" to "Let each course decide". On a site set to "Never share" nothing is shared whatever you choose here, and on a site set to "Always share" answers are shared whatever you choose here.</strong><br /><br /><strong>Only choose Yes if you have a specific teaching reason - a revision course, for example - and have confirmed with your site administrator that your AI provider agreement permits assessment answers to leave your Moodle site.</strong> With it set to No the tutor still receives every question\'s wording, so it can discuss the topic and point learners at the right material - it simply does not hold the answer key.';
+$string['showactivitiesoncards'] = 'Show activities on cards';
+$string['showactivitiesoncards_help'] = 'When enabled, each section card on the course home page also lists that section\'s activities beneath the summary, with the learner\'s completion state for each one. Only the first few are listed; a "+N" link opens the section to see the rest. Activities a learner cannot see are never listed. Leave this off to keep the card grid at its most compact and scannable.';
+$string['showcourseindex'] = 'Show course index sidebar';
+$string['showcourseindex_help'] = 'The course index sidebar appears on the left side, allowing quick navigation between sections and activities. Choose which pages should display it.';
+$string['showfromothers'] = 'Show section';
+$string['showherobanner'] = 'Show hero banner';
+$string['showherobanner_desc'] = 'Display a sticky hero banner at the top of the course page with course image, title, and progress.';
+$string['showherobanner_help'] = 'When enabled, a beautiful sticky hero banner appears at the top of the course page featuring the course image, title, and real-time progress tracking. The banner uses glassmorphism effects and stays visible as students scroll.';
+$string['shownavchevrons'] = 'Show navigation chevrons';
+$string['shownavchevrons_help'] = 'When enabled, elegant navigation chevrons appear on the left and right sides of activity pages, allowing students to quickly move between activities without returning to the course page.';
+$string['siteid'] = 'Site ID';
+$string['siteid_desc'] = 'Your Moodle site URL (e.g., https://yourmoodle.com). This is used to identify your site with the AI Grader service.';
+$string['viewallactivities'] = 'View all activities';
+$string['viewsection'] = 'View section';

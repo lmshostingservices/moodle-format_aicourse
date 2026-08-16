@@ -1,0 +1,123 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template format_aicourse/report_content_tab
+
+    The "Course Content" tab of the per-course AI Tutor report: what the AI tutor has indexed.
+
+    Heading levels: the page supplies the <h1> and format_aicourse/report_page the <h2>, so this
+    tab supplies <h3> for each region and <h4> for each activity card title. No level is skipped.
+
+    Classes required for JS:
+    * None.
+
+    Data attributes required for JS:
+    * None.
+
+    Context variables required for this template:
+    * sectioncount int Number of visible course sections the AI has indexed.
+    * activitycount int Number of activities the AI has indexed.
+    * charactercount string Total indexed characters, already formatted for the locale.
+    * hascoursesummary bool True when the course has a summary.
+    * coursesummary string PRE-ESCAPED summary HTML. It has already been through format_string()
+      when the index was built and through format_text() with the course context here, so it is
+      cleaned and filtered; it is rendered with a triple mustache.
+    * hasactivities bool True when at least one activity was indexed.
+    * activities array One entry per indexed activity.
+      * name string PRE-ESCAPED activity name (already through format_string()); rendered with a
+        triple mustache so the entities format_string() produced are not escaped twice.
+      * type string Module name, e.g. "quiz". Plain text, escaped by the template.
+      * icon string PRE-ESCAPED markup produced by core's pix_icon output component.
+      * haspreview bool True when there is indexed body text to preview.
+      * preview string Plain text preview, escaped by the template.
+
+    Example context (json):
+    {
+        "sectioncount": 4,
+        "activitycount": 12,
+        "charactercount": "18,204",
+        "hascoursesummary": true,
+        "coursesummary": "<p>An introduction to astrophysics.</p>",
+        "hasactivities": true,
+        "activities": [
+            {
+                "name": "Welcome page",
+                "type": "page",
+                "icon": "<i class=\"icon fa fa-file\"></i>",
+                "haspreview": true,
+                "preview": "Start here before the first seminar."
+            }
+        ]
+    }
+}}
+<div class="aicourse-stats-row">
+    <div class="aicourse-stat-card">
+        <div class="aicourse-stat-value">{{sectioncount}}</div>
+        <div class="aicourse-stat-label">{{#str}} aireport_sections, format_aicourse {{/str}}</div>
+    </div>
+    <div class="aicourse-stat-card">
+        <div class="aicourse-stat-value">{{activitycount}}</div>
+        <div class="aicourse-stat-label">{{#str}} aireport_activities, format_aicourse {{/str}}</div>
+    </div>
+    <div class="aicourse-stat-card">
+        <div class="aicourse-stat-value">{{charactercount}}</div>
+        <div class="aicourse-stat-label">{{#str}} aireport_characters, format_aicourse {{/str}}</div>
+    </div>
+</div>
+
+<div class="aicourse-section-card">
+    <h3 class="aicourse-section-title">{{#str}} aireport_course_summary, format_aicourse {{/str}}</h3>
+    {{#hascoursesummary}}
+    <div class="aicourse-course-summary">{{{coursesummary}}}</div>
+    {{/hascoursesummary}}
+    {{^hascoursesummary}}
+    <p class="aicourse-course-summary"><em>{{#str}} aireport_nocoursesummary, format_aicourse {{/str}}</em></p>
+    {{/hascoursesummary}}
+</div>
+
+<h3 class="aicourse-section-title">{{#str}} aireport_learned_content, format_aicourse {{/str}}</h3>
+
+{{#hasactivities}}
+<div class="aicourse-content-grid">
+    {{#activities}}
+    <div class="aicourse-content-card">
+        <div class="aicourse-content-card-header">
+            <div class="aicourse-content-card-icon">{{{icon}}}</div>
+            <div>
+                <h4 class="aicourse-content-card-title">{{{name}}}</h4>
+                <div class="aicourse-content-card-type">{{type}}</div>
+            </div>
+        </div>
+        <div class="aicourse-content-card-status">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false">
+                <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            <span>{{#str}} aireport_learned, format_aicourse {{/str}}</span>
+        </div>
+        {{#haspreview}}
+        <div class="aicourse-content-card-preview">{{preview}}</div>
+        {{/haspreview}}
+    </div>
+    {{/activities}}
+</div>
+{{/hasactivities}}
+{{^hasactivities}}
+<div class="aicourse-empty-state">
+    <p>{{#str}} nothingtodisplay {{/str}}</p>
+</div>
+{{/hasactivities}}

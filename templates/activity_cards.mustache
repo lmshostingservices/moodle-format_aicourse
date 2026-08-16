@@ -1,0 +1,109 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template format_aicourse/activity_cards
+
+    The activity card grid for a single section: a grid of activity cards, then the full-width
+    content rows produced by url-less content modules ("Text and media area"), then an empty state
+    when the section shows nothing at all.
+
+    The container is a named landmark region and carries a real <h2> so the <h3> activity names sit
+    at the correct depth under the page <h1>. The heading is suppressed when the caller (the
+    General section block) has already emitted one for the same section. Every decorative SVG
+    carries aria-hidden="true" focusable="false".
+
+    Classes required for JS:
+    * aicourse-activity-cards-grid
+
+    Data attributes required for JS:
+    * data-for="cmlist" and data-id on the grid - the attributes core_courseformat's reactive state
+      manager binds to so activity move/visibility mutations can update the grid.
+    * data-cmid on each content row.
+
+    Context variables required for this template:
+    * notfound bool True when the requested section does not exist; only the empty state is drawn.
+    * regionlabel string Accessible name of the region (the section name, plain text).
+    * showheading bool True when the region <h2> should be rendered.
+    * sectionname string PRE-ESCAPED section name (already through format_string()); rendered with
+      a triple mustache so the entities format_string() produced are not escaped twice.
+    * sectionid int Section record ID, used as the reactive cmlist owner.
+    * cards array List of contexts for format_aicourse/activity_card.
+    * contentrows array Objects with cmid and content. content is PRE-ESCAPED HTML from
+      cm_info::get_formatted_content(), i.e. it has already been through format_text(), so it is
+      rendered with a triple mustache.
+    * isempty bool True when the section rendered no activities at all.
+
+    Example context (json):
+    {
+        "notfound": false,
+        "regionlabel": "Module 1: Foundations",
+        "showheading": true,
+        "sectionname": "Module 1: Foundations",
+        "sectionid": 35,
+        "cards": [
+            {
+                "issubsection": false,
+                "cmid": 12,
+                "url": "https://example.org/mod/page/view.php?id=12",
+                "status": "completed",
+                "haslabel": true,
+                "cardlabel": "What is machine learning? (Completed)",
+                "iconurl": "https://example.org/theme/image.php/boost/page/1/monologo",
+                "name": "What is machine learning?",
+                "typename": "Page",
+                "iscompleted": true,
+                "statuslabel": "Completed",
+                "badgeclass": "aicourse-status-badge-completed"
+            }
+        ],
+        "contentrows": [
+            {
+                "cmid": 19,
+                "content": "<div class=\"no-overflow\"><p>Read this first.</p></div>"
+            }
+        ],
+        "isempty": false
+    }
+}}
+{{#notfound}}
+<div class="aicourse-activity-cards-container">
+<div class="aicourse-empty-state">
+<p>{{#str}} sectionnotfound, format_aicourse {{/str}}</p>
+</div>
+</div>
+{{/notfound}}
+{{^notfound}}
+<div class="aicourse-activity-cards-container" role="region" aria-label="{{regionlabel}}">
+{{#showheading}}
+<h2 class="aicourse-activity-cards-heading accesshide">{{{sectionname}}}</h2>
+{{/showheading}}
+<div class="aicourse-activity-cards-grid" data-for="cmlist" data-id="{{sectionid}}">
+{{#cards}}
+{{> format_aicourse/activity_card }}
+{{/cards}}
+</div>
+{{#contentrows}}
+<div class="aicourse-activity-content-row" data-cmid="{{cmid}}"><div class="aicourse-activity-content">{{{content}}}</div></div>
+{{/contentrows}}
+{{#isempty}}
+<div class="aicourse-empty-state">
+<svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.4;margin-bottom:12px"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/><path d="M14 4h7"/><path d="M14 9h7"/><path d="M14 15h7"/><path d="M14 20h7"/></svg>
+<p>{{#str}} noactivitiesinsection, format_aicourse {{/str}}</p>
+</div>
+{{/isempty}}
+</div>
+{{/notfound}}

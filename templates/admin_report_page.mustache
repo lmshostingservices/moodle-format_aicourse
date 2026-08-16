@@ -1,0 +1,214 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template format_aicourse/admin_report_page
+
+    The site-wide AI Tutor report: headline counters, filters, results table and CSV download.
+
+    The results table is not built here. It is produced by core's html_table component in
+    format_aicourse\output\report\adminreport::build_table(), which supplies the <caption> and
+    scope="col" on every header cell, and every cell in it is escaped where it is built.
+
+    Classes required for JS:
+    * None. This page needs no JavaScript of its own; the long-text disclosures are native
+      <details> elements.
+
+    Data attributes required for JS:
+    * None.
+
+    admin_report.php uses pagelayout `admin`, so this markup never carries the format-aicourse
+    body class. Its styling hangs off the plugin-owned .aicadmin-wrap root, which carries the
+    plugin's design tokens for exactly that reason (styles.css sections 2-5 and 21b).
+    .aicadmin-result-bar-tools groups the rows-per-page menu and the CSV button so the bar wraps
+    as one unit on a narrow screen; it is the only class here the string builder did not emit.
+
+    Context variables required for this template:
+    * title string Page heading, from the language pack. It is NOT printed here: Moodle's page
+      header already emits it as the page <h1>, and repeating it would give the page two headings
+      with the same text. It stays in the context for themes that override this template.
+    * stats array Headline counters, each with value (string) and label (string).
+    * cappednotices array PRE-ESCAPED markup from core's notification output component, shown when
+      a filter menu had to be truncated.
+    * filterform object The filter form.
+      * action string Form action URL.
+      * search string Current search text.
+      * datefrom string Current "from" date in YYYY-MM-DD form.
+      * dateto string Current "to" date in YYYY-MM-DD form.
+      * sort string Current sort key, carried in a hidden field.
+      * dir string Current sort direction, carried in a hidden field.
+      * perpage int Current rows per page, carried in a hidden field.
+      * courseoptions|useroptions|ratingoptions|refusedoptions array Each entry has value, label
+        and selected.
+      * reseturl string URL that clears every filter.
+    * showingtext string "Showing x-y of z" summary.
+    * perpageselect string PRE-ESCAPED markup from core's single_select output component.
+    * hasexport bool True when there is at least one matching record to export.
+    * csvurl string URL of the CSV download for the current filters.
+    * exportlabel string Label of the CSV download button.
+    * hasresults bool True when the current page has at least one row.
+    * resultstable string PRE-ESCAPED markup from core's html_table output component.
+    * noresultsnotice string PRE-ESCAPED markup from core's notification output component.
+    * pagingbar string PRE-ESCAPED markup from core's paging_bar output component.
+
+    Example context (json):
+    {
+        "title": "AI Tutor — All Q&A (Site-wide)",
+        "stats": [{"value": "42", "label": "Total Questions (all time)"}],
+        "cappednotices": [],
+        "filterform": {
+            "action": "https://example.org/course/format/aicourse/admin_report.php",
+            "search": "",
+            "datefrom": "",
+            "dateto": "",
+            "sort": "timecreated",
+            "dir": "DESC",
+            "perpage": 25,
+            "courseoptions": [{"value": 0, "label": "All courses", "selected": true}],
+            "useroptions": [{"value": 0, "label": "All Students", "selected": true}],
+            "ratingoptions": [{"value": "", "label": "All Ratings", "selected": true}],
+            "refusedoptions": [{"value": "", "label": "All", "selected": true}],
+            "reseturl": "https://example.org/course/format/aicourse/admin_report.php"
+        },
+        "showingtext": "Showing 1-1 of 1 records",
+        "perpageselect": "",
+        "hasexport": true,
+        "csvurl": "https://example.org/course/format/aicourse/admin_report.php?export=1",
+        "exportlabel": "Export CSV",
+        "hasresults": true,
+        "resultstable": "<table class=\"aicadmin-table\"><caption>Records</caption></table>",
+        "noresultsnotice": "",
+        "pagingbar": ""
+    }
+}}
+<div class="aicadmin-wrap">
+
+    <div class="aicadmin-stats">
+        {{#stats}}
+        <div class="aicadmin-stat">
+            <div class="aicadmin-stat-val">{{value}}</div>
+            <div class="aicadmin-stat-lbl">{{label}}</div>
+        </div>
+        {{/stats}}
+    </div>
+
+    {{#cappednotices}}{{{.}}}{{/cappednotices}}
+
+    {{#filterform}}
+    <div class="aicadmin-filter-card">
+        <form method="get" action="{{action}}">
+            <input type="hidden" name="sort" value="{{sort}}">
+            <input type="hidden" name="dir" value="{{dir}}">
+            <input type="hidden" name="perpage" value="{{perpage}}">
+            <fieldset>
+                <legend class="sr-only">{{#str}} filter {{/str}}</legend>
+                <div class="aicadmin-filter-row">
+
+                    <div class="aicadmin-filter-group form-group mb-2">
+                        <label for="ag-search">{{#str}} admin_report_search, format_aicourse {{/str}}</label>
+                        <input id="ag-search" class="form-control" type="search" name="search"
+                            value="{{search}}"
+                            placeholder="{{#str}} aireport_search, format_aicourse {{/str}}">
+                    </div>
+
+                    <div class="aicadmin-filter-group form-group mb-2">
+                        <label for="ag-course">{{#str}} admin_report_filter_course, format_aicourse {{/str}}</label>
+                        <select id="ag-course" class="custom-select" name="filtercourseid">
+                            {{#courseoptions}}
+                            <option value="{{value}}"{{#selected}} selected{{/selected}}>{{label}}</option>
+                            {{/courseoptions}}
+                        </select>
+                    </div>
+
+                    <div class="aicadmin-filter-group form-group mb-2">
+                        <label for="ag-user">{{#str}} admin_report_filter_student, format_aicourse {{/str}}</label>
+                        <select id="ag-user" class="custom-select" name="filteruserid">
+                            {{#useroptions}}
+                            <option value="{{value}}"{{#selected}} selected{{/selected}}>{{label}}</option>
+                            {{/useroptions}}
+                        </select>
+                    </div>
+
+                    <div class="aicadmin-filter-group form-group mb-2">
+                        <label for="ag-rating">{{#str}} admin_report_filter_rating, format_aicourse {{/str}}</label>
+                        <select id="ag-rating" class="custom-select" name="filterrating">
+                            {{#ratingoptions}}
+                            <option value="{{value}}"{{#selected}} selected{{/selected}}>{{label}}</option>
+                            {{/ratingoptions}}
+                        </select>
+                    </div>
+
+                    <div class="aicadmin-filter-group form-group mb-2">
+                        <label for="ag-refused">{{#str}} admin_report_filter_refused, format_aicourse {{/str}}</label>
+                        <select id="ag-refused" class="custom-select" name="filterrefused">
+                            {{#refusedoptions}}
+                            <option value="{{value}}"{{#selected}} selected{{/selected}}>{{label}}</option>
+                            {{/refusedoptions}}
+                        </select>
+                    </div>
+
+                    <div class="aicadmin-filter-group form-group mb-2">
+                        <label for="ag-datefrom">{{#str}} admin_report_filter_datefrom, format_aicourse {{/str}}</label>
+                        <input id="ag-datefrom" class="form-control" type="date" name="datefrom" value="{{datefrom}}">
+                    </div>
+
+                    <div class="aicadmin-filter-group form-group mb-2">
+                        <label for="ag-dateto">{{#str}} admin_report_filter_dateto, format_aicourse {{/str}}</label>
+                        <input id="ag-dateto" class="form-control" type="date" name="dateto" value="{{dateto}}">
+                    </div>
+
+                    <div class="aicadmin-filter-btns form-group mb-2">
+                        <button type="submit" class="aicadmin-btn aicadmin-btn-primary btn btn-primary">
+                            {{#str}} aireport_apply, format_aicourse {{/str}}
+                        </button>
+                        <a href="{{reseturl}}" class="aicadmin-btn aicadmin-btn-outline btn btn-secondary">
+                            {{#str}} admin_report_reset, format_aicourse {{/str}}
+                        </a>
+                    </div>
+
+                </div>
+            </fieldset>
+        </form>
+    </div>
+    {{/filterform}}
+
+    <div class="aicadmin-result-bar">
+        <p class="aicadmin-result-bar-count">{{showingtext}}</p>
+        <div class="aicadmin-result-bar-tools">
+            <div>{{{perpageselect}}}</div>
+            {{#hasexport}}
+            <a href="{{csvurl}}" class="aicadmin-btn aicadmin-btn-csv btn btn-success" download>
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2.5" aria-hidden="true" focusable="false">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="7 10 12 15 17 10"/>
+                    <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                {{exportlabel}}
+            </a>
+            {{/hasexport}}
+        </div>
+    </div>
+
+    {{#hasresults}}
+    <div class="aicadmin-table-wrap">{{{resultstable}}}</div>
+    <div class="aicadmin-pagination">{{{pagingbar}}}</div>
+    {{/hasresults}}
+    {{^hasresults}}
+    <div class="aicadmin-no-results">{{{noresultsnotice}}}</div>
+    {{/hasresults}}
+
+</div>

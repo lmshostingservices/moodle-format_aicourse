@@ -1,0 +1,231 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template format_aicourse/section_card
+
+    A single section card in the AI Course course home grid.
+
+    The card title link is the only element in the card that is exposed to assistive technology;
+    the time badge, the activity count and the percentage badge repeat information that is already
+    in the title link's accessible name, so they are removed from the tab order and the
+    accessibility tree (tabindex="-1" aria-hidden="true") to satisfy WCAG 2.4.4. Every decorative
+    SVG carries aria-hidden="true" focusable="false".
+
+    Classes required for JS:
+    * aicourse-card - the card root, read by amd/src/courseformat.js.
+    * aicourse-card-settings
+    * aicourse-card-duplicate - AJAX duplicate handler.
+    * aicourse-card-delete - AJAX delete handler.
+    * aicourse-card-icon-editable - opens the icon picker modal.
+    * aicourse-card-drag-handle - the grab handle bound by amd/src/local/sectioncardhandle.js.
+    * aicourse-card-bulkselect - wrapper that pins core's bulk selection checkbox to the card.
+
+    Data attributes required for JS:
+    * data-section, data-sectionid, data-courseid, data-sectionnum - read by
+      amd/src/courseformat.js for the duplicate, delete and icon actions.
+    * data-for="section", data-id, data-number on the card root and data-for="section_title" on the
+      title - the attributes core_courseformat's reactive state manager binds to.
+    * data-drag-type="section" on the grab handle - selects the element
+      format_aicourse/local/sectioncard makes draggable.
+    * data-action="moveSection" with data-id on the grab handle - dispatched by core's own
+      core_courseformat/local/content/actions, which opens the keyboard accessible move dialogue.
+    * data-for="sectionBulkSelect" with a data-bulkcheckbox input inside it, emitted by core's own
+      core_courseformat/local/content/section/bulkselect partial - shown, checked and disabled by
+      format_aicourse/local/sectioncard from the reactive bulk state, and found by core's bulk
+      edit tools when the teacher uses "Select all".
+
+    Context variables required for this template:
+    * sectionid int Section record ID.
+    * sectionnum int Section number.
+    * courseid int Course ID.
+    * sectionurl string Unescaped section URL.
+    * sectionname string PRE-ESCAPED section name (already through format_string()); rendered with
+      a triple mustache so the entities format_string() produced are not escaped twice.
+    * isediting bool True when the teacher has edit mode turned on.
+    * uselistroles bool True when role="listitem" should be emitted.
+    * sectionbulk object|null Context for core_courseformat/local/content/section/bulkselect
+      ({id, name}), or null when the section cannot take part in a bulk selection.
+    * showeditbuttons bool True when the card edit controls should be rendered.
+    * editsectionurl string Unescaped URL of the section settings page (edit mode only).
+    * editsectionlabel string Accessible name of the settings link (edit mode only).
+    * editsectiontitle string Tooltip of the settings link (edit mode only).
+    * duplicatelabel string Accessible name of the duplicate button (edit mode only).
+    * duplicatetitle string Tooltip of the duplicate button (edit mode only).
+    * deletelabel string Accessible name of the delete button (edit mode only).
+    * deletetitle string Tooltip of the delete button (edit mode only).
+    * movelabel string Accessible name of the move / drag handle (edit mode only).
+    * movetitle string Tooltip of the move / drag handle (edit mode only).
+    * iconbuttonlabel string Accessible name of the icon picker button (edit mode only).
+    * hasicon bool True when the teacher has chosen an icon for this section.
+    * iconsvg string PRE-ESCAPED SVG child markup taken from the plugin's own icon library
+      (\format_aicourse\local\icons::get_library()); it is plugin-defined constant markup, never
+      user input, so it is rendered with a triple mustache.
+    * hastime bool True when an estimated study time is known.
+    * estimatedtime string Localised estimated study time, e.g. "25 min".
+    * cardlinklabel string Accessible name of the card title link.
+    * hassummary bool True when a truncated section summary should be shown.
+    * summary string Plain-text truncated section summary.
+    * hasactivities bool True when the course option "Show activities on cards" is on AND this
+      section holds at least one activity the user may see. False (the default) emits nothing.
+    * activities array Objects with url (PRE-ESCAPED by moodle_url::out() or s()), name
+      (PRE-ESCAPED by format_string()), label (the accessible name, plain text) and stateclass
+      (one of aicourse-actstate-completed / -in_progress / -not_started / -none).
+    * moreactivities object|null Overflow link with url (unescaped), remaining and label, or null
+      when every activity in the section is already listed.
+    * hasfooter bool True when the card footer should be rendered.
+    * hascount bool True when the activity count should be rendered.
+    * counttext string Localised activity count, e.g. "3 activities".
+    * hasprogress bool True when completion tracking gives this section a percentage.
+    * badgeclass string CSS class of the percentage badge.
+    * percenttext string Localised percentage, e.g. "33%".
+    * hasdots bool True when the compact progress dots should be rendered.
+    * dots array Objects with url (PRE-ESCAPED by moodle_url::out()), statusclass and label.
+    * moredots object|null Overflow link with url (unescaped), remaining and title.
+
+    Example context (json):
+    {
+        "sectionid": 35,
+        "sectionnum": 1,
+        "courseid": 2,
+        "sectionurl": "https://example.org/course/section.php?id=35",
+        "sectionname": "Module 1: Foundations",
+        "isediting": false,
+        "uselistroles": true,
+        "sectionbulk": null,
+        "showeditbuttons": false,
+        "editsectionurl": "https://example.org/course/editsection.php?id=35&amp;sr=0",
+        "editsectionlabel": "Edit section: Module 1: Foundations",
+        "editsectiontitle": "Edit section",
+        "duplicatelabel": "Duplicate section: Module 1: Foundations",
+        "duplicatetitle": "Duplicate section",
+        "deletelabel": "Delete section: Module 1: Foundations",
+        "deletetitle": "Delete section",
+        "movelabel": "Move Module 1: Foundations",
+        "movetitle": "Move section",
+        "iconbuttonlabel": "Add an icon for Module 1: Foundations",
+        "hasicon": false,
+        "iconsvg": "",
+        "hastime": true,
+        "estimatedtime": "25 min",
+        "cardlinklabel": "Module 1: Foundations, 3 activities, Estimated time 25 min, 33% complete",
+        "hassummary": true,
+        "summary": "What machine learning is and why it matters.",
+        "hasactivities": true,
+        "activities": [
+            {
+                "url": "https://example.org/mod/page/view.php?id=12",
+                "name": "What is machine learning?",
+                "label": "What is machine learning?, Module 1: Foundations (Completed)",
+                "stateclass": "aicourse-actstate-completed"
+            },
+            {
+                "url": "https://example.org/mod/quiz/view.php?id=13",
+                "name": "Foundations knowledge check",
+                "label": "Foundations knowledge check, Module 1: Foundations (Not Started)",
+                "stateclass": "aicourse-actstate-not_started"
+            }
+        ],
+        "moreactivities": {
+            "url": "https://example.org/course/section.php?id=35",
+            "remaining": 1,
+            "label": "View all activities in Module 1: Foundations"
+        },
+        "hasfooter": true,
+        "hascount": true,
+        "counttext": "3 activities",
+        "hasprogress": true,
+        "badgeclass": "aicourse-progress-badge",
+        "percenttext": "33%",
+        "hasdots": true,
+        "dots": [
+            {
+                "url": "https://example.org/mod/page/view.php?id=12",
+                "statusclass": "aicourse-dot-completed",
+                "label": "What is machine learning? (Completed)"
+            },
+            {
+                "url": "https://example.org/mod/quiz/view.php?id=13",
+                "statusclass": "aicourse-dot-not_started",
+                "label": "Foundations knowledge check (Not Started)"
+            }
+        ],
+        "moredots": {
+            "url": "https://example.org/course/section.php?id=35",
+            "remaining": 2,
+            "title": "View all activities"
+        }
+    }
+}}
+<div class="aicourse-card" data-section="{{sectionnum}}" data-sectionid="{{sectionid}}"{{#uselistroles}} role="listitem"{{/uselistroles}} data-for="section" data-id="{{sectionid}}" data-number="{{sectionnum}}">
+{{#sectionbulk}}
+<div class="aicourse-card-bulkselect">
+{{> core_courseformat/local/content/section/bulkselect }}
+</div>
+{{/sectionbulk}}
+{{#showeditbuttons}}
+<div class="aicourse-card-edit-buttons">
+<button type="button" class="aicourse-card-drag-handle" data-action="moveSection" data-id="{{sectionid}}" data-drag-type="section" aria-label="{{movelabel}}" title="{{movetitle}}"><svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="5" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="19" r="1"/></svg></button><a href="{{editsectionurl}}" class="aicourse-card-settings" aria-label="{{editsectionlabel}}" title="{{editsectiontitle}}"><svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg></a><button type="button" class="aicourse-card-duplicate" data-sectionid="{{sectionid}}" data-courseid="{{courseid}}" aria-label="{{duplicatelabel}}" title="{{duplicatetitle}}"><svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button><button type="button" class="aicourse-card-delete" data-sectionid="{{sectionid}}" data-sectionnum="{{sectionnum}}" aria-label="{{deletelabel}}" title="{{deletetitle}}"><svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+</div>
+{{/showeditbuttons}}
+<div class="aicourse-card-header">
+{{#isediting}}
+<button type="button" class="aicourse-icon-col aicourse-card-icon-editable" aria-label="{{iconbuttonlabel}}" data-courseid="{{courseid}}" data-sectionid="{{sectionid}}">{{> format_aicourse/section_icon }}<span class="aicourse-icon-change-label">{{#hasicon}}{{#str}} changeicon, format_aicourse {{/str}}{{/hasicon}}{{^hasicon}}{{#str}} addicon, format_aicourse {{/str}}{{/hasicon}}</span></button>
+{{/isediting}}
+{{^isediting}}
+{{> format_aicourse/section_icon }}
+{{/isediting}}
+{{#hastime}}
+<a href="{{sectionurl}}" class="aicourse-card-time" tabindex="-1" aria-hidden="true"><svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg><span>{{estimatedtime}}</span></a>
+{{/hastime}}
+</div>
+<a href="{{sectionurl}}" class="aicourse-card-link" aria-label="{{cardlinklabel}}"><h3 class="aicourse-card-title" data-for="section_title" data-id="{{sectionid}}" data-number="{{sectionnum}}">{{{sectionname}}}</h3></a>
+{{#hassummary}}
+<p class="aicourse-card-summary">{{summary}}</p>
+{{/hassummary}}
+{{#hasactivities}}
+<ul class="aicourse-card-activities">
+{{#activities}}
+<li class="aicourse-card-activity"><a href="{{{url}}}" class="aicourse-card-activity-link" aria-label="{{label}}"><span class="aicourse-card-activity-state {{stateclass}}" aria-hidden="true"></span><span class="aicourse-card-activity-name">{{{name}}}</span></a></li>
+{{/activities}}
+{{#moreactivities}}
+<li class="aicourse-card-activity"><a href="{{url}}" class="aicourse-card-activities-more" aria-label="{{label}}" title="{{label}}">+{{remaining}}</a></li>
+{{/moreactivities}}
+</ul>
+{{/hasactivities}}
+{{#hasfooter}}
+<div class="aicourse-card-footer">
+<div class="aicourse-card-footer-left">
+{{#hascount}}
+<a href="{{sectionurl}}" class="aicourse-activity-count" tabindex="-1" aria-hidden="true">{{counttext}}</a>
+{{/hascount}}
+{{#hasdots}}
+<div class="aicourse-card-dots">
+{{#dots}}
+<a href="{{{url}}}" class="aicourse-card-dot {{statusclass}}" aria-label="{{label}}" title="{{label}}"></a>
+{{/dots}}
+{{#moredots}}
+<a href="{{url}}" class="aicourse-card-dots-more" tabindex="-1" aria-hidden="true" title="{{title}}">+{{remaining}}</a>
+{{/moredots}}
+</div>
+{{/hasdots}}
+</div>
+{{#hasprogress}}
+<a href="{{sectionurl}}" class="{{badgeclass}}" tabindex="-1" aria-hidden="true">{{percenttext}}</a>
+{{/hasprogress}}
+</div>
+{{/hasfooter}}
+</div>
