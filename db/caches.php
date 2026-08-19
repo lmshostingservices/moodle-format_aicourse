@@ -39,6 +39,20 @@
 defined('MOODLE_INTERNAL') || die();
 
 $definitions = [
+    // ACF-FIX-2.1.4: declared here rather than conjured at runtime with
+    // cache::make_from_params(). A declared definition can be inspected, sized and redirected to
+    // a shared store by an administrator, which matters on a cluster: an undeclared per-node
+    // cache means the per-user rate limit is enforced per web node rather than site wide.
+    // Deliberately no TTL -- \format_aicourse\external\throttle prunes timestamps outside the
+    // window itself, and a TTL here would silently reset a user's allowance.
+    'ajaxratelimit' => [
+        'mode'       => cache_store::MODE_APPLICATION,
+        'simplekeys' => true,
+        'simpledata' => false,
+        'staticacceleration' => true,
+        'staticaccelerationsize' => 2,
+    ],
+
     'coursecontent' => [
         'mode'       => cache_store::MODE_APPLICATION,
         'ttl'        => 600, // 10 minutes

@@ -106,9 +106,9 @@ final class save_icon_test extends external_testcase {
 
         $this->setUser($this->teacher);
 
-        $this->expectException(\moodle_exception::class);
-        $this->expectExceptionMessageMatches('/not valid/');
-        save_icon::execute($this->course->id, $othersection, 'rocket');
+        $this->assert_throws_errorcode('error_invalidsection', function (): void {
+            save_icon::execute($this->course->id, $othersection, 'rocket');
+        });
     }
 
     /**
@@ -117,9 +117,9 @@ final class save_icon_test extends external_testcase {
     public function test_execute_rejects_an_unknown_icon(): void {
         $this->setUser($this->teacher);
 
-        $this->expectException(\moodle_exception::class);
-        $this->expectExceptionMessageMatches('/not available/');
-        save_icon::execute($this->course->id, $this->get_section_id(), 'definitelynotanicon');
+        $this->assert_throws_errorcode('error_invalidicon', function (): void {
+            save_icon::execute($this->course->id, $this->get_section_id(), 'definitelynotanicon');
+        });
     }
 
     /**

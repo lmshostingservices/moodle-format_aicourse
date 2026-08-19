@@ -36,7 +36,7 @@ use stdClass;
  */
 class contenttab implements named_templatable, renderable {
     /** @var int Number of characters of an activity shown in the card preview. */
-    const PREVIEW_LENGTH = 150;
+    public const PREVIEW_LENGTH = 150;
 
     /** @var stdClass Course record. */
     protected $course;

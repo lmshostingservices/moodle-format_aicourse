@@ -78,7 +78,7 @@ class before_footer_html_generation {
         $sectionidparam = optional_param('id', 0, PARAM_INT);
 
         // Detect if we're on section.php (uses id param for section ID).
-        $issectionphp = strpos($_SERVER['SCRIPT_NAME'] ?? '', '/course/section.php') !== false;
+        $issectionphp = \format_aicourse\local\callbacks::is_section_php_request();
 
         // ACF-FIX-2.1: the section.php -> view.php redirect used to happen HERE, in the footer,
         // with an inline <script>window.location.replace(...)</script>. By the time a footer hook
@@ -167,6 +167,10 @@ class before_footer_html_generation {
         // where it ran before full authentication was available.
         if ($isgrader) {
             $lateclasses[] = 'aicourse-is-grader';
+            // ACF-FIX-2.1.4: paired with aicourse-is-grader; see the note in lib.php.
+            if (has_capability('moodle/course:update', $coursecontext)) {
+                $lateclasses[] = 'aicourse-can-edit';
+            }
         }
 
         if (!empty($lateclasses)) {

@@ -39,16 +39,16 @@ use moodle_url;
  */
 class adminfilter {
     /** @var int Smallest number of rows a user may ask for. */
-    const PERPAGE_MIN = 5;
+    public const PERPAGE_MIN = 5;
 
     /** @var int Largest number of rows a user may ask for. */
-    const PERPAGE_MAX = 200;
+    public const PERPAGE_MAX = 200;
 
     /** @var int Default number of rows per page. */
-    const PERPAGE_DEFAULT = 25;
+    public const PERPAGE_DEFAULT = 25;
 
     /** @var int Upper bound on the entries offered in the course/student filter menus. */
-    const MAX_FILTER_OPTIONS = 500;
+    public const MAX_FILTER_OPTIONS = 500;
 
     /** @var int Zero-based page number. */
     public $page = 0;

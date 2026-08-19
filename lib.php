@@ -69,6 +69,17 @@ class format_aicourse extends format_topics {
                 if (permissions::is_grader($coursecontext)) {
                     $page->add_body_class('aicourse-is-grader');
                 }
+                // ACF-FIX-2.1.4: aicourse-is-grader is true for every teacher, manager and
+                // admin, and styles.css used it to hide the hero banner outright. That
+                // contradicted format.php, which deliberately renders the hero for anyone who
+                // can edit so they can reach the "Generate banner" button (FIX-ACF-EDITOR-HERO,
+                // v1.7.68) -- so the banner was rendered and then hidden again by CSS, for every
+                // editing user, in and out of edit mode. CSS cannot ask about capabilities, so
+                // the distinction the PHP already makes is published as its own class and the
+                // hide rule is scoped with :not(.aicourse-can-edit).
+                if (has_capability('moodle/course:update', $coursecontext)) {
+                    $page->add_body_class('aicourse-can-edit');
+                }
             } catch (\Throwable $e) {
                 // Context not ready yet — hook JS fallback will handle it.
                 unset($e);
@@ -151,8 +162,7 @@ class format_aicourse extends format_topics {
      * @return bool True when the running script is course/section.php.
      */
     protected function is_section_php_request(): bool {
-        $script = $_SERVER['SCRIPT_NAME'] ?? '';
-        return strpos($script, '/course/section.php') !== false;
+        return \format_aicourse\local\callbacks::is_section_php_request();
     }
 
     /**
@@ -506,7 +516,7 @@ class format_aicourse extends format_topics {
                     context_course::instance($course->id)->id,
                     'format_aicourse',
                     'bannerimage',
-                    $course->id,
+                    \format_aicourse\local\banner::BANNER_ITEMID,
                     ['maxbytes' => 5 * 1024 * 1024, 'maxfiles' => 1, 'subdirs' => 0]
                 );
                 $mform->setDefault('bannerimage', $draftitemid);
@@ -544,7 +554,7 @@ class format_aicourse extends format_topics {
                     $context->id,
                     'format_aicourse',
                     'bannerimage',
-                    $course->id,
+                    \format_aicourse\local\banner::BANNER_ITEMID,
                     ['maxbytes' => 5 * 1024 * 1024, 'maxfiles' => 1, 'subdirs' => 0]
                 );
             }

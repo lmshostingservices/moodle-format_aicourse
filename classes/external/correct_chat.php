@@ -73,7 +73,17 @@ class correct_chat extends external_api {
         self::validate_context($context);
 
         // ACF-FIX-2.0: NOT moodle/course:viewparticipants — students hold that capability.
+        // Reading the report is the precondition for writing onto a row in it.
         require_capability('format/aicourse:viewreport', $context);
+
+        // ACF-FIX-2.1.4: format/aicourse:correctresponses is declared in db/access.php with
+        // RISK_XSS | RISK_PERSONAL precisely because it lets one user write free text onto
+        // another user's record. It was declared but never enforced anywhere, which made it an
+        // orphan. Enforce it here, which is the only place a correction is written. Its default
+        // archetypes (teacher, editingteacher, manager) are identical to those of viewreport, so
+        // no existing site loses access on upgrade -- but a site that wants to let a role read
+        // the report without editing it can now revoke this one capability alone.
+        require_capability('format/aicourse:correctresponses', $context);
 
         $chat = $DB->get_record('format_aicourse_chats', [
             'id' => $params['chatid'],

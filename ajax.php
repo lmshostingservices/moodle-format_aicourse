@@ -63,8 +63,6 @@ $map = [
     ]],
     'generate_banner_image' => ['format_aicourse_generate_banner_image', []],
     'delete_banner_image' => ['format_aicourse_delete_banner_image', []],
-    'dbdiag' => ['format_aicourse_db_diagnostic', []],
-    'dbrepair' => ['format_aicourse_db_repair', []],
 ];
 
 $action = required_param('action', PARAM_ALPHAEXT);
@@ -94,7 +92,7 @@ if (!isset($map[$action])) {
 debugging('format_aicourse/ajax.php is deprecated. Call the external function ' . $function
     . ' instead.', DEBUG_DEVELOPER);
 
-$args = $function === 'format_aicourse_db_repair' ? [] : ['courseid' => $courseid];
+$args = ['courseid' => $courseid];
 foreach ($paramtypes as $name => $type) {
     $value = optional_param($name, null, $type);
     if ($value !== null) {
@@ -103,8 +101,9 @@ foreach ($paramtypes as $name => $type) {
 }
 
 // The third argument stays false: this endpoint performs its own require_login() and
-// require_sesskey(), each external function performs its own require_capability(), and the two
-// support actions are registered with 'ajax' => false yet must keep working here for one release.
+// require_sesskey() above, and each external function performs its own require_capability().
+// Every function reachable through this map is registered with 'ajax' => true, so nothing here
+// is exposed that core/ajax would not already expose.
 $result = external_api::call_external_function($function, $args, false);
 
 if ($result['error']) {

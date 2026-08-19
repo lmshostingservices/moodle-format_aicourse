@@ -106,9 +106,9 @@ final class rate_chat_test extends external_testcase {
         $chatid = $this->create_chat((int) $this->student->id);
         $this->setUser($this->student);
 
-        $this->expectException(\moodle_exception::class);
-        $this->expectExceptionMessageMatches('/not valid/');
-        rate_chat::execute($this->course->id, $chatid, 5);
+        $this->assert_throws_errorcode('error_invalidrating', function (): void {
+            rate_chat::execute($this->course->id, $chatid, 5);
+        });
     }
 
     /**

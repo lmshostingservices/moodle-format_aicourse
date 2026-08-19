@@ -345,10 +345,10 @@ export const init = (courseid) => {
 
     courseId = parseInt(courseid, 10);
     liveRegion = createLiveRegion(table);
-    // Core's changessaved ("Changes saved") is deliberate: it says the right thing, it is already
-    // translated in every language pack, and it keeps this module free of any dependency on a
-    // language string that is not in the plugin's pack yet. See /root/work/strings_reportjs.txt
-    // for the two plugin-specific alternatives, which are a refinement, not a requirement.
+    // Core's changessaved ("Changes saved") is deliberate: it says the right thing, it is
+    // already translated in every language pack, and it keeps this module free of any
+    // dependency on a plugin-specific string for a phrase core already owns. Plugin-specific
+    // alternatives would be a refinement, not a requirement.
     stringsPromise = getStrings([
         {key: 'changessaved', component: 'core'},
         {key: 'aireport_correction', component: 'format_aicourse'},

@@ -55,8 +55,8 @@ export default class extends DndSection {
         // core's dragdrop module in configDragDrop().
         this.classes = {
             LOCKED: 'editinprogress',
-            // Requested from the stylesheet owner in /root/work/notes_dnd.txt. dimmed_text is a
-            // core class and gives an immediate, correct "hidden from students" rendering.
+            // The core dimmed_text class gives an immediate, correct "hidden from
+            // students" rendering.
             CARDHIDDEN: 'aicourse-card-hidden',
             DIMMED: 'dimmed_text',
             // Bootstrap's display utility and core's bulk selection marker, both used by

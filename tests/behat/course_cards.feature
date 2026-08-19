@@ -4,7 +4,7 @@ Feature: Course home page rendering in the AI Course Format
   As a user of a course in AI Course Format
   I need the General section and the section cards to render correctly
 
-  # None of these scenarios are tagged @javascript. The format renders server side, so the whole
+  # No scenario in THIS FILE is tagged @javascript. The format renders server side, so this whole
   # suite runs without a browser or a webdriver, which means it also runs in a plain CI container.
   # Only tag a scenario @javascript if it genuinely needs a live DOM.
 

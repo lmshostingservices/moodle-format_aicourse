@@ -21,6 +21,7 @@ use core_external\external_function_parameters;
 use core_external\external_multiple_structure;
 use core_external\external_single_structure;
 use core_external\external_value;
+use format_aicourse\local\permissions;
 
 /**
  * Web service returning the public context of an activity for the AI Tutor panel.
@@ -78,6 +79,13 @@ class get_activity_context extends external_api {
         $context = \context_course::instance($course->id);
         self::validate_context($context);
         require_capability('format/aicourse:useaitutor', $context);
+
+        // ACF-FIX-2.1.4: honour the site kill switch here too. This function feeds the same chat
+        // panel and reads activity content, so it must not keep answering after an administrator
+        // has turned the AI Tutor off site wide.
+        if (!permissions::is_tutor_enabled()) {
+            throw new \moodle_exception('error_tutordisabled', 'format_aicourse');
+        }
 
         $modinfo = get_fast_modinfo($course);
         try {

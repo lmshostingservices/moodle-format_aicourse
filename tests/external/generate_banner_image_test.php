@@ -61,9 +61,9 @@ final class generate_banner_image_test extends external_testcase {
         set_config('apikey', '', 'format_aicourse');
         $this->setUser($this->teacher);
 
-        $this->expectException(\moodle_exception::class);
-        $this->expectExceptionMessageMatches('/not.*configured/i');
-        generate_banner_image::execute($this->course->id);
+        $this->assert_throws_errorcode('aiassistant_notconfigured', function (): void {
+            generate_banner_image::execute($this->course->id);
+        });
     }
 
     /**
@@ -84,9 +84,9 @@ final class generate_banner_image_test extends external_testcase {
             }
         }
 
-        $this->expectException(\moodle_exception::class);
-        $this->expectExceptionMessageMatches('/too many requests/');
-        generate_banner_image::execute($this->course->id);
+        $this->assert_throws_errorcode('error_toomanyrequests', function (): void {
+            generate_banner_image::execute($this->course->id);
+        });
     }
 
     /**

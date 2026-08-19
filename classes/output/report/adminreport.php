@@ -43,10 +43,10 @@ use stdClass;
  */
 class adminreport implements named_templatable, renderable {
     /** @var int Characters of the question shown before the disclosure. */
-    const QUESTION_LENGTH = 160;
+    public const QUESTION_LENGTH = 160;
 
     /** @var int Characters of the response shown before the disclosure. */
-    const RESPONSE_LENGTH = 220;
+    public const RESPONSE_LENGTH = 220;
 
     /** @var adminfilter The request criteria. */
     protected $filter;

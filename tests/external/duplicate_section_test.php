@@ -85,9 +85,9 @@ final class duplicate_section_test extends external_testcase {
     public function test_execute_refuses_the_general_section(): void {
         $this->setUser($this->teacher);
 
-        $this->expectException(\moodle_exception::class);
-        $this->expectExceptionMessageMatches('/cannot be duplicated/');
-        duplicate_section::execute($this->course->id, $this->get_section_id(0));
+        $this->assert_throws_errorcode('error_cannotduplicategeneral', function (): void {
+            duplicate_section::execute($this->course->id, $this->get_section_id(0));
+        });
     }
 
     /**
@@ -109,9 +109,9 @@ final class duplicate_section_test extends external_testcase {
 
         $this->setUser($this->teacher);
 
-        $this->expectException(\moodle_exception::class);
-        $this->expectExceptionMessageMatches('/could not be found/');
-        duplicate_section::execute($this->course->id, $othersection);
+        $this->assert_throws_errorcode('error_sectionnotfound', function (): void {
+            duplicate_section::execute($this->course->id, $othersection);
+        });
     }
 
     /**

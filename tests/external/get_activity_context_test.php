@@ -131,9 +131,9 @@ final class get_activity_context_test extends external_testcase {
 
         // The student must not.
         $this->setUser($this->student);
-        $this->expectException(\moodle_exception::class);
-        $this->expectExceptionMessageMatches('/do not have access/');
-        get_activity_context::execute($this->course->id, $quiz->cmid, 0);
+        $this->assert_throws_errorcode('error_activitynotvisible', function (): void {
+            get_activity_context::execute($this->course->id, $quiz->cmid, 0);
+        });
     }
 
     /**
@@ -142,9 +142,9 @@ final class get_activity_context_test extends external_testcase {
     public function test_execute_refuses_an_unknown_activity(): void {
         $this->setUser($this->student);
 
-        $this->expectException(\moodle_exception::class);
-        $this->expectExceptionMessageMatches('/could not be found/');
-        get_activity_context::execute($this->course->id, 999999, 0);
+        $this->assert_throws_errorcode('error_activitynotfound', function (): void {
+            get_activity_context::execute($this->course->id, 999999, 0);
+        });
     }
 
     /**

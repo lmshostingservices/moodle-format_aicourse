@@ -45,9 +45,11 @@ function xmldb_format_aicourse_upgrade($oldversion) {
         // rather than from install.xml, so a small number of sites can reach this point with
         // one or both tables missing. Recreate anything that is absent before touching keys
         // and indexes, otherwise the steps below would fail on those sites.
+        $recreated = [];
         foreach (['format_aicourse_chats', 'format_aicourse_ai_memory'] as $tablename) {
             if (!$dbman->table_exists(new xmldb_table($tablename))) {
                 $dbman->install_one_table_from_xmldb_file($installxml, $tablename);
+                $recreated[$tablename] = true;
             }
         }
 
@@ -56,8 +58,14 @@ function xmldb_format_aicourse_upgrade($oldversion) {
         // The privacy provider looks up chat rows by the teacher who wrote a correction, in
         // order to remove that attribution when the teacher's data is deleted. Without an
         // index that is a full table scan on every data request.
-        $key = new xmldb_key('correctedby', XMLDB_KEY_FOREIGN, ['correctedby'], 'user', ['id']);
-        $dbman->add_key($table, $key);
+        //
+        // Only add the key when the table was NOT just recreated: install.xml already declares
+        // this foreign key, so a table created from it two lines above already has the backing
+        // index, and add_key() would fail with a duplicate index error mid-upgrade.
+        if (empty($recreated['format_aicourse_chats'])) {
+            $key = new xmldb_key('correctedby', XMLDB_KEY_FOREIGN, ['correctedby'], 'user', ['id']);
+            $dbman->add_key($table, $key);
+        }
 
         // The course report always filters on courseid and then either orders by timecreated
         // or filters by userid; the privacy export and delete do the same.
@@ -73,6 +81,50 @@ function xmldb_format_aicourse_upgrade($oldversion) {
 
         // AI Course Format savepoint reached.
         upgrade_plugin_savepoint(true, 2026081500, 'format', 'aicourse');
+    }
+
+    if ($oldversion < 2026081900) {
+        // Move every banner image from itemid = courseid to itemid = 0.
+        //
+        // The banner lives in its own course's context and there is only ever one of them, so
+        // the item id never carried any information. It did, however, break backup and restore:
+        // restore_dbops::send_files_to_pool() copies "itemid AS newitemid" verbatim for a file
+        // area restored without an item id mapping, so a course restored into a NEW course kept
+        // its banner filed under the OLD course id, where nothing looks for it. Pinning the item
+        // id to 0 makes that verbatim copy correct.
+        $fs = get_file_storage();
+
+        $rs = $DB->get_recordset_select(
+            'files',
+            "component = :component AND filearea = :filearea AND itemid <> 0 AND filename <> '.'",
+            ['component' => 'format_aicourse', 'filearea' => 'bannerimage'],
+            'id ASC'
+        );
+
+        foreach ($rs as $record) {
+            $oldfile = $fs->get_file_instance($record);
+
+            // Skip if a canonical copy somehow already exists, so a re-run cannot fail.
+            $exists = $fs->get_file(
+                $record->contextid,
+                'format_aicourse',
+                'bannerimage',
+                0,
+                $record->filepath,
+                $record->filename
+            );
+
+            if (!$exists) {
+                $fs->create_file_from_storedfile(['itemid' => 0], $oldfile);
+            }
+
+            $oldfile->delete();
+        }
+
+        $rs->close();
+
+        // AI Course Format savepoint reached.
+        upgrade_plugin_savepoint(true, 2026081900, 'format', 'aicourse');
     }
 
     return true;

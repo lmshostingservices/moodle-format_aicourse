@@ -106,7 +106,7 @@ $functions = [
         'type' => 'write',
         'ajax' => true,
         // NOT moodle/course:viewparticipants, which students hold by default.
-        'capabilities' => 'format/aicourse:viewreport',
+        'capabilities' => 'format/aicourse:viewreport, format/aicourse:correctresponses',
     ],
 
     'format_aicourse_get_activity_context' => [
@@ -138,25 +138,5 @@ $functions = [
         'type' => 'write',
         'ajax' => true,
         'capabilities' => 'moodle/course:update',
-    ],
-
-    'format_aicourse_db_diagnostic' => [
-        'classname' => 'format_aicourse\external\db_diagnostic',
-        'methodname' => 'execute',
-        'description' => 'Report whether the plugin\'s own database tables are present and complete.',
-        'type' => 'read',
-        // Support tool only: no JavaScript in the plugin calls it.
-        'ajax' => false,
-        'capabilities' => 'moodle/course:update',
-    ],
-
-    'format_aicourse_db_repair' => [
-        'classname' => 'format_aicourse\external\db_repair',
-        'methodname' => 'execute',
-        'description' => 'Recreate any missing table or column of the plugin\'s own schema.',
-        'type' => 'write',
-        // Site administrator support tool only: deliberately never exposed to a browser.
-        'ajax' => false,
-        'capabilities' => 'moodle/site:config',
     ],
 ];

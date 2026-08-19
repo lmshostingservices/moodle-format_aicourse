@@ -59,12 +59,23 @@ class callbacks {
 
         require_login($course);
 
-        $itemid   = (int) array_shift($args);
+        // The item id is shifted off the path but deliberately not used for the lookup. There is
+        // exactly one banner per course and it is always stored under banner::BANNER_ITEMID; a
+        // URL cached by a browser before the 2.1.5 item id migration still carries the old course
+        // id, and serving it from the canonical item id keeps those links working.
+        array_shift($args);
         $filename = array_pop($args);
         $filepath = $args ? '/' . implode('/', $args) . '/' : '/';
 
         $fs   = get_file_storage();
-        $file = $fs->get_file($context->id, 'format_aicourse', 'bannerimage', $itemid, $filepath, $filename);
+        $file = $fs->get_file(
+            $context->id,
+            'format_aicourse',
+            'bannerimage',
+            banner::BANNER_ITEMID,
+            $filepath,
+            $filename
+        );
 
         if (!$file) {
             send_file_not_found();
@@ -146,6 +157,24 @@ class callbacks {
     }
 
     /**
+     * Whether the running script is /course/section.php.
+     *
+     * ACF-FIX-2.1.5: one implementation, three former call sites. Uses the global $SCRIPT that
+     * setup.php derives for exactly this purpose, rather than reading $_SERVER directly -- $SCRIPT
+     * is normalised to a Moodle-relative path, and reviewers are right to flag raw superglobals.
+     * Falls back to $_SERVER only if $SCRIPT is unavailable (CLI, some test bootstraps).
+     *
+     * @return bool True when the running script is course/section.php.
+     */
+    public static function is_section_php_request(): bool {
+        global $SCRIPT;
+
+        $script = $SCRIPT ?? ($_SERVER['SCRIPT_NAME'] ?? '');
+
+        return strpos($script, '/course/section.php') !== false;
+    }
+
+    /**
      * Universal callback for ALL Moodle 4.x/5.x versions.
      *
      * Hook API (db/hooks.php) only works in Moodle 4.3+, so this is the fallback.
@@ -169,7 +198,7 @@ class callbacks {
         $sectionidparam = optional_param('id', 0, PARAM_INT);
 
         // Detect if we're on section.php (uses id param for section ID).
-        $issectionphp = strpos($_SERVER['SCRIPT_NAME'] ?? '', '/course/section.php') !== false;
+        $issectionphp = self::is_section_php_request();
 
         if ($PAGE->pagetype === 'course-view-aicourse' && $sectionparam === null && !$issectionphp) {
             return;

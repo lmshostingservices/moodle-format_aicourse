@@ -566,7 +566,10 @@ class content extends topics_content implements named_templatable, renderable {
         $card->activities = $items;
         if ($total > $shown) {
             $card->moreactivities = (object) [
-                'url' => $sectionurl,
+                // ACF-FIX-2.1.4: s(), matching the two sibling assignments above and below. The
+                // template renders this through {{{url}}}, so the value must arrive escaped;
+                // $sectionurl is deliberately the unescaped out(false) form.
+                'url' => s($sectionurl),
                 'remaining' => $total - $shown,
                 // Named with the section, so the "+N" link on one card is distinguishable from
                 // the "+N" link on the next one (WCAG 2.4.4).
@@ -592,7 +595,8 @@ class content extends topics_content implements named_templatable, renderable {
         foreach ($activities as $activity) {
             if (count($dots) >= self::MAX_DOTS) {
                 $card->moredots = (object) [
-                    'url' => $sectionurl,
+                    // ACF-FIX-2.1.4: s(), for the same reason as the dot URLs below.
+                    'url' => s($sectionurl),
                     'remaining' => count($activities) - self::MAX_DOTS,
                     'title' => get_string('viewallactivities', 'format_aicourse'),
                 ];

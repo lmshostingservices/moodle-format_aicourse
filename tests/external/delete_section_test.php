@@ -86,9 +86,9 @@ final class delete_section_test extends external_testcase {
     public function test_execute_refuses_the_general_section(): void {
         $this->setUser($this->teacher);
 
-        $this->expectException(\moodle_exception::class);
-        $this->expectExceptionMessageMatches('/cannot be deleted/');
-        delete_section::execute($this->course->id, $this->get_section_id(0));
+        $this->assert_throws_errorcode('error_cannotdeletegeneral', function (): void {
+            delete_section::execute($this->course->id, $this->get_section_id(0));
+        });
     }
 
     /**
@@ -110,9 +110,9 @@ final class delete_section_test extends external_testcase {
 
         $this->setUser($this->teacher);
 
-        $this->expectException(\moodle_exception::class);
-        $this->expectExceptionMessageMatches('/could not be found/');
-        delete_section::execute($this->course->id, $othersection);
+        $this->assert_throws_errorcode('error_sectionnotfound', function (): void {
+            delete_section::execute($this->course->id, $othersection);
+        });
     }
 
     /**

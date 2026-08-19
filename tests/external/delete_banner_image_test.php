@@ -26,6 +26,7 @@
 namespace format_aicourse\external;
 
 use core_external\external_api;
+use format_aicourse\local\banner;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -51,7 +52,7 @@ final class delete_banner_image_test extends external_testcase {
         get_file_storage()->create_file_from_string([
             'component' => 'format_aicourse',
             'filearea' => 'bannerimage',
-            'itemid' => $this->course->id,
+            'itemid' => banner::BANNER_ITEMID,
             'contextid' => $this->context->id,
             'filepath' => '/',
             'filename' => 'ai_banner_test.jpg',
@@ -68,7 +69,7 @@ final class delete_banner_image_test extends external_testcase {
             $this->context->id,
             'format_aicourse',
             'bannerimage',
-            $this->course->id,
+            banner::BANNER_ITEMID,
             'itemid',
             false
         ));
@@ -82,7 +83,7 @@ final class delete_banner_image_test extends external_testcase {
             $this->context->id,
             'format_aicourse',
             'bannerimage',
-            $this->course->id,
+            banner::BANNER_ITEMID,
             'itemid',
             false
         ));

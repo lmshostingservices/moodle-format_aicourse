@@ -99,8 +99,8 @@ body.format-aicourse,
 .aitutor-report-index {
 
     /* --- Neutral ramp: ONE ramp (Tailwind slate). ------------------------ */
-    --acf-neutral-0:   #ffffff;
-    --acf-neutral-50:  #f8fafc;
+    --acf-neutral-0: #fff;
+    --acf-neutral-50: #f8fafc;
     --acf-neutral-100: #f1f5f9;
     --acf-neutral-200: #e2e8f0;
     --acf-neutral-300: #cbd5e1;
@@ -150,27 +150,27 @@ body.format-aicourse,
 
     /* --- Fixed-dark "inverse" surfaces (the AI modals are dark in both
        themes by design — a deliberate product moment, not an oversight). -- */
-    --acf-inverse-surface:   #16182a;
+    --acf-inverse-surface: #16182a;
     --acf-inverse-surface-2: #1f2138;
-    --acf-inverse-text:      #f2f3f8;           /* 15.8:1 on #16182a */
+    --acf-inverse-text: #f2f3f8;           /* 15.8:1 on #16182a */
     --acf-inverse-text-muted: rgba(255, 255, 255, 0.74); /* 9.6:1 on #16182a */
-    --acf-inverse-border:    rgba(255, 255, 255, 0.13);
-    --acf-inverse-fill:      rgba(255, 255, 255, 0.09);
+    --acf-inverse-border: rgba(255, 255, 255, 0.13);
+    --acf-inverse-fill: rgba(255, 255, 255, 0.09);
     --acf-inverse-fill-hover: rgba(255, 255, 255, 0.16);
 
 
     /* ======================================================================
        SPACE — 4px base grid. Replaces 22 ad-hoc pixel values.
        ====================================================================== */
-    --acf-space-0:  0;
-    --acf-space-1:  0.25rem;   /*  4px */
-    --acf-space-2:  0.5rem;    /*  8px */
-    --acf-space-3:  0.75rem;   /* 12px */
-    --acf-space-4:  1rem;      /* 16px */
-    --acf-space-5:  1.25rem;   /* 20px */
-    --acf-space-6:  1.5rem;    /* 24px */
-    --acf-space-7:  1.75rem;   /* 28px */
-    --acf-space-8:  2rem;      /* 32px */
+    --acf-space-0: 0;
+    --acf-space-1: 0.25rem;   /*  4px */
+    --acf-space-2: 0.5rem;    /*  8px */
+    --acf-space-3: 0.75rem;   /* 12px */
+    --acf-space-4: 1rem;      /* 16px */
+    --acf-space-5: 1.25rem;   /* 20px */
+    --acf-space-6: 1.5rem;    /* 24px */
+    --acf-space-7: 1.75rem;   /* 28px */
+    --acf-space-8: 2rem;      /* 32px */
     --acf-space-10: 2.5rem;    /* 40px */
     --acf-space-12: 3rem;      /* 48px */
     --acf-space-16: 4rem;      /* 64px */
@@ -183,12 +183,12 @@ body.format-aicourse,
     /* ======================================================================
        RADIUS — 7 steps. Replaces 20.
        ====================================================================== */
-    --acf-radius-xs:   4px;
-    --acf-radius-sm:   6px;
-    --acf-radius-md:   10px;
-    --acf-radius-lg:   14px;
-    --acf-radius-xl:   18px;
-    --acf-radius-2xl:  24px;
+    --acf-radius-xs: 4px;
+    --acf-radius-sm: 6px;
+    --acf-radius-md: 10px;
+    --acf-radius-lg: 14px;
+    --acf-radius-xl: 18px;
+    --acf-radius-2xl: 24px;
     --acf-radius-pill: 999px;
     --acf-radius-full: 50%;
 
@@ -200,35 +200,35 @@ body.format-aicourse,
        ====================================================================== */
     --acf-font-family: inherit;                 /* always defer to the theme */
 
-    --acf-font-size-2xs:  0.6875rem;            /* 11px — floor */
-    --acf-font-size-xs:   0.75rem;              /* 12px */
-    --acf-font-size-sm:   0.8125rem;            /* 13px */
-    --acf-font-size-md:   0.875rem;             /* 14px */
+    --acf-font-size-2xs: 0.6875rem;            /* 11px — floor */
+    --acf-font-size-xs: 0.75rem;              /* 12px */
+    --acf-font-size-sm: 0.8125rem;            /* 13px */
+    --acf-font-size-md: 0.875rem;             /* 14px */
     --acf-font-size-base: 1rem;                 /* 16px */
-    --acf-font-size-lg:   1.125rem;             /* 18px */
-    --acf-font-size-xl:   1.25rem;              /* 20px */
-    --acf-font-size-2xl:  clamp(1.25rem, 1.05rem + 1vw, 1.5rem);
-    --acf-font-size-3xl:  clamp(1.375rem, 1rem + 2.1vw, 2.125rem);  /* hero, image mode */
+    --acf-font-size-lg: 1.125rem;             /* 18px */
+    --acf-font-size-xl: 1.25rem;              /* 20px */
+    --acf-font-size-2xl: clamp(1.25rem, 1.05rem + 1vw, 1.5rem);
+    --acf-font-size-3xl: clamp(1.375rem, 1rem + 2.1vw, 2.125rem);  /* hero, image mode */
     /* Gradient-mode hero title. Sits between 2xl and 3xl: enough presence to
        anchor the banner without competing with the page <h1> in edit mode. */
     --acf-font-size-hero: clamp(1.3125rem, 1.02rem + 1.35vw, 1.75rem); /* 21 -> 28px */
 
-    --acf-weight-regular:  400;
-    --acf-weight-medium:   500;
+    --acf-weight-regular: 400;
+    --acf-weight-medium: 500;
     --acf-weight-semibold: 600;
-    --acf-weight-bold:     700;
-    --acf-weight-black:    800;
+    --acf-weight-bold: 700;
+    --acf-weight-black: 800;
 
-    --acf-leading-none:    1;
-    --acf-leading-tight:   1.2;
-    --acf-leading-snug:    1.35;
-    --acf-leading-normal:  1.5;
+    --acf-leading-none: 1;
+    --acf-leading-tight: 1.2;
+    --acf-leading-snug: 1.35;
+    --acf-leading-normal: 1.5;
     --acf-leading-relaxed: 1.65;
 
-    --acf-tracking-tight:  -0.02em;
+    --acf-tracking-tight: -0.02em;
     --acf-tracking-normal: 0;
-    --acf-tracking-wide:   0.04em;
-    --acf-tracking-wider:  0.08em;               /* uppercase micro-labels */
+    --acf-tracking-wide: 0.04em;
+    --acf-tracking-wider: 0.08em;               /* uppercase micro-labels */
 
 
     /* ======================================================================
@@ -237,29 +237,29 @@ body.format-aicourse,
        from one place (section 5).
        ====================================================================== */
     --acf-duration-instant: 80ms;
-    --acf-duration-fast:    140ms;
-    --acf-duration-base:    220ms;
-    --acf-duration-slow:    340ms;
-    --acf-duration-slower:  560ms;
+    --acf-duration-fast: 140ms;
+    --acf-duration-base: 220ms;
+    --acf-duration-slow: 340ms;
+    --acf-duration-slower: 560ms;
 
     --acf-ease-standard: cubic-bezier(0.2, 0, 0, 1);
-    --acf-ease-out:      cubic-bezier(0.16, 1, 0.3, 1);
-    --acf-ease-in:       cubic-bezier(0.7, 0, 0.84, 0);
-    --acf-ease-spring:   cubic-bezier(0.34, 1.42, 0.64, 1);
+    --acf-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    --acf-ease-in: cubic-bezier(0.7, 0, 0.84, 0);
+    --acf-ease-spring: cubic-bezier(0.34, 1.42, 0.64, 1);
 
 
     /* ======================================================================
        Z-INDEX — named scale. Chosen to sit correctly against Boost:
        Boost drawers ~1020, Bootstrap modal-backdrop 1050 / modal 1055.
        ====================================================================== */
-    --acf-z-base:        0;
-    --acf-z-raised:      1;
-    --acf-z-content:     2;
+    --acf-z-base: 0;
+    --acf-z-raised: 1;
+    --acf-z-content: 2;
     --acf-z-overlay-art: 3;     /* hero gradient scrim */
-    --acf-z-floating:    10;    /* card chrome, hero icon pill */
-    --acf-z-sticky:      20;
-    --acf-z-chatbox:     1035;  /* above Boost drawers, below Bootstrap modals */
-    --acf-z-modal:       1060;  /* icon picker */
+    --acf-z-floating: 10;    /* card chrome, hero icon pill */
+    --acf-z-sticky: 20;
+    --acf-z-chatbox: 1035;  /* above Boost drawers, below Bootstrap modals */
+    --acf-z-modal: 1060;  /* icon picker */
     --acf-z-modal-alert: 1070;  /* banner generate / remove — always on top */
 
 
@@ -267,9 +267,9 @@ body.format-aicourse,
        LAYOUT + SIZING
        ====================================================================== */
     --acf-container-max: 87.5rem;   /* 1400px */
-    --acf-card-min:      15.5rem;   /* 248px — section card grid track floor */
-    --acf-activity-min:  16.5rem;   /* 264px — activity card grid track floor */
-    --acf-target-min:    44px;      /* every interactive element honours this */
+    --acf-card-min: 15.5rem;   /* 248px — section card grid track floor */
+    --acf-activity-min: 16.5rem;   /* 264px — activity card grid track floor */
+    --acf-target-min: 44px;      /* every interactive element honours this */
 
     --acf-icon-xs: 14px;
     --acf-icon-sm: 16px;
@@ -283,14 +283,14 @@ body.format-aicourse,
        `herobannerheight` setting is still honoured as documented — it only ever
        wrote an inline `max-height`, which gradient mode overrides (see the
        `!important` note in section 8) so tall content is never clipped. */
-    --acf-hero-min-h:       clamp(4.75rem, 3.4rem + 4.4vw, 7.25rem);   /* 76 -> 116px */
+    --acf-hero-min-h: clamp(4.75rem, 3.4rem + 4.4vw, 7.25rem);   /* 76 -> 116px */
     --acf-hero-image-min-h: clamp(9.5rem, 5.5rem + 13vw, 14.5rem);
 
     /* Progress ring. The gradient-mode ring was 44px — smaller than a single
        hero button — so it read as a status chip rather than the hero's anchor. */
-    --acf-hero-ring:        clamp(3.5rem, 2.4rem + 3.6vw, 5.25rem);    /* 56 -> 84px */
-    --acf-hero-ring-image:  clamp(3.75rem, 3rem + 2.4vw, 5rem);        /* 60 -> 80px */
-    --acf-ring-inline:      2.75rem;   /* 44px — the small inline ring elsewhere */
+    --acf-hero-ring: clamp(3.5rem, 2.4rem + 3.6vw, 5.25rem);    /* 56 -> 84px */
+    --acf-hero-ring-image: clamp(3.75rem, 3rem + 2.4vw, 5rem);        /* 60 -> 80px */
+    --acf-ring-inline: 2.75rem;   /* 44px — the small inline ring elsewhere */
 
     --acf-blur-sm: 6px;
     --acf-blur-md: 10px;
@@ -313,82 +313,82 @@ body.format-aicourse,
 .aitutor-report-index {
 
     /* --- Surfaces -------------------------------------------------------- */
-    --acf-surface-page:    transparent;
-    --acf-surface-raised:  var(--acf-neutral-0);
-    --acf-surface-sunken:  var(--acf-neutral-50);
-    --acf-surface-muted:   var(--acf-neutral-100);
+    --acf-surface-page: transparent;
+    --acf-surface-raised: var(--acf-neutral-0);
+    --acf-surface-sunken: var(--acf-neutral-50);
+    --acf-surface-muted: var(--acf-neutral-100);
     --acf-surface-overlay: var(--acf-neutral-0);
-    --acf-surface-scrim:   rgba(2, 6, 23, 0.55);
-    --acf-surface-hover:   rgba(15, 23, 42, 0.05);
-    --acf-surface-active:  rgba(15, 23, 42, 0.09);
+    --acf-surface-scrim: rgba(2, 6, 23, 0.55);
+    --acf-surface-hover: rgba(15, 23, 42, 0.05);
+    --acf-surface-active: rgba(15, 23, 42, 0.09);
 
     /* --- Text (contrast measured against --acf-surface-raised) ----------- */
-    --acf-text-primary:   var(--acf-neutral-800);   /* 14.63:1 */
+    --acf-text-primary: var(--acf-neutral-800);   /* 14.63:1 */
     --acf-text-secondary: var(--acf-neutral-600);   /*  7.58:1 */
-    --acf-text-tertiary:  var(--acf-neutral-500);   /*  4.76:1 — the FLOOR */
-    --acf-text-inverse:   var(--acf-neutral-0);
-    --acf-text-brand:     var(--acf-brand);         /*  9.72:1 at the default navy */
-    --acf-text-on-brand:  var(--acf-neutral-0);
-    --acf-text-on-media:  var(--acf-neutral-0);     /* always over a >=0.62 scrim */
+    --acf-text-tertiary: var(--acf-neutral-500);   /*  4.76:1 — the FLOOR */
+    --acf-text-inverse: var(--acf-neutral-0);
+    --acf-text-brand: var(--acf-brand);         /*  9.72:1 at the default navy */
+    --acf-text-on-brand: var(--acf-neutral-0);
+    --acf-text-on-media: var(--acf-neutral-0);     /* always over a >=0.62 scrim */
 
     /* --- Borders --------------------------------------------------------- */
-    --acf-border-subtle:  rgba(15, 23, 42, 0.08);
+    --acf-border-subtle: rgba(15, 23, 42, 0.08);
     --acf-border-default: var(--acf-neutral-200);
-    --acf-border-strong:  var(--acf-neutral-300);
-    --acf-border-brand:   var(--acf-brand);
-    --acf-border-media:   rgba(255, 255, 255, 0.24);
+    --acf-border-strong: var(--acf-neutral-300);
+    --acf-border-brand: var(--acf-brand);
+    --acf-border-media: rgba(255, 255, 255, 0.24);
 
     /* --- Brand tints -----------------------------------------------------
        rgba() first as a universal fallback, then color-mix() so the tint
        tracks the SITE's brand colour rather than the plugin's navy.
        Progressive enhancement: silently ignored by older engines. */
-    --acf-brand-tint-weak:   rgba(25, 72, 102, 0.08);
-    --acf-brand-tint-weak:   color-mix(in srgb, var(--acf-brand) 8%, transparent);
-    --acf-brand-tint:        rgba(25, 72, 102, 0.11);
-    --acf-brand-tint:        color-mix(in srgb, var(--acf-brand) 11%, transparent);
+    --acf-brand-tint-weak: rgba(25, 72, 102, 0.08);
+    --acf-brand-tint-weak: color-mix(in srgb, var(--acf-brand) 8%, transparent);
+    --acf-brand-tint: rgba(25, 72, 102, 0.11);
+    --acf-brand-tint: color-mix(in srgb, var(--acf-brand) 11%, transparent);
     --acf-brand-tint-strong: rgba(25, 72, 102, 0.18);
     --acf-brand-tint-strong: color-mix(in srgb, var(--acf-brand) 18%, transparent);
 
     /* --- Status: bg + fg + border declared together so every pair is
            auditable in one place. All ratios measured on the stated bg. ---- */
-    --acf-status-done-bg:     rgba(22, 163, 74, 0.13);
-    --acf-status-done-fg:     var(--acf-green-800);  /* 6.17:1 on the tint */
+    --acf-status-done-bg: rgba(22, 163, 74, 0.13);
+    --acf-status-done-fg: var(--acf-green-800);  /* 6.17:1 on the tint */
     --acf-status-done-border: rgba(22, 163, 74, 0.32);
     /* FILL: anything with white text on it. White on green-700 = 5.02:1. */
-    --acf-status-done-solid:  var(--acf-green-700);
+    --acf-status-done-solid: var(--acf-green-700);
     /* LINE: rings, bars, dots — no text, so it only needs 3:1 vs the surface.
        green-600 on white = 3.30:1. A single token cannot serve both roles:
        green-600 behind white text is 3.30:1, which fails AA for the 12px
        numerals in the hero. */
-    --acf-status-done-line:   var(--acf-green-600);
+    --acf-status-done-line: var(--acf-green-600);
 
-    --acf-status-doing-bg:     rgba(245, 158, 11, 0.15);
-    --acf-status-doing-fg:     var(--acf-amber-800); /* 6.4:1 on the tint */
+    --acf-status-doing-bg: rgba(245, 158, 11, 0.15);
+    --acf-status-doing-fg: var(--acf-amber-800); /* 6.4:1 on the tint */
     --acf-status-doing-border: rgba(245, 158, 11, 0.42);
-    --acf-status-doing-solid:  var(--acf-amber-500);
+    --acf-status-doing-solid: var(--acf-amber-500);
 
-    --acf-status-todo-bg:     var(--acf-neutral-100);
-    --acf-status-todo-fg:     var(--acf-neutral-600); /* 6.91:1 — was 2.27:1 */
+    --acf-status-todo-bg: var(--acf-neutral-100);
+    --acf-status-todo-fg: var(--acf-neutral-600); /* 6.91:1 — was 2.27:1 */
     --acf-status-todo-border: var(--acf-neutral-300);
 
-    --acf-status-danger-bg:     rgba(239, 68, 68, 0.12);
-    --acf-status-danger-fg:     var(--acf-red-700);   /* 6.1:1 on the tint */
+    --acf-status-danger-bg: rgba(239, 68, 68, 0.12);
+    --acf-status-danger-fg: var(--acf-red-700);   /* 6.1:1 on the tint */
     --acf-status-danger-border: rgba(239, 68, 68, 0.35);
-    --acf-status-danger-solid:  var(--acf-red-500);
+    --acf-status-danger-solid: var(--acf-red-500);
 
     --acf-status-info-bg: rgba(29, 78, 216, 0.10);
     --acf-status-info-fg: var(--acf-blue-700);        /* 6.4:1 on the tint */
 
     /* --- AI accent, resolved for text use ------------------------------- */
-    --acf-ai-bg:      rgba(99, 102, 241, 0.09);
-    --acf-ai-border:  rgba(99, 102, 241, 0.28);
-    --acf-ai-fg:      var(--acf-ai-700);              /* 7.04:1 on --acf-ai-bg */
+    --acf-ai-bg: rgba(99, 102, 241, 0.09);
+    --acf-ai-border: rgba(99, 102, 241, 0.28);
+    --acf-ai-fg: var(--acf-ai-700);              /* 7.04:1 on --acf-ai-bg */
     --acf-ai-gradient: linear-gradient(135deg, var(--acf-ai-600) 0%, var(--acf-ai-violet-600) 100%);
     /* White on that gradient: 6.29:1 at the start, 5.70:1 at the end.
        (The old #6366f1 -> #8b5cf6 gradient bottomed out at 4.40:1.) */
 
     /* --- Tracks (progress backgrounds) ---------------------------------- */
-    --acf-track:       rgba(15, 23, 42, 0.12);
+    --acf-track: rgba(15, 23, 42, 0.12);
     --acf-track-media: rgba(255, 255, 255, 0.28);
 
     /* --- Media chrome ----------------------------------------------------
@@ -397,13 +397,13 @@ body.format-aicourse,
        here is the value at which white text clears AA over a PURE WHITE photo
        (the worst case, and exactly what the AI banner generator produces).
          0.55 -> 4.76:1   0.62 -> 6.20:1 */
-    --acf-media-scrim:        rgba(2, 6, 23, 0.55);
+    --acf-media-scrim: rgba(2, 6, 23, 0.55);
     --acf-media-scrim-strong: rgba(2, 6, 23, 0.62);
-    --acf-media-hover:        rgba(255, 255, 255, 0.22);
+    --acf-media-hover: rgba(255, 255, 255, 0.22);
     --acf-media-hover-strong: rgba(255, 255, 255, 0.36);
-    --acf-media-line:         rgba(255, 255, 255, 0.85);
-    --acf-media-line-soft:    rgba(255, 255, 255, 0.70);
-    --acf-media-text-shadow:  0 1px 3px rgba(2, 6, 23, 0.60);
+    --acf-media-line: rgba(255, 255, 255, 0.85);
+    --acf-media-line-soft: rgba(255, 255, 255, 0.70);
+    --acf-media-text-shadow: 0 1px 3px rgba(2, 6, 23, 0.60);
     /* CONTRAST-CORRECTED. The previous ramp assumed the hero text sat in the
        bottom 42% of the banner ("the bottom stop is 0.62 where the summary
        sits"). It does not: .aicourse-hero-content is bottom-packed but only as
@@ -418,11 +418,14 @@ body.format-aicourse,
            a = 0.88 -> 15.30:1
        So every piece of hero text clears AA (4.5:1) on any image, and the
        image is still legible through the top band. */
-    --acf-hero-scrim: linear-gradient(to bottom,
-        rgba(2, 6, 23, 0.38)  0%,
-        rgba(2, 6, 23, 0.58)  8%,
-        rgba(2, 6, 23, 0.66) 58%,
-        rgba(2, 6, 23, 0.88) 100%);
+    --acf-hero-scrim:
+        linear-gradient(
+            to bottom,
+            rgba(2, 6, 23, 0.38)  0%,
+            rgba(2, 6, 23, 0.58)  8%,
+            rgba(2, 6, 23, 0.66) 58%,
+            rgba(2, 6, 23, 0.88) 100%
+        );
 
     /* --- Gradient-mode hero wash ----------------------------------------
        CONTRAST-CHECKED. The old banner was surface-sunken -> surface-muted:
@@ -436,29 +439,41 @@ body.format-aicourse,
        Both still clear AA for body text and AAA for large text.
        rgba() first as the universal fallback, then color-mix() so the wash
        tracks the SITE's brand rather than the plugin's navy. */
-    --acf-hero-wash: linear-gradient(135deg,
-        rgba(15, 108, 191, 0.16) 0%,
-        rgba(15, 108, 191, 0.08) 46%,
-        rgba(15, 108, 191, 0.025) 100%),
+    --acf-hero-wash:
+        linear-gradient(
+            135deg,
+            rgba(15, 108, 191, 0.16) 0%,
+            rgba(15, 108, 191, 0.08) 46%,
+            rgba(15, 108, 191, 0.025) 100%
+        ),
         linear-gradient(var(--acf-surface-raised), var(--acf-surface-raised));
-    --acf-hero-wash: linear-gradient(135deg,
-        color-mix(in srgb, var(--acf-brand) 16%, var(--acf-surface-raised)) 0%,
-        color-mix(in srgb, var(--acf-brand)  8%, var(--acf-surface-raised)) 46%,
-        color-mix(in srgb, var(--acf-brand) 2.5%, var(--acf-surface-raised)) 100%);
+    --acf-hero-wash:
+        linear-gradient(
+            135deg,
+            color-mix(in srgb, var(--acf-brand) 16%, var(--acf-surface-raised)) 0%,
+            color-mix(in srgb, var(--acf-brand)  8%, var(--acf-surface-raised)) 46%,
+            color-mix(in srgb, var(--acf-brand) 2.5%, var(--acf-surface-raised)) 100%
+        );
     /* Soft off-centre bloom behind the progress ring, so the hero's right side
        has a reason to be the anchor. Decorative only — no text sits on it. */
-    --acf-hero-glow: radial-gradient(60% 150% at 82% 18%,
-        var(--acf-brand-tint) 0%,
-        transparent 68%);
+    --acf-hero-glow:
+        radial-gradient(
+            60% 150% at 82% 18%,
+            var(--acf-brand-tint) 0%,
+            transparent 68%
+        );
     --acf-hero-border: var(--acf-brand-tint);
 
     /* --- Fixed-dark modal chrome (see --acf-inverse-* primitives) -------- */
-    --acf-inverse-scrim:        rgba(2, 6, 23, 0.72);
-    --acf-inverse-ai-tint:      rgba(99, 102, 241, 0.16);
-    --acf-inverse-ai-wash: linear-gradient(135deg,
-        rgba(79, 70, 229, 0.20) 0%,
-        rgba(124, 58, 237, 0.20) 100%);
-    --acf-inverse-danger-bg:     rgba(239, 68, 68, 0.16);
+    --acf-inverse-scrim: rgba(2, 6, 23, 0.72);
+    --acf-inverse-ai-tint: rgba(99, 102, 241, 0.16);
+    --acf-inverse-ai-wash:
+        linear-gradient(
+            135deg,
+            rgba(79, 70, 229, 0.20) 0%,
+            rgba(124, 58, 237, 0.20) 100%
+        );
+    --acf-inverse-danger-bg: rgba(239, 68, 68, 0.16);
     --acf-inverse-danger-border: rgba(239, 68, 68, 0.40);
 
     /* --- Elevation: 5 real layered steps. Replaces 35 bespoke shadows.
@@ -490,7 +505,7 @@ body.format-aicourse,
        otherwise ship an invisible focus ring. #1d4ed8 is 6.70:1 on white and
        the two-tone halo keeps it visible on any card, image or gradient. */
     --acf-focus-color: var(--acf-blue-700);
-    --acf-focus-halo:  var(--acf-surface-raised);
+    --acf-focus-halo: var(--acf-surface-raised);
     --acf-focus-width: 2px;
     --acf-focus-offset: 2px;
     --acf-focus-ring:
@@ -499,7 +514,7 @@ body.format-aicourse,
     /* Variant for controls sitting on imagery / dark gradients. */
     --acf-focus-ring-media:
         0 0 0 2px rgba(2, 6, 23, 0.85),
-        0 0 0 4px #ffffff;
+        0 0 0 4px #fff;
 }
 
 
@@ -522,69 +537,75 @@ body.format-aicourse[data-bs-theme="dark"],
 body.format-aicourse.dark-mode,
 html[data-bs-theme="dark"] :is(.aicadmin-wrap, .aitutor-report-index),
 body.dark-mode :is(.aicadmin-wrap, .aitutor-report-index) {
-    --acf-surface-raised:  var(--acf-neutral-800);
-    --acf-surface-sunken:  var(--acf-neutral-900);
-    --acf-surface-muted:   var(--acf-neutral-700);
+    --acf-surface-raised: var(--acf-neutral-800);
+    --acf-surface-sunken: var(--acf-neutral-900);
+    --acf-surface-muted: var(--acf-neutral-700);
     --acf-surface-overlay: var(--acf-neutral-800);
-    --acf-surface-scrim:   rgba(2, 6, 23, 0.72);
-    --acf-surface-hover:   rgba(255, 255, 255, 0.07);
-    --acf-surface-active:  rgba(255, 255, 255, 0.12);
+    --acf-surface-scrim: rgba(2, 6, 23, 0.72);
+    --acf-surface-hover: rgba(255, 255, 255, 0.07);
+    --acf-surface-active: rgba(255, 255, 255, 0.12);
 
-    --acf-text-primary:   var(--acf-neutral-100);   /* 13.35:1 on neutral-800 */
+    --acf-text-primary: var(--acf-neutral-100);   /* 13.35:1 on neutral-800 */
     --acf-text-secondary: var(--acf-neutral-300);   /*  9.85:1 */
-    --acf-text-tertiary:  var(--acf-neutral-400);   /*  5.71:1 — was 1.93:1 */
-    --acf-text-brand:     var(--acf-blue-300);      /*  8.10:1 */
+    --acf-text-tertiary: var(--acf-neutral-400);   /*  5.71:1 — was 1.93:1 */
+    --acf-text-brand: var(--acf-blue-300);      /*  8.10:1 */
 
-    --acf-border-subtle:  rgba(255, 255, 255, 0.10);
+    --acf-border-subtle: rgba(255, 255, 255, 0.10);
     --acf-border-default: var(--acf-neutral-700);
-    --acf-border-strong:  var(--acf-neutral-600);
-    --acf-border-media:   rgba(255, 255, 255, 0.20);
+    --acf-border-strong: var(--acf-neutral-600);
+    --acf-border-media: rgba(255, 255, 255, 0.20);
 
-    --acf-brand-tint-weak:   rgba(148, 163, 184, 0.12);
-    --acf-brand-tint-weak:   color-mix(in srgb, var(--acf-brand) 22%, transparent);
-    --acf-brand-tint:        rgba(148, 163, 184, 0.18);
-    --acf-brand-tint:        color-mix(in srgb, var(--acf-brand) 30%, transparent);
+    --acf-brand-tint-weak: rgba(148, 163, 184, 0.12);
+    --acf-brand-tint-weak: color-mix(in srgb, var(--acf-brand) 22%, transparent);
+    --acf-brand-tint: rgba(148, 163, 184, 0.18);
+    --acf-brand-tint: color-mix(in srgb, var(--acf-brand) 30%, transparent);
     --acf-brand-tint-strong: rgba(148, 163, 184, 0.28);
     --acf-brand-tint-strong: color-mix(in srgb, var(--acf-brand) 42%, transparent);
 
-    --acf-status-done-bg:     rgba(22, 163, 74, 0.20);
-    --acf-status-done-fg:     var(--acf-green-300);   /* 7.93:1 on the tint */
+    --acf-status-done-bg: rgba(22, 163, 74, 0.20);
+    --acf-status-done-fg: var(--acf-green-300);   /* 7.93:1 on the tint */
     --acf-status-done-border: rgba(134, 239, 172, 0.34);
-    --acf-status-done-solid:  var(--acf-green-700);   /* white on it = 5.02:1 */
-    --acf-status-done-line:   var(--acf-green-500);   /* 6.42:1 on neutral-800 */
+    --acf-status-done-solid: var(--acf-green-700);   /* white on it = 5.02:1 */
+    --acf-status-done-line: var(--acf-green-500);   /* 6.42:1 on neutral-800 */
 
-    --acf-status-doing-bg:     rgba(245, 158, 11, 0.20);
-    --acf-status-doing-fg:     var(--acf-amber-300); /* 8.9:1 on the tint */
+    --acf-status-doing-bg: rgba(245, 158, 11, 0.20);
+    --acf-status-doing-fg: var(--acf-amber-300); /* 8.9:1 on the tint */
     --acf-status-doing-border: rgba(252, 211, 77, 0.36);
 
-    --acf-status-todo-bg:     rgba(255, 255, 255, 0.10);
-    --acf-status-todo-fg:     var(--acf-neutral-300); /* 7.24:1 — was 4.47:1 */
+    --acf-status-todo-bg: rgba(255, 255, 255, 0.10);
+    --acf-status-todo-fg: var(--acf-neutral-300); /* 7.24:1 — was 4.47:1 */
     --acf-status-todo-border: rgba(255, 255, 255, 0.22);
 
     --acf-status-danger-bg: rgba(239, 68, 68, 0.20);
     --acf-status-danger-fg: var(--acf-red-300);       /* 6.5:1 on the tint */
-    --acf-status-info-bg:   rgba(147, 197, 253, 0.16);
-    --acf-status-info-fg:   var(--acf-blue-300);
+    --acf-status-info-bg: rgba(147, 197, 253, 0.16);
+    --acf-status-info-fg: var(--acf-blue-300);
 
-    --acf-ai-bg:     rgba(99, 102, 241, 0.22);
+    --acf-ai-bg: rgba(99, 102, 241, 0.22);
     --acf-ai-border: rgba(165, 180, 252, 0.34);
-    --acf-ai-fg:     var(--acf-ai-400);               /* 7.33:1 on neutral-800 */
+    --acf-ai-fg: var(--acf-ai-400);               /* 7.33:1 on neutral-800 */
 
-    --acf-track:     rgba(255, 255, 255, 0.16);
+    --acf-track: rgba(255, 255, 255, 0.16);
 
     /* Hero wash, dark. Same shape as light, deeper mix because the base surface
        is neutral-800. At the darkest stop (34% #0f6cbf on #1e293b = #194068):
          --acf-text-primary (#f1f5f9) on #194068 = 9.74:1 (13.35:1 on the flat
          surface) — still comfortably AA/AAA. */
-    --acf-hero-wash: linear-gradient(135deg,
-        rgba(15, 108, 191, 0.34) 0%,
-        rgba(15, 108, 191, 0.16) 46%,
-        rgba(15, 108, 191, 0.06) 100%),
+    --acf-hero-wash:
+        linear-gradient(
+            135deg,
+            rgba(15, 108, 191, 0.34) 0%,
+            rgba(15, 108, 191, 0.16) 46%,
+            rgba(15, 108, 191, 0.06) 100%
+        ),
         linear-gradient(var(--acf-surface-raised), var(--acf-surface-raised));
-    --acf-hero-wash: linear-gradient(135deg,
-        color-mix(in srgb, var(--acf-brand) 34%, var(--acf-surface-raised)) 0%,
-        color-mix(in srgb, var(--acf-brand) 16%, var(--acf-surface-raised)) 46%,
-        color-mix(in srgb, var(--acf-brand)  6%, var(--acf-surface-raised)) 100%);
+    --acf-hero-wash:
+        linear-gradient(
+            135deg,
+            color-mix(in srgb, var(--acf-brand) 34%, var(--acf-surface-raised)) 0%,
+            color-mix(in srgb, var(--acf-brand) 16%, var(--acf-surface-raised)) 46%,
+            color-mix(in srgb, var(--acf-brand)  6%, var(--acf-surface-raised)) 100%
+        );
 
     /* Dark shadows need more opacity AND a hairline ring to read at all. */
     --acf-elevation-1:
@@ -608,7 +629,7 @@ body.dark-mode :is(.aicadmin-wrap, .aitutor-report-index) {
         0 0 0 1px rgba(255, 255, 255, 0.08);
 
     --acf-focus-color: var(--acf-blue-300);
-    --acf-focus-halo:  var(--acf-neutral-900);
+    --acf-focus-halo: var(--acf-neutral-900);
 
     color-scheme: dark;
 }
@@ -617,67 +638,74 @@ body.dark-mode :is(.aicadmin-wrap, .aitutor-report-index) {
     /* Only when the theme has not declared an explicit mode. `.aicourse-force-light`
        is an opt-out hook for sites whose theme is light-only. */
     html:not([data-bs-theme="light"]) body.format-aicourse:not(.aicourse-force-light):not([data-bs-theme="light"]),
-    html:not([data-bs-theme="light"]) body:not(.aicourse-force-light):not([data-bs-theme="light"]) :is(.aicadmin-wrap, .aitutor-report-index) {
-        --acf-surface-raised:  var(--acf-neutral-800);
-        --acf-surface-sunken:  var(--acf-neutral-900);
-        --acf-surface-muted:   var(--acf-neutral-700);
+    html:not([data-bs-theme="light"]) body:not(.aicourse-force-light):not([data-bs-theme="light"])
+    :is(.aicadmin-wrap, .aitutor-report-index) {
+        --acf-surface-raised: var(--acf-neutral-800);
+        --acf-surface-sunken: var(--acf-neutral-900);
+        --acf-surface-muted: var(--acf-neutral-700);
         --acf-surface-overlay: var(--acf-neutral-800);
-        --acf-surface-scrim:   rgba(2, 6, 23, 0.72);
-        --acf-surface-hover:   rgba(255, 255, 255, 0.07);
-        --acf-surface-active:  rgba(255, 255, 255, 0.12);
+        --acf-surface-scrim: rgba(2, 6, 23, 0.72);
+        --acf-surface-hover: rgba(255, 255, 255, 0.07);
+        --acf-surface-active: rgba(255, 255, 255, 0.12);
 
-        --acf-text-primary:   var(--acf-neutral-100);
+        --acf-text-primary: var(--acf-neutral-100);
         --acf-text-secondary: var(--acf-neutral-300);
-        --acf-text-tertiary:  var(--acf-neutral-400);
-        --acf-text-brand:     var(--acf-blue-300);
+        --acf-text-tertiary: var(--acf-neutral-400);
+        --acf-text-brand: var(--acf-blue-300);
 
-        --acf-border-subtle:  rgba(255, 255, 255, 0.10);
+        --acf-border-subtle: rgba(255, 255, 255, 0.10);
         --acf-border-default: var(--acf-neutral-700);
-        --acf-border-strong:  var(--acf-neutral-600);
-        --acf-border-media:   rgba(255, 255, 255, 0.20);
+        --acf-border-strong: var(--acf-neutral-600);
+        --acf-border-media: rgba(255, 255, 255, 0.20);
 
-        --acf-brand-tint-weak:   rgba(148, 163, 184, 0.12);
-        --acf-brand-tint-weak:   color-mix(in srgb, var(--acf-brand) 22%, transparent);
-        --acf-brand-tint:        rgba(148, 163, 184, 0.18);
-        --acf-brand-tint:        color-mix(in srgb, var(--acf-brand) 30%, transparent);
+        --acf-brand-tint-weak: rgba(148, 163, 184, 0.12);
+        --acf-brand-tint-weak: color-mix(in srgb, var(--acf-brand) 22%, transparent);
+        --acf-brand-tint: rgba(148, 163, 184, 0.18);
+        --acf-brand-tint: color-mix(in srgb, var(--acf-brand) 30%, transparent);
         --acf-brand-tint-strong: rgba(148, 163, 184, 0.28);
         --acf-brand-tint-strong: color-mix(in srgb, var(--acf-brand) 42%, transparent);
 
-        --acf-status-done-bg:     rgba(22, 163, 74, 0.20);
-        --acf-status-done-fg:     var(--acf-green-300);
+        --acf-status-done-bg: rgba(22, 163, 74, 0.20);
+        --acf-status-done-fg: var(--acf-green-300);
         --acf-status-done-border: rgba(134, 239, 172, 0.34);
-        --acf-status-done-solid:  var(--acf-green-700);
-        --acf-status-done-line:   var(--acf-green-500);
+        --acf-status-done-solid: var(--acf-green-700);
+        --acf-status-done-line: var(--acf-green-500);
 
-        --acf-status-doing-bg:     rgba(245, 158, 11, 0.20);
-        --acf-status-doing-fg:     var(--acf-amber-300);
+        --acf-status-doing-bg: rgba(245, 158, 11, 0.20);
+        --acf-status-doing-fg: var(--acf-amber-300);
         --acf-status-doing-border: rgba(252, 211, 77, 0.36);
 
-        --acf-status-todo-bg:     rgba(255, 255, 255, 0.10);
-        --acf-status-todo-fg:     var(--acf-neutral-300);
+        --acf-status-todo-bg: rgba(255, 255, 255, 0.10);
+        --acf-status-todo-fg: var(--acf-neutral-300);
         --acf-status-todo-border: rgba(255, 255, 255, 0.22);
 
         --acf-status-danger-bg: rgba(239, 68, 68, 0.20);
         --acf-status-danger-fg: var(--acf-red-300);
-        --acf-status-info-bg:   rgba(147, 197, 253, 0.16);
-        --acf-status-info-fg:   var(--acf-blue-300);
+        --acf-status-info-bg: rgba(147, 197, 253, 0.16);
+        --acf-status-info-fg: var(--acf-blue-300);
 
-        --acf-ai-bg:     rgba(99, 102, 241, 0.22);
+        --acf-ai-bg: rgba(99, 102, 241, 0.22);
         --acf-ai-border: rgba(165, 180, 252, 0.34);
-        --acf-ai-fg:     var(--acf-ai-400);
+        --acf-ai-fg: var(--acf-ai-400);
 
         --acf-track: rgba(255, 255, 255, 0.16);
 
         /* Hero wash, dark — see the note in section 4. */
-        --acf-hero-wash: linear-gradient(135deg,
-            rgba(15, 108, 191, 0.34) 0%,
-            rgba(15, 108, 191, 0.16) 46%,
-            rgba(15, 108, 191, 0.06) 100%),
+        --acf-hero-wash:
+            linear-gradient(
+                135deg,
+                rgba(15, 108, 191, 0.34) 0%,
+                rgba(15, 108, 191, 0.16) 46%,
+                rgba(15, 108, 191, 0.06) 100%
+            ),
             linear-gradient(var(--acf-surface-raised), var(--acf-surface-raised));
-        --acf-hero-wash: linear-gradient(135deg,
-            color-mix(in srgb, var(--acf-brand) 34%, var(--acf-surface-raised)) 0%,
-            color-mix(in srgb, var(--acf-brand) 16%, var(--acf-surface-raised)) 46%,
-            color-mix(in srgb, var(--acf-brand)  6%, var(--acf-surface-raised)) 100%);
+        --acf-hero-wash:
+            linear-gradient(
+                135deg,
+                color-mix(in srgb, var(--acf-brand) 34%, var(--acf-surface-raised)) 0%,
+                color-mix(in srgb, var(--acf-brand) 16%, var(--acf-surface-raised)) 46%,
+                color-mix(in srgb, var(--acf-brand)  6%, var(--acf-surface-raised)) 100%
+            );
 
         --acf-elevation-1:
             0 1px 2px rgba(2, 6, 23, 0.5),
@@ -700,7 +728,7 @@ body.dark-mode :is(.aicadmin-wrap, .aitutor-report-index) {
             0 0 0 1px rgba(255, 255, 255, 0.08);
 
         --acf-focus-color: var(--acf-blue-300);
-        --acf-focus-halo:  var(--acf-neutral-900);
+        --acf-focus-halo: var(--acf-neutral-900);
 
         color-scheme: dark;
     }
@@ -720,26 +748,29 @@ body.dark-mode :is(.aicadmin-wrap, .aitutor-report-index) {
     body.format-aicourse,
     .aicadmin-wrap,
     .aitutor-report-index {
-        --acf-text-tertiary:  var(--acf-text-secondary);
-        --acf-border-subtle:  var(--acf-border-strong);
+        --acf-text-tertiary: var(--acf-text-secondary);
+        --acf-border-subtle: var(--acf-border-strong);
         --acf-border-default: var(--acf-border-strong);
-        --acf-border-media:   #ffffff;
+        --acf-border-media: #fff;
         --acf-status-todo-bg: transparent;
         --acf-status-todo-border: var(--acf-neutral-600);
-        --acf-surface-hover:  rgba(15, 23, 42, 0.12);
-        --acf-focus-width:    3px;
+        --acf-surface-hover: rgba(15, 23, 42, 0.12);
+        --acf-focus-width: 3px;
+        /* stylelint-disable length-zero-no-unit -- these feed blur(var(--acf-blur-*));
+           blur(0px) is unambiguous where a bare 0 is a known cross-browser sharp edge. */
         --acf-blur-sm: 0px;
         --acf-blur-md: 0px;
         --acf-blur-lg: 0px;
+        /* stylelint-enable length-zero-no-unit */
     }
 
     html[data-bs-theme="dark"] body.format-aicourse,
     body.format-aicourse.dark-mode,
     html[data-bs-theme="dark"] :is(.aicadmin-wrap, .aitutor-report-index),
     body.dark-mode :is(.aicadmin-wrap, .aitutor-report-index) {
-        --acf-border-subtle:  var(--acf-neutral-400);
+        --acf-border-subtle: var(--acf-neutral-400);
         --acf-border-default: var(--acf-neutral-400);
-        --acf-surface-hover:  rgba(255, 255, 255, 0.16);
+        --acf-surface-hover: rgba(255, 255, 255, 0.16);
     }
 
     /* Any element whose only affordance was a tint now gets a real edge.
@@ -765,9 +796,9 @@ body.dark-mode :is(.aicadmin-wrap, .aitutor-report-index) {
    page really is dark. */
 @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
     html:not([data-bs-theme="light"]) body.format-aicourse:not(.aicourse-force-light):not([data-bs-theme="light"]) {
-        --acf-border-subtle:  var(--acf-neutral-400);
+        --acf-border-subtle: var(--acf-neutral-400);
         --acf-border-default: var(--acf-neutral-400);
-        --acf-surface-hover:  rgba(255, 255, 255, 0.16);
+        --acf-surface-hover: rgba(255, 255, 255, 0.16);
     }
 }
 
@@ -776,9 +807,12 @@ body.dark-mode :is(.aicadmin-wrap, .aitutor-report-index) {
    this sheet reads --acf-blur-*, so zeroing them here removes all of them. */
 @media (prefers-reduced-transparency: reduce) {
     body.format-aicourse {
+        /* stylelint-disable length-zero-no-unit -- these feed blur(var(--acf-blur-*));
+           blur(0px) is unambiguous where a bare 0 is a known cross-browser sharp edge. */
         --acf-blur-sm: 0px;
         --acf-blur-md: 0px;
         --acf-blur-lg: 0px;
+        /* stylelint-enable length-zero-no-unit */
         --acf-surface-scrim: rgba(2, 6, 23, 0.92);
         --acf-surface-overlay: var(--acf-surface-raised);
     }
@@ -790,10 +824,10 @@ body.dark-mode :is(.aicadmin-wrap, .aitutor-report-index) {
     .aicadmin-wrap,
     .aitutor-report-index {
         --acf-duration-instant: 1ms;
-        --acf-duration-fast:    1ms;
-        --acf-duration-base:    1ms;
-        --acf-duration-slow:    1ms;
-        --acf-duration-slower:  1ms;
+        --acf-duration-fast: 1ms;
+        --acf-duration-base: 1ms;
+        --acf-duration-slow: 1ms;
+        --acf-duration-slower: 1ms;
     }
 }
 
@@ -838,21 +872,20 @@ body.format-aicourse .format-aicourse-section-summary > :last-child {
    has `overflow: hidden`; both are listed so the ring is never lost.
    -------------------------------------------------------------------------- */
 body.format-aicourse :is(
-     .aicourse-card-link, .aicourse-card-time, .aicourse-card-settings,
-     .aicourse-card-duplicate, .aicourse-card-delete, .aicourse-card-drag-handle,
-     .aicourse-card-dot, .aicourse-card-activity-link, .aicourse-card-activities-more,
-     .aicourse-card-dots-more, .aicourse-activity-count, .aicourse-progress-badge,
-     .aicourse-progress-badge-complete, .aicourse-icon-col, .aicourse-card-icon-editable,
-     .aicourse-activity-card, .aicourse-activity-number, .aicourse-completion-toggle,
-     .aicourse-hero-completion-toggle, .aicourse-hero-nav, .aicourse-hero-home,
-     .aicourse-hero-grades, .aicourse-hero-back, .aicourse-hero-ai-btn,
-     .aicourse-add-section-card, .aicourse-icon-picker-item, .aicourse-icon-picker-close,
-     .aicourse-icon-search-input, .aicourse-ai-quick-btn, .aicourse-ai-send-btn,
-     .aicourse-ai-rate-btn, .aicourse-ai-chatbox-close, .aicourse-bgen-btn,
-     .aicourse-bgen-close, .aicourse-tab, .aicourse-rating-btn, .aicourse-correction-btn,
-     .aicourse-filter-input, .aicourse-filter-select,
-     .aicourse-card-bulkselect input[type="checkbox"]
- ):focus-visible {
+.aicourse-card-link, .aicourse-card-time, .aicourse-card-settings,
+.aicourse-card-duplicate, .aicourse-card-delete, .aicourse-card-drag-handle,
+.aicourse-card-dot, .aicourse-card-activity-link, .aicourse-card-activities-more,
+.aicourse-card-dots-more, .aicourse-activity-count, .aicourse-progress-badge,
+.aicourse-progress-badge-complete, .aicourse-icon-col, .aicourse-card-icon-editable,
+.aicourse-activity-card, .aicourse-activity-number, .aicourse-completion-toggle,
+.aicourse-hero-completion-toggle, .aicourse-hero-nav, .aicourse-hero-home,
+.aicourse-hero-grades, .aicourse-hero-back, .aicourse-hero-ai-btn,
+.aicourse-add-section-card, .aicourse-icon-picker-item, .aicourse-icon-picker-close,
+.aicourse-icon-search-input, .aicourse-ai-quick-btn, .aicourse-ai-send-btn,
+.aicourse-ai-rate-btn, .aicourse-ai-chatbox-close, .aicourse-bgen-btn,
+.aicourse-bgen-close, .aicourse-tab, .aicourse-rating-btn, .aicourse-correction-btn,
+.aicourse-filter-input, .aicourse-filter-select,
+.aicourse-card-bulkselect input[type="checkbox"]):focus-visible {
     outline: var(--acf-focus-width) solid var(--acf-focus-color);
     outline-offset: var(--acf-focus-offset);
     box-shadow: var(--acf-focus-ring);
@@ -862,9 +895,8 @@ body.format-aicourse :is(
 
 /* Controls that sit on imagery or on the AI gradient need the inverted halo. */
 body.format-aicourse .aicourse-hero-has-image :is(
-     .aicourse-hero-nav, .aicourse-hero-home, .aicourse-hero-grades, .aicourse-hero-back,
-     .aicourse-hero-ai-btn, .aicourse-activity-number, .aicourse-hero-completion-toggle
- ):focus-visible,
+.aicourse-hero-nav, .aicourse-hero-home, .aicourse-hero-grades, .aicourse-hero-back,
+.aicourse-hero-ai-btn, .aicourse-activity-number, .aicourse-hero-completion-toggle):focus-visible,
 body.format-aicourse .aicourse-ai-chatbox-close:focus-visible,
 body.format-aicourse .aicourse-bgen-close:focus-visible,
 body.format-aicourse .aicourse-bgen-btn:focus-visible {
@@ -884,12 +916,11 @@ body.format-aicourse .aicourse-card:focus-within .aicourse-card-edit-buttons {
 /* Shared touch-target floor. Applied to every control the plugin owns.
    WCAG 2.2 SC 2.5.8 requires 24px; 44px is the premium bar. */
 body.format-aicourse :is(
-     .aicourse-hero-nav, .aicourse-hero-home, .aicourse-hero-grades, .aicourse-hero-back,
-     .aicourse-hero-ai-btn, .aicourse-hero-completion-toggle, .aicourse-icon-picker-close,
-     .aicourse-ai-chatbox-close, .aicourse-ai-send-btn, .aicourse-bgen-close,
-     .aicourse-card-settings, .aicourse-card-duplicate, .aicourse-card-delete,
-     .aicourse-card-drag-handle
- ) {
+.aicourse-hero-nav, .aicourse-hero-home, .aicourse-hero-grades, .aicourse-hero-back,
+.aicourse-hero-ai-btn, .aicourse-hero-completion-toggle, .aicourse-icon-picker-close,
+.aicourse-ai-chatbox-close, .aicourse-ai-send-btn, .aicourse-bgen-close,
+.aicourse-card-settings, .aicourse-card-duplicate, .aicourse-card-delete,
+.aicourse-card-drag-handle) {
     min-inline-size: var(--acf-target-min);
     min-block-size: var(--acf-target-min);
 }
@@ -917,9 +948,13 @@ body.format-aicourse #topofscroll,
 body.format-aicourse .main-inner,
 body.format-aicourse .course-content,
 body.format-aicourse [role="main"] {
+    /* stylelint-disable-next-line declaration-no-important -- deliberate; see the numbered note above. */
     block-size: auto !important;
+    /* stylelint-disable-next-line declaration-no-important -- deliberate; see the numbered note above. */
     min-block-size: 0 !important;
+    /* stylelint-disable-next-line declaration-no-important -- deliberate; see the numbered note above. */
     max-block-size: none !important;
+    /* stylelint-disable-next-line declaration-no-important -- deliberate; see the numbered note above. */
     overflow: visible !important;
 }
 
@@ -929,7 +964,9 @@ body.format-aicourse .drawer,
 body.format-aicourse .drawers .drawer-left,
 body.format-aicourse .drawer-content-wrapper,
 body.format-aicourse [data-region="fixed-drawer"] {
+    /* stylelint-disable-next-line declaration-no-important -- deliberate; see the numbered note above. */
     overflow-y: auto !important;
+    /* stylelint-disable-next-line declaration-no-important -- deliberate; see the numbered note above. */
     overflow-x: hidden !important;
 }
 
@@ -939,6 +976,7 @@ body.format-aicourse #page-content,
 body.format-aicourse #region-main-box,
 body.format-aicourse #topofscroll,
 body.format-aicourse .main-inner {
+    /* stylelint-disable-next-line declaration-no-important -- deliberate; see the numbered note above. */
     flex: 1 0 auto !important;
 }
 
@@ -967,15 +1005,20 @@ body.format-aicourse #page-header {
    `!important` #8: Bootstrap's own display utilities are `!important`. */
 body.format-aicourse.aicourse-clean-view:not(.editing):not(.editingon):not(.editing-mode) #page-header h1,
 body.format-aicourse:not(.editing):not(.editingon):not(.editing-mode) #page-header h1 {
+    /* stylelint-disable-next-line declaration-no-important -- deliberate; see the numbered note above. */
     display: none !important;
 }
 
-/* Restore the heading in edit mode and for graders (who get no hero banner).
+/* Restore the heading in edit mode, and for read-only graders, who get no hero banner
+   and would otherwise have no course title at all. ACF-FIX-2.1.4 added
+   :not(.aicourse-can-edit) to the grader arm: an editing teacher outside edit mode now
+   receives the hero, so restoring the heading for them as well showed the title twice.
    `!important` #9: must beat the rule above, which is itself `!important`. */
 body.format-aicourse.editing #page-header h1,
 body.format-aicourse.editingon #page-header h1,
 body.format-aicourse.editing-mode #page-header h1,
-body.format-aicourse.aicourse-is-grader #page-header h1 {
+body.format-aicourse.aicourse-is-grader:not(.aicourse-can-edit) #page-header h1 {
+    /* stylelint-disable-next-line declaration-no-important -- deliberate; see the numbered note above. */
     display: block !important;
 }
 
@@ -983,6 +1026,7 @@ body.format-aicourse.aicourse-is-grader #page-header h1 {
    visible for everyone, on every page type.
    `!important` #10: beats Bootstrap's `.d-none` utility. */
 body.format-aicourse .secondary-navigation {
+    /* stylelint-disable-next-line declaration-no-important -- deliberate; see the numbered note above. */
     display: flex !important;
 }
 
@@ -996,14 +1040,15 @@ body.format-aicourse:not(.editing):not(.editingon):not(.editing-mode) #page-head
    the core duplicates are hidden — but only for users who actually get a hero.
    `!important` #11-#12: core marks these with display utilities. */
 body.format-aicourse.path-mod:not(.aicourse-is-grader) :is(
-     .activityiconcontainer, #region-main > .activity-icon, .completion-info,
-     [data-region="completion-info"], .automatic-completion-conditions
- ) {
+.activityiconcontainer, #region-main > .activity-icon, .completion-info,
+[data-region="completion-info"], .automatic-completion-conditions) {
+    /* stylelint-disable-next-line declaration-no-important -- deliberate; see the numbered note above. */
     display: none !important;
 }
 
 body.format-aicourse.path-mod:not(.aicourse-is-grader) #region-main > a[href*="/mod/"] > img.activityicon,
 body.format-aicourse.path-mod:not(.aicourse-is-grader) #region-main-box > a[href*="/mod/"] > img.activityicon {
+    /* stylelint-disable-next-line declaration-no-important -- deliberate; see the numbered note above. */
     display: none !important;
 }
 
@@ -1011,9 +1056,20 @@ body.format-aicourse .path-mod .activity-header:not(:empty) {
     background-color: transparent;
 }
 
-/* Graders never receive the hero banner, so nothing may be hidden for them.
+/* Read-only graders (a non-editing teacher, say) get no hero banner, so the page
+   heading is restored for them instead -- see the #page-header h1 rules above.
+
+   ACF-FIX-2.1.4: this used to be `.aicourse-is-grader` alone, which is true for EVERY
+   teacher, manager and admin. format.php deliberately renders the hero for anyone who
+   can edit, so they can reach the "Generate banner" button (FIX-ACF-EDITOR-HERO,
+   v1.7.68) -- so the banner was rendered on the server and then hidden again here, for
+   every editing user, both in and out of edit mode. Scoping with :not(.aicourse-can-edit)
+   makes this rule the exact complement of the PHP condition rather than a contradiction
+   of it.
+
    `!important` #13: beats the `display: none !important` above. */
-body.format-aicourse.aicourse-is-grader .aicourse-hero-sticky-wrap {
+body.format-aicourse.aicourse-is-grader:not(.aicourse-can-edit) .aicourse-hero-sticky-wrap {
+    /* stylelint-disable-next-line declaration-no-important -- deliberate; see the numbered note above. */
     display: none !important;
 }
 
@@ -1033,18 +1089,18 @@ body.format-aicourse.aicourse-is-grader .aicourse-hero-sticky-wrap {
    guard keeps this rule pointed at CORE's section list and stops it hiding our own grid —
    without it the entire card layout computes to `display: none`. */
 body.format-aicourse.aicourse-cardview :is(
-     .course-content > ul.aicourse, .course-content > ul.topics, .course-content > ul.sections,
-     .course-content > .topics, .course-content > .sections, [data-for="course_sectionlist"]:not(.aicourse-cards-grid),
-     .course-content > .section-summary, .course-content > .course-section
- ) {
+.course-content > ul.aicourse, .course-content > ul.topics, .course-content > ul.sections,
+.course-content > .topics, .course-content > .sections, [data-for="course_sectionlist"]:not(.aicourse-cards-grid),
+.course-content > .section-summary, .course-content > .course-section) {
+    /* stylelint-disable-next-line declaration-no-important -- deliberate; see the numbered note above. */
     display: none !important;
 }
 
 body.format-aicourse.aicourse-activitycards :is(
-     .course-content > ul.aicourse, .course-content > ul.topics, .course-content > ul.sections,
-     [data-for="course_sectionlist"]:not(.aicourse-cards-grid), .course-content > .section-summary,
-     .course-content > .course-section
- ) {
+.course-content > ul.aicourse, .course-content > ul.topics, .course-content > ul.sections,
+[data-for="course_sectionlist"]:not(.aicourse-cards-grid), .course-content > .section-summary,
+.course-content > .course-section) {
+    /* stylelint-disable-next-line declaration-no-important -- deliberate; see the numbered note above. */
     display: none !important;
 }
 
@@ -1071,15 +1127,17 @@ body.format-aicourse .aicourse-general-section > .course-section {
    `!important` #16-#18: Boost sets the drawer width from a CSS variable and
    marks the drawer with display utilities. */
 body.format-aicourse.aicourse-hideindex:not(.editing):not(.editingon):not(.editing-mode) :is(
-     .courseindex, [data-region="courseindex"], [data-region="course-index"], #courseindex,
-     #theme_boost-drawers-courseindex, .drawer-left, [data-region="fixed-drawer"].drawer-left
- ) {
+.courseindex, [data-region="courseindex"], [data-region="course-index"], #courseindex,
+#theme_boost-drawers-courseindex, .drawer-left, [data-region="fixed-drawer"].drawer-left) {
+    /* stylelint-disable-next-line declaration-no-important -- deliberate; see the numbered note above. */
     display: none !important;
+    /* stylelint-disable-next-line declaration-no-important -- deliberate; see the numbered note above. */
     inline-size: 0 !important;
 }
 
 body.format-aicourse.aicourse-hideindex:not(.editing):not(.editingon):not(.editing-mode) {
-    --drawer-left-width: 0px !important; /* Boost-owned variable; scoped to this state only */
+    /* stylelint-disable-next-line declaration-no-important -- deliberate; see the numbered note above. */
+    --drawer-left-width: 0 !important; /* Boost-owned variable; scoped to this state only */
 }
 
 body.format-aicourse.aicourse-hideindex:not(.editing):not(.editingon):not(.editing-mode) :is(#page.drawers, .drawers) {
@@ -1087,12 +1145,14 @@ body.format-aicourse.aicourse-hideindex:not(.editing):not(.editingon):not(.editi
     padding-inline-start: 0;
 }
 
-body.format-aicourse.aicourse-hideindex:not(.editing):not(.editingon):not(.editing-mode) :is(#page-content, .main-inner, #region-main-box, #region-main) {
+body.format-aicourse.aicourse-hideindex:not(.editing):not(.editingon):not(.editing-mode)
+:is(#page-content, .main-inner, #region-main-box, #region-main) {
     margin-inline: auto;
     max-inline-size: var(--acf-container-max);
 }
 
-body.format-aicourse.aicourse-hideindex:not(.editing):not(.editingon):not(.editing-mode) :is(.aicourse-cards-container, .aicourse-activity-cards-container, .format-aicourse-container) {
+body.format-aicourse.aicourse-hideindex:not(.editing):not(.editingon):not(.editing-mode)
+:is(.aicourse-cards-container, .aicourse-activity-cards-container, .format-aicourse-container) {
     max-inline-size: var(--acf-container-max);
     margin-inline: auto;
     padding-inline: var(--acf-gutter);
@@ -1123,8 +1183,9 @@ body.format-aicourse .aicourse-activity-content > * {
 }
 
 /* Media and tables inside prose are exempt — they should use the full width. */
-body.format-aicourse :is(.aicourse-general-summary, .format-aicourse-section-summary, .aicourse-activity-content)
-    > :is(img, video, iframe, table, figure, .mediaplugin, .table-responsive) {
+/* stylelint-disable-next-line max-line-length -- cannot be wrapped: Moodle's
+   selector-combinator-space-before forbids a newline before the ">" combinator. */
+body.format-aicourse :is(.aicourse-general-summary, .format-aicourse-section-summary, .aicourse-activity-content) > :is(img, video, iframe, table, figure, .mediaplugin, .table-responsive) {
     max-inline-size: 100%;
 }
 
@@ -1174,8 +1235,9 @@ body.format-aicourse .icons-collapse-expand {
     flex-shrink: 0;
     box-sizing: border-box;
     cursor: pointer;
-    transition: background var(--acf-duration-fast) var(--acf-ease-standard),
-                border-color var(--acf-duration-fast) var(--acf-ease-standard);
+    transition:
+        background var(--acf-duration-fast) var(--acf-ease-standard),
+        border-color var(--acf-duration-fast) var(--acf-ease-standard);
 }
 
 body.format-aicourse .icons-collapse-expand:hover {
@@ -1245,8 +1307,9 @@ body.format-aicourse .aicourse-hero-banner {
     isolation: isolate;
     /* Only composited properties are transitioned. The previous sheet
        transitioned `min-height`, which reflowed the whole page on scroll. */
-    transition: box-shadow var(--acf-duration-base) var(--acf-ease-standard),
-                border-color var(--acf-duration-base) var(--acf-ease-standard);
+    transition:
+        box-shadow var(--acf-duration-base) var(--acf-ease-standard),
+        border-color var(--acf-duration-base) var(--acf-ease-standard);
 }
 
 /* ACF-FIX-2.0: the inline `max-height` this rule existed to neutralise is gone — lib.php now
@@ -1392,17 +1455,23 @@ body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-her
     position: absolute;
     inset: 0;
     border-radius: inherit;
-    background: linear-gradient(to right,
-        rgba(2, 6, 23, 0.45) 0%,
-        rgba(2, 6, 23, 0.14) 42%,
-        rgba(2, 6, 23, 0.00) 70%);
+    background:
+        linear-gradient(
+            to right,
+            rgba(2, 6, 23, 0.45) 0%,
+            rgba(2, 6, 23, 0.14) 42%,
+            rgba(2, 6, 23, 0.00) 70%
+        );
 }
 
 [dir="rtl"] body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-overlay::before {
-    background: linear-gradient(to left,
-        rgba(2, 6, 23, 0.45) 0%,
-        rgba(2, 6, 23, 0.14) 42%,
-        rgba(2, 6, 23, 0.00) 70%);
+    background:
+        linear-gradient(
+            to left,
+            rgba(2, 6, 23, 0.45) 0%,
+            rgba(2, 6, 23, 0.14) 42%,
+            rgba(2, 6, 23, 0.00) 70%
+        );
 }
 
 /* --- Content row ---------------------------------------------------------
@@ -1442,6 +1511,8 @@ body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-her
     min-block-size: inherit;
     gap: var(--acf-space-2);
     padding: var(--acf-space-6) var(--acf-gutter) var(--acf-space-7);
+    /* stylelint-disable-next-line time-min-milliseconds --
+       80ms here is the animation DELAY, not its duration; the rule targets durations. */
     animation: acf-hero-enter var(--acf-duration-slower) var(--acf-ease-out) 80ms both;
 }
 
@@ -1549,7 +1620,7 @@ body.format-aicourse .aicourse-hero-banner:not(.aicourse-hero-has-image) .aicour
 /* A hairline rule earns the gap between the progress group and the actions,
    instead of leaving it as unexplained emptiness. Only drawn when both exist. */
 body.format-aicourse .aicourse-hero-banner:not(.aicourse-hero-has-image)
-    .aicourse-hero-nav-progress + .aicourse-hero-icons {
+.aicourse-hero-nav-progress + .aicourse-hero-icons {
     padding-inline-start: var(--acf-space-5);
     border-inline-start: 1px solid var(--acf-border-subtle);
 }
@@ -1578,9 +1649,10 @@ body.format-aicourse :is(.aicourse-hero-nav, .aicourse-hero-home, .aicourse-hero
     color: var(--acf-text-secondary);
     text-decoration: none;
     cursor: pointer;
-    transition: background var(--acf-duration-fast) var(--acf-ease-standard),
-                color var(--acf-duration-fast) var(--acf-ease-standard),
-                transform var(--acf-duration-fast) var(--acf-ease-spring);
+    transition:
+        background var(--acf-duration-fast) var(--acf-ease-standard),
+        color var(--acf-duration-fast) var(--acf-ease-standard),
+        transform var(--acf-duration-fast) var(--acf-ease-spring);
 }
 
 body.format-aicourse :is(.aicourse-hero-nav, .aicourse-hero-home, .aicourse-hero-grades, .aicourse-hero-back):hover {
@@ -1695,17 +1767,23 @@ body.format-aicourse .aicourse-hero-ai-btn {
     cursor: pointer;
     overflow: hidden;
     box-shadow: var(--acf-elevation-2);
-    transition: transform var(--acf-duration-fast) var(--acf-ease-spring),
-                box-shadow var(--acf-duration-fast) var(--acf-ease-standard),
-                filter var(--acf-duration-fast) var(--acf-ease-standard);
+    transition:
+        transform var(--acf-duration-fast) var(--acf-ease-spring),
+        box-shadow var(--acf-duration-fast) var(--acf-ease-standard),
+        filter var(--acf-duration-fast) var(--acf-ease-standard);
 }
 
 body.format-aicourse .aicourse-hero-ai-btn::before {
     content: "";
     position: absolute;
     inset: -50%;
-    background: linear-gradient(45deg,
-        transparent 40%, var(--acf-media-hover) 50%, transparent 60%);
+    background:
+        linear-gradient(
+            45deg,
+            transparent 40%,
+            var(--acf-media-hover) 50%,
+            transparent 60%
+        );
     animation: acf-shine 3.6s var(--acf-ease-standard) infinite;
     pointer-events: none;
 }
@@ -1775,7 +1853,7 @@ body.format-aicourse .aicourse-hero-progress {
    the section navigator. Image mode, where the cluster is a full-width column
    and the bar does render, is untouched. */
 body.format-aicourse .aicourse-hero-banner:not(.aicourse-hero-has-image)
-    .aicourse-hero-progress .aicourse-progress-bar-track {
+.aicourse-hero-progress .aicourse-progress-bar-track {
     display: none;
 }
 
@@ -2036,8 +2114,9 @@ body.format-aicourse .aicourse-activity-number {
     font-variant-numeric: tabular-nums;
     text-decoration: none;
     scroll-snap-align: start;
-    transition: transform var(--acf-duration-fast) var(--acf-ease-spring),
-                background var(--acf-duration-fast) var(--acf-ease-standard);
+    transition:
+        transform var(--acf-duration-fast) var(--acf-ease-spring),
+        background var(--acf-duration-fast) var(--acf-ease-standard);
 }
 
 /* `not_started` is the base appearance above; the modifier is declared
@@ -2298,9 +2377,10 @@ body.format-aicourse .aicourse-card {
        hack existed to undo. The ::before accent bar carries its own radius. */
     isolation: isolate;
     -webkit-font-smoothing: antialiased;
-    transition: transform var(--acf-duration-slow) var(--acf-ease-spring),
-                box-shadow var(--acf-duration-slow) var(--acf-ease-standard),
-                border-color var(--acf-duration-slow) var(--acf-ease-standard);
+    transition:
+        transform var(--acf-duration-slow) var(--acf-ease-spring),
+        box-shadow var(--acf-duration-slow) var(--acf-ease-standard),
+        border-color var(--acf-duration-slow) var(--acf-ease-standard);
 }
 
 /* Brand accent rail along the top edge. */
@@ -2312,9 +2392,12 @@ body.format-aicourse .aicourse-card::before {
     block-size: 3px;
     border-start-start-radius: var(--acf-radius-xl);
     border-start-end-radius: var(--acf-radius-xl);
-    background: linear-gradient(to right,
-        var(--acf-brand) 0%,
-        var(--acf-brand-tint-strong) 100%);
+    background:
+        linear-gradient(
+            to right,
+            var(--acf-brand) 0%,
+            var(--acf-brand-tint-strong) 100%
+        );
     opacity: 0.7;
     z-index: var(--acf-z-content);
     transition: opacity var(--acf-duration-slow) var(--acf-ease-standard);
@@ -2391,9 +2474,10 @@ body.format-aicourse .aicourse-card-icon-wrap {
     border-radius: var(--acf-radius-lg);
     background: var(--acf-brand-tint);
     color: var(--acf-text-brand);
-    transition: transform var(--acf-duration-slow) var(--acf-ease-spring),
-                background var(--acf-duration-slow) var(--acf-ease-standard),
-                border-color var(--acf-duration-fast) var(--acf-ease-standard);
+    transition:
+        transform var(--acf-duration-slow) var(--acf-ease-spring),
+        background var(--acf-duration-slow) var(--acf-ease-standard),
+        border-color var(--acf-duration-fast) var(--acf-ease-standard);
 }
 
 body.format-aicourse .aicourse-card-icon-wrap.aicourse-icon-selected {
@@ -2497,8 +2581,9 @@ body.format-aicourse .aicourse-card .aicourse-card-time::before {
     border: 1px solid var(--acf-border-subtle);
     border-radius: var(--acf-radius-pill);
     background: var(--acf-surface-hover);
-    transition: background var(--acf-duration-fast) var(--acf-ease-standard),
-                border-color var(--acf-duration-fast) var(--acf-ease-standard);
+    transition:
+        background var(--acf-duration-fast) var(--acf-ease-standard),
+        border-color var(--acf-duration-fast) var(--acf-ease-standard);
 }
 
 body.format-aicourse .aicourse-card .aicourse-card-time:hover {
@@ -2652,8 +2737,9 @@ body.format-aicourse .aicourse-card .aicourse-card-activity-link {
     line-height: var(--acf-leading-snug);
     color: var(--acf-text-secondary);
     text-decoration: none;
-    transition: background-color var(--acf-duration-fast) var(--acf-ease-standard),
-                color var(--acf-duration-fast) var(--acf-ease-standard);
+    transition:
+        background-color var(--acf-duration-fast) var(--acf-ease-standard),
+        color var(--acf-duration-fast) var(--acf-ease-standard);
 }
 
 body.format-aicourse .aicourse-card .aicourse-card-activity-link:hover {
@@ -2963,12 +3049,13 @@ body.format-aicourse .aicourse-card-edit-buttons {
     opacity: 0;
     pointer-events: none;
     transform: translateY(-4px);
-    transition: opacity var(--acf-duration-fast) var(--acf-ease-standard),
-                transform var(--acf-duration-fast) var(--acf-ease-out);
+    transition:
+        opacity var(--acf-duration-fast) var(--acf-ease-standard),
+        transform var(--acf-duration-fast) var(--acf-ease-out);
 }
 
 body.format-aicourse :is(.aicourse-card-settings, .aicourse-card-duplicate, .aicourse-card-delete,
-     .aicourse-card-drag-handle) {
+.aicourse-card-drag-handle) {
     position: relative;
     display: inline-flex;
     align-items: center;
@@ -2980,13 +3067,14 @@ body.format-aicourse :is(.aicourse-card-settings, .aicourse-card-duplicate, .aic
     color: var(--acf-text-secondary);
     cursor: pointer;
     text-decoration: none;
-    transition: color var(--acf-duration-fast) var(--acf-ease-standard),
-                transform var(--acf-duration-fast) var(--acf-ease-spring);
+    transition:
+        color var(--acf-duration-fast) var(--acf-ease-standard),
+        transform var(--acf-duration-fast) var(--acf-ease-spring);
 }
 
 /* 32px visual chip inside the 44px target. */
 body.format-aicourse :is(.aicourse-card-settings, .aicourse-card-duplicate, .aicourse-card-delete,
-     .aicourse-card-drag-handle)::before {
+.aicourse-card-drag-handle)::before {
     content: "";
     position: absolute;
     inset: 6px;
@@ -2996,7 +3084,7 @@ body.format-aicourse :is(.aicourse-card-settings, .aicourse-card-duplicate, .aic
 }
 
 body.format-aicourse :is(.aicourse-card-settings, .aicourse-card-duplicate, .aicourse-card-delete,
-     .aicourse-card-drag-handle) svg {
+.aicourse-card-drag-handle) svg {
     position: relative;
     z-index: var(--acf-z-raised);
     inline-size: var(--acf-icon-sm);
@@ -3030,12 +3118,12 @@ body.format-aicourse .aicourse-card-delete:hover::before {
 }
 
 body.format-aicourse :is(.aicourse-card-settings, .aicourse-card-duplicate, .aicourse-card-delete,
-     .aicourse-card-drag-handle):active {
+.aicourse-card-drag-handle):active {
     transform: scale(0.92);
 }
 
 /* The drag grab handle, which is also the keyboard "move section" control
-   (data-action="moveSection"). Requested in /root/work/notes_dnd.txt: it is a real <button>, so
+   (data-action="moveSection"). It is a real <button>, so
    without these it renders with user-agent chrome next to three flat icon controls, and below
    the WCAG 2.2 SC 2.5.8 target floor on a phone. The drag STATE classes (dragging, dropready,
    drop-zone, drop-down, drop-up) are core's and are deliberately not touched. */
@@ -3167,9 +3255,12 @@ body.format-aicourse :is(.aicourse-general-section, .format-aicourse-container .
     block-size: 3px;
     border-start-start-radius: var(--acf-radius-xl);
     border-start-end-radius: var(--acf-radius-xl);
-    background: linear-gradient(to right,
-        var(--acf-brand) 0%,
-        var(--acf-brand-tint-strong) 100%);
+    background:
+        linear-gradient(
+            to right,
+            var(--acf-brand) 0%,
+            var(--acf-brand-tint-strong) 100%
+        );
     opacity: 0.7;
     pointer-events: none;
 }
@@ -3226,8 +3317,9 @@ body.format-aicourse :is(.aicourse-general-section, .format-aicourse-container .
     border-radius: var(--acf-radius-lg);
     background: var(--acf-surface-raised);
     box-shadow: var(--acf-elevation-1);
-    transition: border-color var(--acf-duration-fast) var(--acf-ease-standard),
-                box-shadow var(--acf-duration-fast) var(--acf-ease-standard);
+    transition:
+        border-color var(--acf-duration-fast) var(--acf-ease-standard),
+        box-shadow var(--acf-duration-fast) var(--acf-ease-standard);
 }
 
 body.format-aicourse :is(.aicourse-general-section, .format-aicourse-container .single-section) .activity-item:hover {
@@ -3242,7 +3334,8 @@ body.format-aicourse :is(.aicourse-general-section, .format-aicourse-container .
 /* Boost's own `.activityiconcontainer` carries a background and a size, so the
    selector has to name it to reach the same tinted tile the activity cards use
    on the student side. */
-body.format-aicourse :is(.aicourse-general-section, .format-aicourse-container .single-section) :is(.activity-icon, .activityiconcontainer) {
+body.format-aicourse :is(.aicourse-general-section, .format-aicourse-container .single-section)
+:is(.activity-icon, .activityiconcontainer) {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -3254,7 +3347,8 @@ body.format-aicourse :is(.aicourse-general-section, .format-aicourse-container .
     background: var(--acf-brand-tint-weak);
 }
 
-body.format-aicourse :is(.aicourse-general-section, .format-aicourse-container .single-section) :is(.activity-icon, .activityiconcontainer) img {
+body.format-aicourse :is(.aicourse-general-section, .format-aicourse-container .single-section)
+:is(.activity-icon, .activityiconcontainer) img {
     inline-size: 22px;
     block-size: 22px;
     max-inline-size: none;
@@ -3288,7 +3382,8 @@ body.format-aicourse :is(.aicourse-general-section, .format-aicourse-container .
     max-inline-size: 78ch;
 }
 
-body.format-aicourse :is(.aicourse-general-section, .format-aicourse-container .single-section) .activity-altcontent :is(h1, h2, h3, h4, h5, h6) {
+body.format-aicourse :is(.aicourse-general-section, .format-aicourse-container .single-section) .activity-altcontent
+:is(h1, h2, h3, h4, h5, h6) {
     margin-block: 0 var(--acf-space-2);
     font-size: var(--acf-font-size-base);
     font-weight: var(--acf-weight-semibold);
@@ -3296,7 +3391,8 @@ body.format-aicourse :is(.aicourse-general-section, .format-aicourse-container .
 }
 
 body.format-aicourse :is(.aicourse-general-section, .format-aicourse-container .single-section) .activity-altcontent > :last-child,
-body.format-aicourse :is(.aicourse-general-section, .format-aicourse-container .single-section) .activity-altcontent .no-overflow > :last-child {
+body.format-aicourse :is(.aicourse-general-section, .format-aicourse-container .single-section) .activity-altcontent
+.no-overflow > :last-child {
     margin-block-end: 0;
 }
 
@@ -3316,9 +3412,10 @@ body.format-aicourse :is(.aicourse-general-section, .format-aicourse-container .
     color: var(--acf-text-secondary);
     font-size: var(--acf-font-size-sm);
     font-weight: var(--acf-weight-medium);
-    transition: border-color var(--acf-duration-fast) var(--acf-ease-standard),
-                color var(--acf-duration-fast) var(--acf-ease-standard),
-                background var(--acf-duration-fast) var(--acf-ease-standard);
+    transition:
+        border-color var(--acf-duration-fast) var(--acf-ease-standard),
+        color var(--acf-duration-fast) var(--acf-ease-standard),
+        background var(--acf-duration-fast) var(--acf-ease-standard);
 }
 
 body.format-aicourse :is(.aicourse-general-section, .format-aicourse-container .single-section) .section-modchooser:hover {
@@ -3419,7 +3516,8 @@ body.format-aicourse .aicourse-activity-cards-grid:has(> .aicourse-activity-card
 
 @container acf-activities (min-width: 30rem) {
     body.format-aicourse .aicourse-activity-cards-grid:has(> .aicourse-activity-card:only-child) .aicourse-activity-card-body,
-    body.format-aicourse .aicourse-activity-cards-grid:has(> .aicourse-activity-card:nth-child(2):last-child) .aicourse-activity-card-body {
+    body.format-aicourse .aicourse-activity-cards-grid:has(> .aicourse-activity-card:nth-child(2):last-child)
+    .aicourse-activity-card-body {
         display: flex;
         flex-wrap: wrap;
         align-items: baseline;
@@ -3428,13 +3526,15 @@ body.format-aicourse .aicourse-activity-cards-grid:has(> .aicourse-activity-card
     }
 
     body.format-aicourse .aicourse-activity-cards-grid:has(> .aicourse-activity-card:only-child) .aicourse-activity-card-name,
-    body.format-aicourse .aicourse-activity-cards-grid:has(> .aicourse-activity-card:nth-child(2):last-child) .aicourse-activity-card-name {
+    body.format-aicourse .aicourse-activity-cards-grid:has(> .aicourse-activity-card:nth-child(2):last-child)
+    .aicourse-activity-card-name {
         margin-block-end: 0;
         flex: 1 1 auto;
     }
 
     body.format-aicourse .aicourse-activity-cards-grid:has(> .aicourse-activity-card:only-child) .aicourse-activity-card-footer,
-    body.format-aicourse .aicourse-activity-cards-grid:has(> .aicourse-activity-card:nth-child(2):last-child) .aicourse-activity-card-footer {
+    body.format-aicourse .aicourse-activity-cards-grid:has(> .aicourse-activity-card:nth-child(2):last-child)
+    .aicourse-activity-card-footer {
         flex: 0 0 auto;
     }
 }
@@ -3452,9 +3552,10 @@ body.format-aicourse .aicourse-activity-card {
     color: var(--acf-text-primary);
     text-decoration: none;
     -webkit-font-smoothing: antialiased;
-    transition: transform var(--acf-duration-slow) var(--acf-ease-spring),
-                box-shadow var(--acf-duration-slow) var(--acf-ease-standard),
-                border-color var(--acf-duration-slow) var(--acf-ease-standard);
+    transition:
+        transform var(--acf-duration-slow) var(--acf-ease-spring),
+        box-shadow var(--acf-duration-slow) var(--acf-ease-standard),
+        border-color var(--acf-duration-slow) var(--acf-ease-standard);
 }
 
 body.format-aicourse .aicourse-activity-card:hover {
@@ -3480,8 +3581,9 @@ body.format-aicourse .aicourse-activity-card-icon {
     border-radius: var(--acf-radius-md);
     background: var(--acf-brand-tint-weak);
     color: var(--acf-text-brand);
-    transition: transform var(--acf-duration-slow) var(--acf-ease-spring),
-                background var(--acf-duration-slow) var(--acf-ease-standard);
+    transition:
+        transform var(--acf-duration-slow) var(--acf-ease-spring),
+        background var(--acf-duration-slow) var(--acf-ease-standard);
 }
 
 body.format-aicourse .aicourse-activity-card:hover .aicourse-activity-card-icon {
@@ -3717,9 +3819,10 @@ body.format-aicourse .aicourse-completion-toggle {
     font-size: var(--acf-font-size-xs);
     font-weight: var(--acf-weight-semibold);
     cursor: pointer;
-    transition: background var(--acf-duration-base) var(--acf-ease-standard),
-                color var(--acf-duration-base) var(--acf-ease-standard),
-                border-color var(--acf-duration-base) var(--acf-ease-standard);
+    transition:
+        background var(--acf-duration-base) var(--acf-ease-standard),
+        color var(--acf-duration-base) var(--acf-ease-standard),
+        border-color var(--acf-duration-base) var(--acf-ease-standard);
 }
 
 body.format-aicourse .aicourse-completion-toggle-pending {
@@ -3809,10 +3912,11 @@ body.format-aicourse .aicourse-add-section-card {
     font-size: var(--acf-font-size-md);
     font-weight: var(--acf-weight-medium);
     cursor: pointer;
-    transition: border-color var(--acf-duration-base) var(--acf-ease-standard),
-                color var(--acf-duration-base) var(--acf-ease-standard),
-                background var(--acf-duration-base) var(--acf-ease-standard),
-                transform var(--acf-duration-fast) var(--acf-ease-spring);
+    transition:
+        border-color var(--acf-duration-base) var(--acf-ease-standard),
+        color var(--acf-duration-base) var(--acf-ease-standard),
+        background var(--acf-duration-base) var(--acf-ease-standard),
+        transform var(--acf-duration-fast) var(--acf-ease-spring);
 }
 
 body.format-aicourse .aicourse-add-section-card:hover {
@@ -3916,6 +4020,9 @@ body.format-aicourse .aicourse-icon-picker-content {
     inline-size: 100%;
     max-inline-size: 36rem;
     max-block-size: min(82vh, 46rem);
+    /* stylelint-disable-next-line declaration-block-no-duplicate-properties --
+       deliberate progressive enhancement: vh first for browsers without dvh support,
+       dvh second so iOS does not push the input row below the shrinking URL bar. */
     max-block-size: min(82dvh, 46rem);
     overflow: hidden;
     border: 1px solid var(--acf-border-subtle);
@@ -3955,8 +4062,9 @@ body.format-aicourse .aicourse-icon-picker-close {
     font-size: var(--acf-font-size-xl);
     line-height: var(--acf-leading-none);
     cursor: pointer;
-    transition: background var(--acf-duration-fast) var(--acf-ease-standard),
-                color var(--acf-duration-fast) var(--acf-ease-standard);
+    transition:
+        background var(--acf-duration-fast) var(--acf-ease-standard),
+        color var(--acf-duration-fast) var(--acf-ease-standard);
 }
 
 body.format-aicourse .aicourse-icon-picker-close:hover {
@@ -3975,8 +4083,9 @@ body.format-aicourse .aicourse-icon-picker-search {
     border: 1px solid var(--acf-border-default);
     border-radius: var(--acf-radius-md);
     background: var(--acf-surface-sunken);
-    transition: border-color var(--acf-duration-fast) var(--acf-ease-standard),
-                box-shadow var(--acf-duration-fast) var(--acf-ease-standard);
+    transition:
+        border-color var(--acf-duration-fast) var(--acf-ease-standard),
+        box-shadow var(--acf-duration-fast) var(--acf-ease-standard);
 }
 
 body.format-aicourse .aicourse-icon-picker-search:focus-within {
@@ -4065,10 +4174,11 @@ body.format-aicourse .aicourse-icon-picker-item {
     cursor: pointer;
     /* `transition: all` replaced with an explicit list: with 60+ buttons in the
        grid, `all` forced the engine to check every animatable property. */
-    transition: background var(--acf-duration-fast) var(--acf-ease-standard),
-                border-color var(--acf-duration-fast) var(--acf-ease-standard),
-                color var(--acf-duration-fast) var(--acf-ease-standard),
-                transform var(--acf-duration-fast) var(--acf-ease-spring);
+    transition:
+        background var(--acf-duration-fast) var(--acf-ease-standard),
+        border-color var(--acf-duration-fast) var(--acf-ease-standard),
+        color var(--acf-duration-fast) var(--acf-ease-standard),
+        transform var(--acf-duration-fast) var(--acf-ease-spring);
 }
 
 body.format-aicourse .aicourse-icon-picker-item:hover {
@@ -4167,6 +4277,8 @@ body.format-aicourse .aicourse-ai-chatbox {
     /* dvh, not vh: on iOS the shrinking URL bar previously pushed the input row
        and send button below the visible viewport. */
     max-block-size: calc(100vh - 6rem);
+    /* stylelint-disable-next-line declaration-block-no-duplicate-properties --
+       deliberate progressive enhancement; see the note on the chat panel above. */
     max-block-size: calc(100dvh - 6rem);
     overflow: hidden;
     border: 1px solid var(--acf-border-subtle);
@@ -4309,8 +4421,9 @@ body.format-aicourse .aicourse-ai-chatbox-input textarea {
     font-size: var(--acf-font-size-md);
     line-height: var(--acf-leading-snug);
     resize: none;
-    transition: border-color var(--acf-duration-fast) var(--acf-ease-standard),
-                box-shadow var(--acf-duration-fast) var(--acf-ease-standard);
+    transition:
+        border-color var(--acf-duration-fast) var(--acf-ease-standard),
+        box-shadow var(--acf-duration-fast) var(--acf-ease-standard);
 }
 
 /* The previous rule set `outline: none` and changed only the border hue by one
@@ -4342,9 +4455,10 @@ body.format-aicourse .aicourse-ai-send-btn {
     color: var(--acf-text-inverse);
     cursor: pointer;
     box-shadow: var(--acf-elevation-1);
-    transition: transform var(--acf-duration-fast) var(--acf-ease-spring),
-                box-shadow var(--acf-duration-fast) var(--acf-ease-standard),
-                filter var(--acf-duration-fast) var(--acf-ease-standard);
+    transition:
+        transform var(--acf-duration-fast) var(--acf-ease-spring),
+        box-shadow var(--acf-duration-fast) var(--acf-ease-standard),
+        filter var(--acf-duration-fast) var(--acf-ease-standard);
 }
 
 body.format-aicourse .aicourse-ai-send-btn:hover {
@@ -4383,9 +4497,15 @@ body.format-aicourse .aicourse-ai-dots span {
     animation: acf-dots-bounce 1.4s var(--acf-ease-standard) infinite both;
 }
 
-body.format-aicourse .aicourse-ai-dots span:nth-child(1) { animation-delay: -0.32s; }
-body.format-aicourse .aicourse-ai-dots span:nth-child(2) { animation-delay: -0.16s; }
-body.format-aicourse .aicourse-ai-dots span:nth-child(3) { animation-delay: 0s; }
+body.format-aicourse .aicourse-ai-dots span:nth-child(1) {
+    animation-delay: -0.32s;
+}
+body.format-aicourse .aicourse-ai-dots span:nth-child(2) {
+    animation-delay: -0.16s;
+}
+body.format-aicourse .aicourse-ai-dots span:nth-child(3) {
+    animation-delay: 0s;
+}
 
 /* --- Quick actions -------------------------------------------------------- */
 body.format-aicourse .aicourse-ai-quick-actions {
@@ -4424,9 +4544,10 @@ body.format-aicourse .aicourse-ai-quick-btn {
     font-weight: var(--acf-weight-medium);
     white-space: nowrap;
     cursor: pointer;
-    transition: background var(--acf-duration-fast) var(--acf-ease-standard),
-                border-color var(--acf-duration-fast) var(--acf-ease-standard),
-                transform var(--acf-duration-fast) var(--acf-ease-spring);
+    transition:
+        background var(--acf-duration-fast) var(--acf-ease-standard),
+        border-color var(--acf-duration-fast) var(--acf-ease-standard),
+        transform var(--acf-duration-fast) var(--acf-ease-spring);
 }
 
 body.format-aicourse .aicourse-ai-quick-btn:hover {
@@ -4469,9 +4590,10 @@ body.format-aicourse .aicourse-ai-rate-btn {
     font-size: var(--acf-font-size-md);
     line-height: var(--acf-leading-none);
     cursor: pointer;
-    transition: background var(--acf-duration-fast) var(--acf-ease-standard),
-                border-color var(--acf-duration-fast) var(--acf-ease-standard),
-                transform var(--acf-duration-fast) var(--acf-ease-spring);
+    transition:
+        background var(--acf-duration-fast) var(--acf-ease-standard),
+        border-color var(--acf-duration-fast) var(--acf-ease-standard),
+        transform var(--acf-duration-fast) var(--acf-ease-spring);
 }
 
 body.format-aicourse .aicourse-ai-rate-btn:hover {
@@ -4560,9 +4682,12 @@ body.format-aicourse .aicourse-bgen-header {
     padding: var(--acf-space-5) var(--acf-space-5) var(--acf-space-5);
     padding-inline-end: calc(var(--acf-target-min) + var(--acf-space-3));
     border-block-end: 1px solid var(--acf-inverse-border);
-    background: linear-gradient(135deg,
-        var(--acf-inverse-surface-2) 0%,
-        var(--acf-inverse-surface) 100%);
+    background:
+        linear-gradient(
+            135deg,
+            var(--acf-inverse-surface-2) 0%,
+            var(--acf-inverse-surface) 100%
+        );
 }
 
 body.format-aicourse .aicourse-bgen-header-icon {
@@ -4613,8 +4738,9 @@ body.format-aicourse .aicourse-bgen-close {
     background: transparent;
     color: var(--acf-inverse-text-muted);
     cursor: pointer;
-    transition: background var(--acf-duration-fast) var(--acf-ease-standard),
-                color var(--acf-duration-fast) var(--acf-ease-standard);
+    transition:
+        background var(--acf-duration-fast) var(--acf-ease-standard),
+        color var(--acf-duration-fast) var(--acf-ease-standard);
 }
 
 body.format-aicourse .aicourse-bgen-close:hover {
@@ -4706,9 +4832,10 @@ body.format-aicourse .aicourse-bgen-btn {
     font-weight: var(--acf-weight-semibold);
     line-height: var(--acf-leading-snug);
     cursor: pointer;
-    transition: filter var(--acf-duration-fast) var(--acf-ease-standard),
-                background var(--acf-duration-fast) var(--acf-ease-standard),
-                transform var(--acf-duration-instant) var(--acf-ease-spring);
+    transition:
+        filter var(--acf-duration-fast) var(--acf-ease-standard),
+        background var(--acf-duration-fast) var(--acf-ease-standard),
+        transform var(--acf-duration-instant) var(--acf-ease-spring);
 }
 
 body.format-aicourse .aicourse-bgen-btn:active {
@@ -4901,6 +5028,15 @@ body.format-aicourse .courseindex-item:hover {
     background: var(--acf-surface-hover);
 }
 
+/* ACF-FIX-2.1.4: the active item's background and its text colour must never be settled
+   by two rules of different specificity. They were: the background lived here at (0,2,1)
+   while the text colour lived in the rule below at (0,2,2). A theme whose own
+   `.courseindex .courseindex-item.pageitem` background rule outranked the first but not
+   the second painted a dark highlight under text this sheet had just coloured dark navy,
+   leaving the activity title unreadable. Both selectors are now carried at the higher
+   specificity so a theme cannot win one and lose the other. */
+body.format-aicourse .courseindex .courseindex-item.pageitem,
+body.format-aicourse .courseindex .courseindex-item[data-selected="true"],
 body.format-aicourse .courseindex-item.pageitem,
 body.format-aicourse .courseindex-item[data-selected="true"] {
     background: var(--acf-brand-tint-weak);
@@ -4916,6 +5052,8 @@ body.format-aicourse .courseindex-item .text-truncate {
     text-decoration: none;
 }
 
+body.format-aicourse .courseindex .courseindex-item.pageitem :is(a, .text-truncate),
+body.format-aicourse .courseindex .courseindex-item[data-selected="true"] :is(a, .text-truncate),
 body.format-aicourse .courseindex-item.pageitem a,
 body.format-aicourse .courseindex-item[data-selected="true"] a,
 body.format-aicourse .courseindex-item.pageitem .text-truncate,
@@ -4937,6 +5075,7 @@ body.format-aicourse .courseindex .btn.btn-icon:focus-visible {
 /* Completion icons stay visible in edit mode, where core hides them.
    `!important` #20: core marks them with a display utility. */
 body.format-aicourse .courseindex :is(.completioninfo, [data-region="completioninfo"], .completion-icon, .courseindex-completion) {
+    /* stylelint-disable-next-line declaration-no-important -- deliberate; see the numbered note above. */
     display: inline-flex !important;
     visibility: visible;
     opacity: 1;
@@ -4955,7 +5094,9 @@ body.format-aicourse .courseindex .completioninfo :is(img, svg, i) {
 body.format-aicourse .courseindex .btn.btn-icon,
 body.format-aicourse .courseindex .icons-collapse-expand,
 body.format-aicourse .courseindex-chevron {
+    /* stylelint-disable-next-line declaration-no-important -- deliberate; see the numbered note above. */
     inline-size: var(--acf-target-min) !important;
+    /* stylelint-disable-next-line declaration-no-important -- deliberate; see the numbered note above. */
     block-size: var(--acf-target-min) !important;
     min-inline-size: var(--acf-target-min);
     min-block-size: var(--acf-target-min);
@@ -5742,8 +5883,7 @@ body.format-aicourse .aicourse-report-live {
    including the ones on the two `admin` pagelayout pages, which never match a
    `body.format-aicourse` selector. */
 body.format-aicourse :is(
-     .aicourse-sort-link, .aicourse-correction-textarea, .aicourse-pagination a
- ):focus-visible,
+.aicourse-sort-link, .aicourse-correction-textarea, .aicourse-pagination a):focus-visible,
 body.format-aicourse .aicourse-report-perpage select:focus-visible,
 .aicadmin-wrap :is(.aicadmin-sort-link, .aicadmin-pagination a):focus-visible,
 .aicadmin-wrap :is(.aicadmin-filter-group, .aicadmin-result-bar) :is(select, input):focus-visible,
@@ -6189,49 +6329,97 @@ body.format-aicourse .aicourse-report-perpage select:focus-visible,
    ========================================================================== */
 
 @keyframes acf-hero-enter {
-    from { opacity: 0; transform: translateY(16px); }
-    to   { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(16px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 @keyframes acf-card-enter {
-    from { opacity: 0; transform: translateY(18px) scale(0.98); }
-    to   { opacity: 1; transform: translateY(0) scale(1); }
+    from {
+        opacity: 0;
+        transform: translateY(18px) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
 }
 
 @keyframes acf-slide-up {
-    from { opacity: 0; transform: translateY(20px); }
-    to   { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 @keyframes acf-fade-in {
-    from { opacity: 0; transform: translateY(8px); }
-    to   { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 @keyframes acf-ring-pulse {
-    0%   { box-shadow: 0 0 0 0 var(--acf-status-done-bg); }
-    70%  { box-shadow: 0 0 0 12px transparent; }
-    100% { box-shadow: 0 0 0 0 transparent; }
+    0% {
+        box-shadow: 0 0 0 0 var(--acf-status-done-bg);
+    }
+    70% {
+        box-shadow: 0 0 0 12px transparent;
+    }
+    100% {
+        box-shadow: 0 0 0 0 transparent;
+    }
 }
 
 @keyframes acf-dots-bounce {
-    0%, 80%, 100% { transform: scale(0.4); opacity: 0.5; }
-    40%           { transform: scale(1);   opacity: 1; }
+    0%,
+    80%,
+    100% {
+        transform: scale(0.4);
+        opacity: 0.5;
+    }
+    40% {
+        transform: scale(1);
+        opacity: 1;
+    }
 }
 
 @keyframes acf-spin {
-    to { transform: rotate(360deg); }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 /* The report row the AMD module has just updated in place (section 21a). */
 @keyframes acf-row-flash {
-    from { background: var(--acf-status-done-bg); }
-    to   { background: transparent; }
+    from {
+        background: var(--acf-status-done-bg);
+    }
+    to {
+        background: transparent;
+    }
 }
 
 @keyframes acf-shine {
-    0%   { transform: translateX(-100%) rotate(45deg); }
-    100% { transform: translateX(100%) rotate(45deg); }
+    0% {
+        transform: translateX(-100%) rotate(45deg);
+    }
+    100% {
+        transform: translateX(100%) rotate(45deg);
+    }
 }
 
 /* Staggered grid entrance. Two rules replace the previous 18 hand-tuned
@@ -6239,22 +6427,42 @@ body.format-aicourse .aicourse-report-perpage select:focus-visible,
    does not wait two seconds for its last card. */
 body.format-aicourse .aicourse-cards-grid > * {
     animation: acf-card-enter var(--acf-duration-slow) var(--acf-ease-out) both;
+    /* stylelint-disable-next-line time-min-milliseconds --
+       45ms is the per-card stagger STEP inside calc(), not a duration. */
     animation-delay: calc(var(--acf-stagger, 0) * 45ms);
 }
 
 body.format-aicourse .aicourse-activity-cards-grid > * {
     animation: acf-card-enter var(--acf-duration-base) var(--acf-ease-out) both;
+    /* stylelint-disable-next-line time-min-milliseconds --
+       35ms is the per-card stagger STEP inside calc(), not a duration. */
     animation-delay: calc(var(--acf-stagger, 0) * 35ms);
 }
 
-body.format-aicourse :is(.aicourse-cards-grid, .aicourse-activity-cards-grid) > :nth-child(1)  { --acf-stagger: 0; }
-body.format-aicourse :is(.aicourse-cards-grid, .aicourse-activity-cards-grid) > :nth-child(2)  { --acf-stagger: 1; }
-body.format-aicourse :is(.aicourse-cards-grid, .aicourse-activity-cards-grid) > :nth-child(3)  { --acf-stagger: 2; }
-body.format-aicourse :is(.aicourse-cards-grid, .aicourse-activity-cards-grid) > :nth-child(4)  { --acf-stagger: 3; }
-body.format-aicourse :is(.aicourse-cards-grid, .aicourse-activity-cards-grid) > :nth-child(5)  { --acf-stagger: 4; }
-body.format-aicourse :is(.aicourse-cards-grid, .aicourse-activity-cards-grid) > :nth-child(6)  { --acf-stagger: 5; }
-body.format-aicourse :is(.aicourse-cards-grid, .aicourse-activity-cards-grid) > :nth-child(7)  { --acf-stagger: 6; }
-body.format-aicourse :is(.aicourse-cards-grid, .aicourse-activity-cards-grid) > :nth-child(n+8) { --acf-stagger: 7; }
+body.format-aicourse :is(.aicourse-cards-grid, .aicourse-activity-cards-grid) > :nth-child(1) {
+    --acf-stagger: 0;
+}
+body.format-aicourse :is(.aicourse-cards-grid, .aicourse-activity-cards-grid) > :nth-child(2) {
+    --acf-stagger: 1;
+}
+body.format-aicourse :is(.aicourse-cards-grid, .aicourse-activity-cards-grid) > :nth-child(3) {
+    --acf-stagger: 2;
+}
+body.format-aicourse :is(.aicourse-cards-grid, .aicourse-activity-cards-grid) > :nth-child(4) {
+    --acf-stagger: 3;
+}
+body.format-aicourse :is(.aicourse-cards-grid, .aicourse-activity-cards-grid) > :nth-child(5) {
+    --acf-stagger: 4;
+}
+body.format-aicourse :is(.aicourse-cards-grid, .aicourse-activity-cards-grid) > :nth-child(6) {
+    --acf-stagger: 5;
+}
+body.format-aicourse :is(.aicourse-cards-grid, .aicourse-activity-cards-grid) > :nth-child(7) {
+    --acf-stagger: 6;
+}
+body.format-aicourse :is(.aicourse-cards-grid, .aicourse-activity-cards-grid) > :nth-child(n+8) {
+    --acf-stagger: 7;
+}
 
 /* --------------------------------------------------------------------------
    Reduced motion. The previous sheet covered 4 selectors and left every
@@ -6276,11 +6484,20 @@ body.format-aicourse :is(.aicourse-cards-grid, .aicourse-activity-cards-grid) > 
     body.format-aicourse [class*=" aicourse-"]::after {
         /* `!important` #23: keyframe animations cannot be neutralised by
            specificity alone when an element sets `animation` shorthand. */
+        /* stylelint-disable time-min-milliseconds -- inside prefers-reduced-motion the
+           near-zero duration IS the intent; 1ms rather than 0 so animationend still fires. */
+        /* stylelint-disable-next-line declaration-no-important -- deliberate; see the numbered note above. */
         animation-duration: 1ms !important;
+        /* stylelint-disable-next-line declaration-no-important -- deliberate; see the numbered note above. */
         animation-delay: 0ms !important;
+        /* stylelint-disable-next-line declaration-no-important -- deliberate; see the numbered note above. */
         animation-iteration-count: 1 !important;
+        /* stylelint-disable-next-line declaration-no-important -- deliberate; see the numbered note above. */
         transition-duration: 1ms !important;
+        /* stylelint-enable time-min-milliseconds */
+        /* stylelint-disable-next-line declaration-no-important -- deliberate; see the numbered note above. */
         transition-delay: 0ms !important;
+        /* stylelint-disable-next-line declaration-no-important -- deliberate; see the numbered note above. */
         scroll-behavior: auto !important;
     }
 
@@ -6318,22 +6535,22 @@ body.format-aicourse :is(.aicourse-cards-grid, .aicourse-activity-cards-grid) > 
     html:not([data-bs-theme="light"]) body.format-aicourse:not(.aicourse-force-light):not([data-bs-theme="light"]),
     body.format-aicourse.dark-mode {
         /* Token-level, so every component follows without a single override. */
-        --acf-surface-raised:  #ffffff;
-        --acf-surface-sunken:  #ffffff;
-        --acf-surface-muted:   #ffffff;
-        --acf-surface-overlay: #ffffff;
-        --acf-surface-hover:   transparent;
-        --acf-surface-active:  transparent;
-        --acf-text-primary:    #000000;
-        --acf-text-secondary:  #333333;
-        --acf-text-tertiary:   #555555;
-        --acf-text-brand:      #000000;
-        --acf-text-on-media:   #000000;
-        --acf-border-subtle:   #999999;
-        --acf-border-default:  #999999;
-        --acf-border-strong:   #666666;
-        --acf-brand-tint-weak:   transparent;
-        --acf-brand-tint:        transparent;
+        --acf-surface-raised: #fff;
+        --acf-surface-sunken: #fff;
+        --acf-surface-muted: #fff;
+        --acf-surface-overlay: #fff;
+        --acf-surface-hover: transparent;
+        --acf-surface-active: transparent;
+        --acf-text-primary: #000;
+        --acf-text-secondary: #333;
+        --acf-text-tertiary: #555;
+        --acf-text-brand: #000;
+        --acf-text-on-media: #000;
+        --acf-border-subtle: #999;
+        --acf-border-default: #999;
+        --acf-border-strong: #666;
+        --acf-brand-tint-weak: transparent;
+        --acf-brand-tint: transparent;
         --acf-brand-tint-strong: transparent;
         --acf-elevation-0: none;
         --acf-elevation-1: none;
@@ -6341,19 +6558,22 @@ body.format-aicourse :is(.aicourse-cards-grid, .aicourse-activity-cards-grid) > 
         --acf-elevation-3: none;
         --acf-elevation-4: none;
         --acf-elevation-5: none;
+        /* stylelint-disable length-zero-no-unit -- these feed blur(var(--acf-blur-*));
+           blur(0px) is unambiguous where a bare 0 is a known cross-browser sharp edge. */
         --acf-blur-sm: 0px;
         --acf-blur-md: 0px;
         --acf-blur-lg: 0px;
+        /* stylelint-enable length-zero-no-unit */
     }
 
     /* Interactive-only chrome and anything overlaid on the page.
        `!important` #24: several of these are toggled by inline `style`. */
     body.format-aicourse :is(
-     .aicourse-ai-chatbox, .aicourse-icon-picker-modal, .aicourse-bgen-overlay,
-     .aicourse-bdel-overlay, .aicourse-card-edit-buttons, .aicourse-add-section-card,
-     .aicourse-hero-icons, .aicourse-hero-nav, .aicourse-hero-nav-spacer,
-     .aicourse-icon-change-label
- ) {
+    .aicourse-ai-chatbox, .aicourse-icon-picker-modal, .aicourse-bgen-overlay,
+    .aicourse-bdel-overlay, .aicourse-card-edit-buttons, .aicourse-add-section-card,
+    .aicourse-hero-icons, .aicourse-hero-nav, .aicourse-hero-nav-spacer,
+    .aicourse-icon-change-label) {
+        /* stylelint-disable-next-line declaration-no-important -- deliberate; see the numbered note above. */
         display: none !important;
     }
 
@@ -6380,6 +6600,8 @@ body.format-aicourse :is(.aicourse-cards-grid, .aicourse-activity-cards-grid) > 
     body.format-aicourse .aicourse-cards-grid,
     body.format-aicourse .aicourse-activity-cards-grid {
         grid-template-columns: repeat(2, 1fr);
+        /* stylelint-disable-next-line unit-disallowed-list --
+           pt is the correct absolute unit inside @media print. */
         gap: 8pt;
     }
 
@@ -6428,38 +6650,37 @@ body.format-aicourse :is(.aicourse-cards-grid, .aicourse-activity-cards-grid) > 
     html :is(.aicadmin-wrap, .aitutor-report-index),
     html[data-bs-theme] :is(.aicadmin-wrap, .aitutor-report-index),
     body.dark-mode :is(.aicadmin-wrap, .aitutor-report-index) {
-        --acf-surface-raised:  #ffffff;
-        --acf-surface-sunken:  #ffffff;
-        --acf-surface-muted:   #ffffff;
-        --acf-surface-hover:   transparent;
-        --acf-surface-active:  transparent;
-        --acf-text-primary:    #000000;
-        --acf-text-secondary:  #333333;
-        --acf-text-tertiary:   #555555;
-        --acf-text-brand:      #000000;
-        --acf-ai-fg:           #000000;
-        --acf-border-subtle:   #999999;
-        --acf-border-default:  #999999;
-        --acf-border-strong:   #666666;
-        --acf-status-done-bg:   transparent;
+        --acf-surface-raised: #fff;
+        --acf-surface-sunken: #fff;
+        --acf-surface-muted: #fff;
+        --acf-surface-hover: transparent;
+        --acf-surface-active: transparent;
+        --acf-text-primary: #000;
+        --acf-text-secondary: #333;
+        --acf-text-tertiary: #555;
+        --acf-text-brand: #000;
+        --acf-ai-fg: #000;
+        --acf-border-subtle: #999;
+        --acf-border-default: #999;
+        --acf-border-strong: #666;
+        --acf-status-done-bg: transparent;
         --acf-status-danger-bg: transparent;
-        --acf-status-doing-bg:  transparent;
-        --acf-status-todo-bg:   transparent;
-        --acf-status-info-bg:   transparent;
-        --acf-status-done-fg:   #000000;
-        --acf-status-danger-fg: #000000;
-        --acf-status-doing-fg:  #000000;
-        --acf-status-todo-fg:   #000000;
-        --acf-status-info-fg:   #000000;
+        --acf-status-doing-bg: transparent;
+        --acf-status-todo-bg: transparent;
+        --acf-status-info-bg: transparent;
+        --acf-status-done-fg: #000;
+        --acf-status-danger-fg: #000;
+        --acf-status-doing-fg: #000;
+        --acf-status-todo-fg: #000;
+        --acf-status-info-fg: #000;
         --acf-elevation-1: none;
         --acf-elevation-2: none;
     }
 
     /* Controls that cannot be operated on paper. */
     body.format-aicourse :is(
-     .aicourse-filter-form, .aicourse-report-perpage, .aicourse-chat-rating,
-     .aicourse-correction-btn, .aicourse-correction-form, .aicourse-pagination
- ),
+    .aicourse-filter-form, .aicourse-report-perpage, .aicourse-chat-rating,
+    .aicourse-correction-btn, .aicourse-correction-form, .aicourse-pagination),
     .aicadmin-wrap :is(.aicadmin-filter-card, .aicadmin-pagination, .aicadmin-btn-csv),
     .aicadmin-wrap .aicadmin-result-bar select,
     .aitutor-report-index .aitutor-course-btn {
@@ -6492,7 +6713,7 @@ body.format-aicourse :is(.aicourse-cards-grid, .aicourse-activity-cards-grid) > 
     }
 
     .aicadmin-wrap :is(.aicadmin-badge, .aicadmin-activity-pill) {
-        border: 1px solid #666666;
+        border: 1px solid #666;
     }
 }
 
@@ -6508,11 +6729,10 @@ body.format-aicourse :is(.aicourse-cards-grid, .aicourse-activity-cards-grid) > 
 
 @media (forced-colors: active) {
     body.format-aicourse :is(
-     .aicourse-card, .aicourse-activity-card, .aicourse-activity-content,
-     .aicourse-hero-banner, .aicourse-icon-picker-content, .aicourse-ai-chatbox,
-     .aicourse-bgen-card, .aicourse-bdel-card, .aicourse-stat-card, .aicourse-content-card,
-     .aicourse-empty-state
- ) {
+    .aicourse-card, .aicourse-activity-card, .aicourse-activity-content,
+    .aicourse-hero-banner, .aicourse-icon-picker-content, .aicourse-ai-chatbox,
+    .aicourse-bgen-card, .aicourse-bdel-card, .aicourse-stat-card, .aicourse-content-card,
+    .aicourse-empty-state) {
         border: 1px solid CanvasText;
     }
 
@@ -6520,22 +6740,20 @@ body.format-aicourse :is(.aicourse-cards-grid, .aicourse-activity-cards-grid) > 
        (44px target, smaller visual — section 11), so the forced-colours edge has
        to land there or it paints a 44px rectangle round a 27px pill. */
     body.format-aicourse :is(
-     .aicourse-progress-badge, .aicourse-progress-badge-complete, .aicourse-card-time
- )::before {
+    .aicourse-progress-badge, .aicourse-progress-badge-complete, .aicourse-card-time)::before {
         border: 1px solid ButtonBorder;
         background: ButtonFace;
         forced-color-adjust: none;
     }
 
     body.format-aicourse :is(
-     .aicourse-status-badge, .aicourse-progress-badge, .aicourse-progress-badge-complete,
-     .aicourse-activity-number, .aicourse-completion-toggle, .aicourse-ai-quick-btn,
-     .aicourse-bgen-btn, .aicourse-icon-picker-item, .aicourse-add-section-card,
-     .aicourse-hero-nav, .aicourse-hero-home, .aicourse-hero-grades, .aicourse-hero-back,
-     .aicourse-hero-ai-btn, .aicourse-card-settings, .aicourse-card-duplicate,
-     .aicourse-card-delete, .aicourse-ai-send-btn, .aicourse-ai-chatbox-close,
-     .aicourse-icon-picker-close, .aicourse-bgen-close
- ) {
+    .aicourse-status-badge, .aicourse-progress-badge, .aicourse-progress-badge-complete,
+    .aicourse-activity-number, .aicourse-completion-toggle, .aicourse-ai-quick-btn,
+    .aicourse-bgen-btn, .aicourse-icon-picker-item, .aicourse-add-section-card,
+    .aicourse-hero-nav, .aicourse-hero-home, .aicourse-hero-grades, .aicourse-hero-back,
+    .aicourse-hero-ai-btn, .aicourse-card-settings, .aicourse-card-duplicate,
+    .aicourse-card-delete, .aicourse-ai-send-btn, .aicourse-ai-chatbox-close,
+    .aicourse-icon-picker-close, .aicourse-bgen-close) {
         border: 1px solid ButtonBorder;
         background: ButtonFace;
         color: ButtonText;
@@ -6550,9 +6768,8 @@ body.format-aicourse :is(.aicourse-cards-grid, .aicourse-activity-cards-grid) > 
 
     /* Gradients and image scrims carry no meaning here. */
     body.format-aicourse :is(
-     .aicourse-hero-overlay, .aicourse-hero-bg-img, .aicourse-card::before,
-     .aicourse-hero-ai-btn::before
- ) {
+    .aicourse-hero-overlay, .aicourse-hero-bg-img, .aicourse-card::before,
+    .aicourse-hero-ai-btn::before) {
         display: none;
     }
 

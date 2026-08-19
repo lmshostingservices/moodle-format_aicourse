@@ -132,6 +132,29 @@ abstract class external_testcase extends \advanced_testcase {
     }
 
     /**
+     * Assert that a callable throws a moodle_exception carrying a given error code.
+     *
+     * ACF-FIX-2.1.4: use this rather than expectExceptionMessageMatches(). Matching on the
+     * rendered message asserts on English prose from the language pack, so the test breaks when
+     * a string is reworded for clarity and fails outright under a different language pack. The
+     * error code is the stable contract -- it is what the client branches on.
+     *
+     * @param string $expectederrorcode The errorcode the exception should carry.
+     * @param callable $callable The call under test.
+     * @return void
+     */
+    protected function assert_throws_errorcode(string $expectederrorcode, callable $callable): void {
+        try {
+            $callable();
+        } catch (\moodle_exception $e) {
+            $this->assertSame($expectederrorcode, $e->errorcode);
+            return;
+        }
+        $this->fail('Expected a moodle_exception with errorcode ' . $expectederrorcode
+            . ', but nothing was thrown.');
+    }
+
+    /**
      * Fake the LMS-Labs credentials so a function gets past its configuration check.
      *
      * @return void

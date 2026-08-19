@@ -65,6 +65,8 @@
     * hasrows bool True when the current page has at least one row.
     * rows array One entry per chat record: id, avatar (PRE-ESCAPED core user_picture markup),
       hasavatar, fullname, question, response, hascorrection, correction, correctionshort, date,
+      cancorrect (bool, true when the viewer holds format/aicourse:correctresponses; when false the
+      correction controls are replaced by the read-only correction text),
       ishelpful, isnothelpful, canrate.
       the viewer did not write. Only reaches the page when a row has canrate false.
     * emptytitle string Heading of the empty state.
@@ -123,7 +125,8 @@
                 "date": "1/02/26, 09:14",
                 "ishelpful": true,
                 "isnothelpful": false,
-                "canrate": true
+                "canrate": true,
+                "cancorrect": true
             }
         ],
         "emptytitle": "No chat history yet",
@@ -275,6 +278,7 @@
                 {{/canrate}}
             </td>
             <td>
+                {{#cancorrect}}
                 <button type="button" class="aicourse-correction-btn" data-action="togglecorrection"
                     data-chatid="{{id}}" aria-expanded="false" aria-controls="aicourse-correction-{{id}}">
                     {{#str}} aireport_correct, format_aicourse {{/str}}
@@ -298,6 +302,10 @@
                         </button>
                     </div>
                 </div>
+                {{/cancorrect}}
+                {{^cancorrect}}
+                {{#hascorrection}}<span class="aicourse-chat-correction">{{correctionshort}}</span>{{/hascorrection}}
+                {{/cancorrect}}
             </td>
         </tr>
         {{/rows}}

@@ -42,19 +42,19 @@ use moodle_url;
  */
 class chatfilter {
     /** @var int Smallest number of rows a user may ask for. */
-    const PERPAGE_MIN = 5;
+    public const PERPAGE_MIN = 5;
 
     /** @var int Largest number of rows a user may ask for. */
-    const PERPAGE_MAX = 200;
+    public const PERPAGE_MAX = 200;
 
     /** @var int Default number of rows per page. */
-    const PERPAGE_DEFAULT = 20;
+    public const PERPAGE_DEFAULT = 20;
 
     /** @var string The course content tab. */
-    const TAB_CONTENT = 'content';
+    public const TAB_CONTENT = 'content';
 
     /** @var string The chat history tab. */
-    const TAB_HISTORY = 'history';
+    public const TAB_HISTORY = 'history';
 
     /** @var int Course id the report is for. */
     public $courseid = 0;

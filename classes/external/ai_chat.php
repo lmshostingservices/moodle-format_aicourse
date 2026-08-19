@@ -21,7 +21,9 @@ use core_external\external_function_parameters;
 use core_external\external_single_structure;
 use core_external\external_value;
 use core_external\external_warnings;
+use core_text;
 use format_aicourse\local\contentindex;
+use format_aicourse\local\permissions;
 
 /**
  * Web service asking the AI Tutor a question about a course.
@@ -129,6 +131,15 @@ class ai_chat extends external_api {
         // ACF-FIX-2.0: Guests must never spend API credits.
         if (isguestuser()) {
             throw new \moodle_exception('error_guestnotallowed', 'format_aicourse');
+        }
+
+        // ACF-FIX-2.1.4: the site setting is a kill switch, not a display preference. It used to
+        // be consulted only by the output classes that draw the chat panel, so unticking it hid
+        // the bubble while leaving this function fully callable through core/ajax -- anyone
+        // holding format/aicourse:useaitutor could still spend purchased API credits. Enforce it
+        // where the credits are actually spent.
+        if (!permissions::is_tutor_enabled()) {
+            throw new \moodle_exception('error_tutordisabled', 'format_aicourse');
         }
 
         // ACF-FIX-2.0: Each call ships up to 50KB of course context to a paid external API with a
@@ -248,11 +259,23 @@ class ai_chat extends external_api {
             'questionText' => $params['questiontext'] !== '' ? $params['questiontext'] : null,
         ];
 
+        // ACF-FIX-2.1.4: never POST the result of a failed encode. json_encode() returns false
+        // (not a string) if any value is not valid UTF-8, and curl->post(false) sends an empty
+        // body, which the remote service answers with an opaque error. Fail loudly instead.
+        $payload = json_encode($postdata);
+        if ($payload === false) {
+            debugging(
+                'format_aicourse ai_chat could not encode request: ' . json_last_error_msg(),
+                DEBUG_DEVELOPER
+            );
+            throw new \moodle_exception('aiassistant_error', 'format_aicourse');
+        }
+
         require_once($CFG->libdir . '/filelib.php');
         $curl = new \curl();
         $curl->setopt(['CURLOPT_TIMEOUT' => 60]);
         $curl->setHeader(['Content-Type: application/json', 'Accept: application/json']);
-        $response = $curl->post(self::API_URL, json_encode($postdata));
+        $response = $curl->post(self::API_URL, $payload);
         $httpcode = $curl->info['http_code'] ?? 0;
 
         if ((int) $httpcode !== 200) {
@@ -272,13 +295,22 @@ class ai_chat extends external_api {
         }
 
         $answer = (string) ($result['answer'] ?? '');
+
+        // ACF-FIX-2.1.4: prefer an explicit flag from the service. detect_refusal() below matches
+        // English phrases only, so on a site running the tutor in any other language the report's
+        // academic-integrity counters silently read zero. The flag is authoritative when present;
+        // the phrase matching remains as a fallback for service versions that do not send it.
+        $refused = array_key_exists('refused', $result)
+            ? (int) (bool) $result['refused']
+            : self::detect_refusal($answer);
+
         $chatid = self::log_chat(
             $course->id,
             $activityid,
             $questionslot > 0 ? $questionslot : null,
             $params['question'],
             $answer,
-            self::detect_refusal($answer),
+            $refused,
             0,
             $warnings
         );
@@ -408,11 +440,14 @@ class ai_chat extends external_api {
         global $DB, $USER;
 
         try {
-            $summary = 'Student asked about: ' . substr(strip_tags($question), 0, 200);
+            // ACF-FIX-2.1.4: core_text, not substr(). A byte-wise cut can land in the middle of
+            // a multibyte character and store invalid UTF-8, which then breaks json_encode() on
+            // the next request that sends this memory to the remote service.
+            $summary = 'Student asked about: ' . core_text::substr(strip_tags($question), 0, 200);
             if ($memory !== '') {
                 $summary = $memory . "\n" . $summary;
-                if (strlen($summary) > self::MAX_MEMORY_CHARS) {
-                    $summary = substr($summary, -self::MAX_MEMORY_CHARS);
+                if (core_text::strlen($summary) > self::MAX_MEMORY_CHARS) {
+                    $summary = core_text::substr($summary, -self::MAX_MEMORY_CHARS);
                 }
             }
 
@@ -477,8 +512,12 @@ class ai_chat extends external_api {
             $text .= '- ' . $activity['name'] . ' (' . $activity['type'] . '): ' . $activity['content'] . "\n";
         }
 
-        if (strlen($text) > self::MAX_CONTEXT_CHARS) {
-            $text = substr($text, 0, self::MAX_CONTEXT_CHARS) . "\n...[content truncated]";
+        // ACF-FIX-2.1.4: core_text, not substr(). This is the severe case: a byte-wise cut here
+        // produces invalid UTF-8, json_encode() below then returns false rather than a string,
+        // and the plugin POSTs an empty body -- so the tutor failed with an opaque error on any
+        // course containing accented characters, CJK or emoji.
+        if (core_text::strlen($text) > self::MAX_CONTEXT_CHARS) {
+            $text = core_text::substr($text, 0, self::MAX_CONTEXT_CHARS) . "\n...[content truncated]";
         }
 
         if ($allquestions !== '') {
@@ -505,6 +544,10 @@ class ai_chat extends external_api {
      * Whether an answer looks like the tutor refused to hand over a solution.
      *
      * Refusals are counted as academic-integrity enforcement evidence in the AI Tutor report.
+     *
+     * FALLBACK ONLY. These markers are English, so this cannot work on a site running the tutor
+     * in another language. execute() uses the 'refused' flag from the service response whenever
+     * the service sends one, and only falls back to this when it does not.
      *
      * @param string $answer The tutor's answer.
      * @return int 1 when the answer reads as a refusal, 0 otherwise.

@@ -18,6 +18,7 @@ namespace format_aicourse\local;
 
 use cache;
 use context_module;
+use core_text;
 use Exception;
 use ZipArchive;
 
@@ -39,6 +40,18 @@ class contentindex {
 
     /** @var int Site setting: each course decides for itself, through its own course setting. */
     public const SHARE_PERCOURSE = 2;
+
+    /**
+     * Largest file, in bytes, that will be read into memory for text extraction.
+     *
+     * ACF-FIX-2.1.4: every extraction path below calls stored_file::get_content(), which loads
+     * the WHOLE file into a PHP string. Without a ceiling a single large course resource
+     * exhausts memory_limit and fatals the AI Tutor request that happened to trigger the index
+     * build. Files above this size contribute a filename placeholder instead of their text.
+     *
+     * @var int
+     */
+    public const MAX_EXTRACT_BYTES = 10485760;
 
     /**
      * In-request cache of built course indexes, keyed on "courseid_userid".
@@ -305,7 +318,7 @@ class contentindex {
                         $activitydata['content'] = strip_tags($record->intro ?? '');
                         if (!empty($record->transcripttext)) {
                             $activitydata['content'] .= "\n[TRANSCRIPT]: "
-                                . substr(strip_tags($record->transcripttext), 0, 5000);
+                                . core_text::substr(strip_tags($record->transcripttext), 0, 5000);
                         }
                         $vaquestions = $DB->get_records(
                             'aivideoactivity_questions',
@@ -675,8 +688,9 @@ class contentindex {
             }
 
             // Trim content to reasonable length (8KB per activity to capture full detail).
-            if (strlen($activitydata['content']) > 8000) {
-                $activitydata['content'] = substr($activitydata['content'], 0, 8000) . '...[content truncated]';
+            if (core_text::strlen($activitydata['content']) > 8000) {
+                $activitydata['content'] = core_text::substr($activitydata['content'], 0, 8000)
+                    . '...[content truncated]';
             }
 
             $content['activities'][] = $activitydata;
@@ -718,6 +732,13 @@ class contentindex {
             $filename = $file->get_filename();
             $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
 
+            // ACF-FIX-2.1.4: refuse to read an oversized file into memory. Note the filename so
+            // the tutor still knows the resource exists.
+            if ($file->get_filesize() > self::MAX_EXTRACT_BYTES) {
+                $content .= ' [File: ' . $filename . '] ';
+                continue;
+            }
+
             // Handle different file types.
             if (in_array($extension, ['txt', 'md', 'csv', 'html', 'htm', 'xml', 'json'])) {
                 // Plain text files - read directly.
@@ -744,8 +765,8 @@ class contentindex {
             }
 
             // Limit content per file.
-            if (strlen($content) > $maxchars) {
-                $content = substr($content, 0, $maxchars) . '...';
+            if (core_text::strlen($content) > $maxchars) {
+                $content = core_text::substr($content, 0, $maxchars) . '...';
                 break;
             }
         }
@@ -776,15 +797,18 @@ class contentindex {
             $filename = $file->get_filename();
             $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
 
-            // For text files, try to read content.
-            if (in_array($extension, ['txt', 'md', 'csv', 'html', 'htm'])) {
+            // For text files, try to read content, unless the file is too large to hold in memory.
+            if (
+                in_array($extension, ['txt', 'md', 'csv', 'html', 'htm'])
+                && $file->get_filesize() <= self::MAX_EXTRACT_BYTES
+            ) {
                 $text = $file->get_content();
-                $content .= ' [' . $filename . ': ' . strip_tags(substr($text, 0, 500)) . '] ';
+                $content .= ' [' . $filename . ': ' . strip_tags(core_text::substr($text, 0, 500)) . '] ';
             } else {
                 $content .= ' [File: ' . $filename . '] ';
             }
 
-            if (strlen($content) > $maxchars) {
+            if (core_text::strlen($content) > $maxchars) {
                 break;
             }
             if ($filecount > 20) {
@@ -804,6 +828,10 @@ class contentindex {
      * @return string Extracted text, or a filename placeholder.
      */
     public static function extract_pdf_text($file, $maxchars = 2000) {
+        if ($file->get_filesize() > self::MAX_EXTRACT_BYTES) {
+            return ' [PDF: ' . $file->get_filename() . '] ';
+        }
+
         try {
             $content = $file->get_content();
             $text = '';
@@ -824,7 +852,7 @@ class contentindex {
 
             // If we got meaningful text, return it.
             if (strlen(trim($text)) > 50) {
-                return ' [PDF content: ' . substr(trim($text), 0, $maxchars) . '] ';
+                return ' [PDF content: ' . core_text::substr(trim($text), 0, $maxchars) . '] ';
             }
 
             // Fallback - just note the filename.
@@ -842,14 +870,24 @@ class contentindex {
      * @return string Extracted text, or a filename placeholder.
      */
     public static function extract_docx_text($file, $maxchars = 2000) {
+        if ($file->get_filesize() > self::MAX_EXTRACT_BYTES) {
+            return ' [Word: ' . $file->get_filename() . '] ';
+        }
+
+        // ACF-FIX-2.1.4: make_request_directory() replaces tempnam(sys_get_temp_dir(), ...).
+        // Two reasons. Moodle requires plugin temp files to live under $CFG->tempdir, the only
+        // path guaranteed writable and correctly shared on clustered hosting. And the directory
+        // is removed automatically at the end of the request, so the file cannot leak -- the
+        // previous code called unlink() on the happy path only, so any throw between tempnam()
+        // and unlink() left the file behind permanently.
+        $tempfile = make_request_directory() . '/extract.docx';
+        $zip = null;
+
         try {
-            $content = $file->get_content();
+            file_put_contents($tempfile, $file->get_content());
             $text = '';
 
             // DOCX is a ZIP file - try to extract document.xml.
-            $tempfile = tempnam(sys_get_temp_dir(), 'docx');
-            file_put_contents($tempfile, $content);
-
             $zip = new ZipArchive();
             if ($zip->open($tempfile) === true) {
                 $xml = $zip->getFromName('word/document.xml');
@@ -860,16 +898,21 @@ class contentindex {
                     $text = preg_replace('/\s+/', ' ', $text);
                 }
                 $zip->close();
+                $zip = null;
             }
-            unlink($tempfile);
 
-            if (strlen(trim($text)) > 50) {
-                return ' [Word content: ' . substr(trim($text), 0, $maxchars) . '] ';
+            if (core_text::strlen(trim($text)) > 50) {
+                return ' [Word content: ' . core_text::substr(trim($text), 0, $maxchars) . '] ';
             }
 
             return ' [Word: ' . $file->get_filename() . '] ';
         } catch (Exception $e) {
             return ' [Word: ' . $file->get_filename() . '] ';
+        } finally {
+            // An archive left open would hold a file handle until the request ended.
+            if ($zip instanceof ZipArchive) {
+                $zip->close();
+            }
         }
     }
 
@@ -912,7 +955,7 @@ class contentindex {
                 // Learning card content.
                 $body = $slide['body'] ?? $slide['content'] ?? $slide['text'] ?? '';
                 if (!empty($body) && is_string($body)) {
-                    $text .= " — " . substr(strip_tags($body), 0, 500);
+                    $text .= " — " . core_text::substr(strip_tags($body), 0, 500);
                 }
                 // Key points / bullet points.
                 $points = $slide['keyPoints'] ?? $slide['bulletPoints'] ?? $slide['points'] ?? [];
@@ -955,7 +998,7 @@ class contentindex {
                                 $text .= "\n    Doc: " . strip_tags($doctitle);
                             }
                             if (!empty($doccontent)) {
-                                $text .= " — " . substr(strip_tags($doccontent), 0, 300);
+                                $text .= " — " . core_text::substr(strip_tags($doccontent), 0, 300);
                             }
                         }
                     }

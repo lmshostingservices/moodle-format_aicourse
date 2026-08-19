@@ -20,6 +20,7 @@ use core_external\external_api;
 use core_external\external_function_parameters;
 use core_external\external_single_structure;
 use core_external\external_value;
+use format_aicourse\local\banner;
 
 /**
  * Web service removing the AI generated banner image from a course.
@@ -58,7 +59,12 @@ class delete_banner_image extends external_api {
         self::validate_context($context);
         require_capability('moodle/course:update', $context);
 
-        get_file_storage()->delete_area_files($context->id, 'format_aicourse', 'bannerimage', $course->id);
+        get_file_storage()->delete_area_files(
+            $context->id,
+            'format_aicourse',
+            'bannerimage',
+            banner::BANNER_ITEMID
+        );
 
         return ['status' => true];
     }

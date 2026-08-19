@@ -46,13 +46,13 @@ use user_picture;
  */
 class historytab implements named_templatable, renderable {
     /** @var int Characters of the question shown in the table. */
-    const QUESTION_LENGTH = 200;
+    public const QUESTION_LENGTH = 200;
 
     /** @var int Characters of the response shown in the table. */
-    const RESPONSE_LENGTH = 300;
+    public const RESPONSE_LENGTH = 300;
 
     /** @var int Characters of a teacher correction shown in the table. */
-    const CORRECTION_LENGTH = 200;
+    public const CORRECTION_LENGTH = 200;
 
     /** @var stdClass Course record. */
     protected $course;
@@ -162,10 +162,6 @@ class historytab implements named_templatable, renderable {
                 $filter->perpage,
                 $filter->get_url()
             ),
-            // Core's own string, on purpose. The plugin string that says this properly
-            // (aireport_rate_ownonly, queued in /root/work/strings_reportjs.txt) cannot be
-            // referenced until the language pack merge lands: get_string() on a key that is not
-            // in the pack yet raises a debugging() call, which fails the report renderable test.
             'showingtext' => get_string('admin_report_showing', 'format_aicourse', [
                 'from' => $totalcount > 0 ? ($filter->page * $filter->perpage + 1) : 0,
                 'to' => min(($filter->page + 1) * $filter->perpage, $totalcount),
@@ -411,6 +407,16 @@ class historytab implements named_templatable, renderable {
 
         $unknown = get_string('aireport_unknownuser', 'format_aicourse');
         $dateformat = get_string('strftimedatetimeshort', 'core_langconfig');
+
+        // ACF-FIX-2.1.4: format_aicourse_correct_chat now enforces
+        // format/aicourse:correctresponses as well as format/aicourse:viewreport. Both default to
+        // the same archetypes, so on a stock site this is true for everyone who can reach this
+        // page -- but a site may grant read-only report access by revoking just this capability,
+        // and in that case the correction controls must not be offered at all rather than offered
+        // and then failing. Resolved once for the whole table, not per row: it does not vary by
+        // row and has_capability() would otherwise run once per chat record.
+        $cancorrect = has_capability('format/aicourse:correctresponses', $this->context);
+
         $rows = [];
         foreach ($chats as $chat) {
             $user = $users[$chat->userid] ?? null;
@@ -437,6 +443,7 @@ class historytab implements named_templatable, renderable {
                 'hascorrection' => ($correction !== ''),
                 'correction' => $correction,
                 'correctionshort' => shorten_text($correction, self::CORRECTION_LENGTH),
+                'cancorrect' => $cancorrect,
                 'date' => userdate($chat->timecreated, $dateformat),
                 'ishelpful' => ((int) $chat->rating === 1),
                 'isnothelpful' => ((int) $chat->rating === -1),
@@ -445,9 +452,9 @@ class historytab implements named_templatable, renderable {
                 // conversation, which is right for the student chat window but means every rating
                 // button on a row this viewer did not write would fail with "chatnotfound". The
                 // buttons are therefore rendered disabled on those rows, with the reason as a
-                // tooltip, rather than offering a control that cannot work. See
-                // /root/work/notes_reportjs.txt — if rate_chat is later widened to accept
-                // format/aicourse:viewreport, delete this flag and the template branch with it.
+                // tooltip, rather than offering a control that cannot work. If rate_chat is later
+                // widened to accept format/aicourse:viewreport, delete this flag and the template
+                // branch with it.
                 'canrate' => ((int) $chat->userid === (int) $USER->id),
             ];
         }

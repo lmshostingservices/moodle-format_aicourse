@@ -129,9 +129,9 @@ final class ai_chat_test extends external_testcase {
 
         $this->setGuestUser();
 
-        $this->expectException(\moodle_exception::class);
-        $this->expectExceptionMessageMatches('/Guest users cannot use the AI Tutor/');
-        ai_chat::execute($this->course->id, 'What is a hazard?');
+        $this->assert_throws_errorcode('error_guestnotallowed', function (): void {
+            ai_chat::execute($this->course->id, 'What is a hazard?');
+        });
     }
 
     /**
@@ -140,9 +140,9 @@ final class ai_chat_test extends external_testcase {
     public function test_execute_refuses_an_empty_question(): void {
         $this->setUser($this->student);
 
-        $this->expectException(\moodle_exception::class);
-        $this->expectExceptionMessageMatches('/enter a question/');
-        ai_chat::execute($this->course->id, '   ');
+        $this->assert_throws_errorcode('error_questionrequired', function (): void {
+            ai_chat::execute($this->course->id, '   ');
+        });
     }
 
     /**
@@ -175,9 +175,9 @@ final class ai_chat_test extends external_testcase {
             }
         }
 
-        $this->expectException(\moodle_exception::class);
-        $this->expectExceptionMessageMatches('/too many requests/');
-        ai_chat::execute($this->course->id, 'One question too many');
+        $this->assert_throws_errorcode('error_toomanyrequests', function (): void {
+            ai_chat::execute($this->course->id, 'One question too many');
+        });
     }
 
     /**

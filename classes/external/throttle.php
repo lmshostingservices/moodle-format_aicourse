@@ -61,9 +61,12 @@ class throttle {
     /**
      * Test and consume one slot of the caller's allowance.
      *
-     * Backed by an ad-hoc MUC application cache so it works without a db/caches.php definition.
-     * If the cache subsystem is unavailable the request is allowed through rather than locking
-     * the user out of the feature.
+     * Backed by the 'ajaxratelimit' MUC definition in db/caches.php. If the cache subsystem is
+     * unavailable the request is allowed through rather than locking the user out of the feature.
+     *
+     * The read-modify-write below is not atomic, so two truly simultaneous requests from the same
+     * user can each see the same count and both proceed. That is accepted: the purpose is to stop
+     * a user burning API credits in a loop, not to enforce an exact quota.
      *
      * @param string $action Identifier of the throttled operation.
      * @param int $courseid Course the request belongs to.
@@ -74,7 +77,7 @@ class throttle {
      */
     public static function allowed(string $action, int $courseid, int $userid, int $max, int $window): bool {
         try {
-            $cache = \cache::make_from_params(\cache_store::MODE_APPLICATION, 'format_aicourse', 'ajaxratelimit');
+            $cache = \cache::make('format_aicourse', 'ajaxratelimit');
         } catch (\Exception $e) {
             debugging('format_aicourse throttle cache unavailable: ' . $e->getMessage(), DEBUG_DEVELOPER);
             return true;

@@ -30,6 +30,22 @@ use moodle_url;
  */
 class banner {
     /**
+     * Item id used for every banner file.
+     *
+     * ACF-FIX-2.1.5: this is deliberately 0, not the course id.
+     *
+     * There is exactly one banner per course and the file already lives in that course's
+     * context, so the item id carries no information. It used to be the course id, which broke
+     * backup and restore: restore_dbops::send_files_to_pool() copies "itemid AS newitemid"
+     * verbatim when a file area is restored without an item id mapping, so a course restored
+     * into a NEW course kept its banner filed under the OLD course id and
+     * get_banner_image_url() -- which looks under the new one -- found nothing. Pinning the
+     * item id to 0 makes the verbatim copy correct. db/upgrade.php migrates existing files.
+     *
+     * @var int
+     */
+    public const BANNER_ITEMID = 0;
+    /**
      * Return the URL of the course overview image, or null when the course has none.
      *
      * @param \stdClass $course Course record.
@@ -72,7 +88,7 @@ class banner {
             $context->id,
             'format_aicourse',
             'bannerimage',
-            $course->id,
+            self::BANNER_ITEMID,
             'sortorder DESC, id ASC',
             false
         );

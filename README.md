@@ -35,16 +35,16 @@ and can write corrections that are fed back to the service.
 
 ## Screenshots
 
-All captured from a live Moodle 4.4 site running this release.
+Screenshots are published on the plugin's page in the Moodle Plugins Directory rather than
+shipped inside the package, so that installing the plugin does not copy several megabytes of
+images onto every site. All were captured from a live Moodle 4.4 site running this release.
 
-| | |
-|---|---|
-| ![Course home page with hero banner and section cards](pix/screenshots/course-home.png) | **Course home** — hero banner with course meta and completion ring, the General section rendered inline, and the section card grid. |
-| ![The same course home page in dark mode](pix/screenshots/dark-mode.png) | **Dark mode** — a full token-level dark theme, not an inversion. Follows the theme, the OS preference, or both. |
-| ![A section page showing activity cards](pix/screenshots/section-page.png) | **Section page** — activities as cards with type, completion state and progress. |
-| ![The course home page for a teacher with edit mode on](pix/screenshots/teacher-edit-mode.png) | **Edit mode** — section cards stay, with drag reordering, bulk actions, per-section icons and Moodle's own controls in the General section. |
-| ![The AI Tutor chat panel open over a course page](pix/screenshots/ai-tutor.png) | **AI Tutor** — a course-aware chat panel, available on course, section and activity pages. |
-| ![The course home page on a narrow mobile viewport](pix/screenshots/mobile.png) | **Mobile** — the same layout at 430&nbsp;px, with no horizontal scrolling. |
+The set covers: the course home page (hero banner, completion ring, inline General section and
+the section card grid); the same page in dark mode, which is a full token-level dark theme
+rather than an inversion; a section page showing activities as cards with type, completion
+state and progress; the course home page in edit mode, where the section cards remain and gain
+drag reordering, bulk actions and per-section icons; the AI Tutor chat panel open over a course
+page; and the layout at a 430&nbsp;px mobile viewport with no horizontal scrolling.
 
 ## Requirements
 
@@ -60,6 +60,12 @@ Moodle 4.4 is a hard minimum. The plugin registers a callback for
 and the hero banner and AI Tutor are injected through it.
 
 Everything except the AI Tutor works with no subscription and no outbound network access.
+
+### Moodle Mobile app
+
+This format does not ship a `db/mobile.php`, so the Moodle Mobile app renders these courses with
+its own default course layout. Courses remain fully usable in the app — the section cards,
+hero banner and AI Tutor panel are web-only.
 
 ## Installation
 

@@ -20,6 +20,7 @@ use core_external\external_api;
 use core_external\external_function_parameters;
 use core_external\external_single_structure;
 use core_external\external_value;
+use format_aicourse\local\banner;
 
 /**
  * Web service generating a course banner image with the remote AI image service.
@@ -151,12 +152,12 @@ class generate_banner_image extends external_api {
         $fs = get_file_storage();
 
         // Remove any existing banner images for this course.
-        $fs->delete_area_files($context->id, 'format_aicourse', 'bannerimage', $course->id);
+        $fs->delete_area_files($context->id, 'format_aicourse', 'bannerimage', banner::BANNER_ITEMID);
 
         $fileinfo = [
             'component' => 'format_aicourse',
             'filearea' => 'bannerimage',
-            'itemid' => $course->id,
+            'itemid' => banner::BANNER_ITEMID,
             'contextid' => $context->id,
             'filepath' => '/',
             'filename' => 'ai_banner_' . time() . '.' . $allowedmimes[$imageinfo['mime']],

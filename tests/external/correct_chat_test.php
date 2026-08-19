@@ -122,6 +122,42 @@ final class correct_chat_test extends external_testcase {
     }
 
     /**
+     * A teacher who can read the report but has had format/aicourse:correctresponses revoked
+     * cannot write a correction.
+     *
+     * ACF-FIX-2.1.4: format/aicourse:correctresponses was declared in db/access.php with
+     * RISK_XSS | RISK_PERSONAL but never enforced anywhere, so it was an orphan. This function
+     * now requires it in addition to format/aicourse:viewreport. Both capabilities default to
+     * the same archetypes, so a stock site is unaffected; this test covers the case a site
+     * creates deliberately, namely read-only access to the report.
+     */
+    public function test_execute_refuses_a_reader_without_correctresponses(): void {
+        global $DB;
+
+        $chatid = $this->create_chat();
+        $this->prohibit_capability('format/aicourse:correctresponses', 'editingteacher');
+        $this->setUser($this->teacher);
+
+        // The teacher can still read the report.
+        $this->assertTrue(has_capability('format/aicourse:viewreport', $this->context, $this->teacher));
+        // But may no longer write onto it.
+        $this->assertFalse(
+            has_capability('format/aicourse:correctresponses', $this->context, $this->teacher)
+        );
+
+        try {
+            correct_chat::execute($this->course->id, $chatid, 'Read only, so this must not land.');
+            $this->fail('A user without correctresponses was allowed to correct a chat response.');
+        } catch (\required_capability_exception $e) {
+            $this->assertSame(get_capability_string('format/aicourse:correctresponses'), $e->a);
+        }
+
+        $stored = $DB->get_record('format_aicourse_chats', ['id' => $chatid], '*', MUST_EXIST);
+        $this->assertNull($stored->correction);
+        $this->assertNull($stored->correctedby);
+    }
+
+    /**
      * A chat row belonging to another course cannot be reached.
      */
     public function test_execute_refuses_a_chat_from_another_course(): void {
@@ -130,9 +166,9 @@ final class correct_chat_test extends external_testcase {
 
         $this->setUser($this->teacher);
 
-        $this->expectException(\moodle_exception::class);
-        $this->expectExceptionMessageMatches('/could not be found/');
-        correct_chat::execute($this->course->id, $chatid, 'Not mine to correct.');
+        $this->assert_throws_errorcode('error_chatnotfound', function (): void {
+            correct_chat::execute($this->course->id, $chatid, 'Not mine to correct.');
+        });
     }
 
     /**

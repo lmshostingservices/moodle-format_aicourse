@@ -2,6 +2,121 @@
 
 All notable changes to this plugin will be documented in this file.
 
+## [2.1.5] - 2026-08-19
+
+Second pre-submission pass: backup/restore support and standards clean-up.
+
+### Fixed
+
+- **The course banner image was lost on backup, restore, duplication and import.** The plugin had
+  no `backup/moodle2/` classes at all. Core backs up `{course_format_options}` automatically, so
+  every *setting* survived a backup while the image those settings refer to did not. Added
+  `backup_format_aicourse_plugin` and `restore_format_aicourse_plugin`.
+- **Banner files moved from `itemid = courseid` to `itemid = 0`.** This is what made the restore
+  correct rather than merely present: `restore_dbops::send_files_to_pool()` copies
+  `itemid AS newitemid` verbatim for a file area restored without an item id mapping, so a course
+  restored into a *new* course would have kept its banner filed under the *old* course id, where
+  nothing looks for it. There is only ever one banner per course and it already lives in that
+  course's context, so the item id never carried information. `db/upgrade.php` migrates existing
+  files; the pluginfile callback continues to serve browser-cached URLs that still carry the old
+  item id.
+
+### Changed
+
+- Class constants in the five report classes now declare explicit visibility.
+- `/course/section.php` detection is now a single helper on `format_aicourse\local\callbacks`
+  using the global `$SCRIPT` rather than three separate reads of `$_SERVER['SCRIPT_NAME']`.
+- Removed 11 orphaned language strings.
+- `styles.css` now passes Moodle's stylelint configuration with zero errors and zero warnings.
+  The 28 `!important` declarations are retained — a course format overriding Boost's layout needs
+  them — and each now carries an explicit suppression next to its existing numbered rationale, so
+  a *new* accidental `!important` is still reported. Ten over-length selectors were wrapped; one
+  cannot be, because a newline before a `>` combinator breaks `selector-combinator-space-before`,
+  and is suppressed with that reason recorded.
+- README documents that the Moodle Mobile app renders these courses with its default layout.
+
+## [2.1.4] - 2026-08-18
+
+Pre-submission hardening pass ahead of the Moodle Plugins Directory listing. No new features.
+
+### Fixed
+
+- **Upgrade could fail part way through on sites missing a plugin table.** The 2026081500 step
+  recreates a missing table from `db/install.xml` and then added the `correctedby` foreign key.
+  `install.xml` already declares that key, so on any site that took the recreate path the second
+  operation was a duplicate index and raised a DDL exception mid-upgrade. The key is now only
+  added when the table already existed.
+- **"Enable AI Tutor" is now a real kill switch.** The setting was consulted only by the output
+  classes that draw the chat panel, so unticking it hid the bubble while leaving
+  `format_aicourse_ai_chat` and `format_aicourse_get_activity_context` fully callable through
+  `core/ajax` — anyone holding `format/aicourse:useaitutor` could still spend purchased API
+  credits. Both functions now enforce it.
+- **Courses containing non-ASCII text could not use the AI Tutor.** Prompt context, tutor memory
+  and every file-extraction path truncated with byte-wise `substr()`, which can cut a multibyte
+  character in half. The resulting invalid UTF-8 made `json_encode()` return `false`, so the
+  plugin posted an empty request body and the tutor failed with an opaque error on any course
+  using accented characters, CJK or emoji. All truncation now uses `core_text`, and a failed
+  encode raises a clear error instead of being sent.
+- **Temporary files from Word document extraction could leak.** `.docx` extraction wrote to
+  `sys_get_temp_dir()` and removed the file only on the success path, so any exception left it
+  behind permanently. It now uses `make_request_directory()`, which Moodle cleans up
+  automatically, and closes the archive handle in a `finally` block.
+- **A single large course file could exhaust memory.** Text extraction called
+  `stored_file::get_content()` with no size check, loading the whole file into a PHP string. A
+  10 MB ceiling (`contentindex::MAX_EXTRACT_BYTES`) now applies to every extraction path; larger
+  files contribute a filename placeholder instead.
+- **Refusal counts read zero on non-English sites.** The AI Tutor report's academic-integrity
+  counter was derived by matching English phrases in the answer text. It now uses the `refused`
+  flag from the service response when present, falling back to phrase matching only when it is
+  absent.
+- Section card overflow links (`+N` activities, `+N` progress dots) are now escaped consistently
+  with their sibling links.
+- Corrected the "Site ID" setting label and description: the field is validated as a URL
+  (`PARAM_URL`) and is sent as the site URL, so a non-URL value was silently discarded on save
+  and the tutor then reported itself unconfigured for no visible reason.
+
+- **The hero banner was hidden from every teacher, manager and admin.** `styles.css` hid
+  `.aicourse-hero-sticky-wrap` for `.aicourse-is-grader`, a body class that is added for every
+  user `permissions::is_grader()` matches — which is all teacher archetypes plus anyone holding
+  `moodle/grade:viewall`, `moodle/course:manageactivities` or `moodle/course:viewhiddenactivities`.
+  `format.php` deliberately renders the hero for anyone who can edit, so they can reach the
+  "Generate banner" button (FIX-ACF-EDITOR-HERO, v1.7.68), so the banner was built on the server
+  and then hidden again by CSS, in and out of edit mode. A companion `aicourse-can-edit` body
+  class is now published alongside `aicourse-is-grader`, and the hide rule is scoped with
+  `:not(.aicourse-can-edit)` so it is the exact complement of the PHP condition. The
+  `#page-header h1` restore rule is scoped the same way, so an editing teacher outside edit mode
+  does not see the course title twice.
+- **The selected item in the course index could be unreadable.** The active item's background
+  was declared at a lower specificity than its text colour, so a theme whose own
+  `.courseindex .courseindex-item.pageitem` rule outranked the first but not the second painted
+  a dark highlight beneath text this plugin had just coloured dark. Both are now carried at the
+  higher specificity so a theme cannot win one and lose the other.
+
+### Changed
+
+- **`format/aicourse:correctresponses` is now enforced.** It was declared in `db/access.php`
+  with `RISK_XSS | RISK_PERSONAL` but never checked anywhere; writing a correction was gated on
+  `format/aicourse:viewreport` alone. `format_aicourse_correct_chat` now requires both. The two
+  capabilities have identical default archetypes, so no existing site loses access — but a site
+  can now grant read-only access to the report by revoking this one capability, and the report's
+  correction controls disappear for those users rather than failing when used.
+- **Removed the `db_repair` and `db_diagnostic` external functions.** They altered the database
+  schema at runtime, which Moodle permits only through `db/install.xml` and `db/upgrade.php`,
+  and the table `db_repair` built omitted every foreign key and index declared in
+  `install.xml` — so a site that ran it was left with permanent schema drift. The supported
+  route for a half-applied upgrade is `admin/cli/upgrade.php`. The corresponding `dbdiag` and
+  `dbrepair` actions have been removed from the deprecated `ajax.php` shim.
+- The AI Tutor rate limiter now uses a declared `ajaxratelimit` cache definition in
+  `db/caches.php` instead of an ad-hoc runtime cache, so an administrator can point it at a
+  shared store. On a cluster the previous arrangement enforced the limit per web node rather
+  than site wide.
+- Screenshots are no longer bundled in the package. They were 2.3 MB of a 4.3 MB download and
+  are published on the plugin's directory page instead.
+- `styles.css` reformatted to the Moodle stylelint standard.
+- External function tests now assert on the exception's error code rather than on the rendered
+  English message, so they no longer break when a string is reworded or when run under a
+  different language pack.
+
 ## [2.1.2] - 2026-08-16
 
 ### Added
