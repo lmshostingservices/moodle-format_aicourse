@@ -80,6 +80,11 @@ class format_aicourse extends format_topics {
                 if (has_capability('moodle/course:update', $coursecontext)) {
                     $page->add_body_class('aicourse-can-edit');
                 }
+                // ACF-FIX-2.1.9: colour mode, see callbacks::get_colour_mode_class().
+                $colourclass = \format_aicourse\local\callbacks::get_colour_mode_class();
+                if ($colourclass !== '') {
+                    $page->add_body_class($colourclass);
+                }
             } catch (\Throwable $e) {
                 // Context not ready yet — hook JS fallback will handle it.
                 unset($e);

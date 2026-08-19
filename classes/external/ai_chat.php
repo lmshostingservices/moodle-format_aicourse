@@ -271,9 +271,17 @@ class ai_chat extends external_api {
             throw new \moodle_exception('aiassistant_error', 'format_aicourse');
         }
 
+        // ACF-FIX-2.1.10: raise the script limit to sit above the cURL timeout, and fail fast on
+        // connect. Without the first, a slow answer is killed by PHP rather than by cURL and the
+        // user gets a blank failure instead of a handled one.
+        \core_php_time_limit::raise(120);
+
         require_once($CFG->libdir . '/filelib.php');
         $curl = new \curl();
-        $curl->setopt(['CURLOPT_TIMEOUT' => 60]);
+        $curl->setopt([
+            'CURLOPT_TIMEOUT' => 60,
+            'CURLOPT_CONNECTTIMEOUT' => 15,
+        ]);
         $curl->setHeader(['Content-Type: application/json', 'Accept: application/json']);
         $response = $curl->post(self::API_URL, $payload);
         $httpcode = $curl->info['http_code'] ?? 0;

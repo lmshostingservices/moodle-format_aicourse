@@ -25,6 +25,7 @@
 namespace format_aicourse\hook;
 
 use core\hook\output\before_standard_footer_html_generation;
+use format_aicourse\local\callbacks;
 use format_aicourse\local\permissions;
 use format_aicourse\output\courseformat\activityhero;
 use format_aicourse\output\courseformat\chatbox;
@@ -171,6 +172,13 @@ class before_footer_html_generation {
             if (has_capability('moodle/course:update', $coursecontext)) {
                 $lateclasses[] = 'aicourse-can-edit';
             }
+        }
+
+        // ACF-FIX-2.1.9: colour mode must reach activity, section and report pages too, which
+        // are rendered by core rather than by format.php.
+        $colourclass = callbacks::get_colour_mode_class();
+        if ($colourclass !== '') {
+            $lateclasses[] = $colourclass;
         }
 
         if (!empty($lateclasses)) {

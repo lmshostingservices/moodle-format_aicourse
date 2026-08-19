@@ -94,6 +94,8 @@ function xmldb_format_aicourse_upgrade($oldversion) {
         // id to 0 makes that verbatim copy correct.
         $fs = get_file_storage();
 
+        // Real files first. The '.' rows are directory records, moved implicitly by the
+        // delete_area_files() sweep below rather than copied.
         $rs = $DB->get_recordset_select(
             'files',
             "component = :component AND filearea = :filearea AND itemid <> 0 AND filename <> '.'",
@@ -101,8 +103,14 @@ function xmldb_format_aicourse_upgrade($oldversion) {
             'id ASC'
         );
 
+        $staleareas = [];
+
         foreach ($rs as $record) {
             $oldfile = $fs->get_file_instance($record);
+            $staleareas[$record->contextid . ':' . $record->itemid] = [
+                'contextid' => $record->contextid,
+                'itemid' => $record->itemid,
+            ];
 
             // Skip if a canonical copy somehow already exists, so a re-run cannot fail.
             $exists = $fs->get_file(
@@ -117,11 +125,37 @@ function xmldb_format_aicourse_upgrade($oldversion) {
             if (!$exists) {
                 $fs->create_file_from_storedfile(['itemid' => 0], $oldfile);
             }
-
-            $oldfile->delete();
         }
 
         $rs->close();
+
+        // Clear each old item id wholesale. Deleting the file alone leaves its '.' directory
+        // record behind under the old item id, which then lingers in {files} for good.
+        foreach ($staleareas as $area) {
+            $fs->delete_area_files(
+                $area['contextid'],
+                'format_aicourse',
+                'bannerimage',
+                $area['itemid']
+            );
+        }
+
+        // Directory records under a non-zero item id with no file beside them, left by an
+        // earlier partial run or by a deleted banner.
+        $orphans = $DB->get_recordset_sql(
+            "SELECT DISTINCT contextid, itemid
+               FROM {files}
+              WHERE component = :component
+                AND filearea = :filearea
+                AND itemid <> 0",
+            ['component' => 'format_aicourse', 'filearea' => 'bannerimage']
+        );
+
+        foreach ($orphans as $orphan) {
+            $fs->delete_area_files($orphan->contextid, 'format_aicourse', 'bannerimage', $orphan->itemid);
+        }
+
+        $orphans->close();
 
         // AI Course Format savepoint reached.
         upgrade_plugin_savepoint(true, 2026081900, 'format', 'aicourse');

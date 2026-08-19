@@ -157,6 +157,42 @@ class callbacks {
     }
 
     /**
+     * Body class that tells styles.css which colour mode to paint in, or '' for none.
+     *
+     * ACF-FIX-2.1.9. The plugin ships a full dark token set, but CSS cannot see whether the
+     * surrounding theme is actually dark -- and that is the only thing that matters, because
+     * dark plugin tokens on a light page are unreadable. Two signals exist and neither is
+     * sufficient alone:
+     *
+     *   - html[data-bs-theme] / body.dark-mode: authoritative when present, but a theme is
+     *     free never to set it. theme_academi sets it nowhere.
+     *   - prefers-color-scheme: reports the DEVICE, not the page. Honouring it on a
+     *     light-only theme is what made course index titles vanish for dark-mode users.
+     *
+     * So the site decides. 'theme' (the default) trusts the first signal only and is safe
+     * everywhere; 'device' restores the media-query behaviour for sites whose theme really does
+     * follow the OS; 'light' and 'dark' pin it for themes that give no signal at all.
+     *
+     * @return string One of '', 'aicourse-force-light', 'aicourse-force-dark',
+     *                'aicourse-follow-os'.
+     */
+    public static function get_colour_mode_class(): string {
+        $mode = get_config('format_aicourse', 'colourmode');
+
+        switch ($mode) {
+            case 'light':
+                return 'aicourse-force-light';
+            case 'dark':
+                return 'aicourse-force-dark';
+            case 'device':
+                return 'aicourse-follow-os';
+            default:
+                // Covers 'theme', unset, and anything unrecognised: follow the theme's declaration.
+                return '';
+        }
+    }
+
+    /**
      * Whether the running script is /course/section.php.
      *
      * ACF-FIX-2.1.5: one implementation, three former call sites. Uses the global $SCRIPT that

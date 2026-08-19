@@ -2,6 +2,145 @@
 
 All notable changes to this plugin will be documented in this file.
 
+## [2.1.11] - 2026-08-19
+
+### Fixed
+
+- **The banner dialog told customers their image was "Powered by Google Imagen 4 Ultra". It was
+  not.** Google has removed the Imagen family from the Gemini API entirely — a live query of the
+  list-models endpoint returns no `imagen-*` model at all — so the remote service's Imagen call
+  has been returning 404 on every request and silently falling back to OpenAI `gpt-image-1`.
+  Every banner produced in at least the past week came from OpenAI while the dialog credited
+  Google.
+
+  The subtitle is now the provider-neutral "AI image generation". Naming a specific model in a
+  shipped language string means the claim goes stale the moment the service changes provider,
+  which is precisely what happened here; the plugin has no way to know which model served a
+  given request, so it should not assert one.
+
+## [2.1.10] - 2026-08-19
+
+### Fixed
+
+- **AI banner generation always failed, and charged the account anyway.** The client gave up
+  after 90 seconds; the remote service currently takes about two minutes, because its primary
+  image model has been retired upstream and every request now fails against it before falling
+  back to a slower second provider. The server finished successfully, deducted 5 credits and
+  returned an image to a connection this plugin had already closed — so the user saw only
+  "Generation failed" and had paid for it. Server-side logs show no 4xx and no errors on the
+  route at all, which is why the failure was invisible from the Moodle side.
+
+  The cURL timeout is now 180 seconds with a separate 30-second connect timeout, so a service
+  that is genuinely down still fails fast. `core_php_time_limit::raise(300)` accompanies it:
+  without that the request is killed by PHP's script limit before cURL ever returns.
+- The AI Tutor chat call gained a 15-second connect timeout and a raised script limit for the
+  same reason — its 60-second cURL timeout could previously be pre-empted by PHP.
+- The progress dialog claimed banner generation "takes 15-40 seconds". It now says one to two
+  minutes and asks the user to leave the window open.
+
+## [2.1.9] - 2026-08-19
+
+Verified against a real Moodle 4.5.13 / PostgreSQL 16 install rather than by inspection.
+
+### Added
+
+- **Colour mode site setting** (*Site administration ▸ Plugins ▸ Course formats ▸ AI Course
+  Format*). 2.1.8 stopped the format painting itself dark on a light page, but it did so by
+  ignoring the device preference entirely, which left no way to get dark styling at all on a
+  theme that declares no mode. The site now chooses:
+
+  - **Follow the theme** (default) — uses the mode the theme declares on the page. Safe on every
+    theme; a theme that declares nothing keeps the format light.
+  - **Always light** / **Always dark** — pins the format for themes with a fixed appearance that
+    they do not declare.
+  - **Follow the device setting** — the pre-2.1.8 behaviour, now opt-in, for sites whose theme
+    genuinely follows the operating system.
+
+  The choice is published as a body class from both `lib.php` and the footer hook, so it reaches
+  course, activity, section and report pages alike. `Always light` vetoes every other trigger,
+  including a theme-declared dark mode, and the print stylesheet neutralises the two new routes
+  so printing stays black-on-white.
+
+### Fixed
+
+- The 2.1.5 banner item id migration left the old `.` directory record behind in `{files}` under
+  the previous item id, where it lingered permanently. Each stale item id is now cleared
+  wholesale, and directory records orphaned by an earlier partial run are swept up too.
+- The same migration used `get_recordset_select()` with `DISTINCT` in its fields argument, which
+  raises "Error reading from database" on PostgreSQL because the `DISTINCT` collides with the
+  generated `ORDER BY`. It would have thrown part way through the upgrade on a real site.
+  Rewritten as `get_recordset_sql()`. Caught by running the upgrade, not by review — phpcs and
+  `php -l` both passed it.
+
+## [2.1.8] - 2026-08-19
+
+### Fixed
+
+- **Course index titles were invisible for users whose operating system is in dark mode.** The
+  plugin's dark design tokens were applied under `@media (prefers-color-scheme: dark)` guarded
+  only by `html:not([data-bs-theme="light"])`. An element carrying no `data-bs-theme` attribute
+  at all satisfies that guard, so on any theme that never sets the attribute — theme_academi sets
+  it nowhere — the dark tokens were applied to every dark-mode user while the theme itself stayed
+  light. `--acf-text-primary` became near-white on a white drawer, so the course index titles,
+  and everything else coloured from it, disappeared.
+
+  The symptom varied per person rather than per course, which made it look like a permissions
+  fault: one user could read the drawer and another, in the same course with the same role, could
+  not. The guard now requires the attribute to be present (`html[data-bs-theme]:not(...)`), so a
+  mode-aware theme such as Boost 4.4+ still gets automatic dark mode while a theme that is
+  light-only by omission is left alone. `.aicourse-force-light` remains as an explicit opt-out.
+  Both the main dark block and the `prefers-contrast: more` block are corrected.
+- The print stylesheet's dark-mode reset gained the same `html[data-bs-theme]` prefix. It works by
+  mirroring the dark blocks' selector shapes and winning on source order; tightening the guard
+  above raised those blocks from (0,4,2) to (0,5,2), which would have left the print reset losing
+  and produced white-on-white when printing from a dark page.
+
+## [2.1.7] - 2026-08-19
+
+### Fixed
+
+- **The selected item in the course index was unreadable on theme_academi (and themes like it).**
+  2.1.6 tried to fix this by raising the plugin's specificity to (0,4,1). That is not enough:
+  Academi sets the selected item's background from
+
+      .drawer .drawercontent .courseindex .courseindex-section
+      .courseindex-sectioncontent .courseindex-item.pageitem
+
+  which is (0,7,0). The theme therefore won the background while the plugin still won the text
+  colour, painting the theme's dark primary underneath this plugin's dark brand navy. Climbing
+  the specificity ladder is an arms race against every theme, so the background and the text
+  colour are now pinned together with `!important` — whatever a theme does, it can no longer
+  take one declaration and leave the other.
+
+### Changed
+
+- Corrected the rationale recorded against the card-title sizing rules. 2.1.6 attributed the
+  oversized titles to themes styling headings through an id selector; that was not verified and
+  is not what theme_academi does (it sets a plain `h3 { font-size: 26px }`, which the plugin's
+  (0,3,1) selector already outranks). The forcing is retained on its own merit — it makes the
+  course's "Card title size" setting authoritative regardless of theme — but it is no longer
+  described as a fix for a fault that was not diagnosed.
+
+## [2.1.6] - 2026-08-19
+
+### Fixed
+
+- **Section and activity card titles ignored the "Card title size" course setting on some
+  themes.** The rules that size these titles previously carried `!important`; it had been removed
+  on the reasoning that a heading here competes only with Boost's element-level rule at (0,0,1),
+  which the plugin's (0,3,1) selector beats comfortably. That holds for stock Boost, but not for
+  a theme that styles headings through an id — `#page-content h3` is (1,0,1) and outranks it —
+  or with `!important` of its own. On those sites the titles rendered at the theme's heading
+  size and the course setting silently did nothing. `font-size` and `line-height` are forced
+  again, and only those two properties; everything else still yields to the theme.
+- **Banner generation failures were undiagnosable.** `format_aicourse_generate_banner_image` can
+  fail for six distinct reasons, each with its own translated message, but the dialog collapsed
+  all of them into "Generation failed. Please try again." `errorMessage()` only read the
+  rejection's `message` property, and a rejection carrying just an `errorcode` fell straight
+  through to the generic fallback. It now falls back through `errorcode`, `debuginfo` and
+  `exception` before giving up, so the cause is identifiable from the dialog itself. Note this
+  improves reporting of the failure; it does not change whether the remote service succeeds.
+
 ## [2.1.5] - 2026-08-19
 
 Second pre-submission pass: backup/restore support and standards clean-up.

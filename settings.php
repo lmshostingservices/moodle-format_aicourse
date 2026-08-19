@@ -108,6 +108,19 @@ if ($hassiteconfig) {
         get_string('displaysettings_desc', 'format_aicourse')
     ));
 
+    $settings->add(new admin_setting_configselect(
+        'format_aicourse/colourmode',
+        get_string('colourmode', 'format_aicourse'),
+        get_string('colourmode_desc', 'format_aicourse'),
+        'theme',
+        [
+            'theme' => get_string('colourmode_theme', 'format_aicourse'),
+            'light' => get_string('colourmode_light', 'format_aicourse'),
+            'dark' => get_string('colourmode_dark', 'format_aicourse'),
+            'device' => get_string('colourmode_device', 'format_aicourse'),
+        ]
+    ));
+
     $settings->add(new admin_setting_configcheckbox(
         'format_aicourse/defaultshowherobanner',
         get_string('showherobanner', 'format_aicourse'),

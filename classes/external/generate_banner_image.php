@@ -98,9 +98,27 @@ class generate_banner_image extends external_api {
             'courseId' => $course->id,
         ];
 
+        // ACF-FIX-2.1.10: 180 seconds, not 90.
+        //
+        // Banner generation genuinely takes about two minutes end to end at the moment: the
+        // remote service's primary image model has been retired upstream, so every request now
+        // fails against it first and falls back to a second, slower provider. At 90 seconds this
+        // client hung up while the server was still working -- the server then finished
+        // successfully, charged the account 5 credits, and returned an image to a connection that
+        // had already gone. The user saw only "Generation failed", and had paid for it.
+        //
+        // The PHP time limit has to be raised with it, or the request is killed by the script
+        // limit before cURL ever returns.
+        \core_php_time_limit::raise(300);
+
         require_once($CFG->libdir . '/filelib.php');
         $curl = new \curl();
-        $curl->setopt(['CURLOPT_TIMEOUT' => 90]);
+        $curl->setopt([
+            'CURLOPT_TIMEOUT' => 180,
+            // Distinct from the read timeout: a service that is down should fail fast rather than
+            // holding the user on the spinner for the full three minutes.
+            'CURLOPT_CONNECTTIMEOUT' => 30,
+        ]);
         $curl->setHeader(['Content-Type: application/json', 'Accept: application/json']);
         $response = $curl->post(self::API_URL, json_encode($postdata));
         $httpcode = (int) ($curl->info['http_code'] ?? 0);

@@ -67,7 +67,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function($, Str
         jsSectiondeleteerror: 'Failed to delete section',
         jsIconremoved: 'Icon removed',
         bannergenTitle: 'Generate AI banner',
-        bannergenSubtitle: 'Powered by Google Imagen 4 Ultra',
+        bannergenSubtitle: 'AI image generation',
         bannergenDesc: 'AI reads your course name and generates a cinematic, full-width banner ' +
             'image tailored to your course subject. The image is automatically cropped and ' +
             'optimised for your course header, then saved directly to your course.',
@@ -76,7 +76,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function($, Str
         bannergenGenerate: 'Generate banner',
         bannergenLoadingtitle: 'Generating your banner',
         bannergenLoadingsub: 'AI is crafting a cinematic banner for your course. ' +
-            'This takes 15-40 seconds - please wait.',
+            'This usually takes one to two minutes - please leave this window open.',
         bannergenPreviewalt: 'Generated course banner',
         bannergenApplied: 'Banner applied to your course',
         bannergenSuccess: 'Your AI banner has been saved to the course.',
@@ -334,8 +334,29 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function($, Str
      * @returns {String} Plain text.
      */
     function errorMessage(error, fallback) {
-        if (error && typeof error.message === 'string' && error.message) {
+        if (!error) {
+            return fallback;
+        }
+
+        if (typeof error.message === 'string' && error.message) {
             return error.message;
+        }
+
+        // ACF-FIX-2.1.5: core/ajax does not always populate .message. A rejection carrying only
+        // an errorcode used to fall straight through to the generic fallback, which is how a
+        // banner failure with six distinct server-side causes reached the user as one
+        // undiagnosable "Generation failed. Please try again." Surface whatever the server did
+        // send, so the cause is at least identifiable from the dialog.
+        if (typeof error.errorcode === 'string' && error.errorcode) {
+            return error.errorcode;
+        }
+
+        if (typeof error.debuginfo === 'string' && error.debuginfo) {
+            return error.debuginfo;
+        }
+
+        if (typeof error.exception === 'string' && error.exception) {
+            return error.exception;
         }
 
         return fallback;

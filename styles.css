@@ -521,10 +521,18 @@ body.format-aicourse,
 /* ==========================================================================
    4. DESIGN TOKENS — DARK
    --------------------------------------------------------------------------
-   Three triggers, one palette:
+   Four triggers, one palette:
      a) Moodle 5 / Bootstrap 5    html[data-bs-theme="dark"]
      b) the legacy body class already in the wild   body.dark-mode
-     c) the OS preference, only when the theme has NOT declared a mode
+     c) the site setting forcing dark   body.aicourse-force-dark
+     d) the OS preference, but ONLY when the theme has declared a mode, or when
+        the site has explicitly opted in with body.aicourse-follow-os
+
+   Every trigger yields to .aicourse-force-light, which is what the site setting
+   emits for "Always light". The point of (c) and (d) is that a theme is free to
+   declare nothing at all -- theme_academi declares nothing -- so the plugin must
+   let the site say what the page actually looks like rather than guess from the
+   device. See \format_aicourse\local\callbacks::get_colour_mode_class().
 
    Because everything is tokenised this is a ~40-declaration override, not the
    ~350 lines of duplicated component rules it replaces. The block appears
@@ -532,11 +540,13 @@ body.format-aicourse,
    selector list and an @media rule.
    ========================================================================== */
 
-html[data-bs-theme="dark"] body.format-aicourse,
-body.format-aicourse[data-bs-theme="dark"],
-body.format-aicourse.dark-mode,
-html[data-bs-theme="dark"] :is(.aicadmin-wrap, .aitutor-report-index),
-body.dark-mode :is(.aicadmin-wrap, .aitutor-report-index) {
+html[data-bs-theme="dark"] body.format-aicourse:not(.aicourse-force-light),
+body.format-aicourse[data-bs-theme="dark"]:not(.aicourse-force-light),
+body.format-aicourse.dark-mode:not(.aicourse-force-light),
+body.format-aicourse.aicourse-force-dark,
+html[data-bs-theme="dark"] body:not(.aicourse-force-light) :is(.aicadmin-wrap, .aitutor-report-index),
+body.dark-mode:not(.aicourse-force-light) :is(.aicadmin-wrap, .aitutor-report-index),
+body.aicourse-force-dark :is(.aicadmin-wrap, .aitutor-report-index) {
     --acf-surface-raised: var(--acf-neutral-800);
     --acf-surface-sunken: var(--acf-neutral-900);
     --acf-surface-muted: var(--acf-neutral-700);
@@ -635,11 +645,23 @@ body.dark-mode :is(.aicadmin-wrap, .aitutor-report-index) {
 }
 
 @media (prefers-color-scheme: dark) {
-    /* Only when the theme has not declared an explicit mode. `.aicourse-force-light`
-       is an opt-out hook for sites whose theme is light-only. */
-    html:not([data-bs-theme="light"]) body.format-aicourse:not(.aicourse-force-light):not([data-bs-theme="light"]),
-    html:not([data-bs-theme="light"]) body:not(.aicourse-force-light):not([data-bs-theme="light"])
-    :is(.aicadmin-wrap, .aitutor-report-index) {
+    /* ACF-FIX-2.1.8: the theme must DECLARE a colour mode before the OS preference is honoured.
+       This block used to be guarded by `html:not([data-bs-theme="light"])` alone. An element
+       carrying no data-bs-theme attribute at all satisfies :not([data-bs-theme="light"]), so on
+       any theme that never sets the attribute -- theme_academi sets it nowhere -- these dark
+       tokens were applied to every user whose OPERATING SYSTEM was in dark mode, while the theme
+       itself stayed light. The result was near-white text on white: the course index titles, and
+       everything else coloured from --acf-text-primary, became invisible for those users only.
+       It looked like a permissions bug because it varied per person, not per course.
+
+       Requiring the attribute to be present means a mode-aware theme (Boost 4.4+ sets
+       data-bs-theme on <html>) still gets automatic dark mode, and a theme that is light-only by
+       omission is left alone. `.aicourse-force-light` remains as an explicit opt-out. */
+    html[data-bs-theme]:not([data-bs-theme="light"]) body.format-aicourse:not(.aicourse-force-light):not([data-bs-theme="light"]),
+    body.format-aicourse.aicourse-follow-os:not(.aicourse-force-light),
+    html[data-bs-theme]:not([data-bs-theme="light"]) body:not(.aicourse-force-light):not([data-bs-theme="light"])
+    :is(.aicadmin-wrap, .aitutor-report-index),
+    body.aicourse-follow-os:not(.aicourse-force-light) :is(.aicadmin-wrap, .aitutor-report-index) {
         --acf-surface-raised: var(--acf-neutral-800);
         --acf-surface-sunken: var(--acf-neutral-900);
         --acf-surface-muted: var(--acf-neutral-700);
@@ -795,7 +817,9 @@ body.dark-mode :is(.aicadmin-wrap, .aitutor-report-index) {
    win. Both media features are required, so this can only ever apply when the
    page really is dark. */
 @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
-    html:not([data-bs-theme="light"]) body.format-aicourse:not(.aicourse-force-light):not([data-bs-theme="light"]) {
+    /* ACF-FIX-2.1.8: same attribute-presence guard as the main dark block above. */
+    html[data-bs-theme]:not([data-bs-theme="light"]) body.format-aicourse:not(.aicourse-force-light):not([data-bs-theme="light"]),
+    body.format-aicourse.aicourse-follow-os:not(.aicourse-force-light) {
         --acf-border-subtle: var(--acf-neutral-400);
         --acf-border-default: var(--acf-neutral-400);
         --acf-surface-hover: rgba(255, 255, 255, 0.16);
@@ -2648,9 +2672,16 @@ body.format-aicourse .aicourse-card .aicourse-card-link:hover {
     text-decoration: none;
 }
 
-/* The h3 competes only with Boost's element-level `h3` rule (0,0,1); this
-   selector is (0,3,1), so the previous four `!important`s are unnecessary.
-   --aicourse-card-title-size is the px value format.php injects inline. */
+/* ACF-FIX-2.1.5: font-size and line-height are forced so the course's own
+   "Card title size" setting is authoritative.
+   The value comes from --aicourse-card-title-size, which format.php injects on
+   .format-aicourse-container, and a teacher who changes that setting should see it take effect
+   whatever theme the site runs. Themes size headings by element -- theme_academi, for one, sets
+   h3 to 26px -- and while a (0,3,1) selector beats a bare `h3` at (0,0,1), that margin is thin
+   and depends entirely on the theme not reaching for an id or !important of its own. Pinning
+   these two declarations removes the question. Only these two are forced; colour, weight and
+   spacing still yield to the theme. */
+/* --aicourse-card-title-size is the px value format.php injects inline. */
 body.format-aicourse .aicourse-card .aicourse-card-title {
     margin: 0;
     /* The old `min-block-size: 2.375rem` reserved a second line even for
@@ -2658,9 +2689,11 @@ body.format-aicourse .aicourse-card .aicourse-card-title {
        the heading and its summary. Card heights are aligned by the grid's
        `align-items: stretch` plus the footer's auto margin, not by padding the
        title, so the reservation only ever cost rhythm. */
-    font-size: var(--aicourse-card-title-size, var(--acf-font-size-md));
+    /* stylelint-disable-next-line declaration-no-important -- deliberate; see the note above. */
+    font-size: var(--aicourse-card-title-size, var(--acf-font-size-md)) !important;
     font-weight: var(--acf-weight-semibold);
-    line-height: var(--acf-leading-snug);
+    /* stylelint-disable-next-line declaration-no-important -- must travel with the font-size. */
+    line-height: var(--acf-leading-snug) !important;
     letter-spacing: var(--acf-tracking-tight);
     color: var(--acf-text-primary);
     display: -webkit-box;
@@ -3605,12 +3638,14 @@ body.format-aicourse .aicourse-activity-card-body {
     min-inline-size: 0;
 }
 
-/* h4 competes only with Boost's element rule (0,0,1); this is (0,3,1). */
+/* ACF-FIX-2.1.5: forced for the same reason as .aicourse-card-title above. */
 body.format-aicourse .aicourse-activity-card .aicourse-activity-card-name {
     margin: 0 0 var(--acf-space-1);
-    font-size: var(--aicourse-card-title-size, var(--acf-font-size-md));
+    /* stylelint-disable-next-line declaration-no-important -- deliberate; see the note above. */
+    font-size: var(--aicourse-card-title-size, var(--acf-font-size-md)) !important;
     font-weight: var(--acf-weight-semibold);
-    line-height: var(--acf-leading-snug);
+    /* stylelint-disable-next-line declaration-no-important -- must travel with the font-size. */
+    line-height: var(--acf-leading-snug) !important;
     letter-spacing: var(--acf-tracking-tight);
     color: var(--acf-text-primary);
     display: -webkit-box;
@@ -5028,19 +5063,28 @@ body.format-aicourse .courseindex-item:hover {
     background: var(--acf-surface-hover);
 }
 
-/* ACF-FIX-2.1.4: the active item's background and its text colour must never be settled
-   by two rules of different specificity. They were: the background lived here at (0,2,1)
-   while the text colour lived in the rule below at (0,2,2). A theme whose own
-   `.courseindex .courseindex-item.pageitem` background rule outranked the first but not
-   the second painted a dark highlight under text this sheet had just coloured dark navy,
-   leaving the activity title unreadable. Both selectors are now carried at the higher
-   specificity so a theme cannot win one and lose the other. */
+/* ACF-FIX-2.1.6: the selected item's background and its text colour are forced together.
+   The background and the colour used to be settled by two rules of different specificity,
+   so a theme could win one and lose the other -- which is precisely what happens with
+   theme_academi, whose
+
+       .drawer .drawercontent .courseindex .courseindex-section
+       .courseindex-sectioncontent .courseindex-item.pageitem { background-color: $primary; }
+
+   is (0,7,0). It outranked this rule's background while the colour rule below still won,
+   so the selected activity was painted in the theme's dark primary and then lettered in
+   this sheet's dark brand navy: unreadable, which is exactly what the drawer showed.
+   Raising specificity is an arms race against every theme, so the pair is pinned with
+   !important instead. That keeps the two declarations inseparable: whatever a theme does,
+   it can no longer take one and leave the other. */
 body.format-aicourse .courseindex .courseindex-item.pageitem,
 body.format-aicourse .courseindex .courseindex-item[data-selected="true"],
 body.format-aicourse .courseindex-item.pageitem,
 body.format-aicourse .courseindex-item[data-selected="true"] {
-    background: var(--acf-brand-tint-weak);
-    border-color: var(--acf-brand-tint);
+    /* stylelint-disable-next-line declaration-no-important -- see the note above. */
+    background: var(--acf-brand-tint-weak) !important;
+    /* stylelint-disable-next-line declaration-no-important -- must travel with the background. */
+    border-color: var(--acf-brand-tint) !important;
 }
 
 body.format-aicourse .courseindex-item a,
@@ -5052,13 +5096,16 @@ body.format-aicourse .courseindex-item .text-truncate {
     text-decoration: none;
 }
 
-body.format-aicourse .courseindex .courseindex-item.pageitem :is(a, .text-truncate),
-body.format-aicourse .courseindex .courseindex-item[data-selected="true"] :is(a, .text-truncate),
+body.format-aicourse .courseindex .courseindex-item.pageitem,
+body.format-aicourse .courseindex .courseindex-item[data-selected="true"],
+body.format-aicourse .courseindex .courseindex-item.pageitem :is(a, .text-truncate, span),
+body.format-aicourse .courseindex .courseindex-item[data-selected="true"] :is(a, .text-truncate, span),
 body.format-aicourse .courseindex-item.pageitem a,
 body.format-aicourse .courseindex-item[data-selected="true"] a,
 body.format-aicourse .courseindex-item.pageitem .text-truncate,
 body.format-aicourse .courseindex-item[data-selected="true"] .text-truncate {
-    color: var(--acf-text-brand);
+    /* stylelint-disable-next-line declaration-no-important -- pinned to the background above. */
+    color: var(--acf-text-brand) !important;
     font-weight: var(--acf-weight-semibold);
 }
 
@@ -6525,14 +6572,19 @@ body.format-aicourse :is(.aicourse-cards-grid, .aicourse-activity-cards-grid) > 
    ========================================================================== */
 
 @media print {
-    /* Specificity note: the dark-mode token blocks are (0,2,2) and (0,4,2).
-       A print stylesheet at (0,1,1) would lose to them whenever the user
-       prints from a dark-mode page, which is exactly when it matters most.
-       These selectors match their shapes and, being later in the file, win the
-       tie without a single `!important`. */
+    /* Specificity note: this must out-rank the dark-mode token blocks, or printing from a
+       dark page produces white-on-white -- exactly when it matters most. The selectors below
+       mirror those blocks' shapes and, being later in the file, win the tie without a single
+       `!important`.
+       ACF-FIX-2.1.8: the third selector gained `html[data-bs-theme]` when the dark blocks did.
+       Without it that selector sits at (0,4,2) against the dark block's new (0,5,2) and would
+       silently start losing. Keep these two in step: if the dark-mode guard changes again, this
+       must change with it. */
     html body.format-aicourse,
     html[data-bs-theme] body.format-aicourse,
-    html:not([data-bs-theme="light"]) body.format-aicourse:not(.aicourse-force-light):not([data-bs-theme="light"]),
+    html[data-bs-theme]:not([data-bs-theme="light"]) body.format-aicourse:not(.aicourse-force-light):not([data-bs-theme="light"]),
+    body.format-aicourse.aicourse-follow-os:not(.aicourse-force-light),
+    body.format-aicourse.aicourse-force-dark,
     body.format-aicourse.dark-mode {
         /* Token-level, so every component follows without a single override. */
         --acf-surface-raised: #fff;
