@@ -290,7 +290,8 @@ class ai_chat extends external_api {
             // ACF-FIX-2.0: the remote error body is logged, never returned to the browser.
             debugging('format_aicourse ai_chat HTTP ' . $httpcode . ' ' . $curl->error . ' '
                 . substr((string) $response, 0, 500), DEBUG_DEVELOPER);
-            throw new \moodle_exception('aiassistant_error', 'format_aicourse');
+            $key = self::error_key_for_status((int) $httpcode);
+            throw new \moodle_exception($key ?? 'aiassistant_error', 'format_aicourse');
         }
 
         $result = json_decode($response, true);
@@ -546,6 +547,34 @@ class ai_chat extends external_api {
         }
 
         return $text;
+    }
+
+    /**
+     * Translate an HTTP status from the LMS-Labs service into a specific error string.
+     *
+     * ACF-FIX-2.1.24: both integrations used to collapse every non-200 into a single generic
+     * message, so "you have run out of credits" and "your API key is wrong" were indistinguishable
+     * from "the service is down" — for the student, the teacher and the administrator alike. The
+     * real status was written to debugging() only, which is off on production sites, so the one
+     * place the answer existed was the one place nobody was looking.
+     *
+     * Unknown statuses still fall through to the caller's generic message.
+     *
+     * @param int $httpcode The HTTP status returned by the service.
+     * @return string|null A language string key, or null when the status has no specific message.
+     */
+    protected static function error_key_for_status(int $httpcode): ?string {
+        switch ($httpcode) {
+            case 401:
+            case 403:
+                return 'error_apiunauthorized';
+            case 402:
+                return 'error_apinocredits';
+            case 429:
+                return 'error_apiratelimited';
+            default:
+                return null;
+        }
     }
 
     /**

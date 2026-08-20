@@ -2,6 +2,33 @@
 
 All notable changes to this plugin will be documented in this file.
 
+## [2.1.24] - 2026-08-20
+
+Full audit pass covering activity coverage, endpoint wiring and credit handling.
+
+### Fixed
+
+- **The AI Tutor could not see any label activity.** `get_course_content_for_ai()` filtered with
+  `if (!$cm->uservisible || !$cm->url) continue;`. Labels have no view URL by design — they render
+  inline on the course page — so every one was dropped before it reached the index. Labels are
+  where teachers put headings, instructions and framing text, so this removed real teaching content
+  from what the tutor can read. The switch below the guard already carried a `case 'label':` branch,
+  which the guard made unreachable: indexing them was always the intent. `mod_subsection` and any
+  future view-less module were in the same position. `$cm->url` was used nowhere else in the loop.
+
+  Verified on a course containing 14 activities of 14 different types: 13 indexed before, **14 of
+  14 after**.
+
+- **"Out of credits" and "invalid API key" were indistinguishable from an outage.** Both
+  integrations collapsed every non-200 response into a single generic message, writing the real
+  status only to `debugging()` — which is off on production sites, so the one place the answer
+  existed was the one place nobody looks.
+
+  The service returns **401** for a bad key or mismatched site URL and **402** for insufficient
+  credits (confirmed against the service's own code). These now map to specific, translated
+  messages naming the actual cause, on both the tutor and the banner. Unknown statuses still fall
+  through to the previous generic message.
+
 ## [2.1.23] - 2026-08-19
 
 ### Changed
