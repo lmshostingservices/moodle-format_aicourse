@@ -121,7 +121,12 @@ class activitycards implements named_templatable, renderable {
         // activity names below (now <h3>, previously <h4>) sit at the correct depth under the page
         // <h1>. On a section page these cards render standalone, so without this the document went
         // straight from h1 to h4.
-        $data->regionlabel = $sectionname;
+        // ACF-FIX-2.1.17: a11y — this region's name must differ from the hero's. The hero above is
+        // a <section aria-label="{section name}">, which is itself a landmark, so labelling this
+        // region with the bare section name too gave two landmarks the identical accessible name.
+        // A screen reader user cycling landmarks heard the same title twice with no way to tell
+        // the banner from the activity list. Flagged by axe-core as landmark-unique.
+        $data->regionlabel = get_string('sectionactivitiesregion', 'format_aicourse', $sectionname);
         $data->sectionname = format_string($sectionname);
         $data->sectionid = (int) $section->id;
 

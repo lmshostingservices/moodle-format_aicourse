@@ -2,6 +2,334 @@
 
 All notable changes to this plugin will be documented in this file.
 
+## [2.1.23] - 2026-08-19
+
+### Changed
+
+- **The hero banner is roughly half its previous height on every screen size.** Measured before
+  and after in a real browser:
+
+  | Viewport | Before | After |
+  |---|---|---|
+  | 1440px | 232px | **128px** |
+  | 1024px | 214px | **114px** |
+  | 768px  | 206px | **109px** |
+  | 430px  | 255px | **166px** |
+  | 390px  | 254px | **165px** |
+  | 320px  | 279px | **190px** |
+
+  Four things were making it tall, and only the last was obvious:
+
+  1. **Image mode stacked its content in a column** — title, summary, meta and progress each
+     claiming a row — while the right two thirds of the banner sat empty. It is now a single row
+     with the text on the left and the progress cluster at the end, which uses width that was
+     already there. Below 700px it becomes a wrapping row, so the text still takes full lines but
+     the progress cluster shares the last line with the icon pill rather than taking a row of its
+     own.
+  2. **`--acf-hero-image-min-h` was `clamp(9.5rem, 5.5rem + 13vw, 14.5rem)`** — 152px to 232px.
+     This, not the course's own `herobannerheight`, was what actually set the height: at 1440px it
+     resolved to 232px and overrode a 96px setting entirely. Now 88px to 128px.
+  3. **The prev/next spacers were dead weight.** `.aicourse-hero-nav-spacer` exists to balance a
+     centred chevron row when one chevron is missing. Gradient mode dropped them long ago; image
+     mode kept them. On a course page, which has no chevrons at all, the two spacers *were* the
+     entire progress cluster — 100px of empty boxes, and at 320px they were what pushed the icon
+     pill onto a second row. Hidden in both modes now; section pages still show real chevrons.
+  4. **The default `herobannerheight` is 96, down from 180.** Courses that never saved their
+     format settings pick this up; a course with a stored value keeps it, since that was a
+     deliberate choice.
+
+  Verified at six viewports from 320px to 1440px, on both course and section pages: no horizontal
+  overflow, no clipped content, and no collision between the title text and the progress cluster.
+
+## [2.1.22] - 2026-08-19
+
+### Fixed
+
+- **The hero banner disappeared in "Switch role to... Student".** `permissions::is_grader()`
+  decided on role archetypes read through `get_user_roles()`, carrying a comment asserting that
+  this "respects `$SESSION->role_switch`". It does not. `get_user_roles()` reads the user's real
+  entries in `{role_assignments}`; role switching is applied by `has_capability()` via
+  `$USER->access['rsw']` and leaves role assignments untouched.
+
+  So a teacher previewing as a student was still reported as a grader, while correctly losing
+  `moodle/course:update`. `format.php` renders the hero only when `(!$isgrader || $canedit)`,
+  which then evaluated false — and the banner vanished in exactly the view whose purpose is to
+  show what a student sees. A student does see the hero.
+
+  When a role switch is active the archetype branch is now skipped and the capability checks
+  decide, because those do honour the switch. The memoisation key includes the switched role, so
+  a value computed before a switch cannot be reused after one.
+
+  Verified end to end on a real Moodle: switching an admin to Student now leaves the hero
+  rendered and visible, with the body carrying neither `aicourse-is-grader` nor
+  `aicourse-can-edit` — which is correct for a student.
+
+### Added
+
+- `tests/local/permissions_test.php` — two tests covering grader status for real roles and across
+  a live `role_switch()`, including an assertion that the switch actually removed the editing
+  capability, so the regression guard cannot silently pass for the wrong reason.
+
+## [2.1.21] - 2026-08-19
+
+### Changed
+
+- **Edit mode: the section container chrome is removed.** In edit mode the format hands rendering
+  back to core's standard renderer so teachers keep drag handles, action menus and bulk selection.
+  Core's section then sat inside this sheet's card treatment, which drew three separate layers of
+  chrome around content that was already visually grouped:
+
+  - a 1px border with an 18px radius, a raised background and a drop shadow,
+  - a 3px brand-coloured gradient rule along the top (a `::before` on `.course-section`),
+  - dashed `<hr>` dividers between every activity.
+
+  Each activity already carries its own rectangle, so the container was a box around boxes and the
+  dividers described a grouping the rectangles made obvious. All three are gone; the activities
+  now sit directly on the page.
+
+  Nothing that carries meaning was touched: drag handles, action menus, availability and
+  completion controls, bulk selection and the "Add an activity or resource" affordance are all
+  unchanged. **View mode is entirely unaffected** — verified that this container does not exist
+  outside edit mode, so the change cannot leak into the student view.
+
+## [2.1.20] - 2026-08-19
+
+### Fixed
+
+- **The banner overlay darkened the whole image instead of just the text area.** 2.1.12 added a
+  Light/Medium/Strong setting, but all three ramps ran top-to-bottom, which meant a near-uniform
+  0.56-0.68 blanket across 92% of the banner. On a dark photograph even "Light" still crushed the
+  image, because every pixel received the same treatment — reducing the numbers could not fix a
+  problem that was structural.
+
+  All hero text — title, summary, meta, progress ring — sits in the left half of the banner. The
+  Light and Medium ramps now run **left to right**: heavier than before where the text actually
+  is, and nearly clear on the right where the photograph should be visible.
+
+  Contrast improves rather than degrades. The title band moves from 0.56-0.57 alpha to 0.62-0.70,
+  measured against a worst-case pure-white image at **5.9:1 (Light) and 8.1:1 (Medium)**, against
+  the previous 4.7-4.9:1 and an AA floor of 4.5:1. Meanwhile the right-hand third of the overlay
+  drops to 0.06-0.20 alpha.
+
+  Measured on a dark test banner: mean brightness of the right third rose from **15.7 to 29.7**,
+  an 89% increase, while the text side was unchanged.
+
+  Below 600px the title wraps across the full width, so there is no protected side and the
+  vertical ramp is retained. Strong is unchanged, so anyone relying on the previous appearance
+  keeps it exactly.
+
+## [2.1.19] - 2026-08-19
+
+Systematic contrast sweep. After the same fault appeared on two unrelated surfaces, every screen
+was scanned generically rather than element by element: each text-bearing node inside plugin
+markup had its effective background composited up the ancestor chain and its ratio measured.
+Six screens, both colour modes.
+
+### Fixed
+
+- **"General" heading was light-on-white in dark mode (1.10:1).** This heading sits above the
+  card, directly on the theme's own page background, which the plugin does not control. It was
+  taking `--acf-text-primary`, so in dark mode it turned light while the page behind it stayed
+  white. It now inherits the theme's page colour, which is correct in all four combinations of
+  colour mode and theme.
+- **The chat input's label was dark-on-dark in dark mode (1.11:1).** `.aicourse-ai-chatbox-input`
+  sets a mode-aware background but left its text colour to the theme — the **third** surface with
+  this exact fault, after the section card and the message list. Anchored.
+- **The empty section-icon glyph was below AA in both modes** — 4.34:1 light, 2.34:1 dark, against
+  a 4.5:1 floor. It is small rendered text rather than a decorative shape, so it has to clear the
+  threshold. Moved from `--acf-text-tertiary` to `--acf-text-secondary`.
+
+### Verified
+
+- **0 contrast failures** across course, section, chat panel, course report, admin report and
+  report index, in light and dark: 138 element/mode combinations measured.
+- **axe-core: 0 violations** on all three report screens in both modes, adding to the course,
+  section and chat panel results from 2.1.17 and 2.1.18.
+
+## [2.1.18] - 2026-08-19
+
+AI Tutor chat panel audited — previously the largest untested surface in the plugin.
+
+### Fixed
+
+- **The tutor's own answers were unreadable in dark mode.** `.aicourse-ai-chatbox-messages` takes
+  its background from `--acf-surface-sunken`, which flips with colour mode, but the message text
+  inherited the host theme's colour — Boost hands down `rgb(29, 33, 37)`. In dark mode that is
+  near-black text on a `rgb(15, 23, 42)` panel: **measured 1.1:1 where AA requires 4.5:1**. Unlike
+  the section card, where the same missing invariant was latent, this one was live: the greeting
+  and every tutor reply were affected. Now ~15:1.
+
+  This is the second surface found with the same fault — a surface that sets its background from a
+  mode-aware token while letting its text colour fall through to the theme. Worth treating as a
+  pattern to check for rather than two isolated bugs.
+
+### Verified
+
+The chat panel is otherwise a textbook modal dialog, confirmed by measurement at 1400x900 and
+390x844:
+
+- `role="dialog"`, `aria-modal="true"`, accessible name present, `aria-expanded` on the toggle
+  kept in sync.
+- Focus moves into the panel on open, and Tab cycles correctly through all eight controls —
+  send, close, and the five quick prompts — without escaping the dialog.
+- Escape closes the panel **and returns focus to the toggle**, which is the step most
+  implementations forget.
+- The panel fits the viewport at both sizes; on mobile it becomes a full-width sheet with no
+  horizontal overflow.
+- **axe-core: 0 violations** on the open panel at both viewports.
+
+## [2.1.17] - 2026-08-19
+
+Accessibility, performance and internationalisation reviews, each measured with real tooling.
+
+### Fixed
+
+- **Two landmarks shared an accessible name on section pages.** The hero renders as
+  `<section aria-label="{section name}">`, which is a landmark, and the activity list rendered as
+  `<div role="region" aria-label="{section name}">` — the same name. A screen reader user cycling
+  landmarks heard the identical title twice with no way to tell the section banner from the
+  activity list. The activity region is now labelled "{section name} activities". Flagged by
+  axe-core as `landmark-unique`, and the only violation it found.
+
+### Verified
+
+- **axe-core, WCAG 2.0/2.1/2.2 A + AA plus best-practice, scoped to plugin markup: 0 violations**
+  on the course and section pages, in both light and dark mode, after the fix above.
+- **Performance is at parity with core.** Benchmarked against `format_topics` with identical
+  content, five runs each, median: PHP 0.140s vs 0.155s (this plugin faster), 43 DB reads vs 39,
+  5.6 MB RAM vs 5.8 MB, 595 files included vs 623, 1,599 DOM nodes vs 1,574. The format costs
+  about four extra database reads over core for a considerably richer page.
+- **Right-to-left support is complete.** The stylesheet uses **zero** physical direction
+  properties — no `margin-left`, `padding-right`, `left:`, `text-align: left` or `border-left`
+  anywhere — against 232 uses of their logical equivalents. Verified by rendering with `dir="rtl"`
+  at 1400px and 390px: the layout mirrors correctly (the hero icon pill moves from right to left,
+  cards right-align) with zero horizontal overflow and no element spilling outside the viewport.
+
+## [2.1.16] - 2026-08-19
+
+Dark mode audited by measuring rendered contrast ratios in a real browser across every colour
+mode and both OS colour schemes, compositing alpha up the ancestor chain rather than reading a
+single background value.
+
+### Fixed
+
+- **Section cards did not carry their text colour with their surface.** `.aicourse-card` takes its
+  background from `--acf-surface-raised`, which flips with colour mode, but its text colour was
+  inherited from the host theme — Boost hands down `rgb(29, 33, 37)`. In dark mode that is
+  near-black text on a `#1e293b` card: **measured 1.1:1 against a 4.5:1 requirement**.
+
+  Nothing was visibly broken, because every text element inside currently sets its own colour
+  explicitly. That made it a latent fault rather than a live one: any text added to a card without
+  an explicit colour would have been invisible in dark mode, and a section summary is the obvious
+  candidate. The surface now establishes `color: var(--acf-text-primary)` so background and text
+  flip together. Measured 1.1:1 → 13.4:1.
+
+  `.aicourse-activity-card` already declared this, which is why activity cards were unaffected —
+  the section card was the one surface missing the invariant.
+
+### Verified
+
+Contrast measured in both light and dark, for card title, card link, status badge, hero title,
+hero meta, activity name and activity type. Every pair clears WCAG AA; the lowest is 4.8:1
+(activity type in light mode) and most sit between 13:1 and 18:1.
+
+## [2.1.15] - 2026-08-19
+
+Mobile pass. Audited at 320, 360, 390, 430, 600, 768, 1024 and 1440px in a real rendering engine,
+measuring layout rather than inspecting source.
+
+### Fixed
+
+- **The hero action icons overlapped the course title.** The icon pill is absolutely positioned
+  over the banner's top-right while `.aicourse-hero-title` is `inline-size: 100%`, and nothing
+  reserved space for it. Measured across seven viewports the two boxes overlapped by 198px
+  horizontally at *every* width — desktop included. It went unnoticed because a short course name
+  never visually reaches the pill; on a phone the title wraps to full width and runs straight
+  underneath it, which is where it became obvious.
+
+  From 600px up the title and summary now reserve the pill's measured footprint. Below 600px,
+  where reserving ~200px of a 320px banner would leave nothing for the title, the pill stops being
+  absolutely positioned and takes its own row beneath the hero content. Verified clear at all
+  eight viewports by measuring the title's text range against the pill's box — the element box
+  alone cannot show this, because padding sits inside it.
+- **Status badges were 11px on phones.** The 2xs step is a deliberate dense chip size that works
+  at desk distance, but 11px set uppercase with wide tracking is below comfortable reading on a
+  handset. The token is lifted to 12px under 600px, which raises every 2xs use on mobile at once
+  and leaves desktop density untouched.
+
+### Verified, not changed
+
+- **Zero horizontal overflow** at all six device widths on both the course and section pages. No
+  plugin element exceeds the viewport at any size.
+- **Touch targets** — the section card's title link reports as 302x16 to
+  `getBoundingClientRect()`, but a stretched `::after` makes the whole card the hit area, and the
+  sheet already documents that the measured box will mislead. No genuine sub-44px plugin target
+  was found.
+
+## [2.1.14] - 2026-08-19
+
+First release whose test suite has actually been executed, and whose visual changes were verified
+in a real rendering engine rather than reasoned about.
+
+### Fixed
+
+- **Six test failures, introduced by 2.1.4's own refactor.** Converting the external-function
+  assertions to error-code checks wrapped each call in a closure, but PHP closures do not capture
+  outer scope without an explicit `use` clause, so `$othersection`, `$quiz` and `$chatid` were
+  undefined inside them. Six tests errored with "Undefined variable". Both phpcs standards and
+  `php -l` passed this code cleanly; only running it found the fault. All 99 tests now pass with
+  390 assertions.
+- **Section cards showed a dashed placeholder icon to students.** A dashed outline means "drop
+  something here" — an editing affordance. On a course whose teacher never chose section icons,
+  which is the common case, every card carried a dashed box with a question mark and the page read
+  as broken rather than merely unstyled. View mode now uses a solid, quiet placeholder; edit mode
+  keeps the dashed invitation.
+- **The section card grid left a ragged gap.** The grid used `repeat(auto-fill, ...)`, which keeps
+  empty phantom tracks. A course with three sections in a wide container filled three tracks of
+  four and left roughly 280px of dead space beside the last card, under a hero running the full
+  width. `auto-fit` collapses the unused track. Measured before and after in a headless browser:
+  three cards went from ending at x=1222 to ending at x=1529, exactly matching the hero's right
+  edge, with card width growing from 283px to 386px.
+
+## [2.1.13] - 2026-08-19
+
+### Fixed
+
+- **Hero banner layout on courses that have a banner image.** With an image, the progress cluster
+  was laid out as a column: the ring stacked above a linear bar capped at 22rem, the pair packed
+  to the left. On a wide banner that left the ring floating alone at the left edge, an orphaned
+  bar beneath it, and roughly 60% of the banner empty.
+
+  The cluster is now a single row — ring, then bar taking the width the row leaves it (to a
+  34rem ceiling so it cannot stretch absurdly on an ultrawide screen), vertically centred against
+  each other. It reads as one control rather than two strays.
+
+  Gradient mode is unchanged: it hides the linear bar outright, because there the ring alone is
+  the anchor and the bar merely duplicates it. That asymmetry was deliberate but image mode had
+  simply been left as it was rather than laid out.
+
+## [2.1.12] - 2026-08-19
+
+### Added
+
+- **Banner overlay strength setting.** The dark gradient laid over hero banner images is now
+  selectable: *Light*, *Medium* (the new default) or *Strong* (the previous appearance).
+
+  The overlay keeps white title text readable over any image, including a near-white one, but
+  the original ramp was calibrated well past that requirement — its foot reached **16.2:1**
+  against white text where WCAG AA asks for **4.5:1**. On a dark photograph that is far more
+  darkening than the image can carry, and the banner reads as almost black.
+
+  The minimum alpha clearing AA on a worst-case pure-white image is 0.539. Every level keeps the
+  band where the title and summary actually sit at 0.56 alpha or above (4.9:1 measured on that
+  same worst case) and relaxes only the top and bottom of the gradient, where no text sits. All
+  three levels remain accessible; they differ in how much of the photograph survives.
+
+### Changed
+
+- **The default is now Medium, so existing sites will see banners lighten on upgrade.** Choose
+  *Strong* in the format settings to restore the previous appearance exactly.
+
 ## [2.1.11] - 2026-08-19
 
 ### Fixed

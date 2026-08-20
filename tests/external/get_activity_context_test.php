@@ -131,7 +131,7 @@ final class get_activity_context_test extends external_testcase {
 
         // The student must not.
         $this->setUser($this->student);
-        $this->assert_throws_errorcode('error_activitynotvisible', function (): void {
+        $this->assert_throws_errorcode('error_activitynotvisible', function () use ($quiz): void {
             get_activity_context::execute($this->course->id, $quiz->cmid, 0);
         });
     }

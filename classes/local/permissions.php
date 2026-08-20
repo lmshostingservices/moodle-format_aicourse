@@ -60,17 +60,38 @@ class permissions {
         // ACF-FIX-2.0: Memoise per contextid+userid. This function runs two uncached DB queries
         // (get_user_roles + the {role} lookup) and is called 3-4 times per page render
         // (page_set_course, format.php, the footer hook, extend_navigation_course).
-        $cachekey = $context->id . '_' . $USER->id;
+        // ACF-FIX-2.1.22: the switched role is part of the identity being cached, otherwise a
+        // value computed before a switch could be reused after one within the same request.
+        $rsw = '';
+        if (!empty($USER->access['rsw']) && is_array($USER->access['rsw'])) {
+            $rsw = ':rsw' . implode(',', $USER->access['rsw']);
+        }
+        $cachekey = $context->id . '_' . $USER->id . $rsw;
         if (array_key_exists($cachekey, self::$gradercache)) {
             return self::$gradercache[$cachekey];
         }
 
         $graderarchetypes = ['teacher', 'editingteacher', 'manager', 'coursecreator'];
 
-        // PRIMARY: role archetype check — works with role switches and any capability config.
-        // get_user_roles() respects $SESSION->role_switch so this correctly handles the
-        // "Switch role to..." scenario that trips up has_capability() based checks.
-        $roles = get_user_roles($context, $USER->id, true);
+        // ACF-FIX-2.1.22: honour "Switch role to...".
+        //
+        // The archetype branch below used to carry a comment claiming that get_user_roles()
+        // respects $SESSION->role_switch. It does not. get_user_roles() reads the user's real
+        // entries in {role_assignments}; role switching is applied by has_capability() through
+        // $USER->access['rsw'], and leaves role assignments untouched.
+        //
+        // The effect was that a teacher who switched to Student was still reported as a grader
+        // while correctly losing moodle/course:update. format.php renders the hero only when
+        // (!$isgrader || $canedit), which then evaluated false — so the hero banner vanished in
+        // student view. That is precisely the view whose whole purpose is to show what a student
+        // sees, and a student does see the hero.
+        //
+        // When a role switch is active the archetype branch is therefore skipped entirely and the
+        // capability checks below decide the answer, because those do respect the switch.
+        $coursecontext = $context->get_course_context(false);
+        $roleswitched = $coursecontext && is_role_switched($coursecontext->instanceid);
+
+        $roles = $roleswitched ? [] : get_user_roles($context, $USER->id, true);
         $recs = [];
 
         if (!empty($roles)) {

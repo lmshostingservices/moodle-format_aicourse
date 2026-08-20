@@ -110,7 +110,7 @@ final class delete_section_test extends external_testcase {
 
         $this->setUser($this->teacher);
 
-        $this->assert_throws_errorcode('error_sectionnotfound', function (): void {
+        $this->assert_throws_errorcode('error_sectionnotfound', function () use ($othersection): void {
             delete_section::execute($this->course->id, $othersection);
         });
     }

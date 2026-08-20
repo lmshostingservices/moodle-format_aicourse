@@ -106,7 +106,7 @@ final class rate_chat_test extends external_testcase {
         $chatid = $this->create_chat((int) $this->student->id);
         $this->setUser($this->student);
 
-        $this->assert_throws_errorcode('error_invalidrating', function (): void {
+        $this->assert_throws_errorcode('error_invalidrating', function () use ($chatid): void {
             rate_chat::execute($this->course->id, $chatid, 5);
         });
     }

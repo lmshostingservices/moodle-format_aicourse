@@ -166,7 +166,7 @@ final class correct_chat_test extends external_testcase {
 
         $this->setUser($this->teacher);
 
-        $this->assert_throws_errorcode('error_chatnotfound', function (): void {
+        $this->assert_throws_errorcode('error_chatnotfound', function () use ($chatid): void {
             correct_chat::execute($this->course->id, $chatid, 'Not mine to correct.');
         });
     }

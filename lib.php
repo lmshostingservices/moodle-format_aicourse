@@ -85,6 +85,11 @@ class format_aicourse extends format_topics {
                 if ($colourclass !== '') {
                     $page->add_body_class($colourclass);
                 }
+                // ACF-FIX-2.1.12: hero banner overlay strength.
+                $scrimclass = \format_aicourse\local\callbacks::get_scrim_class();
+                if ($scrimclass !== '') {
+                    $page->add_body_class($scrimclass);
+                }
             } catch (\Throwable $e) {
                 // Context not ready yet — hook JS fallback will handle it.
                 unset($e);
@@ -223,7 +228,12 @@ class format_aicourse extends format_topics {
                 'type' => PARAM_INT,
             ],
             'herobannerheight' => [
-                'default' => 180,
+                // ACF-FIX-2.1.23: 180 -> 96. This value is a FLOOR on the banner's height, and
+                // with the hero content now laid out on a single row the old 180 forced roughly
+                // twice the height the design needs. Courses that never saved their format
+                // settings pick this up automatically; a course with a stored value keeps it,
+                // because that was a deliberate choice by its teacher.
+                'default' => 96,
                 'type' => PARAM_INT,
             ],
             'showcourseindex' => [

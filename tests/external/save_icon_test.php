@@ -106,7 +106,7 @@ final class save_icon_test extends external_testcase {
 
         $this->setUser($this->teacher);
 
-        $this->assert_throws_errorcode('error_invalidsection', function (): void {
+        $this->assert_throws_errorcode('error_invalidsection', function () use ($othersection): void {
             save_icon::execute($this->course->id, $othersection, 'rocket');
         });
     }

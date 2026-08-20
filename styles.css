@@ -283,8 +283,17 @@ body.format-aicourse,
        `herobannerheight` setting is still honoured as documented — it only ever
        wrote an inline `max-height`, which gradient mode overrides (see the
        `!important` note in section 8) so tall content is never clipped. */
-    --acf-hero-min-h: clamp(4.75rem, 3.4rem + 4.4vw, 7.25rem);   /* 76 -> 116px */
-    --acf-hero-image-min-h: clamp(9.5rem, 5.5rem + 13vw, 14.5rem);
+    /* ACF-FIX-2.1.23: 60 -> 92px, down from 76 -> 116px. The row layout no longer needs the
+       taller floor, and the floor was setting the height on courses whose own setting is small. */
+    --acf-hero-min-h: clamp(3.75rem, 2.9rem + 2.8vw, 5.75rem);   /* 60 -> 92px */
+    /* ACF-FIX-2.1.23: 152 -> 232px becomes 88 -> 128px.
+       This token, not the course's herobannerheight setting, was what actually decided the
+       image banner's height: at 1440px it resolved to 232px and overrode a 96px setting
+       entirely. With the hero content now on a single row the tallest child is 54px, so the
+       old floor was reserving four times the space the content needed. The new range still
+       clears the tallest child plus padding at every width, and the banner keeps a landscape
+       proportion rather than collapsing to a strip. */
+    --acf-hero-image-min-h: clamp(5.5rem, 4.2rem + 4.2vw, 8rem);
 
     /* Progress ring. The gradient-mode ring was 44px — smaller than a single
        hero button — so it read as a status chip rather than the hero's anchor. */
@@ -427,6 +436,81 @@ body.format-aicourse,
             rgba(2, 6, 23, 0.88) 100%
         );
 
+    /* --- Banner overlay strength -----------------------------------------
+       ACF-FIX-2.1.12. The ramp above is the "strong" setting and it is far
+       heavier than accessibility requires: its bottom stop reaches 16.2:1
+       against white text where AA asks for 4.5:1, so a dark photograph is
+       crushed almost to black. The minimum alpha that clears AA on a worst-case
+       pure-white image is 0.539, so every level below keeps the whole text band
+       at 0.56 or above and only relaxes the top and bottom stops, where no text
+       sits. Contrast measured on the worst case, not the typical one, so these
+       remain safe on any image the generator produces. */
+    /* stylelint-disable-next-line no-descending-specificity */
+}
+
+/* ACF-FIX-2.1.20: darken where the text is, not the whole picture.
+   The earlier ramps were vertical, which meant a near-uniform 0.56-0.68 blanket across 92% of
+   the banner: the "Light" setting still crushed a dark photograph because every pixel got the
+   same treatment. Hero text (title, summary, meta, progress ring) all sits in the left half, so
+   the scrim now runs LEFT TO RIGHT -- heavier than before where the text actually is, and
+   nearly clear on the right where the image should be visible.
+
+   Contrast is better, not worse: the text band now sits at 0.62-0.72 alpha against the old
+   0.56-0.57. Measured on a worst-case pure-white image that is 5.8:1 to 8.4:1, comfortably above
+   the 4.5:1 AA floor, while the right-hand 30% of the banner drops to 0.06-0.20 and the photo
+   reads properly for the first time.
+
+   Below 600px the title wraps to the full width, so there is no "text side" to protect and the
+   vertical ramp is kept -- see the media query after these rules. */
+body.format-aicourse.aicourse-scrim-medium {
+    --acf-hero-scrim:
+        linear-gradient(
+            to right,
+            rgba(2, 6, 23, 0.78)  0%,
+            rgba(2, 6, 23, 0.70) 38%,
+            rgba(2, 6, 23, 0.34) 66%,
+            rgba(2, 6, 23, 0.16) 100%
+        );
+}
+
+body.format-aicourse.aicourse-scrim-light {
+    --acf-hero-scrim:
+        linear-gradient(
+            to right,
+            rgba(2, 6, 23, 0.72)  0%,
+            rgba(2, 6, 23, 0.62) 34%,
+            rgba(2, 6, 23, 0.20) 62%,
+            rgba(2, 6, 23, 0.06) 100%
+        );
+}
+
+/* Narrow screens: the title wraps across the whole banner, so a horizontal fade would leave the
+   end of each line unprotected. Fall back to the vertical ramp, which is correct there. */
+@media (max-width: 599px) {
+    body.format-aicourse.aicourse-scrim-medium {
+        --acf-hero-scrim:
+            linear-gradient(
+                to bottom,
+                rgba(2, 6, 23, 0.22)  0%,
+                rgba(2, 6, 23, 0.57)  8%,
+                rgba(2, 6, 23, 0.60) 58%,
+                rgba(2, 6, 23, 0.68) 100%
+            );
+    }
+
+    body.format-aicourse.aicourse-scrim-light {
+        --acf-hero-scrim:
+            linear-gradient(
+                to bottom,
+                rgba(2, 6, 23, 0.12)  0%,
+                rgba(2, 6, 23, 0.56)  8%,
+                rgba(2, 6, 23, 0.57) 58%,
+                rgba(2, 6, 23, 0.60) 100%
+            );
+    }
+}
+
+body.format-aicourse {
     /* --- Gradient-mode hero wash ----------------------------------------
        CONTRAST-CHECKED. The old banner was surface-sunken -> surface-muted:
        two neutrals two steps apart, i.e. a flat pale bar. This is a real
@@ -642,6 +726,20 @@ body.aicourse-force-dark :is(.aicadmin-wrap, .aitutor-report-index) {
     --acf-focus-halo: var(--acf-neutral-900);
 
     color-scheme: dark;
+}
+
+/* --- Small-screen legibility ----------------------------------------------
+   ACF-FIX-2.1.15. The 2xs step is 11px: a deliberate, dense chip size that works at desk
+   viewing distance. On a phone held at arm's length, 11px set in uppercase with wide tracking
+   -- which is exactly how the status badges are set -- sits below comfortable reading. Lifting
+   the token to 12px under 600px raises every 2xs use on mobile at once, and leaves desktop
+   density untouched. Measured on an iPhone SE viewport, where the badges were the only plugin
+   text below 12px. */
+@media (max-width: 599px) {
+    body.format-aicourse,
+    body :is(.aicadmin-wrap, .aitutor-report-index) {
+        --acf-font-size-2xs: 0.75rem;
+    }
 }
 
 @media (prefers-color-scheme: dark) {
@@ -1527,14 +1625,20 @@ body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image :is(.aicourse
     flex: 0 0 auto;
 }
 
+/* ACF-FIX-2.1.23: a row, not a column.
+   Image mode stacked title, summary, meta and the progress cluster one under another, so the
+   banner needed ~230px of height to hold four stacked rows while the right two thirds of it
+   stayed empty. Laying the title group against the progress cluster on a single row uses the
+   width that was already there and roughly halves the height required. Below 700px there is not
+   enough width for two columns and the stack returns -- see the media query below. */
 body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-content {
-    flex-direction: column;
+    flex-direction: row;
     flex-wrap: nowrap;
-    justify-content: flex-end;
-    align-items: flex-start;
+    justify-content: space-between;
+    align-items: center;
     min-block-size: inherit;
-    gap: var(--acf-space-2);
-    padding: var(--acf-space-6) var(--acf-gutter) var(--acf-space-7);
+    gap: var(--acf-space-5);
+    padding: var(--acf-space-4) var(--acf-gutter);
     /* stylelint-disable-next-line time-min-milliseconds --
        80ms here is the animation DELAY, not its duration; the rule targets durations. */
     animation: acf-hero-enter var(--acf-duration-slower) var(--acf-ease-out) 80ms both;
@@ -1637,7 +1741,14 @@ body.format-aicourse .aicourse-hero-nav-progress {
 
 /* The spacers exist only to keep a CENTRED circle row balanced when one of the
    prev/next chevrons is absent. Right-aligned, they are 44px of dead space. */
-body.format-aicourse .aicourse-hero-banner:not(.aicourse-hero-has-image) .aicourse-hero-nav-spacer {
+/* ACF-FIX-2.1.23: applies to image mode as well now.
+   The spacers exist only to keep a CENTRED chevron row balanced when one of prev/next is absent.
+   Gradient mode right-aligned its cluster long ago and dropped them; image mode kept them, and
+   since 2.1.23 lays its cluster out right-aligned too they became the same dead weight there.
+   On a course page, which has no chevrons at all, they were the ENTIRE cluster: two 44px boxes
+   holding nothing, 100px wide including the gap. At 320px that was what pushed the icon pill
+   onto a second row and kept the banner tall. */
+body.format-aicourse .aicourse-hero-nav-spacer {
     display: none;
 }
 
@@ -1649,11 +1760,52 @@ body.format-aicourse .aicourse-hero-banner:not(.aicourse-hero-has-image)
     border-inline-start: 1px solid var(--acf-border-subtle);
 }
 
+/* ACF-FIX-2.1.23: was inline-size 100%, which forced the cluster onto its own line under the
+   title. On a row it takes only the width it needs and sits at the end. */
 body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-nav-progress {
-    inline-size: 100%;
-    justify-content: flex-start;
+    inline-size: auto;
+    justify-content: flex-end;
     flex: 0 0 auto;
 }
+
+/* Under 700px two columns do not fit: the title would be squeezed to a few words per line, so
+   the text wraps to full width. Rather than a five-row stack, the row stays a wrapping row: the
+   title, summary and meta each take a full line, and the progress ring then shares the LAST line
+   with the icon pill instead of each claiming a row of its own. That removes a 44px row plus its
+   gap without hiding anything or shrinking a touch target. */
+@media (max-width: 699px) {
+    body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-content {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        gap: var(--acf-space-2) var(--acf-space-3);
+        padding: var(--acf-space-3) var(--acf-gutter) var(--acf-space-4);
+    }
+
+    body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image
+    :is(.aicourse-hero-title-wrap, .aicourse-hero-title-group, .aicourse-hero-summary, .aicourse-hero-meta) {
+        flex: 1 1 100%;
+    }
+
+    body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-nav-progress {
+        inline-size: auto;
+        justify-content: flex-start;
+        flex: 0 1 auto;
+    }
+
+    body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-icons {
+        flex: 0 0 auto;
+        margin-block-start: 0;
+    }
+
+    /* The meta line repeats what the section cards below already state, and on a phone it is the
+       least valuable of the four text rows. */
+    body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-summary {
+        display: none;
+    }
+}
+
 
 /* --- Hero controls: nav chevrons, home, grades, back, AI -------------------
    All were 34-40px (below the 44px bar, and below it on mobile specifically —
@@ -1713,6 +1865,14 @@ body.format-aicourse .aicourse-hero-nav-spacer {
 /* --- Image-mode controls: frosted glass pill, WCAG-safe -------------------
    Old: rgba(0,0,0,0.30) pill + rgba(255,255,255,0.88) glyphs = 1.96:1 over a
    bright photo. New: 0.62 fill + solid white glyphs = 6.20:1 worst case. */
+/* ACF-FIX-2.1.15: the icon pill is absolutely positioned over the top-right of the banner while
+   .aicourse-hero-title is inline-size: 100%, so nothing reserved space for it. Measured across
+   seven viewports the two boxes overlapped by 198px horizontally at EVERY width. On desktop the
+   course name is usually short enough that the text never visually reaches the pill, which is why
+   it went unnoticed; on a phone the title wraps to the full width and runs straight underneath
+   it. The title now reserves the pill's width on its first lines, and below 600px -- where
+   reserving ~200px of a 320px banner would leave nothing for the title -- the pill stops being
+   absolute and takes its own row. */
 body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-icons {
     position: absolute;
     inset-block-start: var(--acf-space-3);
@@ -1732,6 +1892,27 @@ body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-her
     -webkit-backdrop-filter: blur(var(--acf-blur-md));
     box-shadow: var(--acf-elevation-2);
 }
+/* ACF-FIX-2.1.15: clear the absolutely positioned icon pill. 13rem is its measured width
+   (198px) plus a gutter of breathing room. Applied to the title and the meta line, which are
+   the two elements that reach the banner's top-right corner. */
+@media (min-width: 600px) {
+    body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image
+    :is(.aicourse-hero-title, .aicourse-hero-summary) {
+        padding-inline-end: 13rem;
+    }
+}
+
+/* Below 600px there is not enough width to reserve for the pill, so it leaves the corner and
+   flows as a normal row under the hero content instead of sitting on top of the title. */
+@media (max-width: 599px) {
+    body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-icons {
+        position: static;
+        justify-content: flex-start;
+        margin-block-start: var(--acf-space-3);
+        max-inline-size: 100%;
+    }
+}
+
 
 body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-icons :is(a, button) {
     color: var(--acf-text-on-media);
@@ -1881,10 +2062,17 @@ body.format-aicourse .aicourse-hero-banner:not(.aicourse-hero-has-image)
     display: none;
 }
 
+/* ACF-FIX-2.1.13: one row, not a column.
+   The column stacked the ring above the bar and left-packed the pair, so on a wide banner the
+   ring floated alone at the left, the bar sat orphaned beneath it capped at 22rem, and the
+   remaining ~60% of the banner was empty. Laying them along a single row lets the bar consume
+   the free width, which is what makes the cluster read as one control instead of two strays.
+   Gradient mode is unaffected: it hides the bar entirely (see the rule above) because there the
+   ring alone is the anchor. */
 body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-progress {
-    flex-direction: column;
-    align-items: stretch;
-    gap: var(--acf-space-2);
+    flex-direction: row;
+    align-items: center;
+    gap: var(--acf-space-3);
     flex: 1 1 auto;
     min-inline-size: 0;
     padding: 0;
@@ -1900,14 +2088,19 @@ body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-her
    than its content, and on a section page the numbered circles inside it were
    pushed into that void. Basis auto + a stretched cross size gives the bar its
    width back and the banner its real height. */
+/* ACF-FIX-2.1.13: the bar now takes the width the row leaves it rather than being pinned to a
+   22rem block. max-inline-size keeps it from stretching absurdly wide on an ultrawide banner. */
 body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-progress-bar-container {
-    flex: 0 0 auto;
-    inline-size: 100%;
-    max-inline-size: 22rem;
+    flex: 1 1 auto;
+    inline-size: auto;
+    min-inline-size: 0;
+    max-inline-size: 34rem;
 }
 
+/* ACF-FIX-2.1.13: was flex-start, which made sense when the ring sat atop a column. On a row it
+   left the ring riding high against the bar's centreline. */
 body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-progress-ring-container {
-    align-self: flex-start;
+    align-self: center;
 }
 
 /* --- Ring ---------------------------------------------------------------- */
@@ -2369,7 +2562,11 @@ body.format-aicourse .aicourse-cards-container {
 
 body.format-aicourse .aicourse-cards-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--acf-card-min)), 1fr));
+    /* ACF-FIX-2.1.14: auto-fit, not auto-fill. auto-fill keeps empty phantom tracks, so a course
+       with three sections in a wide container left a ragged gap to the right of the last card
+       while the hero above ran the full width. auto-fit collapses the empty tracks and lets the
+       real cards share the space. */
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--acf-card-min)), 1fr));
     gap: var(--acf-space-4);
     align-items: stretch;
 }
@@ -2387,6 +2584,15 @@ body.format-aicourse .aicourse-cards-grid {
 }
 
 body.format-aicourse .aicourse-card {
+    /* ACF-FIX-2.1.16: establish the text colour on the surface itself.
+       The card's BACKGROUND comes from --acf-surface-raised, which flips with colour mode, but
+       its text colour was inherited from the host theme -- Boost hands down rgb(29, 33, 37).
+       In dark mode that is near-black text on a #1e293b card: measured 1.1:1 against a 4.5:1
+       requirement. Nothing is visibly broken today only because every text element inside sets
+       its own colour explicitly; the moment anything is added that does not, it disappears.
+       Setting it here makes the surface and its contents flip together, which is the invariant
+       that was missing. */
+    color: var(--acf-text-primary);
     position: relative;
     display: flex;
     flex-direction: column;
@@ -2514,6 +2720,21 @@ body.format-aicourse .aicourse-card-icon-wrap.aicourse-icon-empty {
     background: var(--acf-surface-hover);
     border: 2px dashed var(--acf-border-strong);
     color: var(--acf-text-tertiary);
+}
+
+/* ACF-FIX-2.1.14: a dashed outline means "drop something here". That is an editing affordance,
+   and it was being shown to students: on a course whose teacher never picked section icons --
+   the common case -- every card carried a dashed box with a question mark, which reads as
+   broken rather than as merely un-styled. In view mode the placeholder is now solid and quiet,
+   so an un-iconed course looks deliberate. Edit mode keeps the dashed invitation. */
+body.format-aicourse:not(.editing):not(.editingon):not(.editing-mode)
+.aicourse-card-icon-wrap.aicourse-icon-empty {
+    background: var(--acf-surface-muted);
+    border: 1px solid var(--acf-border-subtle);
+    /* ACF-FIX-2.1.19: --acf-text-tertiary measured 4.34:1 in light and 2.34:1 in dark against
+       this surface, both short of the 4.5:1 AA floor. The glyph is small rendered text, not a
+       decorative shape, so it has to clear it. --acf-text-secondary does. */
+    color: var(--acf-text-secondary);
 }
 
 body.format-aicourse .aicourse-card:hover .aicourse-card-icon-wrap {
@@ -3436,6 +3657,53 @@ body.format-aicourse :is(.aicourse-general-section, .format-aicourse-container .
     opacity: 1;
 }
 
+/* --- Edit mode: strip the container chrome ---------------------------------
+   ACF-FIX-2.1.21. In edit mode the format hands rendering back to core's standard renderer so
+   teachers keep drag handles, action menus and bulk selection. Core's section then sat inside
+   this sheet's card treatment -- a 1px border, an 18px radius, a shadow and a raised background
+   -- with a brand-coloured rule along the top and dashed <hr> dividers between every activity.
+
+   The result was a box around a box: each activity already carries its own rectangle, so the
+   outer card, its accent rule and the dividers were three layers of chrome describing a grouping
+   the activity rectangles already make obvious. Removed, leaving the activities to speak for
+   themselves. Nothing that carries meaning is touched -- drag handles, availability badges,
+   completion controls and the "Add an activity" affordance are all untouched. View mode is
+   unaffected; it never used this container. */
+body.format-aicourse.editing
+:is(.aicourse-general-section, .format-aicourse-container .single-section) .course-section,
+body.format-aicourse.editingon
+:is(.aicourse-general-section, .format-aicourse-container .single-section) .course-section,
+body.format-aicourse.editing-mode
+:is(.aicourse-general-section, .format-aicourse-container .single-section) .course-section {
+    padding-inline: 0;
+    padding-block: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+/* The dashed rules between activities describe the same grouping. */
+body.format-aicourse.editing
+:is(.aicourse-general-section, .format-aicourse-container .single-section) .divider hr,
+body.format-aicourse.editingon
+:is(.aicourse-general-section, .format-aicourse-container .single-section) .divider hr,
+body.format-aicourse.editing-mode
+:is(.aicourse-general-section, .format-aicourse-container .single-section) .divider hr {
+    border-block-start: 0;
+}
+
+/* The 3px brand rule along the top of the container is the last piece of the box. It was the
+   card's accent; with the card gone it is a line with nothing to accent. */
+body.format-aicourse.editing
+:is(.aicourse-general-section, .format-aicourse-container .single-section) .course-section::before,
+body.format-aicourse.editingon
+:is(.aicourse-general-section, .format-aicourse-container .single-section) .course-section::before,
+body.format-aicourse.editing-mode
+:is(.aicourse-general-section, .format-aicourse-container .single-section) .course-section::before {
+    content: none;
+}
+
 body.format-aicourse :is(.aicourse-general-section, .format-aicourse-container .single-section) .section-modchooser {
     min-block-size: var(--acf-target-min);
     padding-inline: var(--acf-space-3);
@@ -3783,7 +4051,12 @@ body.format-aicourse .aicourse-general-heading {
     font-weight: var(--acf-weight-semibold);
     line-height: var(--acf-leading-snug);
     letter-spacing: var(--acf-tracking-tight);
-    color: var(--acf-text-primary);
+    /* ACF-FIX-2.1.19: inherit, not --acf-text-primary. This heading sits ABOVE the card, directly
+       on the theme's own page background, which the plugin does not control. Taking the plugin's
+       text token meant that in dark mode it turned light while the page behind it stayed white:
+       measured 1.10:1. Inheriting the theme's page colour is correct in all four combinations of
+       colour mode and theme, because the surface underneath is always the theme's. */
+    color: inherit;
 }
 
 /* .accesshide is applied by core with high specificity and wins; this is only
@@ -4394,6 +4667,13 @@ body.format-aicourse .aicourse-ai-chatbox-messages {
     overflow-y: auto;
     overscroll-behavior: contain;
     background: var(--acf-surface-sunken);
+    /* ACF-FIX-2.1.18: same invariant the section card was missing. This surface takes its
+       background from --acf-surface-sunken, which flips with colour mode, but message text was
+       inheriting the host theme's colour -- Boost hands down rgb(29, 33, 37). In dark mode that
+       is near-black text on a rgb(15, 23, 42) panel: measured 1.1:1 where AA needs 4.5:1, i.e.
+       the tutor's answers were unreadable. Anchoring the colour here makes background and text
+       flip together for every message bubble, present and future. */
+    color: var(--acf-text-primary);
 }
 
 body.format-aicourse .aicourse-ai-message {
@@ -4440,6 +4720,10 @@ body.format-aicourse .aicourse-ai-chatbox-input {
     padding: var(--acf-space-3) var(--acf-space-4);
     border-block-start: 1px solid var(--acf-border-subtle);
     background: var(--acf-surface-raised);
+    /* ACF-FIX-2.1.19: the same invariant missed on the section card and the message list. The
+       <label> for the textarea was inheriting the theme's colour against this mode-aware
+       background: measured 1.11:1 in dark mode. Third occurrence of the pattern. */
+    color: var(--acf-text-primary);
 }
 
 body.format-aicourse .aicourse-ai-chatbox-input textarea {

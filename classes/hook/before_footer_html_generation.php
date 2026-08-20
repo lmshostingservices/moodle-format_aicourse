@@ -181,6 +181,11 @@ class before_footer_html_generation {
             $lateclasses[] = $colourclass;
         }
 
+        $scrimclass = callbacks::get_scrim_class();
+        if ($scrimclass !== '') {
+            $lateclasses[] = $scrimclass;
+        }
+
         if (!empty($lateclasses)) {
             $PAGE->requires->js_call_amd('format_aicourse/bodyclass', 'init', [$lateclasses]);
         }

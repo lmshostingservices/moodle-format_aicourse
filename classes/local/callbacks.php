@@ -193,6 +193,29 @@ class callbacks {
     }
 
     /**
+     * Body class selecting the hero banner overlay strength, or '' for the default.
+     *
+     * ACF-FIX-2.1.12. The default ramp is built for the worst case -- white text over a pure
+     * white photograph -- and reaches 16.2:1 at the foot of the banner where WCAG AA asks for
+     * 4.5:1. On a dark photograph that is far more darkening than the image can carry. The
+     * lighter levels relax the top and bottom stops only; the band where the title and summary
+     * actually sit never drops below 0.56 alpha, which measures 4.9:1 on that same worst case.
+     *
+     * @return string One of '', 'aicourse-scrim-medium', 'aicourse-scrim-light'.
+     */
+    public static function get_scrim_class(): string {
+        switch (get_config('format_aicourse', 'scrimstrength')) {
+            case 'medium':
+                return 'aicourse-scrim-medium';
+            case 'light':
+                return 'aicourse-scrim-light';
+            default:
+                // Covers 'strong', unset and anything unrecognised.
+                return '';
+        }
+    }
+
+    /**
      * Whether the running script is /course/section.php.
      *
      * ACF-FIX-2.1.5: one implementation, three former call sites. Uses the global $SCRIPT that

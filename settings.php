@@ -109,6 +109,18 @@ if ($hassiteconfig) {
     ));
 
     $settings->add(new admin_setting_configselect(
+        'format_aicourse/scrimstrength',
+        get_string('scrimstrength', 'format_aicourse'),
+        get_string('scrimstrength_desc', 'format_aicourse'),
+        'medium',
+        [
+            'light' => get_string('scrimstrength_light', 'format_aicourse'),
+            'medium' => get_string('scrimstrength_medium', 'format_aicourse'),
+            'strong' => get_string('scrimstrength_strong', 'format_aicourse'),
+        ]
+    ));
+
+    $settings->add(new admin_setting_configselect(
         'format_aicourse/colourmode',
         get_string('colourmode', 'format_aicourse'),
         get_string('colourmode_desc', 'format_aicourse'),
