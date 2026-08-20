@@ -112,9 +112,14 @@ if (!empty($options['showherobanner']) && (!$acfisgrader || $acfcanedit)) {
 // The teacher-configured card title size is a genuinely dynamic value, so it rides on the
 // container as a custom property rather than in a separate <style> element.
 $cardtitlesize = isset($options['cardtitlesize']) ? (int)$options['cardtitlesize'] : 14;
-$containerstyle = ($cardtitlesize > 0)
-    ? ' style="--aicourse-card-title-size:' . $cardtitlesize . 'px;"'
-    : '';
+$containercss = ($cardtitlesize > 0) ? '--aicourse-card-title-size:' . $cardtitlesize . 'px;' : '';
+// ACF-FIX-2.1.23: the course accent colour and hero fade ride on the container as custom
+// properties, so every card, border and focus ring inside it re-derives from them. Both
+// values are validated inside get_accent_style(); nothing user-supplied reaches the
+// attribute unchecked. The hero is OUTSIDE this container and gets the same string of its
+// own, in classes/output/courseformat/hero.php.
+$containercss .= format_aicourse::get_accent_style($options);
+$containerstyle = ($containercss !== '') ? ' style="' . $containercss . '"' : '';
 echo '<div class="format-aicourse-container"' . $containerstyle . '>';
 
 // Section description: shown on section page between hero banner and activity list (v1.7.41).

@@ -283,17 +283,8 @@ body.format-aicourse,
        `herobannerheight` setting is still honoured as documented — it only ever
        wrote an inline `max-height`, which gradient mode overrides (see the
        `!important` note in section 8) so tall content is never clipped. */
-    /* ACF-FIX-2.1.23: 60 -> 92px, down from 76 -> 116px. The row layout no longer needs the
-       taller floor, and the floor was setting the height on courses whose own setting is small. */
-    --acf-hero-min-h: clamp(3.75rem, 2.9rem + 2.8vw, 5.75rem);   /* 60 -> 92px */
-    /* ACF-FIX-2.1.23: 152 -> 232px becomes 88 -> 128px.
-       This token, not the course's herobannerheight setting, was what actually decided the
-       image banner's height: at 1440px it resolved to 232px and overrode a 96px setting
-       entirely. With the hero content now on a single row the tallest child is 54px, so the
-       old floor was reserving four times the space the content needed. The new range still
-       clears the tallest child plus padding at every width, and the banner keeps a landscape
-       proportion rather than collapsing to a strip. */
-    --acf-hero-image-min-h: clamp(5.5rem, 4.2rem + 4.2vw, 8rem);
+    --acf-hero-min-h: clamp(4.75rem, 3.4rem + 4.4vw, 7.25rem);   /* 76 -> 116px */
+    --acf-hero-image-min-h: clamp(9.5rem, 5.5rem + 13vw, 14.5rem);
 
     /* Progress ring. The gradient-mode ring was 44px — smaller than a single
        hero button — so it read as a status chip rather than the hero's anchor. */
@@ -1418,7 +1409,9 @@ body.format-aicourse .aicourse-hero-banner {
        custom property written by lib.php) and acts as a FLOOR, not a cap. It previously arrived
        as an inline `max-height`, which clipped wrapped titles and the numbered activity circles
        — so the stylesheet had to neutralise it, making the setting inert at every value. */
-    min-block-size: max(var(--acf-hero-min-h), var(--acf-hero-h, 0px));
+    /* ACF-FIX-2.1.26: --acf-hero-h is gone with the "Hero banner height" setting; the
+       banner's floor is the token alone and it grows from there to fit its content. */
+    min-block-size: var(--acf-hero-min-h);
     block-size: auto;
     box-sizing: border-box;
     border: 1px solid var(--acf-hero-border);
@@ -1625,20 +1618,14 @@ body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image :is(.aicourse
     flex: 0 0 auto;
 }
 
-/* ACF-FIX-2.1.23: a row, not a column.
-   Image mode stacked title, summary, meta and the progress cluster one under another, so the
-   banner needed ~230px of height to hold four stacked rows while the right two thirds of it
-   stayed empty. Laying the title group against the progress cluster on a single row uses the
-   width that was already there and roughly halves the height required. Below 700px there is not
-   enough width for two columns and the stack returns -- see the media query below. */
 body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-content {
-    flex-direction: row;
+    flex-direction: column;
     flex-wrap: nowrap;
-    justify-content: space-between;
-    align-items: center;
+    justify-content: flex-end;
+    align-items: flex-start;
     min-block-size: inherit;
-    gap: var(--acf-space-5);
-    padding: var(--acf-space-4) var(--acf-gutter);
+    gap: var(--acf-space-2);
+    padding: var(--acf-space-6) var(--acf-gutter) var(--acf-space-7);
     /* stylelint-disable-next-line time-min-milliseconds --
        80ms here is the animation DELAY, not its duration; the rule targets durations. */
     animation: acf-hero-enter var(--acf-duration-slower) var(--acf-ease-out) 80ms both;
@@ -1741,14 +1728,7 @@ body.format-aicourse .aicourse-hero-nav-progress {
 
 /* The spacers exist only to keep a CENTRED circle row balanced when one of the
    prev/next chevrons is absent. Right-aligned, they are 44px of dead space. */
-/* ACF-FIX-2.1.23: applies to image mode as well now.
-   The spacers exist only to keep a CENTRED chevron row balanced when one of prev/next is absent.
-   Gradient mode right-aligned its cluster long ago and dropped them; image mode kept them, and
-   since 2.1.23 lays its cluster out right-aligned too they became the same dead weight there.
-   On a course page, which has no chevrons at all, they were the ENTIRE cluster: two 44px boxes
-   holding nothing, 100px wide including the gap. At 320px that was what pushed the icon pill
-   onto a second row and kept the banner tall. */
-body.format-aicourse .aicourse-hero-nav-spacer {
+body.format-aicourse .aicourse-hero-banner:not(.aicourse-hero-has-image) .aicourse-hero-nav-spacer {
     display: none;
 }
 
@@ -1760,52 +1740,11 @@ body.format-aicourse .aicourse-hero-banner:not(.aicourse-hero-has-image)
     border-inline-start: 1px solid var(--acf-border-subtle);
 }
 
-/* ACF-FIX-2.1.23: was inline-size 100%, which forced the cluster onto its own line under the
-   title. On a row it takes only the width it needs and sits at the end. */
 body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-nav-progress {
-    inline-size: auto;
-    justify-content: flex-end;
+    inline-size: 100%;
+    justify-content: flex-start;
     flex: 0 0 auto;
 }
-
-/* Under 700px two columns do not fit: the title would be squeezed to a few words per line, so
-   the text wraps to full width. Rather than a five-row stack, the row stays a wrapping row: the
-   title, summary and meta each take a full line, and the progress ring then shares the LAST line
-   with the icon pill instead of each claiming a row of its own. That removes a 44px row plus its
-   gap without hiding anything or shrinking a touch target. */
-@media (max-width: 699px) {
-    body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-content {
-        flex-direction: row;
-        flex-wrap: wrap;
-        justify-content: space-between;
-        align-items: center;
-        gap: var(--acf-space-2) var(--acf-space-3);
-        padding: var(--acf-space-3) var(--acf-gutter) var(--acf-space-4);
-    }
-
-    body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image
-    :is(.aicourse-hero-title-wrap, .aicourse-hero-title-group, .aicourse-hero-summary, .aicourse-hero-meta) {
-        flex: 1 1 100%;
-    }
-
-    body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-nav-progress {
-        inline-size: auto;
-        justify-content: flex-start;
-        flex: 0 1 auto;
-    }
-
-    body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-icons {
-        flex: 0 0 auto;
-        margin-block-start: 0;
-    }
-
-    /* The meta line repeats what the section cards below already state, and on a phone it is the
-       least valuable of the four text rows. */
-    body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-summary {
-        display: none;
-    }
-}
-
 
 /* --- Hero controls: nav chevrons, home, grades, back, AI -------------------
    All were 34-40px (below the 44px bar, and below it on mobile specifically —
@@ -2166,6 +2105,12 @@ body.format-aicourse .aicourse-progress-ring-text {
 
 [dir="rtl"] body.format-aicourse .aicourse-progress-ring-text {
     transform: translate(50%, -50%);
+}
+
+/* The hero ring stretches to fill instead of being translated, in both
+   directions, so RTL must not re-apply the translate either. */
+[dir="rtl"] body.format-aicourse .aicourse-hero-banner .aicourse-progress-ring-text {
+    transform: none;
 }
 
 /* The label scales with the ring. At 56-84px a 11px numeral read as an
@@ -7183,4 +7128,1274 @@ body.format-aicourse :is(.aicourse-cards-grid, .aicourse-activity-cards-grid) > 
     .aitutor-empty-state {
         border: 1px solid CanvasText;
     }
+}
+
+
+/* ==========================================================================
+   12. COMPACT HERO, EDGE ALIGNMENT AND LIST LAYOUT  (ACF-FIX-2.1.23)
+   --------------------------------------------------------------------------
+   Everything in this section is an intentional late override of the rules
+   above. It is kept as one block, at the end of the sheet, so the whole
+   revision can be read — or reverted — in one place.
+
+   Four problems it fixes, all reported against 2.1.22:
+
+   1. HEIGHT. The image-mode banner floored at 9.5rem-14.5rem (152-232px) and
+      laid its content out as a bottom-packed COLUMN with 24px/32px block
+      padding around an 80px ring. On a 1400px shell that is ~230px of banner
+      carrying about 90px of content: the rest was empty. It is now a single
+      ROW — title/meta on the inline-start, progress on the inline-end, actions
+      last — floored at 5.5rem-7.5rem (88-120px).
+
+   2. EDGE ALIGNMENT. format.php echoes the hero OUTSIDE
+      .format-aicourse-container by design (so a teacher's banner width setting
+      is not clipped), which means the hero never received the container's
+      gutter. Worse, the hide-course-index rule applied `padding-inline` to
+      .format-aicourse-container AND to .aicourse-cards-container nested inside
+      it, so the cards were inset by two gutters against the hero's zero. The
+      hero and the container are now given one identical box, and the doubled
+      inner padding is removed (see the override of the 1268 rule below).
+
+   3. DARKNESS. .aicourse-hero-overlay::before adds a 0.45-alpha inline-start
+      wash. That was written for the old TOP-TO-BOTTOM scrim, where it was the
+      only horizontal shaping. Since 2.1.20 the scrim itself runs LEFT TO RIGHT
+      at 0.78 alpha on that edge, so the two now multiply: 1-(1-0.78)(1-0.45)
+      = 0.88 effective alpha over the title. The ::before is retired for the
+      directional scrims and kept only where the vertical ramp is still in use
+      (the <600px media query at the end of section 8).
+
+   4. LIST LAYOUT. Section cards had no way to stack full-width down the page.
+      `body.aicourse-cardlist` switches the grid to a single column and lets the
+      card lay itself out horizontally, which is the readable shape at that
+      width.
+   ========================================================================== */
+
+/* --- 12.1 Compact metrics ------------------------------------------------- */
+body.format-aicourse {
+    /* 60 -> 76px. Gradient mode has no photograph to show, so it can be
+       tighter still than image mode. */
+    --acf-hero-min-h: clamp(3.75rem, 3.1rem + 2.1vw, 4.75rem);
+    /* 88 -> 120px, replacing 152 -> 232px. */
+    --acf-hero-image-min-h: clamp(5.5rem, 4.6rem + 3vw, 7.5rem);
+    /* The ring can no longer be the tallest thing in the banner: at 84px it
+       alone exceeded the new floor. 44 -> 56px keeps the digits legible while
+       fitting inside the row's block padding. */
+    --acf-hero-ring: clamp(2.75rem, 2.3rem + 1.5vw, 3.5rem);
+    --acf-hero-ring-image: clamp(2.75rem, 2.3rem + 1.5vw, 3.5rem);
+    /* The hero's own type scale, decoupled from --acf-font-size-3xl (which is
+       shared with card headings and must not shrink with the banner). */
+    --acf-hero-title-compact: clamp(1.125rem, 0.85rem + 1.35vw, 1.625rem);
+}
+
+/* --- 12.2 One shared content box: hero == container ----------------------- */
+/* The hero wrap and the content container are now the same box at every
+   viewport, whether or not the course index is hidden, so their inline edges
+   line up to the pixel. box-sizing is restated because the padding is what
+   creates the alignment and it must sit inside the max-inline-size. */
+body.format-aicourse :is(.aicourse-hero-sticky-wrap, .format-aicourse-container) {
+    box-sizing: border-box;
+    inline-size: 100%;
+    max-inline-size: var(--acf-container-max);
+    margin-inline: auto;
+    padding-inline: var(--acf-gutter);
+}
+
+/* Retire the doubled gutter. The outer .format-aicourse-container already
+   carries it from the rule above; the nested card containers must not add a
+   second one or the cards sit two gutters in from the hero. */
+body.format-aicourse.aicourse-hideindex:not(.editing):not(.editingon):not(.editing-mode)
+:is(.aicourse-cards-container, .aicourse-activity-cards-container) {
+    max-inline-size: none;
+    margin-inline: 0;
+    padding-inline: 0;
+}
+
+/* Left-aligned banners keep the gutter but drop the auto centring. */
+body.format-aicourse .aicourse-hero-sticky-wrap.aicourse-hero-align-left {
+    margin-inline: 0 auto;
+}
+
+/* The banner sat 24px below whatever preceded it and 40px above the cards.
+   With the header band collapsed (12.6) it should read as the top of the page —
+   but not welded to the theme's navbar. A deliberate 12px keeps the banner's
+   rounded corners and drop shadow from colliding with whatever sits above it,
+   which on most themes is a solid-coloured bar. Zero looked like a rendering
+   fault rather than a decision. The value is a token, so a theme that already
+   leaves a gap of its own can be trimmed here in one place. */
+body.format-aicourse .aicourse-hero-sticky-wrap {
+    /* PADDING, not margin, on the top edge. The hero is the first child of the
+       content column, which has no border or padding of its own, so a
+       margin-block-start collapses straight through it and reappears above an
+       ancestor — the gap either vanishes or lands in the wrong place depending
+       on the theme. Padding cannot collapse. The wrap has no background, so
+       12px of padding is simply 12px of space. */
+    margin-block: 0 var(--acf-space-4);
+    padding-block-start: var(--acf-space-3);
+}
+
+body.format-aicourse .aicourse-cards-container {
+    margin-block-start: var(--acf-space-4);
+}
+
+/* --- 12.3 Image-mode hero as a single row --------------------------------- */
+/* Base behaviour of the new .aicourse-hero-lede wrapper, before the compact row
+   kicks in. In gradient mode it inherits the flex basis the title wrap used to
+   carry. In image mode the content box is a COLUMN below 700px, where a
+   flex-basis would be read as a BLOCK size — 16rem of forced height, the exact
+   bug section 8 fixed for .aicourse-hero-title-wrap — so it hugs its content. */
+body.format-aicourse .aicourse-hero-lede {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    inline-size: 100%;
+    min-inline-size: 0;
+    gap: var(--acf-space-1);
+    flex: 1 1 16rem;
+}
+
+body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-lede {
+    flex: 0 0 auto;
+}
+
+/* Below 700px the title needs the full width and the row would crush it, so
+   the column layout from section 8 is left in place there. */
+@media (min-width: 700px) {
+    body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-content {
+        flex-direction: row;
+        flex-wrap: nowrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--acf-space-5);
+        /* Was space-6 / space-7 (24px / 32px) block padding. */
+        padding: var(--acf-space-3) var(--acf-gutter);
+    }
+
+    /* The lede (title + summary + meta) takes the space the progress cluster
+       does not need. See the note in hero.mustache: these three used to be
+       three separate row items, which is what stacked the meta row into a
+       narrow column beside the title. */
+    /* .aicourse-hero-title-group is the activity page's equivalent of the lede
+       (activity_hero.mustache wraps the section label and title in it), so the
+       two are treated as one role here. Only ONE of them is ever present. */
+    body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image :is(
+    .aicourse-hero-lede,
+    .aicourse-hero-title-group) {
+        flex: 1 1 auto;
+        min-inline-size: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 2px;
+    }
+
+    /* The title wrap is a child of whichever of the two is present, so it fills
+       it rather than competing with it. */
+    body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-title-wrap {
+        flex: 0 0 auto;
+        inline-size: 100%;
+        min-inline-size: 0;
+        gap: 2px;
+    }
+
+    /* One line, not two: the second line is what forced the extra 34px of
+       banner. Long names ellipsise, and the full name is still the region's
+       aria-label and the browser tab title. */
+    body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-title {
+        font-size: var(--acf-hero-title-compact);
+        line-height: 1.15;
+        -webkit-line-clamp: 1;
+        line-clamp: 1;
+        max-inline-size: 100%;
+    }
+
+    /* The summary is prose and cannot fit a 96px row. It is still rendered for
+       screen readers and still shown in the <700px column layout. */
+    body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-summary {
+        display: none;
+    }
+
+    body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-meta {
+        margin: 0;
+        line-height: 1.2;
+    }
+
+    /* The progress cluster stops being a full-width column and becomes the
+       row's inline-end group. flex-basis is a preference, not a floor: it
+       yields to a long title before the title truncates. */
+    body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-nav-progress {
+        inline-size: auto;
+        flex: 0 1 26rem;
+        justify-content: flex-end;
+        min-inline-size: 0;
+    }
+
+    body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-progress-bar-container {
+        max-inline-size: 20rem;
+    }
+
+    /* The action pill was absolutely positioned at the top-right, which is
+       exactly where the progress cluster now sits. In row layout it joins the
+       row as its last item instead, so nothing overlaps and the banner needs
+       no reserved dead zone. */
+    body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-icons {
+        position: static;
+        flex: 0 0 auto;
+        flex-wrap: nowrap;
+        max-inline-size: none;
+        align-self: center;
+    }
+}
+
+/* Below the row breakpoint the banner stays a column, but it should not stay
+   285px tall either. The summary is the single biggest contributor and it
+   duplicates the course description shown further down the page, so it goes;
+   the block padding comes down to match the desktop trim. */
+@media (max-width: 699px) {
+    body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-content {
+        padding: var(--acf-space-4) var(--acf-gutter);
+        gap: var(--acf-space-2);
+    }
+
+    body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-summary {
+        display: none;
+    }
+
+    body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-title {
+        font-size: var(--acf-hero-title-compact);
+        line-height: 1.15;
+    }
+}
+
+/* Gradient mode: same block-padding trim, so the two modes agree in height. */
+body.format-aicourse .aicourse-hero-banner:not(.aicourse-hero-has-image) .aicourse-hero-content {
+    padding-block: var(--acf-space-3);
+    padding-inline: var(--acf-gutter);
+}
+
+/* --- 12.4 Stop the scrim double-darkening the title side ------------------ */
+/* Retired for the directional scrims (see note 3 in the section header). The
+   <600px vertical-ramp media query in section 8 re-enables it there, because
+   with a vertical scrim this wash is the only horizontal shaping. */
+@media (min-width: 600px) {
+    body.format-aicourse:is(.aicourse-scrim-medium, .aicourse-scrim-light)
+    .aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-overlay::before {
+        display: none;
+    }
+}
+
+/* The default (no scrim class = "strong") ramp is vertical and reaches 0.88 at
+   its foot, which crushes a dark photograph on its own. Softened to the same
+   left-to-right shaping as "medium" but two points heavier, so the strong
+   setting still means something without turning the image black. */
+@media (min-width: 600px) {
+    body.format-aicourse:not(.aicourse-scrim-medium):not(.aicourse-scrim-light) {
+        --acf-hero-scrim:
+            linear-gradient(
+                to right,
+                rgba(2, 6, 23, 0.82)  0%,
+                rgba(2, 6, 23, 0.74) 40%,
+                rgba(2, 6, 23, 0.40) 68%,
+                rgba(2, 6, 23, 0.20) 100%
+            );
+    }
+}
+
+@media (min-width: 600px) {
+    body.format-aicourse:not(.aicourse-scrim-medium):not(.aicourse-scrim-light)
+    .aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-overlay::before {
+        display: none;
+    }
+}
+
+/* --- 12.5 Section cards as a stacked list --------------------------------- */
+/* One column. The card itself is told to run horizontally so a full-width row
+   does not become a 400px-tall poster. */
+body.format-aicourse.aicourse-cardlist .aicourse-cards-grid {
+    grid-template-columns: 1fr;
+    gap: var(--acf-space-3);
+}
+
+@media (min-width: 768px) {
+    body.format-aicourse.aicourse-cardlist .aicourse-cards-grid {
+        gap: var(--acf-space-3);
+    }
+}
+
+@media (min-width: 1280px) {
+    body.format-aicourse.aicourse-cardlist .aicourse-cards-grid {
+        gap: var(--acf-space-3);
+    }
+}
+
+/* A full-width card laid out as a column would be a 400px-tall poster, so the
+   card runs horizontally instead: icon + time, then the title taking the slack,
+   then the footer stats. Flex with per-region basis rather than fixed grid
+   tracks, because section_card.mustache emits between three and five children
+   depending on the summary and activity-list settings — a three-track grid
+   would silently put the footer in the wrong column the moment a summary
+   appeared. Regions that need their own line (summary, activity list) claim
+   100% basis and wrap. */
+@media (min-width: 700px) {
+    body.format-aicourse.aicourse-cardlist .aicourse-card {
+        display: flex;
+        flex-flow: row wrap;
+        align-items: center;
+        column-gap: var(--acf-space-4);
+        row-gap: var(--acf-space-2);
+    }
+
+    /* A fixed leading column, so the titles start on the same x across every
+       row. Without it the header is only as wide as its time badge and
+       "15 min" vs "1 hr 20 min" staggers the titles down the list. */
+    body.format-aicourse.aicourse-cardlist .aicourse-card .aicourse-card-header {
+        flex: 0 0 auto;
+        inline-size: 12.5rem;
+        justify-content: flex-start;
+        gap: var(--acf-space-3);
+        margin: 0;
+    }
+
+    body.format-aicourse.aicourse-cardlist .aicourse-card .aicourse-card-link {
+        flex: 1 1 14rem;
+        min-inline-size: 0;
+    }
+
+    body.format-aicourse.aicourse-cardlist .aicourse-card .aicourse-card-title {
+        margin: 0;
+    }
+
+    body.format-aicourse.aicourse-cardlist .aicourse-card .aicourse-card-footer {
+        flex: 0 0 auto;
+        margin: 0;
+        border-block-start: none;
+        padding-block-start: 0;
+    }
+
+    /* Prose and the activity list are never squeezed into the row. */
+    body.format-aicourse.aicourse-cardlist .aicourse-card
+    :is(.aicourse-card-summary, .aicourse-card-activities) {
+        flex: 1 1 100%;
+        min-inline-size: 0;
+    }
+}
+
+/* --- 12.6 Reclaim the top of the page ------------------------------------- */
+/* Boost renders an empty #page-header band above the secondary navigation on a
+   course page: no heading, no breadcrumb, just margin. On this format the hero
+   IS the page header, so the band is collapsed and the hero rises to the top
+   of the content column. Edit mode is excluded — teachers rely on the header
+   region for course-level controls. */
+body.format-aicourse:not(.editing):not(.editingon):not(.editing-mode) #page-header {
+    margin-block: 0;
+    padding-block: 0;
+}
+
+body.format-aicourse:not(.editing):not(.editingon):not(.editing-mode) #page-header:empty,
+body.format-aicourse:not(.editing):not(.editingon):not(.editing-mode) #page-header .page-context-header,
+body.format-aicourse:not(.editing):not(.editingon):not(.editing-mode) #page-header .page-header-headings {
+    display: none;
+}
+
+body.format-aicourse:not(.editing):not(.editingon):not(.editing-mode) #region-main {
+    padding-block-start: 0;
+}
+
+/* Secondary navigation (Course / Settings / Participants / Grades / Reports /
+   More). Hidden by course setting, never for a user who is editing — losing
+   the Settings tab mid-edit would be a trap. Two levels:
+     .aicourse-hidenav-students  hide for everyone without moodle/course:update
+     .aicourse-hidenav-all       hide for everyone, editors included
+   The class is added in lib.php::page_set_course(). */
+body.format-aicourse.aicourse-hidenav-students:not(.aicourse-can-edit):not(.editing):not(.editingon):not(.editing-mode)
+:is(.secondary-navigation, nav.moremenu.navigation),
+body.format-aicourse.aicourse-hidenav-all:not(.editing):not(.editingon):not(.editing-mode)
+:is(.secondary-navigation, nav.moremenu.navigation) {
+    /* stylelint-disable-next-line declaration-no-important --
+       deliberate: line 1141 forces `display: flex !important` on the secondary
+       nav to beat Bootstrap's .d-none utility. An !important declaration can
+       only be beaten by another one, whatever the specificity, so hiding the
+       nav by course setting has to match it. */
+    display: none !important;
+}
+
+/* --- 12.7 Card top accent line -------------------------------------------- */
+/* The 3px brand gradient rule across the top of every section card. Removed by
+   request: at three cards abreast it read as three disconnected underlines
+   above the content rather than as card chrome. The card still has its border,
+   its elevation and its hover lift, so nothing is lost from the affordance.
+   The :hover rule that raised the accent's opacity is neutralised with it. */
+body.format-aicourse .aicourse-card::before,
+body.format-aicourse .aicourse-card:hover::before {
+    content: none;
+}
+
+/* --- 12.8 Compact row order: actions | title | progress -------------------
+   Requested arrangement, and the conventional one: the home affordance sits at
+   the far inline-start where people reach for it, the course name is the centre
+   of gravity, and the progress readout closes the row on the inline-end with
+   the ring — the thing you actually read — furthest out.
+
+   All of this is `order` and `row-reverse`, not new markup: the DOM order
+   (lede, progress, actions) is the correct READING order for a screen reader
+   and for a no-CSS render, and it stays untouched. Only the visual order moves,
+   which is exactly what `order` is for. It applies solely inside the >=700px
+   compact row; below that the banner is a column and source order is what
+   renders. */
+@media (min-width: 700px) {
+    body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-icons {
+        order: 1;
+    }
+
+    body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image :is(
+    .aicourse-hero-lede,
+    .aicourse-hero-title-group) {
+        order: 2;
+        align-items: center;
+        text-align: center;
+    }
+
+    body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-nav-progress {
+        order: 3;
+    }
+
+    /* Home first, then grades, the AI tutor, and the teacher-only banner
+       buttons last so the student-facing pair never shifts position when a
+       teacher looks at the same course. */
+    body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-home {
+        order: 1;
+    }
+
+    body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-grades {
+        order: 2;
+    }
+
+    body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-ai-toggle {
+        order: 3;
+    }
+
+    body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-ai-delete-banner {
+        order: 4;
+    }
+
+    body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-ai-generate-banner {
+        order: 5;
+    }
+
+    /* Bar then ring, so the ring lands furthest inline-end. row-reverse rather
+       than order values because the progress cluster has exactly two children
+       and this survives the section-page variant, where the bar container holds
+       the numbered activity circles instead of a track. */
+    body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-progress {
+        flex-direction: row-reverse;
+    }
+}
+
+/* --- 12.9 Flat gradient-mode banner --------------------------------------- */
+/* No gradients on the banner, by request. --acf-hero-wash was a three-stop
+   135deg ramp from 16% brand down to 2.5%; it is now flat at the LIGHTEST of
+   those three stops, so the banner is the palest blue that appeared in the old
+   ramp rather than an average of it.
+
+   One number controls it. If it reads too washed out on your brand, raise
+   --acf-hero-wash-tint: 8% is the old ramp's midpoint, 16% its darkest stop.
+   Contrast is unaffected at any of those values — the darkest stop already
+   measured 11.66:1 for primary text, and every lighter value is better.
+
+   rgba() first as the universal fallback, then color-mix() so the tint tracks
+   the SITE's brand colour, exactly as the original pair did.
+
+   --acf-hero-glow, the radial bloom behind the progress ring, goes with it:
+   it is also a gradient, and on a flat banner it was the only thing left
+   making the right-hand side look unevenly lit. */
+body.format-aicourse {
+    --acf-hero-wash-tint: 2.5%;
+    --acf-hero-wash: rgba(15, 108, 191, 0.025);
+    --acf-hero-wash: color-mix(in srgb, var(--acf-brand) var(--acf-hero-wash-tint), var(--acf-surface-raised));
+    --acf-hero-glow: none;
+}
+
+body.format-aicourse .aicourse-hero-banner:not(.aicourse-hero-has-image)::after {
+    content: none;
+}
+
+/* --- 12.10 Order applies in gradient mode too ------------------------------
+   12.8 scoped the actions | title | progress order to .aicourse-hero-has-image,
+   because that was the mode being looked at. A course with no banner image has
+   the same row and the same expectations, so the order is lifted to both modes
+   here rather than duplicated. */
+@media (min-width: 700px) {
+    body.format-aicourse .aicourse-hero-banner .aicourse-hero-icons {
+        order: 1;
+    }
+
+    body.format-aicourse .aicourse-hero-banner :is(
+    .aicourse-hero-lede,
+    .aicourse-hero-title-group) {
+        order: 2;
+    }
+
+    body.format-aicourse .aicourse-hero-banner .aicourse-hero-nav-progress {
+        order: 3;
+    }
+
+    body.format-aicourse .aicourse-hero-banner .aicourse-hero-home {
+        order: 1;
+    }
+
+    body.format-aicourse .aicourse-hero-banner .aicourse-hero-grades {
+        order: 2;
+    }
+
+    body.format-aicourse .aicourse-hero-banner .aicourse-ai-toggle {
+        order: 3;
+    }
+
+    body.format-aicourse .aicourse-hero-banner .aicourse-ai-delete-banner {
+        order: 4;
+    }
+
+    body.format-aicourse .aicourse-hero-banner .aicourse-ai-generate-banner {
+        order: 5;
+    }
+
+    body.format-aicourse .aicourse-hero-banner .aicourse-hero-progress {
+        flex-direction: row-reverse;
+    }
+
+    /* The hairline that section 8 draws between the progress group and the
+       actions assumed the actions came last. They now come first, so the rule
+       is moved to the other side of the pair — or it would float in the middle
+       of the row separating nothing. */
+    body.format-aicourse .aicourse-hero-banner:not(.aicourse-hero-has-image)
+    .aicourse-hero-nav-progress + .aicourse-hero-icons {
+        padding-inline-start: 0;
+        border-inline-start: none;
+    }
+}
+
+/* The prev/next spacers exist only to keep a CENTRED circle row balanced. In
+   the compact row nothing is centred, so on the course home page — which has
+   no chevrons at all — a spacer was 44px of dead air to the right of the ring,
+   stopping it being the last thing in the banner. Gradient mode already hid
+   them (section 8); image mode now does too. */
+@media (min-width: 700px) {
+    body.format-aicourse .aicourse-hero-banner .aicourse-hero-nav-spacer {
+        display: none;
+    }
+}
+
+/* --- 12.11 Chevrons ahead of the progress cluster -------------------------
+   On a section page the next-section chevron follows the progress block in
+   source order, so after 12.8 it — not the ring — was the last thing in the
+   banner. Both chevrons are ordered ahead of the cluster, which keeps the
+   ring as the final element on every page type. Source order is untouched:
+   for a screen reader the chevrons still read either side of the progress,
+   which is the correct relationship. */
+@media (min-width: 700px) {
+    body.format-aicourse .aicourse-hero-banner .aicourse-hero-nav-prev {
+        order: 1;
+    }
+
+    body.format-aicourse .aicourse-hero-banner .aicourse-hero-nav-next {
+        order: 2;
+    }
+
+    body.format-aicourse .aicourse-hero-banner .aicourse-hero-progress {
+        order: 3;
+    }
+
+    /* The section page's numbered circles need more room than the home page's
+       bar: at a 26rem basis only two of eight were on screen before the row
+       started scrolling. */
+    body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-nav-progress {
+        flex: 0 1 auto;
+    }
+}
+
+/* --- 12.12 Gradient mode gets the compact row too -------------------------
+   12.3 scoped the row to image mode, so a course with no banner image kept the
+   old wrapping layout: with the 12.10 order values applied to a `flex-wrap:
+   wrap` container the three groups broke onto three lines and the banner grew
+   to 338px — taller than the version this revision set out to shrink. Same
+   row, same rules, no image-specific parts (no scrim, no summary to suppress —
+   hero.php only emits the summary in image mode). */
+@media (min-width: 700px) {
+    body.format-aicourse .aicourse-hero-banner:not(.aicourse-hero-has-image) .aicourse-hero-content {
+        flex-direction: row;
+        flex-wrap: nowrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--acf-space-5);
+    }
+
+    body.format-aicourse .aicourse-hero-banner:not(.aicourse-hero-has-image) .aicourse-hero-lede {
+        flex: 1 1 auto;
+        min-inline-size: 0;
+        align-items: center;
+        text-align: center;
+        gap: 2px;
+    }
+
+    body.format-aicourse .aicourse-hero-banner:not(.aicourse-hero-has-image) .aicourse-hero-title {
+        font-size: var(--acf-hero-title-compact);
+        line-height: 1.15;
+        -webkit-line-clamp: 1;
+        line-clamp: 1;
+    }
+
+    body.format-aicourse .aicourse-hero-banner:not(.aicourse-hero-has-image) .aicourse-hero-meta {
+        margin: 0;
+        line-height: 1.2;
+    }
+
+    body.format-aicourse .aicourse-hero-banner:not(.aicourse-hero-has-image) .aicourse-hero-nav-progress {
+        flex: 0 1 auto;
+        inline-size: auto;
+    }
+
+    body.format-aicourse .aicourse-hero-banner:not(.aicourse-hero-has-image) .aicourse-hero-icons {
+        flex: 0 0 auto;
+        flex-wrap: nowrap;
+    }
+}
+
+/* The lede is always a COLUMN, and section 8 gives .aicourse-hero-title-wrap
+   `flex: 1 1 16rem`. In a column that basis is read as a BLOCK size, so the
+   title wrap reserved 256px of height inside the lede and the gradient-mode
+   banner came out 324px tall. Unconditional, because the lede is a column at
+   every width and in both modes. */
+body.format-aicourse .aicourse-hero-lede .aicourse-hero-title-wrap {
+    flex: 0 0 auto;
+    inline-size: 100%;
+    min-inline-size: 0;
+}
+
+/* Gradient mode never emits the summary today (hero.php gates it on image
+   mode), but it inherits --acf-text-on-media — white — so if that gate ever
+   changes the text lands invisible on the pale banner. Cheap insurance. */
+body.format-aicourse .aicourse-hero-banner:not(.aicourse-hero-has-image) .aicourse-hero-summary {
+    color: var(--acf-text-secondary);
+    text-shadow: none;
+}
+
+/* --- 12.13 Flat scrim, with a per-course opacity --------------------------
+   No gradients anywhere on the banner, by request. 12.9 flattened the
+   gradient-mode background; this flattens the last one — the scrim that sits
+   between the banner photo and the text.
+
+   The scrim cannot simply be deleted: white text over a near-white photo (which
+   is exactly what the AI banner generator produces) measures 1.1:1 without it.
+   So it becomes a FLAT alpha, published as a number in --acf-hero-scrim-a so a
+   course can set its own value. Contrast on the worst case — white text on a
+   pure-white image, black scrim at alpha a:
+       a = 0.40 ->  2.78:1   (below AA; only safe on images you control)
+       a = 0.55 ->  4.71:1   (Light,  clears WCAG AA's 4.5:1)
+       a = 0.62 ->  6.20:1   (Medium, the default)
+       a = 0.72 ->  9.24:1   (Strong)
+   Every pixel now gets the same treatment, which is the trade: the old ramps
+   left the right-hand 30% of the picture nearly clear, and a flat scrim cannot.
+
+   Precedence: the course setting (Hero image overlay opacity) wins, because it
+   arrives as an inline custom property on the banner. The site-wide Banner
+   overlay strength is the fallback for any course that has not set one.
+
+   The ::before wash is switched off outright rather than per-breakpoint — with
+   a flat scrim there is no vertical ramp left for it to shape. */
+body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-overlay::before {
+    content: none;
+}
+
+body.format-aicourse,
+body.format-aicourse.aicourse-scrim-medium {
+    --acf-hero-scrim-a: 0.62;
+}
+
+body.format-aicourse.aicourse-scrim-light {
+    --acf-hero-scrim-a: 0.55;
+}
+
+body.format-aicourse:not(.aicourse-scrim-medium):not(.aicourse-scrim-light) {
+    --acf-hero-scrim-a: 0.72;
+}
+
+/* One declaration, at the end, so it resolves whatever set the alpha — the
+   site class above or the course's inline --acf-hero-scrim-a. The <600px
+   vertical ramp from section 8 is overridden here too; it no longer applies. */
+body.format-aicourse,
+body.format-aicourse.aicourse-scrim-light,
+body.format-aicourse.aicourse-scrim-medium {
+    --acf-hero-scrim: rgba(2, 6, 23, var(--acf-hero-scrim-a, 0.62));
+}
+
+@media (max-width: 599px) {
+    body.format-aicourse {
+        --acf-hero-scrim: rgba(2, 6, 23, var(--acf-hero-scrim-a, 0.62));
+    }
+}
+
+/* --- 12.14 AI tutor chrome follows the accent colour -----------------------
+   The AI tutor's header, send button, buttons and message chips were pinned to
+   a fixed indigo ramp (--acf-ai-500/600/700 plus a violet), so on any site
+   whose brand is not indigo the tutor looked like a different product bolted
+   onto the course. They now derive from --acf-brand, which is the theme's
+   primary unless the site or the course overrides it with the Accent colour
+   setting — so one value drives the whole format, tutor included.
+
+   --acf-ai-gradient is kept as a NAME because ~6 rules reference it, but it is
+   no longer a gradient: same no-gradients rule as the banner.
+
+   Contrast: --acf-ai-fg is the accent darkened towards black rather than a
+   fixed indigo-700, so it holds its ratio against --acf-ai-bg (the accent at
+   9% on white / 22% on the dark surface) for any hue. White on the solid accent
+   is the theme's own primary-on-white pairing, which a theme is responsible
+   for keeping legible — the same assumption every button on the site makes. */
+body.format-aicourse {
+    --acf-ai-bg: color-mix(in srgb, var(--acf-brand) 9%, transparent);
+    --acf-ai-border: color-mix(in srgb, var(--acf-brand) 28%, transparent);
+    --acf-ai-fg: color-mix(in srgb, var(--acf-brand) 82%, #000);
+    --acf-ai-gradient: var(--acf-brand);
+    --acf-inverse-ai-tint: color-mix(in srgb, var(--acf-brand) 16%, transparent);
+}
+
+body.format-aicourse.aicourse-force-dark {
+    --acf-ai-bg: color-mix(in srgb, var(--acf-brand) 22%, transparent);
+    --acf-ai-border: color-mix(in srgb, var(--acf-brand) 34%, transparent);
+    /* Lightened, not darkened, so it stays readable on a dark surface. */
+    --acf-ai-fg: color-mix(in srgb, var(--acf-brand) 55%, #fff);
+}
+
+@media (prefers-color-scheme: dark) {
+    body.format-aicourse.aicourse-follow-os:not(.aicourse-force-light) {
+        --acf-ai-bg: color-mix(in srgb, var(--acf-brand) 22%, transparent);
+        --acf-ai-border: color-mix(in srgb, var(--acf-brand) 34%, transparent);
+        --acf-ai-fg: color-mix(in srgb, var(--acf-brand) 55%, #fff);
+    }
+}
+
+/* --- 12.15 Centre the title on the same axis as the meta row --------------
+   The title is a flex item with `min-inline-size: auto` (the default) and
+   `line-clamp: 1`, so it cannot wrap and its max-content width is the whole
+   unbroken line. That let it grow past its wrap, and because the wrap packs
+   items to flex-start the overflow all went one way: the title's optical
+   centre sat ~100px to the right of the meta row's. Pinning it to its wrap's
+   width and allowing it to shrink puts both rows on one axis. */
+body.format-aicourse .aicourse-hero-title-wrap {
+    align-items: center;
+}
+
+body.format-aicourse .aicourse-hero-title {
+    inline-size: 100%;
+    max-inline-size: 100%;
+    min-inline-size: 0;
+    align-self: stretch;
+}
+
+/* In list mode the header is a fixed-width leading column in a centred row, so
+   its own contents must centre too — the grid-mode header aligns its icon and
+   time badge to the top of a tall card, which in a 60px row left them sitting
+   above the centre line of the title beside them. */
+@media (min-width: 700px) {
+    body.format-aicourse.aicourse-cardlist .aicourse-card .aicourse-card-header {
+        align-items: center;
+    }
+
+    body.format-aicourse.aicourse-cardlist .aicourse-card .aicourse-card-header > * {
+        align-self: center;
+    }
+}
+
+/* The bar container shrank to zero once the progress cluster stopped growing
+   (12.11 set the cluster to `flex: 0 1 auto`, and the track's `inline-size:
+   100%` contributes no max-content width to a shrink-to-fit parent). It gets an
+   explicit basis so the bar is actually drawn beside the ring. */
+@media (min-width: 700px) {
+    body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-progress-bar-container {
+        flex: 0 1 18rem;
+        min-inline-size: 7rem;
+    }
+}
+
+/* --- 12.16 Section-page circle row: size to content, never scroll ----------
+   The previous rule capped .aicourse-progress-bar-container at 18rem so the
+   home page's progress BAR had a sensible width. On a section page that same
+   container holds the numbered activity circles instead, and the cap turned it
+   into a ~100px scroll box: the circles overlapped the ring, circle 1 sat under
+   the prev chevron, and a horizontal scrollbar appeared inside the banner.
+
+   The two cases are told apart by what the container actually holds, so each
+   gets the sizing it needs and neither has to know about the other. :has() is
+   the right tool: the parent's layout genuinely depends on its child here. */
+@media (min-width: 700px) {
+    /* Home page: the bar. A basis, so it shares the row. */
+    body.format-aicourse .aicourse-hero-banner
+    .aicourse-progress-bar-container:has(.aicourse-progress-bar-track) {
+        flex: 0 1 18rem;
+        min-inline-size: 7rem;
+        max-inline-size: 20rem;
+    }
+
+    /* Section page: the circles. Sized by content and NOT allowed to shrink —
+       the title beside it has min-inline-size 0 and truncates instead, which is
+       the right thing to give up. */
+    body.format-aicourse .aicourse-hero-banner
+    .aicourse-progress-bar-container:has(.aicourse-activity-number-circles) {
+        flex: 0 0 auto;
+        min-inline-size: 0;
+        max-inline-size: none;
+    }
+
+    /* The whole cluster follows: it may not be squeezed below its contents. */
+    body.format-aicourse .aicourse-hero-banner
+    .aicourse-hero-nav-progress:has(.aicourse-activity-number-circles) {
+        flex: 0 0 auto;
+    }
+}
+
+/* Section 8 makes the circle row a horizontally scrollable strip so a long
+   course can never clip circles. With the row now sized to its content the
+   scrollbar is dead chrome that was drawing across the banner — and on a
+   narrow viewport, where scrolling IS still needed, it should be invisible
+   rather than a grey bar over the photo. Scrolling itself is untouched. */
+body.format-aicourse .aicourse-activity-number-circles {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+body.format-aicourse .aicourse-activity-number-circles::-webkit-scrollbar {
+    display: none;
+}
+
+/* ==========================================================================
+   13. THE THREE THINGS 12.x GOT WRONG  (ACF-FIX-2.1.25)
+   ========================================================================== */
+
+/* --- 13.1 The title's off-centre text -------------------------------------
+   ROOT CAUSE, and it is not the alignment properties. Section 8 reserves
+   `padding-inline-end: 13rem` (208px) on the title and summary, to clear the
+   icon pill that used to be ABSOLUTELY POSITIONED in the banner's top-right
+   corner. 12.3 took the pill out of absolute positioning and made it a normal
+   item at the start of the row — but the reservation stayed. 208px of dead
+   padding on the inline-end of a centred text block moves its optical centre
+   exactly 104px towards the inline-start, which is the offset that was visible
+   against the meta row (which has no such padding and so was centred properly).
+
+   Everything else I checked and ruled out: `text-align: center` was applied and
+   inherited; `align-items: center` was set on the lede and the title wrap;
+   `max-inline-size: 46rem` was already overridden to 100%; the lede and the
+   title wrap measured identical boxes. The title's border box measured
+   1217px inside a 1009px wrap — 1009 + 208. That was the whole story.
+
+   The reservation is only correct while the pill is absolute, which is now
+   only below 600px, so it is scoped to exactly that case. */
+@media (min-width: 600px) {
+    body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image
+    :is(.aicourse-hero-title, .aicourse-hero-summary) {
+        padding-inline-end: 0;
+    }
+}
+
+/* --- 13.2 The overlay opacity setting that did nothing --------------------
+   ROOT CAUSE, also mine. 12.13 declared
+
+       body.format-aicourse { --acf-hero-scrim: rgba(2, 6, 23, var(--acf-hero-scrim-a, 0.62)); }
+
+   and expected the course's inline --acf-hero-scrim-a (written onto the hero
+   wrap by get_accent_style()) to feed it. It cannot: a custom property's value
+   is substituted at the element where the property is DECLARED, not where it is
+   used. --acf-hero-scrim was therefore resolved once, on <body>, against the
+   body's own alpha — so the course setting was inherited by the banner and then
+   never read by anything.
+
+   The fix is to resolve the alpha on the element that actually paints it. The
+   overlay inherits --acf-hero-scrim-a from the hero wrap, so the course value
+   wins there, and the site-wide Banner overlay strength classes still provide
+   the fallback on <body>. */
+body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-overlay {
+    background: rgba(2, 6, 23, var(--acf-hero-scrim-a, 0.45));
+}
+
+/* Belt and braces: every other dark layer that could stack on top of the
+   overlay is accounted for here, so "the overlay" means exactly one thing.
+     - the ::before inline-start wash (12.13 retired it; restated)
+     - the banner's own --acf-neutral-900 backdrop, which is only ever visible
+       through a transparent image, never over one. */
+body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-overlay::before,
+body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-overlay::after {
+    content: none;
+}
+
+/* Lighter out of the box. 45% still clears WCAG AA (4.5:1) on a mid-tone image;
+   it is below the 55% needed for the pure-white worst case, which is the
+   deliberate trade for images that are not white. Raise "Hero image overlay
+   opacity" per course if your banners are pale. */
+body.format-aicourse,
+body.format-aicourse.aicourse-scrim-medium {
+    --acf-hero-scrim-a: 0.45;
+}
+
+body.format-aicourse.aicourse-scrim-light {
+    --acf-hero-scrim-a: 0.32;
+}
+
+body.format-aicourse:not(.aicourse-scrim-medium):not(.aicourse-scrim-light) {
+    --acf-hero-scrim-a: 0.62;
+}
+
+/* --- 13.3 Nothing is truncated -------------------------------------------
+   The title takes two lines and the banner grows to fit them, rather than
+   clipping to one. min-block-size stays a floor, so a one-line title keeps the
+   compact 88-120px banner and only a long name makes it taller. */
+body.format-aicourse .aicourse-hero-banner .aicourse-hero-title {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: visible;
+    text-overflow: clip;
+    overflow-wrap: break-word;
+}
+
+body.format-aicourse .aicourse-hero-banner {
+    block-size: auto;
+}
+
+@media (min-width: 700px) {
+    body.format-aicourse .aicourse-hero-banner .aicourse-hero-content {
+        align-items: center;
+    }
+}
+
+/* ==========================================================================
+   14. FIXED ZONES, AUTO-SIZED CONTENT  (ACF-FIX-2.1.26)
+   --------------------------------------------------------------------------
+   The banner is three zones that cannot collide, because they are grid tracks
+   rather than flex items competing for the same space:
+
+       [ actions ]   [ title + meta ]   [ progress ]
+          auto             1fr             auto
+
+   The outer two are sized by their content and never shrink. The middle takes
+   whatever is left. Nothing overlaps by construction, so no rule in here has
+   to nudge anything back into place.
+
+   Inside the middle and the right-hand zones the CONTENT resizes instead of
+   being cut off:
+     - the title gets two lines and steps down through a type scale as the
+       course name gets longer (tier class from hero.php);
+     - the activity circles get two rows and step down through a size scale as
+       the count rises (tier class from hero.php).
+   Nothing is ever truncated, ellipsised or scrolled.
+   ========================================================================== */
+
+@media (min-width: 700px) {
+    body.format-aicourse .aicourse-hero-banner .aicourse-hero-content {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        align-items: center;
+        column-gap: var(--acf-space-5);
+        row-gap: 0;
+    }
+
+    /* Explicit placement, so the visual order no longer depends on `order`
+       values and the DOM order stays free to be the reading order. */
+    body.format-aicourse .aicourse-hero-banner .aicourse-hero-icons {
+        grid-column: 1;
+    }
+
+    body.format-aicourse .aicourse-hero-banner :is(
+    .aicourse-hero-lede,
+    .aicourse-hero-title-group) {
+        grid-column: 2;
+        min-inline-size: 0;
+    }
+
+    body.format-aicourse .aicourse-hero-banner .aicourse-hero-nav-progress {
+        grid-column: 3;
+    }
+}
+
+/* --- 14.1 Title: two lines, auto-sized, never cut ------------------------- */
+body.format-aicourse .aicourse-hero-banner .aicourse-hero-title {
+    display: block;
+    overflow: visible;
+    text-overflow: clip;
+    -webkit-line-clamp: none;
+    line-clamp: none;
+    overflow-wrap: break-word;
+    /* Two lines is the zone. A title that needs more than two lines at its tier
+       has already stepped down to a smaller tier, so it fits. */
+    line-height: 1.15;
+    text-wrap: balance;
+}
+
+/* The tiers. Each is roughly 0.85x the one above, which is a big enough step to
+   buy a whole line back and small enough that adjacent courses do not look like
+   they use different designs. */
+body.format-aicourse .aicourse-hero-title.aicourse-title-xl {
+    font-size: clamp(1.25rem, 0.95rem + 1.5vw, 1.75rem);
+}
+
+body.format-aicourse .aicourse-hero-title.aicourse-title-lg {
+    font-size: clamp(1.125rem, 0.9rem + 1.15vw, 1.5rem);
+}
+
+body.format-aicourse .aicourse-hero-title.aicourse-title-md {
+    font-size: clamp(1rem, 0.85rem + 0.8vw, 1.25rem);
+}
+
+body.format-aicourse .aicourse-hero-title.aicourse-title-sm {
+    font-size: clamp(0.9375rem, 0.82rem + 0.6vw, 1.125rem);
+}
+
+body.format-aicourse .aicourse-hero-title.aicourse-title-xs {
+    font-size: clamp(0.875rem, 0.8rem + 0.4vw, 1rem);
+}
+
+/* --- 14.2 Circles: two rows, auto-sized, never scrolled ------------------- */
+/* Section 8 made this a single scrolling strip. It is now a wrapping grid with
+   a hard two-row zone: the tier classes shrink the circles so every one of them
+   fits inside it. max-inline-size keeps the zone from eating the title's track
+   on a wide banner. */
+body.format-aicourse .aicourse-activity-number-circles {
+    display: flex;
+    flex-wrap: wrap;
+    align-content: center;
+    justify-content: flex-end;
+    gap: 4px;
+    overflow: visible;
+    max-inline-size: 22rem;
+}
+
+body.format-aicourse .aicourse-circles-xl .aicourse-activity-number {
+    inline-size: 2rem;
+    block-size: 2rem;
+    font-size: 0.8125rem;
+}
+
+body.format-aicourse .aicourse-circles-lg .aicourse-activity-number {
+    inline-size: 1.75rem;
+    block-size: 1.75rem;
+    font-size: 0.75rem;
+}
+
+body.format-aicourse .aicourse-circles-md .aicourse-activity-number {
+    inline-size: 1.5rem;
+    block-size: 1.5rem;
+    font-size: 0.6875rem;
+}
+
+body.format-aicourse .aicourse-circles-sm .aicourse-activity-number {
+    inline-size: 1.25rem;
+    block-size: 1.25rem;
+    font-size: 0.625rem;
+}
+
+body.format-aicourse .aicourse-circles-xs .aicourse-activity-number {
+    inline-size: 1rem;
+    block-size: 1rem;
+    font-size: 0.5625rem;
+}
+
+/* A circle is a touch target, so below the row breakpoint -- where the banner is
+   a column with room to spare -- they go back to full size regardless of tier.
+   Shrinking them to 16px on the device with the least precise pointer would be
+   exactly backwards. */
+@media (max-width: 699px) {
+    body.format-aicourse [class*="aicourse-circles-"] .aicourse-activity-number {
+        inline-size: 1.75rem;
+        block-size: 1.75rem;
+        font-size: 0.75rem;
+    }
+
+    body.format-aicourse .aicourse-activity-number-circles {
+        max-inline-size: none;
+        justify-content: flex-start;
+    }
+}
+
+/* ==========================================================================
+   15. CLOSING THE BAND ABOVE THE CONTENT  (ACF-FIX-2.1.28)
+   --------------------------------------------------------------------------
+   Hiding the secondary navigation with `display: none` removes the tabs but
+   NOT the space they sat in: the theme's #page-header band above them, the
+   nav's own container margin, and the top padding on the content region all
+   survive, so the cards stayed pinned a long way below the banner with nothing
+   in between. Every one of those is collapsed here, but only in the exact case
+   where it is safe to: the tabs are hidden AND the user is not editing.
+   ========================================================================== */
+
+/* The header band. It is empty on a course page for a student — no heading, no
+   breadcrumb — so with the tabs gone there is nothing left in it to show. */
+body.format-aicourse.aicourse-hidenav-all:not(.editing):not(.editingon):not(.editing-mode) #page-header,
+body.format-aicourse.aicourse-hidenav-students:not(.aicourse-can-edit):not(.editing):not(.editingon):not(.editing-mode) #page-header {
+    display: none;
+}
+
+/* The nav's own spacing, and the wrappers that carry it. `display: none` on the
+   <nav> does not collapse a margin on its parent. */
+body.format-aicourse.aicourse-hidenav-all:not(.editing):not(.editingon):not(.editing-mode)
+:is(#page-content, #region-main-box, #region-main, .main-inner, .secondary-navigation),
+body.format-aicourse.aicourse-hidenav-students:not(.aicourse-can-edit):not(.editing):not(.editingon):not(.editing-mode)
+:is(#page-content, #region-main-box, #region-main, .main-inner, .secondary-navigation) {
+    margin-block-start: 0;
+    padding-block-start: 0;
+}
+
+/* And the banner keeps its own 12px, so the cards sit one gutter below it
+   rather than welded to its lower edge. */
+body.format-aicourse.aicourse-hidenav-all:not(.editing):not(.editingon):not(.editing-mode) .aicourse-cards-container,
+body.format-aicourse.aicourse-hidenav-students:not(.aicourse-can-edit):not(.editing):not(.editingon):not(.editing-mode) .aicourse-cards-container {
+    margin-block-start: var(--acf-space-4);
+}
+
+/* --- 15.1 The percentage inside the ring ---------------------------------
+   The ring shrank from 80px to 56px in the compact banner but its text did
+   not, so "43%" ran to the inner edge of the stroke and read as clipped. The
+   type is now sized as a fraction of the ring itself and the box is inset by
+   the stroke width, which keeps a real gap at every ring size instead of one
+   that happens to work at the size it was designed against. */
+/* Specificity note: two rules in section 9 set this font-size at (0,3,0) —
+   one for each banner mode — so a (0,2,0) selector loses to both. Matching
+   their shape rather than reaching for !important. */
+body.format-aicourse .aicourse-hero-banner:not(.aicourse-hero-has-image) .aicourse-progress-ring-text,
+body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-progress-ring-text {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* Section 9 centres this with inset-*-start: 50% plus a -50%/-50% translate.
+       Stretching it to fill the ring instead lets flexbox do the centring, and
+       the padding then reads as a real inset from the stroke. The translate MUST
+       be cleared with it or the box is dragged half its size up and to the
+       start — which put the percentage outside the circle entirely. */
+    inset: 0;
+    transform: none;
+    padding: 18%;
+    font-size: clamp(0.625rem, 0.42rem + 0.55vw, 0.8125rem);
+    line-height: 1;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+}
+
+/* ==========================================================================
+   16. THE BAND ABOVE THE TABS  (ACF-FIX-2.1.30)
+   --------------------------------------------------------------------------
+   Section 15 only collapsed the top-of-page whitespace when the navigation
+   tabs were HIDDEN. That was too narrow: the empty band is there whether or
+   not the tabs are shown — it is the theme's #page-header region, which on a
+   course page carries a heading this format already renders in the banner and
+   is therefore blank, plus the top padding of the content region.
+
+   With the banner lifted to the top of the page (heroattop) the result was
+   banner, ~90px of nothing, tabs, more nothing, cards.
+
+   So the collapse is now tied to the banner being at the top, which is the
+   condition that actually makes the band redundant, rather than to the tabs
+   being hidden. Edit mode is still excluded — a teacher needs the header
+   region for course-level controls — and if the banner has NOT been lifted
+   nothing here applies, so a site that turns heroattop off keeps the theme's
+   normal spacing untouched.
+
+   Scoped by [data-aicourse-atop], the attribute heroatop.js sets on the banner
+   once it has actually moved it. That means the rule cannot fire on a theme
+   where the move silently failed, which would otherwise strip the header band
+   and leave the banner still sitting below it.
+   ========================================================================== */
+
+body.format-aicourse:not(.editing):not(.editingon):not(.editing-mode):has(.aicourse-hero-sticky-wrap[data-aicourse-atop]) #page-header {
+    display: none;
+}
+
+body.format-aicourse:not(.editing):not(.editingon):not(.editing-mode):has(.aicourse-hero-sticky-wrap[data-aicourse-atop])
+:is(#page-content, #region-main-box, #region-main, .main-inner) {
+    margin-block-start: 0;
+    padding-block-start: 0;
+}
+
+/* The tab row's own breathing space, when it is shown. It should sit close
+   under the banner, not float in the middle of a band. */
+body.format-aicourse:not(.editing):not(.editingon):not(.editing-mode):has(.aicourse-hero-sticky-wrap[data-aicourse-atop]) .secondary-navigation {
+    margin-block: 0 var(--acf-space-3);
+}
+
+/* :has() is unsupported on a small tail of older browsers, where the rules
+   above are simply skipped and the theme's spacing survives — a cosmetic
+   fallback, not a broken page. For those, the same collapse keyed off the body
+   class the server writes, which is the closest signal available without it. */
+@supports not selector(:has(*)) {
+    body.format-aicourse.aicourse-hero-attop:not(.editing):not(.editingon):not(.editing-mode) #page-header {
+        display: none;
+    }
+
+    body.format-aicourse.aicourse-hero-attop:not(.editing):not(.editingon):not(.editing-mode)
+    :is(#page-content, #region-main-box, #region-main, .main-inner) {
+        margin-block-start: 0;
+        padding-block-start: 0;
+    }
+}
+
+/* ==========================================================================
+   17. TIGHTENING THE TOP OF THE PAGE  (ACF-FIX-2.1.31)
+   --------------------------------------------------------------------------
+   Measured on the preview at 1440px with the banner lifted and the tabs shown:
+   banner -> tabs 46px, tabs -> cards 36px. With the tabs HIDDEN those two
+   collapse into one gap, and 46 + 36 of inherited spacing is far more than the
+   one deliberate step the design wants there.
+
+   Zero is wrong, though: the banner has a drop shadow and a rounded lower edge,
+   and butting the first card straight against it reads as a rendering fault
+   rather than as a decision. A negative value would clip the shadow outright.
+   One space-4 (20px) is the smallest gap that still lets the banner's shadow
+   resolve — that is the value below, and it replaces everything else rather
+   than adding to it.
+   ========================================================================== */
+
+body.format-aicourse:not(.editing):not(.editingon):not(.editing-mode):has(.aicourse-hero-sticky-wrap[data-aicourse-atop]) {
+    /* One place to change the whole top-of-page rhythm. */
+    --acf-topgap: var(--acf-space-4);
+}
+
+body.format-aicourse:not(.editing):not(.editingon):not(.editing-mode):has(.aicourse-hero-sticky-wrap[data-aicourse-atop])
+.aicourse-hero-sticky-wrap {
+    margin-block-end: 0;
+}
+
+/* Whichever comes first after the banner — the tab row, or the cards when the
+   tabs are hidden — carries the single gap. */
+body.format-aicourse:not(.editing):not(.editingon):not(.editing-mode):has(.aicourse-hero-sticky-wrap[data-aicourse-atop])
+:is(.secondary-navigation, .format-aicourse-container) {
+    margin-block-start: var(--acf-topgap);
+}
+
+body.format-aicourse:not(.editing):not(.editingon):not(.editing-mode):has(.aicourse-hero-sticky-wrap[data-aicourse-atop])
+:is(.aicourse-cards-container, .aicourse-activity-cards-container) {
+    margin-block-start: 0;
+}
+
+/* When the tabs ARE shown they own the gap above them, and the cards sit their
+   own step below the tabs rather than inheriting a second full gap. */
+body.format-aicourse:not(.editing):not(.editingon):not(.editing-mode):has(.aicourse-hero-sticky-wrap[data-aicourse-atop])
+.secondary-navigation {
+    margin-block-end: var(--acf-space-3);
+}
+
+body.format-aicourse:not(.editing):not(.editingon):not(.editing-mode):has(.aicourse-hero-sticky-wrap[data-aicourse-atop])
+.secondary-navigation ~ * .format-aicourse-container {
+    margin-block-start: 0;
+}
+
+/* Section 15 gives .aicourse-cards-container a 20px top margin when the tabs
+   are hidden, and section 17 zeroes it — but 15's selector carries the
+   .aicourse-hidenav-* class and therefore wins on specificity, so the two
+   margins stacked and the measured banner-to-card gap came out at 54px instead
+   of 20. Matching 15's selector shape settles it, and .course-content's own 8px
+   goes with it so the single deliberate gap is the only thing left. */
+body.format-aicourse:is(.aicourse-hidenav-all, .aicourse-hidenav-students):not(.editing):not(.editingon):not(.editing-mode):has(.aicourse-hero-sticky-wrap[data-aicourse-atop])
+:is(.aicourse-cards-container, .aicourse-activity-cards-container, .course-content) {
+    margin-block-start: 0;
+    padding-block-start: 0;
+}
+
+body.format-aicourse:not(.editing):not(.editingon):not(.editing-mode):has(.aicourse-hero-sticky-wrap[data-aicourse-atop])
+.course-content {
+    padding-block-start: 0;
 }

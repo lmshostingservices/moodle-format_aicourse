@@ -74,6 +74,27 @@ class before_footer_html_generation {
             return;
         }
 
+        // ACF-FIX-2.1.26: lift the banner to the very top of the page.
+        //
+        // This runs before the hero-injection branch below and independently of it, because the
+        // two cases are different: course/view.php renders its own banner in format.php and gets
+        // no injected one, but it still needs lifting. The module is a no-op when there is no
+        // banner on the page, when one has already been lifted, or in edit mode, so loading it
+        // unconditionally on aicourse pages costs one cached AMD request and nothing else.
+        //
+        // Why JavaScript at all: format.php is included AFTER $OUTPUT->header() has written the
+        // navbar, #page-header and the secondary navigation, so a course format has no
+        // server-side insertion point above them, and the banner and the nav are in different
+        // non-sibling subtrees so no CSS ordering reaches across. See amd/src/heroatop.js.
+        try {
+            $atopoptions = course_get_format($COURSE)->get_format_options();
+            if (!empty($atopoptions['heroattop']) && !$PAGE->user_is_editing()) {
+                $PAGE->requires->js_call_amd('format_aicourse/heroatop', 'init');
+            }
+        } catch (\Throwable $e) {
+            unset($e);
+        }
+
         // Check if we're on the main course page (all sections) vs single section view.
         $sectionparam = optional_param('section', null, PARAM_INT);
         $sectionidparam = optional_param('id', 0, PARAM_INT);

@@ -112,6 +112,9 @@ if ($hassiteconfig) {
         'format_aicourse/scrimstrength',
         get_string('scrimstrength', 'format_aicourse'),
         get_string('scrimstrength_desc', 'format_aicourse'),
+        // ACF-FIX-2.1.25: superseded by "Hero image overlay opacity", which expresses the same
+        // thing as a number and can be set per course. Kept because existing sites have a value
+        // stored here and it is still the fallback for any course whose own overlay is -1.
         'medium',
         [
             'light' => get_string('scrimstrength_light', 'format_aicourse'),
@@ -133,6 +136,27 @@ if ($hassiteconfig) {
         ]
     ));
 
+    // ACF-FIX-2.1.23: site-wide accent colour. Everything the format tints —
+    // the hero background, card borders, icon wells, the focus ring — derives
+    // from --acf-brand, which normally inherits the theme's primary. This
+    // overrides it for aicourse pages only. Empty = keep following the theme.
+    // admin_setting_configcolourpicker gives the real picker-and-swatches UI;
+    // it stores '' or a #rrggbb string and validates that itself.
+    $settings->add(new admin_setting_configcolourpicker(
+        'format_aicourse/defaultaccentcolour',
+        get_string('accentcolour', 'format_aicourse'),
+        get_string('accentcolour_desc', 'format_aicourse'),
+        ''
+    ));
+
+    $settings->add(new admin_setting_configtext(
+        'format_aicourse/defaultherobannerfade',
+        get_string('herobannerfade', 'format_aicourse'),
+        get_string('herobannerfade_desc', 'format_aicourse'),
+        3,
+        PARAM_INT
+    ));
+
     $settings->add(new admin_setting_configcheckbox(
         'format_aicourse/defaultshowherobanner',
         get_string('showherobanner', 'format_aicourse'),
@@ -145,5 +169,130 @@ if ($hassiteconfig) {
         get_string('displayascards', 'format_aicourse'),
         get_string('displayascards_desc', 'format_aicourse'),
         1
+    ));
+
+    // ACF-FIX-2.1.25 (settings audit). Every course format option now has a site-level default
+    // here, so what an administrator sets on this page is genuinely what a new course starts
+    // with. Twelve of these did not exist before: the course form fell back to a value hard
+    // coded in lib.php and this page had no say at all.
+    //
+    // Naming contract, relied on by format_aicourse::site_default(): the setting is always
+    // 'default' . <the course option name>. Do not rename one side without the other.
+    //
+    // Each reuses the course option's own label string, so the admin page and the course
+    // settings form can never drift apart in wording.
+
+    $settings->add(new admin_setting_configselect(
+        'format_aicourse/defaulthidesecondarynav',
+        get_string('hidesecondarynav', 'format_aicourse'),
+        get_string('sitedefault_desc', 'format_aicourse'),
+        1,
+        [
+            0 => get_string('hidesecondarynav_show', 'format_aicourse'),
+            1 => get_string('hidesecondarynav_students', 'format_aicourse'),
+            2 => get_string('hidesecondarynav_all', 'format_aicourse'),
+        ]
+    ));
+
+    // ACF-FIX-2.1.31: the override, deliberately placed next to the default so the difference
+    // is visible. "Follow each course" is the safe value and stays the shipped behaviour.
+    $settings->add(new admin_setting_configselect(
+        'format_aicourse/forcehidesecondarynav',
+        get_string('forcehidesecondarynav', 'format_aicourse'),
+        get_string('forcehidesecondarynav_desc', 'format_aicourse'),
+        -1,
+        [
+            -1 => get_string('forcehidesecondarynav_follow', 'format_aicourse'),
+            0 => get_string('hidesecondarynav_show', 'format_aicourse'),
+            1 => get_string('hidesecondarynav_students', 'format_aicourse'),
+            2 => get_string('hidesecondarynav_all', 'format_aicourse'),
+        ]
+    ));
+
+    $settings->add(new admin_setting_configcheckbox(
+        'format_aicourse/defaultheroattop',
+        get_string('heroattop', 'format_aicourse'),
+        get_string('sitedefault_desc', 'format_aicourse'),
+        1
+    ));
+
+    $settings->add(new admin_setting_configselect(
+        'format_aicourse/defaultcardlayout',
+        get_string('cardlayout', 'format_aicourse'),
+        get_string('sitedefault_desc', 'format_aicourse'),
+        0,
+        [
+            0 => get_string('cardlayout_grid', 'format_aicourse'),
+            1 => get_string('cardlayout_list', 'format_aicourse'),
+        ]
+    ));
+
+    $settings->add(new admin_setting_configselect(
+        'format_aicourse/defaultactivitydisplaymode',
+        get_string('activitydisplaymode', 'format_aicourse'),
+        get_string('sitedefault_desc', 'format_aicourse'),
+        1,
+        [
+            0 => get_string('activitydisplaystandard', 'format_aicourse'),
+            1 => get_string('activitydisplaycards', 'format_aicourse'),
+        ]
+    ));
+
+    $settings->add(new admin_setting_configcheckbox(
+        'format_aicourse/defaultshowactivitiesoncards',
+        get_string('showactivitiesoncards', 'format_aicourse'),
+        get_string('sitedefault_desc', 'format_aicourse'),
+        0
+    ));
+
+    $settings->add(new admin_setting_configcheckbox(
+        'format_aicourse/defaultshownavchevrons',
+        get_string('shownavchevrons', 'format_aicourse'),
+        get_string('sitedefault_desc', 'format_aicourse'),
+        1
+    ));
+
+    $settings->add(new admin_setting_configtext(
+        'format_aicourse/defaultcardactivitylimit',
+        get_string('cardactivitylimit', 'format_aicourse'),
+        get_string('cardactivitylimit_desc', 'format_aicourse'),
+        0,
+        PARAM_INT
+    ));
+
+    $settings->add(new admin_setting_configtext(
+        'format_aicourse/defaultcardtitlesize',
+        get_string('cardtitlesize', 'format_aicourse'),
+        get_string('sitedefault_desc', 'format_aicourse'),
+        14,
+        PARAM_INT
+    ));
+
+
+
+
+    $settings->add(new admin_setting_configselect(
+        'format_aicourse/defaultshowcourseindex',
+        get_string('showcourseindex', 'format_aicourse'),
+        get_string('sitedefault_desc', 'format_aicourse'),
+        7,
+        [
+            0 => get_string('courseindex_none', 'format_aicourse'),
+            1 => get_string('courseindex_home', 'format_aicourse'),
+            2 => get_string('courseindex_section', 'format_aicourse'),
+            3 => get_string('courseindex_home_section', 'format_aicourse'),
+            4 => get_string('courseindex_activity', 'format_aicourse'),
+            5 => get_string('courseindex_home_activity', 'format_aicourse'),
+            6 => get_string('courseindex_section_activity', 'format_aicourse'),
+            7 => get_string('courseindex_all', 'format_aicourse'),
+        ]
+    ));
+
+    $settings->add(new admin_setting_configtext(
+        'format_aicourse/defaultheroimageoverlay',
+        get_string('heroimageoverlay', 'format_aicourse'),
+        get_string('heroimageoverlay_desc', 'format_aicourse'),
+        45,
+        PARAM_INT
     ));
 }

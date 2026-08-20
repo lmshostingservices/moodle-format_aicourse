@@ -2,71 +2,65 @@
 
 All notable changes to this plugin will be documented in this file.
 
-## [2.1.24] - 2026-08-20
+## [2.1.34] - 2026-08-20
 
-Full audit pass covering activity coverage, endpoint wiring and credit handling.
+Ports the outstanding fixes from the parallel 2.1.24 line onto this branch, and sorts the
+language file.
 
 ### Fixed
 
-- **The AI Tutor could not see any label activity.** `get_course_content_for_ai()` filtered with
-  `if (!$cm->uservisible || !$cm->url) continue;`. Labels have no view URL by design — they render
-  inline on the course page — so every one was dropped before it reached the index. Labels are
-  where teachers put headings, instructions and framing text, so this removed real teaching content
-  from what the tutor can read. The switch below the guard already carried a `case 'label':` branch,
-  which the guard made unreachable: indexing them was always the intent. `mod_subsection` and any
-  future view-less module were in the same position. `$cm->url` was used nowhere else in the loop.
+- **The AI Tutor could not see any label activity.** `contentindex::get_course_content_for_ai()`
+  filtered with `if (!$cm->uservisible || !$cm->url) continue;`. Labels have no view URL by design
+  — they render inline on the course page — so every one was dropped before reaching the index.
+  Labels are where teachers put headings, instructions and framing text, so this removed real
+  teaching content from what the tutor can read. The switch below the guard already carried a
+  `case 'label':` branch that the guard made unreachable, so indexing them was always the intent.
+  `mod_subsection` was in the same position. `$cm->url` was used nowhere else in the loop.
 
-  Verified on a course containing 14 activities of 14 different types: 13 indexed before, **14 of
-  14 after**.
+  Verified on a course of 14 activities spanning 14 module types: 13 indexed before, **14 of 14
+  after**.
 
-- **"Out of credits" and "invalid API key" were indistinguishable from an outage.** Both
-  integrations collapsed every non-200 response into a single generic message, writing the real
-  status only to `debugging()` — which is off on production sites, so the one place the answer
-  existed was the one place nobody looks.
+- **The AI Tutor reported "out of credits" and "bad API key" as an unspecified error.** Non-200
+  responses all collapsed into `aiassistant_error`, with the real status going to `debugging()`
+  only — off on production sites, so the answer existed only where nobody looks. The service
+  returns 401 for a bad key or mismatched site URL and 402 for insufficient credits; these now map
+  to specific translated messages. Unknown statuses still fall through to the generic message.
 
-  The service returns **401** for a bad key or mismatched site URL and **402** for insufficient
-  credits (confirmed against the service's own code). These now map to specific, translated
-  messages naming the actual cause, on both the tutor and the banner. Unknown statuses still fall
-  through to the previous generic message.
+  Deliberately **not** applied to the banner endpoint: `describe_failure()` (2.1.26) already does
+  this better there, surfacing the service's own text. That is safe for the banner because it
+  requires `moodle/course:update`, but not for the tutor, which students can reach — so the tutor
+  uses fixed translated strings and never echoes remote text.
 
-## [2.1.23] - 2026-08-19
+- **The language file was not in alphabetical order** — 433 ordering breaks, which Moodle's coding
+  style requires it not to have. Re-sorted; verified lossless by loading both versions and
+  comparing: 442 strings before and after, none missing, none added, no value altered.
 
 ### Changed
 
-- **The hero banner is roughly half its previous height on every screen size.** Measured before
-  and after in a real browser:
+- `$plugin->version` is 2026082002, which clears the 2026082000 currently installed on the
+  production site. Moodle refuses any lower number as a downgrade.
 
-  | Viewport | Before | After |
-  |---|---|---|
-  | 1440px | 232px | **128px** |
-  | 1024px | 214px | **114px** |
-  | 768px  | 206px | **109px** |
-  | 430px  | 255px | **166px** |
-  | 390px  | 254px | **165px** |
-  | 320px  | 279px | **190px** |
+## [2.1.33] - 2026-08-20
 
-  Four things were making it tall, and only the last was obvious:
+### Fixed
 
-  1. **Image mode stacked its content in a column** — title, summary, meta and progress each
-     claiming a row — while the right two thirds of the banner sat empty. It is now a single row
-     with the text on the left and the progress cluster at the end, which uses width that was
-     already there. Below 700px it becomes a wrapping row, so the text still takes full lines but
-     the progress cluster shares the last line with the icon pill rather than taking a row of its
-     own.
-  2. **`--acf-hero-image-min-h` was `clamp(9.5rem, 5.5rem + 13vw, 14.5rem)`** — 152px to 232px.
-     This, not the course's own `herobannerheight`, was what actually set the height: at 1440px it
-     resolved to 232px and overrode a 96px setting entirely. Now 88px to 128px.
-  3. **The prev/next spacers were dead weight.** `.aicourse-hero-nav-spacer` exists to balance a
-     centred chevron row when one chevron is missing. Gradient mode dropped them long ago; image
-     mode kept them. On a course page, which has no chevrons at all, the two spacers *were* the
-     entire progress cluster — 100px of empty boxes, and at 320px they were what pushed the icon
-     pill onto a second row. Hidden in both modes now; section pages still show real chevrons.
-  4. **The default `herobannerheight` is 96, down from 180.** Courses that never saved their
-     format settings pick this up; a course with a stored value keeps it, since that was a
-     deliberate choice.
+- **Two stale unit tests.** `content_test` still asserted the card activity list was capped at 4,
+  but 2.1.25 replaced that hard-coded cap with the `cardactivitylimit` course setting, which
+  defaults to 0 ("list every activity"). The code was right and the tests had not followed; they
+  now set an explicit limit of 4, since what they actually test is the overflow chip.
+- **Seven phpcs errors** in `classes/output/courseformat/hero.php` and `activityhero.php` —
+  consecutive blank lines inside functions, and a multi-line function call whose parenthesis and
+  indentation were wrong. Auto-fixed; both Moodle standards now report zero.
+- **`--acf-navband` removed.** Declared in one rule and consumed nowhere in the CSS, JS, PHP or
+  templates. Removing it also cleared the only `length-zero-no-unit` warning.
+- Reworded the `accentcolour` comment in `lib.php` so it no longer contains the literal token the
+  release pipeline greps for, and capitalised the inline comment on the overlay default.
 
-  Verified at six viewports from 320px to 1440px, on both course and section pages: no horizontal
-  overflow, no clipped content, and no collision between the title text and the progress cluster.
+### Changed
+
+- **`$plugin->version` is now 2026082001.** It had to clear 2026082000, which is what a build
+  installed on the production site reports; Moodle refuses a lower number as a downgrade, so
+  2.1.33 could not have been installed over it.
 
 ## [2.1.22] - 2026-08-19
 

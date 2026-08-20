@@ -41,7 +41,6 @@
 
     Data attributes required for JS:
     * data-aicourse-hero - marks the banner so the format's JS can find it.
-    * data-height - the configured banner height in pixels.
     * data-cmid - the course module id the completion toggle acts on.
     * data-completed - "1" or "0", the completion state the toggle starts from.
     * data-courseid - the course id, on every AI button.
@@ -49,16 +48,13 @@
     * data-coursename, data-shortname - seed text for AI banner generation.
 
     Context variables required for this template:
-    * alignleft bool True to left-align the banner content (herobanneralign = 1).
-    * haswidth bool True when a maximum banner width is configured.
-    * bannerwidth int Maximum banner width in pixels; only read when haswidth is true.
     * cmname string PRE-ESCAPED activity name (format_string). Rendered with a triple mustache in
       the heading and re-escaped with a double mustache in the region's aria-label, which is
       exactly what the pre-template string builder did.
     * hasimage bool True when a custom banner or course overview image was found.
     * imageurl string Absolute image URL; escaped by the template into the inline background-image.
-    * heroheight int Configured banner height in pixels; applied as a max-height in gradient mode
-      only and always published in data-height.
+    ACF-FIX-2.1.26: the "Hero banner height" course setting is GONE, and with it heroheight and
+    data-height. See the note in hero.mustache.
     * hassection bool True when the activity's section could be resolved.
     * sectionlabel string PRE-ESCAPED section name (format_string).
     * hasprev bool True when a previous activity chevron should be shown.
@@ -99,13 +95,9 @@
 
     Example context (json):
     {
-        "alignleft": false,
-        "haswidth": false,
-        "bannerwidth": 0,
         "cmname": "Quiz: Linear regression",
         "hasimage": false,
         "imageurl": "",
-        "heroheight": 180,
         "hassection": true,
         "sectionlabel": "Module 2: Regression",
         "hasprev": true,
@@ -145,8 +137,8 @@
         "shortname": "ML101"
     }
 }}
-<section class="aicourse-hero-sticky-wrap{{#alignleft}} aicourse-hero-align-left{{/alignleft}}" data-aicourse-hero="1" aria-label="{{cmname}}" style="{{#haswidth}}max-width:{{bannerwidth}}px;{{/haswidth}}">{{!
-}}<div class="aicourse-hero-banner{{#hasimage}} aicourse-hero-has-image{{/hasimage}}" style="{{^hasimage}}max-height: {{heroheight}}px;{{/hasimage}}" data-height="{{heroheight}}">{{!
+<section class="aicourse-hero-sticky-wrap" data-aicourse-hero="1" aria-label="{{cmname}}" style="{{{accentstyle}}}">{{!
+}}<div class="aicourse-hero-banner{{#hasimage}} aicourse-hero-has-image{{/hasimage}}">{{!
     }}{{#hasimage}}<div class="aicourse-hero-bg-img" style="background-image: url('{{imageurl}}');"></div>{{/hasimage}}{{!
     }}<div class="aicourse-hero-overlay"></div>{{!
     }}<div class="aicourse-hero-content">{{!

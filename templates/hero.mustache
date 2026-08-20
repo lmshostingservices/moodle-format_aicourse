@@ -41,8 +41,13 @@
     * aicourse-ai-delete-banner - removes the uploaded custom banner.
 
     Data attributes required for JS:
+    ACF-FIX-2.1.23: the title wrap, the summary and the meta row are now wrapped in a single
+    .aicourse-hero-lede element. They were three siblings of the progress block, which is fine
+    in a column layout but made them three competing items once the compact banner laid its
+    content out as a ROW — the meta row collapsed into a narrow stacked column beside the title.
+    Grouping them means the row has exactly three items: lede, progress, actions.
+
     * data-aicourse-hero - marks the banner so the format's JS can find it.
-    * data-height - the configured banner height in pixels.
     * data-percentage - the progress percentage, on the ring container and on the bar fill.
     * data-courseid - the course id, on the ring container and on every AI button.
     * data-radius - the ring radius in viewBox units.
@@ -52,16 +57,22 @@
     * data-coursename, data-shortname - seed text for AI banner generation.
 
     Context variables required for this template:
-    * alignleft bool True to left-align the banner content (herobanneralign = 1).
-    * haswidth bool True when a maximum banner width is configured.
-    * bannerwidth int Maximum banner width in pixels; only read when haswidth is true.
+    * accentstyle string PRE-VALIDATED CSS custom-property declarations for the course accent
+      colour and hero fade, built by format_aicourse::get_accent_style(). Rendered with a TRIPLE
+      mustache because it is generated CSS, not text: the builder matches the colour against a
+      strict hex regex and clamps the fade to an integer 0-100, so nothing user-supplied reaches
+      the attribute. Do not switch this to a double mustache -- escaping would corrupt it -- and
+      do not feed it anything that has not been through that builder.
     * title string PRE-ESCAPED course full name (format_string) or section name (get_section_name).
       Rendered with a triple mustache inside the heading and re-escaped with a double mustache in
       the region's aria-label, which is exactly what the pre-template string builder did.
     * hasimage bool True when a custom banner or course overview image was found.
     * imageurl string Absolute image URL; escaped by the template into the inline background-image.
-    * heroheight int Configured banner height in pixels, published as the --acf-hero-h custom
-      property and consumed by styles.css as a floor, not a cap.
+    ACF-FIX-2.1.26: the "Hero banner height" course setting is GONE, and with it heroheight and
+    data-height. It only ever worked in gradient mode -- image mode overrode the floor with its
+    own min-block-size, so the number a teacher typed did nothing on any course that had a banner
+    image. The banner now sizes itself: a floor from styles.css, growing to fit a two-line title
+    or two rows of activity circles.
     * issection bool True on a section page, false on the course home page.
     * hassummary bool True when the course summary should be shown under the title (image mode,
       course home page only).
@@ -85,6 +96,12 @@
     * progresstext string Long form percentage text used for aria-valuetext.
     * progressshort string Short form percentage text shown inside the ring.
     * countertext string "N of M activities completed", the text equivalent of the ring.
+    * titlesize string Size tier for the title -- xl/lg/md/sm/xs, from its character count. The
+      banner gives the title a fixed two-line zone and steps the type scale down instead of
+      truncating, so a long name is shown in full at a smaller size.
+    * circlesize string Size tier for the numbered activity circles -- xl/lg/md/sm/xs, from how
+      many there are. Same principle: a fixed two-row zone, smaller circles as the count rises,
+      so a section with many activities never overflows or scrolls.
     * hascircles bool True when the section has at least one numbered activity circle.
     * circles array List of {num, statusclass, islink, url, name, label} activity circles. url is
       the raw moodle_url::out() value and is escaped by the template.
@@ -105,13 +122,9 @@
 
     Example context (json):
     {
-        "alignleft": false,
-        "haswidth": true,
-        "bannerwidth": 1200,
         "title": "Introduction to Machine Learning",
         "hasimage": true,
         "imageurl": "https://example.org/pluginfile.php/25/course/overviewfiles/banner.jpg",
-        "heroheight": 180,
         "issection": false,
         "hassummary": true,
         "summary": "A gentle introduction to supervised and unsupervised learning.",
@@ -158,14 +171,16 @@
         "shortname": "ML101"
     }
 }}
-<section class="aicourse-hero-sticky-wrap{{#alignleft}} aicourse-hero-align-left{{/alignleft}}" data-aicourse-hero="1" aria-label="{{title}}" style="{{#haswidth}}max-width:{{bannerwidth}}px;{{/haswidth}}">{{!
-}}<div class="aicourse-hero-banner{{#hasimage}} aicourse-hero-has-image{{/hasimage}}" style="--acf-hero-h: {{heroheight}}px;" data-height="{{heroheight}}">{{!
+<section class="aicourse-hero-sticky-wrap" data-aicourse-hero="1" aria-label="{{title}}" style="{{{accentstyle}}}">{{!
+}}<div class="aicourse-hero-banner{{#hasimage}} aicourse-hero-has-image{{/hasimage}}">{{!
     }}{{#hasimage}}<div class="aicourse-hero-bg-img" style="background-image: url('{{imageurl}}');"></div>{{/hasimage}}{{!
     }}<div class="aicourse-hero-overlay"></div>{{!
     }}<div class="aicourse-hero-content">{{!
-        }}<div class="aicourse-hero-title-wrap"><span class="aicourse-hero-title">{{{title}}}</span></div>{{!
-        }}{{#hassummary}}<p class="aicourse-hero-summary">{{summary}}</p>{{/hassummary}}{{!
-        }}{{#hasmeta}}<p class="aicourse-hero-meta">{{#metaparts}}<span>{{text}}</span>{{/metaparts}}</p>{{/hasmeta}}{{!
+        }}<div class="aicourse-hero-lede">{{!
+            }}<div class="aicourse-hero-title-wrap"><span class="aicourse-hero-title aicourse-title-{{titlesize}}">{{{title}}}</span></div>{{!
+            }}{{#hassummary}}<p class="aicourse-hero-summary">{{summary}}</p>{{/hassummary}}{{!
+            }}{{#hasmeta}}<p class="aicourse-hero-meta">{{#metaparts}}<span>{{text}}</span>{{/metaparts}}</p>{{/hasmeta}}{{!
+        }}</div>{{!
         }}<div class="aicourse-hero-nav-progress">{{!
             }}{{#hasprev}}<a href="{{{prevurl}}}" class="aicourse-hero-nav aicourse-hero-nav-prev" aria-label="{{prevlabel}}" title="{{prevname}}"><svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></a>{{/hasprev}}{{!
             }}{{^hasprev}}<div class="aicourse-hero-nav-spacer"></div>{{/hasprev}}{{!
@@ -180,7 +195,7 @@
                     }}<span class="accesshide">{{countertext}}</span>{{!
                 }}</div>{{!
                 }}<div class="aicourse-progress-bar-container">{{!
-                    }}{{#issection}}{{#hascircles}}<div class="aicourse-activity-number-circles">{{#circles}}{{#islink}}<a href="{{url}}" class="aicourse-activity-number {{statusclass}}" aria-label="{{label}}" title="{{name}}">{{num}}</a>{{/islink}}{{^islink}}<span class="aicourse-activity-number {{statusclass}}" role="img" aria-label="{{label}}" title="{{name}}">{{num}}</span>{{/islink}}{{/circles}}</div>{{/hascircles}}{{/issection}}{{!
+                    }}{{#issection}}{{#hascircles}}<div class="aicourse-activity-number-circles aicourse-circles-{{circlesize}}">{{#circles}}{{#islink}}<a href="{{url}}" class="aicourse-activity-number {{statusclass}}" aria-label="{{label}}" title="{{name}}">{{num}}</a>{{/islink}}{{^islink}}<span class="aicourse-activity-number {{statusclass}}" role="img" aria-label="{{label}}" title="{{name}}">{{num}}</span>{{/islink}}{{/circles}}</div>{{/hascircles}}{{/issection}}{{!
                     }}{{^issection}}<div class="aicourse-progress-bar-track" aria-hidden="true"><div class="aicourse-progress-bar-fill" data-percentage="{{percentage}}" style="width: 0%;"></div></div>{{/issection}}{{!
                 }}</div>{{!
             }}</div>{{/progressenabled}}{{!

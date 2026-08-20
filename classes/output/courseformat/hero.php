@@ -106,8 +106,6 @@ class hero implements named_templatable, renderable {
         $options = $this->options;
         $sectionnum = $this->sectionnum;
 
-        $height = isset($options['herobannerheight']) ? (int)$options['herobannerheight'] : 180;
-
         // Custom banner image takes priority; fall back to course overview image.
         // Track custom banner separately so we can show the delete button only for custom images.
         $custombanner = banner::get_banner_image_url($course);
@@ -151,9 +149,6 @@ class hero implements named_templatable, renderable {
             $navdata = ['prev' => null, 'next' => null];
         }
 
-        $bannerwidth = isset($options['herobannerwidth']) ? (int)$options['herobannerwidth'] : 0;
-        $banneralign = isset($options['herobanneralign']) ? (int)$options['herobanneralign'] : 0;
-
         // ACF-FIX-2.0: herobannerheight was emitted as an inline `max-height`, i.e. a cap. A cap is
         // the wrong control: it clipped wrapped titles and the numbered activity circles, so the
         // stylesheet had to neutralise it — which made the setting inert at every value. It is now
@@ -163,13 +158,22 @@ class hero implements named_templatable, renderable {
         $data = (object) [
             // ACF-FIX-2.0: a11y — the hero is a named region so it can be reached (and skipped)
             // with landmark navigation. The wrapper class is unchanged.
-            'alignleft' => ($banneralign === 1),
-            'haswidth' => ($bannerwidth > 0),
-            'bannerwidth' => $bannerwidth,
+            // ACF-FIX-2.1.23: the hero is rendered outside .format-aicourse-container, so it
+            // cannot inherit the accent custom properties that format.php puts there. It
+            // carries its own copy. Validated in format_aicourse::get_accent_style().
+            'accentstyle' => \format_aicourse::get_accent_style($options),
             'title' => $titletext,
+            // ACF-FIX-2.1.26: size tiers, computed here because CSS cannot count characters.
+            // The banner gives the title a FIXED zone of two lines; rather than truncate a long
+            // name to fit it, the type scale steps down so the whole name is shown. Thresholds
+            // are character counts on the plain text, chosen so each tier still fills roughly
+            // two lines at the width the zone gets on a 1400px shell.
+            'titlesize' => self::size_tier(
+                \core_text::strlen(html_to_text($titletext, 0, false)),
+                [28 => 'xl', 48 => 'lg', 72 => 'md', 104 => 'sm']
+            ),
             'hasimage' => !empty($imageurl),
             'imageurl' => (string) $imageurl,
-            'heroheight' => $height,
             'issection' => ($sectioninfo !== null),
             'hassummary' => false,
             'summary' => '',
@@ -296,6 +300,23 @@ class hero implements named_templatable, renderable {
     }
 
     /**
+     * Pick a size tier for a piece of content whose length is only known at render time.
+     *
+     * @param int $measure The thing being measured -- a character count, or a number of items.
+     * @param array $thresholds Map of upper-bound => tier name, in ascending order of bound.
+     *                          The first bound the measure falls within wins.
+     * @return string The tier name, or 'xs' when the measure exceeds every bound.
+     */
+    protected static function size_tier(int $measure, array $thresholds): string {
+        foreach ($thresholds as $bound => $tier) {
+            if ($measure <= $bound) {
+                return $tier;
+            }
+        }
+        return 'xs';
+    }
+
+    /**
      * Add the progress ring, the course progress bar and the numbered activity circles.
      *
      * ACF-FIX-2.0: a11y — the ring is exposed as a real progressbar. It previously carried no role
@@ -379,6 +400,11 @@ class hero implements named_templatable, renderable {
             $actnum++;
         }
         $data->hascircles = !empty($data->circles);
+        // ACF-FIX-2.1.26: the circles get a fixed zone of two rows. Rather than let a long
+        // section overflow it or scroll, the circle size steps down as the count rises so the
+        // whole set is visible. CSS cannot count children into a size, so the tier is decided
+        // here alongside the data it describes.
+        $data->circlesize = self::size_tier(count($data->circles), [6 => 'xl', 12 => 'lg', 20 => 'md', 30 => 'sm']);
     }
 
     /**

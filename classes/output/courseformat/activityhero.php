@@ -97,8 +97,6 @@ class activityhero implements named_templatable, renderable {
         $options = $this->options;
         $cm = $this->cm;
 
-        $height = isset($options['herobannerheight']) ? (int)$options['herobannerheight'] : 180;
-
         // Custom banner image takes priority; fall back to course overview image.
         // Track custom banner separately so we can show the delete button only for custom images.
         $custombanner = banner::get_banner_image_url($course);
@@ -116,19 +114,15 @@ class activityhero implements named_templatable, renderable {
         // ACF-FIX-2.0: dead code removed — $iconurl was computed here (costing a get_fast_modinfo()
         // and a get_icon_url()) and never used anywhere in this function.
 
-        $bannerwidth = isset($options['herobannerwidth']) ? (int)$options['herobannerwidth'] : 0;
-        $banneralign = isset($options['herobanneralign']) ? (int)$options['herobanneralign'] : 0;
-
         // Image mode: adds a class to trigger tall immersive CSS and skips the max-height constraint.
         // ACF-FIX-2.0: a11y — named landmark region, same as the course/section hero.
         $data = (object) [
-            'alignleft' => ($banneralign === 1),
-            'haswidth' => ($bannerwidth > 0),
-            'bannerwidth' => $bannerwidth,
+            // ACF-FIX-2.1.23: see the note in hero.php - the banner carries its own copy of
+            // the accent custom properties because it sits outside the content container.
+            'accentstyle' => \format_aicourse::get_accent_style($options),
             'cmname' => format_string($cm->name),
             'hasimage' => !empty($imageurl),
             'imageurl' => (string) $imageurl,
-            'heroheight' => $height,
             'hassection' => !empty($currentsection),
             'sectionlabel' => '',
         ];

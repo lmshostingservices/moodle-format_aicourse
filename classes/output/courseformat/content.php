@@ -59,11 +59,13 @@ class content extends topics_content implements named_templatable, renderable {
     protected const MAX_DOTS = 5;
 
     /**
-     * @var int Maximum number of activities listed on a card when the course has turned
-     * "Show activities on cards" on. The grid's value is that it is scannable, so the list is
-     * capped and the remainder is shown as the same "+N" overflow chip the progress dots use.
+     * @var int Fallback cap on activities listed on a card, used only if the course option is
+     * somehow absent. ACF-FIX-2.1.25: the cap is now the "Activities listed per card" course
+     * setting and DEFAULTS TO 0, meaning show every activity and let the card grow. The old
+     * hard-coded 4 produced the "+7" chip that hid most of a section's contents from the very
+     * teacher who had just switched the list on.
      */
-    protected const MAX_CARD_ACTIVITIES = 4;
+    protected const MAX_CARD_ACTIVITIES = 0;
 
     /** @var int Maximum length of the truncated card summary, in characters. */
     protected const SUMMARY_LENGTH = 130;
@@ -517,6 +519,11 @@ class content extends topics_content implements named_templatable, renderable {
         $modinfo = get_fast_modinfo($course, $USER->id);
         $cmids = $modinfo->sections[$section->section] ?? [];
 
+        $formatoptions = course_get_format($course)->get_format_options();
+        $limit = isset($formatoptions['cardactivitylimit'])
+            ? max(0, (int) $formatoptions['cardactivitylimit'])
+            : self::MAX_CARD_ACTIVITIES;
+
         $items = [];
         $shown = 0;
         $total = 0;
@@ -526,7 +533,9 @@ class content extends topics_content implements named_templatable, renderable {
                 continue;
             }
             $total++;
-            if ($shown >= self::MAX_CARD_ACTIVITIES) {
+            // 0 means no limit: list everything. Anything above 0 caps the list and the
+            // remainder becomes the "+N" chip below.
+            if ($limit > 0 && $shown >= $limit) {
                 continue;
             }
             $shown++;

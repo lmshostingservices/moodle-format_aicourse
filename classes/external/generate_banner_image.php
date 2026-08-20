@@ -124,18 +124,49 @@ class generate_banner_image extends external_api {
         $httpcode = (int) ($curl->info['http_code'] ?? 0);
 
         if ($curl->error || $httpcode !== 200) {
-            // ACF-FIX-2.0: log the remote body, return a generic translated message.
+            // ACF-FIX-2.1.26: say WHY.
+            //
+            // This used to log the remote body at DEBUG_DEVELOPER and show the user
+            // "Generation failed. Please try again." -- which is unactionable, and on a
+            // production site with debugging off the real reason was written nowhere the
+            // teacher could reach. Retrying a 402 or a bad API key forever is not a plan.
+            //
+            // Showing the detail is safe here: execute() already required
+            // moodle/course:update, so the only people who can reach this line are course
+            // editors. The remote body is truncated and stripped of tags before display.
             debugging('format_aicourse generate_banner_image HTTP ' . $httpcode . ' ' . $curl->error . ' '
                 . substr((string) $response, 0, 500), DEBUG_DEVELOPER);
-            $key = self::error_key_for_status($httpcode);
-            throw new \moodle_exception($key ?? 'error_bannerfailed', 'format_aicourse');
+            throw new \moodle_exception(
+                'error_bannerfailed_detail',
+                'format_aicourse',
+                '',
+                self::describe_failure($httpcode, (string) $curl->error, (string) $response)
+            );
         }
 
         $result = json_decode($response, true);
         if (!$result || empty($result['success']) || empty($result['imageBase64'])) {
             debugging('format_aicourse generate_banner_image no image in '
                 . substr((string) $response, 0, 500), DEBUG_DEVELOPER);
-            throw new \moodle_exception('error_bannernoimage', 'format_aicourse');
+            // A 200 with no image is the shape the service returns when it is out of credits
+            // or every image provider it tried failed, and its own message says which.
+            $remote = '';
+            if (is_array($result)) {
+                foreach (['error', 'message', 'reason', 'detail'] as $key) {
+                    if (!empty($result[$key]) && is_string($result[$key])) {
+                        $remote = $result[$key];
+                        break;
+                    }
+                }
+            }
+            throw new \moodle_exception(
+                'error_bannerfailed_detail',
+                'format_aicourse',
+                '',
+                $remote !== ''
+                    ? self::clean_remote_message($remote)
+                    : get_string('error_bannernoimage', 'format_aicourse')
+            );
         }
 
         // ACF-FIX-2.0: strict base64 decoding — the old call silently accepted garbage.
@@ -205,31 +236,55 @@ class generate_banner_image extends external_api {
     }
 
     /**
-     * Translate an HTTP status from the LMS-Labs service into a specific error string.
+     * Build a short, human-readable reason for a failed generation request.
      *
-     * ACF-FIX-2.1.24: both integrations used to collapse every non-200 into a single generic
-     * message, so "you have run out of credits" and "your API key is wrong" were indistinguishable
-     * from "the service is down" — for the student, the teacher and the administrator alike. The
-     * real status was written to debugging() only, which is off on production sites, so the one
-     * place the answer existed was the one place nobody was looking.
-     *
-     * Unknown statuses still fall through to the caller's generic message.
-     *
-     * @param int $httpcode The HTTP status returned by the service.
-     * @return string|null A language string key, or null when the status has no specific message.
+     * @param int $httpcode HTTP status returned by the remote service, 0 if the request never
+     *                      completed.
+     * @param string $curlerror cURL's own error string, empty when the transport was fine.
+     * @param string $response Raw response body.
+     * @return string A single line safe to show to a course editor.
      */
-    protected static function error_key_for_status(int $httpcode): ?string {
-        switch ($httpcode) {
-            case 401:
-            case 403:
-                return 'error_apiunauthorized';
-            case 402:
-                return 'error_apinocredits';
-            case 429:
-                return 'error_apiratelimited';
-            default:
-                return null;
+    protected static function describe_failure(int $httpcode, string $curlerror, string $response): string {
+        if ($curlerror !== '') {
+            // No HTTP response at all: DNS, TLS, timeout, firewall. The teacher cannot fix this
+            // but the administrator can, and the distinction matters.
+            return get_string('error_bannerunreachable', 'format_aicourse', s($curlerror));
         }
+
+        // Prefer the service's own explanation over the bare status code.
+        $decoded = json_decode($response, true);
+        if (is_array($decoded)) {
+            foreach (['error', 'message', 'reason', 'detail'] as $key) {
+                if (!empty($decoded[$key]) && is_string($decoded[$key])) {
+                    return get_string('error_bannerhttp', 'format_aicourse', (object) [
+                        'code' => $httpcode,
+                        'message' => self::clean_remote_message($decoded[$key]),
+                    ]);
+                }
+            }
+        }
+
+        return get_string('error_bannerhttp', 'format_aicourse', (object) [
+            'code' => $httpcode,
+            'message' => self::clean_remote_message($response),
+        ]);
+    }
+
+    /**
+     * Reduce a remote response to one short, safe line.
+     *
+     * Tags are stripped and the result is truncated, so a service that answers with an HTML
+     * error page cannot inject markup into the dialogue or fill the screen with it.
+     *
+     * @param string $message Raw text from the remote service.
+     * @return string
+     */
+    protected static function clean_remote_message(string $message): string {
+        $message = trim(preg_replace('/\s+/', ' ', html_to_text($message, 0, false)));
+        if ($message === '') {
+            return get_string('error_bannernoreason', 'format_aicourse');
+        }
+        return s(\core_text::substr($message, 0, 200));
     }
 
     /**

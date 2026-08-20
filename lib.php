@@ -45,6 +45,62 @@ require_once($CFG->dirroot . '/course/format/aicourse/deprecatedlib.php');
  */
 class format_aicourse extends format_topics {
     /**
+     * Read a site-level default for a course format option.
+     *
+     * Site defaults are stored as format_aicourse/default<optionname>. An unset setting, or one
+     * saved as an empty string, falls back to the value passed in -- NOT to zero, which is what
+     * a bare (int) cast of an absent setting would have produced and would silently have turned
+     * every checkbox off.
+     *
+     * @param string $name The course option name, without the 'default' prefix.
+     * @param mixed $fallback Value to use when the site setting is absent or empty.
+     * @return mixed The site default, cast to the same type as $fallback.
+     */
+    protected static function site_default(string $name, $fallback) {
+        $value = get_config('format_aicourse', 'default' . $name);
+        if ($value === false || $value === '') {
+            return $fallback;
+        }
+        return is_int($fallback) ? (int) $value : (string) $value;
+    }
+
+    /**
+     * Build the inline custom properties that carry the course's accent colour
+     * and hero fade.
+     *
+     * Returned as a style-attribute fragment rather than a <style> element on
+     * purpose: this format already publishes dynamic values that way (the hero
+     * height, the card title size), and a <style> element would need
+     * style-src 'unsafe-inline' from any site running a strict CSP.
+     *
+     * SECURITY: the colour is matched against a strict #rrggbb / #rgb regex and
+     * dropped entirely if it does not match, and the fade is cast to int and
+     * clamped, so neither value can carry a `;` out of the declaration it sits
+     * in. Never relax this to a plain s_() or PARAM_TEXT pass-through.
+     *
+     * @param array $options The course format options.
+     * @return string Style declarations, or '' when neither option is set.
+     */
+    public static function get_accent_style(array $options): string {
+        $css = '';
+        $colour = isset($options['accentcolour']) ? trim((string) $options['accentcolour']) : '';
+        if ($colour !== '' && preg_match('/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/', $colour)) {
+            $css .= '--acf-brand:' . $colour . ';';
+        }
+        if (isset($options['herobannerfade']) && $options['herobannerfade'] !== '') {
+            $fade = max(0, min(100, (int) $options['herobannerfade']));
+            $css .= '--acf-hero-wash-tint:' . $fade . '%;';
+        }
+        // The default of -1 means "not set" -- leave the property absent so the site-wide
+        // Banner overlay strength class keeps control. 0 is a real value: no overlay at all.
+        if (isset($options['heroimageoverlay']) && (int) $options['heroimageoverlay'] >= 0) {
+            $overlay = max(0, min(100, (int) $options['heroimageoverlay']));
+            $css .= '--acf-hero-scrim-a:' . number_format($overlay / 100, 2, '.', '') . ';';
+        }
+        return $css;
+    }
+
+    /**
      * Called on EVERY page where this course format is relevant.
      *
      * Only adds body classes - hero injection is handled separately via CSS + JS.
@@ -90,10 +146,51 @@ class format_aicourse extends format_topics {
                 if ($scrimclass !== '') {
                     $page->add_body_class($scrimclass);
                 }
+                // ACF-FIX-2.1.23: secondary-nav visibility and card layout. Read here, with
+                // the other body classes, so they are written into the <body> tag rather than
+                // patched on after render — no flash of the layout the teacher turned off.
+                // get_format_options() is already loaded at this point in the page lifecycle;
+                // a fresh course being created has no options row yet, hence the defaults.
             } catch (\Throwable $e) {
                 // Context not ready yet — hook JS fallback will handle it.
                 unset($e);
             }
+        }
+
+        // ACF-FIX-2.1.25 (settings audit): these two are LAYOUT, not permission, and they were
+        // being computed inside the isloggedin() && !isguestuser() branch above -- so a guest,
+        // or anyone viewing a course that allows guest access, got neither class and saw the
+        // navigation the teacher had hidden and the grid they had switched to a list. They need
+        // no capability check and no context, so they sit outside that branch.
+        try {
+            $navopts = $this->get_format_options();
+            $hidenav = isset($navopts['hidesecondarynav']) ? (int) $navopts['hidesecondarynav'] : 1;
+            // ACF-FIX-2.1.31: a site-wide OVERRIDE, distinct from the site DEFAULT above it.
+            // The default only seeds new courses; an existing course that has ever saved its
+            // settings form has its own stored value and ignores it forever. This forces the
+            // behaviour on every course at once, which is what an administrator actually wants
+            // when they decide the tabs should not be shown to learners anywhere. -1 (the
+            // default) means "leave each course alone".
+            $forcenav = get_config('format_aicourse', 'forcehidesecondarynav');
+            if ($forcenav !== false && $forcenav !== '' && (int) $forcenav >= 0) {
+                $hidenav = (int) $forcenav;
+            }
+            if ($hidenav === 1) {
+                $page->add_body_class('aicourse-hidenav-students');
+            } else if ($hidenav === 2) {
+                $page->add_body_class('aicourse-hidenav-all');
+            }
+            if (!empty($navopts['cardlayout'])) {
+                $page->add_body_class('aicourse-cardlist');
+            }
+            // Published as a class so the CSS can stop reserving space at the top of the
+            // content column when the banner is about to be moved out of it, and so the
+            // JS has a server-rendered signal rather than re-reading the option.
+            if (!empty($navopts['heroattop'])) {
+                $page->add_body_class('aicourse-hero-attop');
+            }
+        } catch (\Throwable $e) {
+            unset($e);
         }
 
         // ACF-FIX-2.1: section.php renders the standard Moodle section layout, which this format
@@ -213,57 +310,83 @@ class format_aicourse extends format_topics {
 
         // ACF-FIX-2.0: The site-level admin defaults were registered in settings.php but never
         // read, so "Show hero banner" / "Display as cards" defaults were ignored for new courses.
-        $defaulthero = get_config('format_aicourse', 'defaultshowherobanner');
-        $defaulthero = ($defaulthero === false || $defaulthero === '') ? 1 : (int) $defaulthero;
-        $defaultcards = get_config('format_aicourse', 'defaultdisplayascards');
-        $defaultcards = ($defaultcards === false || $defaultcards === '') ? 1 : (int) $defaultcards;
+        // ACF-FIX-2.1.25 (settings audit). Every course option now has a matching site-level
+        // default, read through one helper instead of a growing pile of ad-hoc get_config()
+        // pairs. Before this, only "Show hero banner" and "Display as cards" had site defaults
+        // and the other twelve options ignored whatever an administrator set -- the admin page
+        // and the course form disagreed about what the default even was.
+        $d = fn(string $name, $fallback) => self::site_default($name, $fallback);
 
         $courseformatoptions = [
             'showherobanner' => [
-                'default' => $defaulthero,
+                'default' => $d('showherobanner', 1),
                 'type' => PARAM_INT,
             ],
             'shownavchevrons' => [
-                'default' => 1,
-                'type' => PARAM_INT,
-            ],
-            'herobannerheight' => [
-                // ACF-FIX-2.1.23: 180 -> 96. This value is a FLOOR on the banner's height, and
-                // with the hero content now laid out on a single row the old 180 forced roughly
-                // twice the height the design needs. Courses that never saved their format
-                // settings pick this up automatically; a course with a stored value keeps it,
-                // because that was a deliberate choice by its teacher.
-                'default' => 96,
+                'default' => $d('shownavchevrons', 1),
                 'type' => PARAM_INT,
             ],
             'showcourseindex' => [
-                'default' => 7,
+                'default' => $d('showcourseindex', 7),
                 'type' => PARAM_INT,
             ],
             'displayascards' => [
-                'default' => $defaultcards,
+                'default' => $d('displayascards', 1),
                 'type' => PARAM_INT,
             ],
             // Off by default. With it off the section cards render exactly as they always have;
             // the card renderer emits no activity list at all, so a default course is unchanged.
             'showactivitiesoncards' => [
-                'default' => 0,
+                'default' => $d('showactivitiesoncards', 0),
                 'type' => PARAM_INT,
             ],
             'activitydisplaymode' => [
-                'default' => 1,
-                'type' => PARAM_INT,
-            ],
-            'herobannerwidth' => [
-                'default' => 0,
-                'type' => PARAM_INT,
-            ],
-            'herobanneralign' => [
-                'default' => 0,
+                'default' => $d('activitydisplaymode', 1),
                 'type' => PARAM_INT,
             ],
             'cardtitlesize' => [
-                'default' => 14,
+                'default' => $d('cardtitlesize', 14),
+                'type' => PARAM_INT,
+            ],
+            // ACF-FIX-2.1.23: hide Moodle's secondary navigation (Course / Settings /
+            // Participants / Grades / Reports / More) on this course's pages.
+            // 0 = show, 1 = hide from users who cannot edit the course, 2 = hide from everyone.
+            // Enforcement is CSS-only and deliberately so: this is a decluttering preference,
+            // NOT an access control. Every tab it hides remains reachable by URL and is still
+            // guarded by its own capability check, exactly as before.
+            'hidesecondarynav' => [
+                // ACF-FIX-2.1.30: defaults to 1 (hide from students). The tabs are chrome a learner
+                // never needs -- most sites hide Participants anyway -- and on this format they push the
+                // course cards a long way down the page for no gain. Teachers keep them.
+                'default' => $d('hidesecondarynav', 1),
+                'type' => PARAM_INT,
+            ],
+            // ACF-FIX-2.1.23: 0 = responsive grid (unchanged), 1 = one full-width card per row.
+            'cardlayout' => [
+                'default' => $d('cardlayout', 0),
+                'type' => PARAM_INT,
+            ],
+            // ACF-FIX-2.1.23: per-course accent colour, '#rrggbb' or '' to follow the site
+            // setting (which in turn falls back to the theme's primary). PARAM_TEXT rather
+            // than an unfiltered type, because the value is written into a style attribute; it
+            // is additionally regex-validated at the point of use, in get_accent_style(), so a
+            // value restored from an old backup or edited in the database cannot inject CSS.
+            'accentcolour' => [
+                'default' => (string) $d('accentcolour', ''),
+                'type' => PARAM_TEXT,
+            ],
+            // Percentage of the accent colour mixed into the hero's background in gradient
+            // mode. 0 = the plain card surface, 100 = the accent at full strength. Clamped
+            // to 0-100 on read.
+            'herobannerfade' => [
+                'default' => $d('herobannerfade', 3),
+                'type' => PARAM_INT,
+            ],
+            // ACF-FIX-2.1.23: opacity of the dark overlay between the banner IMAGE and the
+            // text, as a percentage. 0 = no overlay, 100 = solid. Empty/0 is a real choice,
+            // so -1 is used as "not set, follow the site's Banner overlay strength".
+            'heroimageoverlay' => [
+                'default' => $d('heroimageoverlay', -1),
                 'type' => PARAM_INT,
             ],
             // Per-course opt in to sending assessment answer keys to the external AI service.
@@ -272,8 +395,22 @@ class format_aicourse extends format_topics {
             // site has not permitted. That check lives in exactly one place,
             // \format_aicourse\local\contentindex::may_share_assessment_answers(), which is where
             // the value is read -- deliberately NOT here, where it is merely stored.
+            // ACF-FIX-2.1.26: lift the hero above the page header and the secondary navigation.
+            // See amd/src/heroatop.js for why this cannot be done in CSS or server-side.
+            // 1 = on (default), 0 = leave the banner where the server rendered it.
+            'heroattop' => [
+                'default' => $d('heroattop', 1),
+                'type' => PARAM_INT,
+            ],
+            // ACF-FIX-2.1.25: 0 = list every activity and let the card grow to fit, which is
+            // the point of switching the list on. Any positive number caps the list and shows
+            // a "+N" chip for the rest.
+            'cardactivitylimit' => [
+                'default' => $d('cardactivitylimit', 0),
+                'type' => PARAM_INT,
+            ],
             'shareassessmentanswers' => [
-                'default' => 0,
+                'default' => $d('shareassessmentanswers', 0),
                 'type' => PARAM_INT,
             ],
         ];
@@ -303,12 +440,6 @@ class format_aicourse extends format_topics {
                             1 => get_string('yes'),
                         ],
                     ],
-                ],
-                'herobannerheight' => [
-                    'label' => get_string('herobannerheight', 'format_aicourse'),
-                    'help' => 'herobannerheight',
-                    'help_component' => 'format_aicourse',
-                    'element_type' => 'text',
                 ],
                 'showcourseindex' => [
                     'label' => get_string('showcourseindex', 'format_aicourse'),
@@ -364,29 +495,72 @@ class format_aicourse extends format_topics {
                         ],
                     ],
                 ],
-                'herobannerwidth' => [
-                    'label' => get_string('herobannerwidth', 'format_aicourse'),
-                    'help' => 'herobannerwidth',
-                    'help_component' => 'format_aicourse',
-                    'element_type' => 'text',
-                ],
-                'herobanneralign' => [
-                    'label' => get_string('herobanneralign', 'format_aicourse'),
-                    'help' => 'herobanneralign',
-                    'help_component' => 'format_aicourse',
-                    'element_type' => 'select',
-                    'element_attributes' => [
-                        [
-                            0 => get_string('herobanneralign_center', 'format_aicourse'),
-                            1 => get_string('herobanneralign_left', 'format_aicourse'),
-                        ],
-                    ],
-                ],
                 'cardtitlesize' => [
                     'label' => get_string('cardtitlesize', 'format_aicourse'),
                     'help' => 'cardtitlesize',
                     'help_component' => 'format_aicourse',
                     'element_type' => 'text',
+                ],
+                'hidesecondarynav' => [
+                    'label' => get_string('hidesecondarynav', 'format_aicourse'),
+                    'help' => 'hidesecondarynav',
+                    'help_component' => 'format_aicourse',
+                    'element_type' => 'select',
+                    'element_attributes' => [
+                        [
+                            0 => get_string('hidesecondarynav_show', 'format_aicourse'),
+                            1 => get_string('hidesecondarynav_students', 'format_aicourse'),
+                            2 => get_string('hidesecondarynav_all', 'format_aicourse'),
+                        ],
+                    ],
+                ],
+                'accentcolour' => [
+                    'label' => get_string('accentcolour', 'format_aicourse'),
+                    'help' => 'accentcolour',
+                    'help_component' => 'format_aicourse',
+                    'element_type' => 'text',
+                ],
+                'herobannerfade' => [
+                    'label' => get_string('herobannerfade', 'format_aicourse'),
+                    'help' => 'herobannerfade',
+                    'help_component' => 'format_aicourse',
+                    'element_type' => 'text',
+                ],
+                'heroimageoverlay' => [
+                    'label' => get_string('heroimageoverlay', 'format_aicourse'),
+                    'help' => 'heroimageoverlay',
+                    'help_component' => 'format_aicourse',
+                    'element_type' => 'text',
+                ],
+                'heroattop' => [
+                    'label' => get_string('heroattop', 'format_aicourse'),
+                    'help' => 'heroattop',
+                    'help_component' => 'format_aicourse',
+                    'element_type' => 'select',
+                    'element_attributes' => [
+                        [
+                            0 => get_string('no'),
+                            1 => get_string('yes'),
+                        ],
+                    ],
+                ],
+                'cardactivitylimit' => [
+                    'label' => get_string('cardactivitylimit', 'format_aicourse'),
+                    'help' => 'cardactivitylimit',
+                    'help_component' => 'format_aicourse',
+                    'element_type' => 'text',
+                ],
+                'cardlayout' => [
+                    'label' => get_string('cardlayout', 'format_aicourse'),
+                    'help' => 'cardlayout',
+                    'help_component' => 'format_aicourse',
+                    'element_type' => 'select',
+                    'element_attributes' => [
+                        [
+                            0 => get_string('cardlayout_grid', 'format_aicourse'),
+                            1 => get_string('cardlayout_list', 'format_aicourse'),
+                        ],
+                    ],
                 ],
                 // Always offered, on every site, so that the value can be set, imported and
                 // restored regardless of what the site setting happens to be today -- core's

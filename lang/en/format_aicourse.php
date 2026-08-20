@@ -27,6 +27,13 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+$string['accentcolour'] = 'Accent colour';
+$string['accentcolour_desc'] = 'The colour this format tints everything with: the hero banner background, card borders and hover states, icon wells, progress chips and the keyboard focus ring. Leave empty to keep following your theme\'s primary colour. Set here it applies to every course using this format; an individual course can override it in its own course settings.';
+$string['accentcolour_help'] = 'A colour in `#rrggbb` form, for example `#0f6cbf`. Leave empty to use the site-wide accent colour set by your administrator, which itself falls back to your theme\'s primary colour.
+
+This tints the hero banner background, card borders and hover states, icon wells, progress chips and the focus ring &mdash; everything the format colours is derived from this one value, so they stay consistent with each other.
+
+Anything that is not a valid hex colour is ignored rather than applied.';
 $string['activities'] = 'activities';
 $string['activity'] = 'activity';
 $string['activitydisplaycards'] = 'Beautiful activity cards';
@@ -184,7 +191,23 @@ $string['cachedef_ajaxratelimit'] = 'AI Tutor and banner generation rate limit c
 $string['cachedef_coursecontent'] = 'Course content index used by the AI Tutor';
 $string['cardactivitiesmore'] = 'View all activities in {$a}';
 $string['cardactivitylabel'] = '{$a->name}, {$a->section}';
+$string['cardactivitylimit'] = 'Activities listed per card';
+$string['cardactivitylimit_desc'] = 'How many activities each section card lists when "Show activities on cards" is on. 0 (the default) lists every activity and lets the card grow to fit them. Any number above 0 caps the list and shows a "+N" link for the rest.';
+$string['cardactivitylimit_help'] = 'Only applies when **Show activities on cards** is turned on.
+
+* **0** &mdash; list every activity. Cards grow as tall as they need and, because the grid stretches cards to a common height, the whole row matches the tallest one. This is the default.
+* **4** &mdash; the old fixed behaviour: four activities and a "+N" link to the section.
+
+Set a cap if you have sections with a great many activities and you want the course home page to stay scannable.';
 $string['cardactivitystatuslabel'] = '{$a->name}, {$a->section} ({$a->status})';
+$string['cardlayout'] = 'Section card layout';
+$string['cardlayout_grid'] = 'Grid - cards side by side';
+$string['cardlayout_help'] = 'How the section cards are arranged.
+
+**Grid** fits as many cards across the page as the width allows and is the default.
+
+**List** gives every card the full width of the page and stacks them vertically, which suits long section names and courses with only a few sections. On a phone both settings look the same, because a single column is all that fits either way.';
+$string['cardlayout_list'] = 'List - one card per row, down the page';
 $string['cardtitlesize'] = 'Card title text size';
 $string['cardtitlesize_help'] = 'Set the font size for section card and activity card titles in pixels. For example, enter 12 for smaller titles or 16 for larger. Default is 14px.';
 $string['changeicon'] = 'Change icon';
@@ -236,12 +259,16 @@ $string['error_activitynotvisible'] = 'You do not have access to this activity.'
 $string['error_addsectionfailed'] = 'The section could not be added.';
 $string['error_apinocredits'] = 'Your site has run out of AI credits. Please contact your administrator to top up the account.';
 $string['error_apiratelimited'] = 'The AI service is receiving too many requests from this site right now. Please wait a moment and try again.';
-$string['error_apiunauthorized'] = 'This site could not be authenticated with the AI service. Check the Site URL and API key in the AI Course Format settings.';
+$string['error_apiunauthorized'] = 'The AI Tutor could not be authenticated with the AI service. Ask your administrator to check the Site URL and API key in the AI Course Format settings.';
 $string['error_bannerfailed'] = 'The banner image could not be generated. Please try again.';
+$string['error_bannerfailed_detail'] = 'Banner generation failed. {$a}';
+$string['error_bannerhttp'] = 'The image service answered with HTTP {$a->code}: {$a->message}';
 $string['error_bannerinvalidimage'] = 'The generated banner image could not be read.';
 $string['error_bannernoimage'] = 'The AI service did not return an image.';
+$string['error_bannernoreason'] = 'It gave no reason.';
 $string['error_bannersavefailed'] = 'The banner image could not be saved to this course.';
 $string['error_bannertoolarge'] = 'The generated banner image is too large to be stored.';
+$string['error_bannerunreachable'] = 'The image service could not be reached ({$a}). This is usually a network, firewall or TLS problem on the server rather than anything wrong with the course.';
 $string['error_cannotdeletegeneral'] = 'The General section cannot be deleted.';
 $string['error_cannotdeletesection'] = 'This section cannot be deleted.';
 $string['error_cannotduplicategeneral'] = 'The General section cannot be duplicated.';
@@ -268,20 +295,67 @@ $string['esttime_hm'] = '{$a->hours} hr {$a->mins} min';
 $string['esttime_m'] = '{$a} min';
 $string['externalservice'] = 'External AI service';
 $string['externalservice_desc'] = 'When a user asks the AI Tutor a question, this plugin sends their user ID, their first name, the course ID and name, the question text and the text content of the course to <a href="https://lms-labs.com">lms-labs.com</a>, which is operated by LMS-Labs outside your Moodle site. Nothing is sent unless both a Site ID and an API Key are set below and a user actively asks a question. Set "Enable AI Tutor" to No to stop all transmission. See the plugin privacy policy and Site administration &gt; Users &gt; Privacy and policies &gt; Plugin privacy registry for the full field list.';
+$string['forcehidesecondarynav'] = 'Course navigation tabs (override all courses)';
+$string['forcehidesecondarynav_desc'] = 'Forces the course navigation tabs setting on <strong>every</strong> course using this format, ignoring what each course has chosen.<br /><br />The "Course navigation tabs" default above only applies to newly created courses &mdash; an existing course that has ever had its settings saved keeps its own stored value and will not pick up a change to the default. Use this override when you want the tabs hidden everywhere without editing each course.<br /><br />Leave it on <strong>Follow each course</strong> to keep per-course control. Tabs are never hidden while edit mode is on, whatever this is set to.';
+$string['forcehidesecondarynav_follow'] = 'Follow each course\'s own setting';
 $string['generatebannerimage'] = 'Generate AI banner image';
 $string['gotocourse'] = 'Course Home';
 $string['gradefraction'] = '{$a->current}/{$a->max}';
 $string['gradefractionnone'] = '-/{$a}';
 $string['grades'] = 'My Grades';
+$string['heroattop'] = 'Banner at top of page';
+$string['heroattop_help'] = 'Moves the hero banner above Moodle\'s page header and course navigation tabs, so it is the first thing on the page.
+
+Moodle renders the page header before a course format gets a chance to output anything, so this is done by moving the banner in the browser after the page loads. Two consequences worth knowing:
+
+* It is switched off automatically while **edit mode** is on, so the page header controls stay where you expect them.
+* On a theme with an unusual page structure it simply does nothing and the banner stays where Moodle put it. It will not break the page.
+
+Turn it off if your theme puts something above the banner that you need to keep there.';
 $string['herobanneralign'] = 'Hero banner alignment';
 $string['herobanneralign_center'] = 'Centre';
 $string['herobanneralign_help'] = 'Choose whether the hero banner is centred or left-aligned on the page. Left-aligned is useful when you want the banner to line up with the left edge of your page content.';
 $string['herobanneralign_left'] = 'Left';
+$string['herobannerfade'] = 'Hero banner background fade';
+$string['herobannerfade_desc'] = 'How much of the accent colour is mixed into the hero banner background when the course has no banner image, as a percentage. 0 is the plain card surface, 3 is a barely-there tint (the default), 8 is noticeably coloured, 16 and above is a solid accent panel. Values are clamped to 0-100. This has no effect when a banner image is set, because the image covers the background.';
+$string['herobannerfade_help'] = 'A whole number from 0 to 100.
+
+* **0** &mdash; no tint at all, the banner matches the cards below it.
+* **3** &mdash; the default: the palest hint of your accent colour.
+* **8** &mdash; clearly coloured but still light behind the title.
+* **16+** &mdash; a solid accent panel.
+
+This only applies when the course has **no banner image**; with an image the background is covered by the picture. Text contrast stays above the WCAG AA threshold at every value in the range.';
 $string['herobannerheight'] = 'Hero banner height';
-$string['herobannerheight_help'] = 'Set the maximum height of the hero banner in pixels. A smaller value (140-180px) creates a compact, professional look while a larger value (200-300px) makes the course image more prominent.';
+$string['herobannerheight_help'] = 'The **minimum** height of the hero banner in pixels, for courses with no banner image. The banner never gets shorter than this, and grows past it if the content needs more room &mdash; so it is a floor, not a cap, and a long course name is never clipped.
+
+The default is 110, which matches the compact banner layout. Set it to 0 to let the banner size itself entirely from its content. Larger values (160-240) give a plain banner more presence.
+
+Courses **with** a banner image ignore this: an image banner is sized by its own layout so the picture always has a sensible aspect ratio.';
 $string['herobannerwidth'] = 'Hero banner width';
 $string['herobannerwidth_help'] = 'Set the maximum width of the hero banner in pixels to match your theme\'s content width. For example, if your Moodle theme has a 1200px content area, set this to 1200. Set to 0 (default) for full width up to 1400px.';
+$string['heroimageoverlay'] = 'Hero image overlay opacity';
+$string['heroimageoverlay_help'] = 'How dark the overlay between the banner **image** and the banner text is, as a percentage. Leave it at **-1** to follow the site-wide "Banner overlay strength" setting.
+
+* **-1** &mdash; follow the site setting (Light 55, Medium 62, Strong 72).
+* **0** &mdash; no overlay at all. The image shows at full strength.
+* **55** &mdash; the lightest value at which white text still clears the WCAG AA contrast threshold on a worst-case near-white image.
+* **62** &mdash; the default.
+* **72** &mdash; heavy; use it if your banner images are busy or pale.
+
+The overlay is a single flat tone, not a gradient, so it dims the whole image evenly. Below about 55 the title can become hard to read over a light photo &mdash; check your own images before going lower.
+
+This has no effect on courses with no banner image.';
 $string['hidefromothers'] = 'Hide section';
+$string['hidesecondarynav'] = 'Course navigation tabs';
+$string['hidesecondarynav_all'] = 'Hide from everyone';
+$string['hidesecondarynav_help'] = 'Whether Moodle\'s row of course tabs (Course, Settings, Participants, Grades, Reports, More) appears on this course\'s pages. Hiding it lets the banner sit at the very top of the page.
+
+The tabs are always shown while edit mode is on, so you never lose access to course settings.
+
+This is a display preference, not a permission: every page behind those tabs stays reachable by its own URL and is still protected by its own capability checks. Choose **Hide from students** if you want teachers to keep the tabs.';
+$string['hidesecondarynav_show'] = 'Show';
+$string['hidesecondarynav_students'] = 'Hide from students';
 $string['icon_alert_triangle'] = 'Warning triangle';
 $string['icon_award'] = 'Award';
 $string['icon_book'] = 'Book';
@@ -435,6 +509,7 @@ $string['showherobanner_desc'] = 'Display a sticky hero banner at the top of the
 $string['showherobanner_help'] = 'When enabled, a beautiful sticky hero banner appears at the top of the course page featuring the course image, title, and real-time progress tracking. The banner uses glassmorphism effects and stays visible as students scroll.';
 $string['shownavchevrons'] = 'Show navigation chevrons';
 $string['shownavchevrons_help'] = 'When enabled, elegant navigation chevrons appear on the left and right sides of activity pages, allowing students to quickly move between activities without returning to the course page.';
+$string['sitedefault_desc'] = 'The starting value for new courses using this format. Each course can change it in its own course settings, and changing it here does not alter courses that already exist.';
 $string['siteid'] = 'Site URL';
 $string['siteid_desc'] = 'The full URL of this Moodle site, including the scheme — for example <code>https://moodle.example.com</code>. This identifies your site to the LMS-Labs AI service. It must be a valid URL: anything else is discarded when you save, and the AI Tutor will then report that it is not configured.';
 $string['viewallactivities'] = 'View all activities';

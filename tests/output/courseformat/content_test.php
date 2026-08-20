@@ -245,7 +245,13 @@ final class content_test extends \advanced_testcase {
     public function test_the_list_is_capped_and_the_remainder_is_offered(): void {
         $this->resetAfterTest();
 
-        $course = $this->course_as_student(['showactivitiesoncards' => 1]);
+        // ACF-FIX-2.1.33: the cap is the cardactivitylimit course setting since 2.1.25, and it
+        // defaults to 0, meaning "list every activity". This test is about the overflow chip, so
+        // it sets an explicit limit of 4 rather than relying on the old hard-coded constant.
+        $course = $this->course_as_student([
+            'showactivitiesoncards' => 1,
+            'cardactivitylimit' => 4,
+        ]);
         for ($i = 1; $i <= 6; $i++) {
             $this->getDataGenerator()->create_module('page', [
                 'course' => $course->id,
@@ -274,7 +280,11 @@ final class content_test extends \advanced_testcase {
     public function test_hidden_activities_do_not_inflate_the_overflow_count(): void {
         $this->resetAfterTest();
 
-        $course = $this->course_as_student(['showactivitiesoncards' => 1]);
+        // ACF-FIX-2.1.33: explicit limit, for the reason given in the test above.
+        $course = $this->course_as_student([
+            'showactivitiesoncards' => 1,
+            'cardactivitylimit' => 4,
+        ]);
         for ($i = 1; $i <= 5; $i++) {
             $this->getDataGenerator()->create_module('page', [
                 'course' => $course->id,

@@ -336,6 +336,35 @@ class ai_chat extends external_api {
     }
 
     /**
+     * Translate an HTTP status from the LMS-Labs service into a specific error string.
+     *
+     * ACF-FIX-2.1.34: both integrations used to collapse every non-200 into a single generic
+     * message, so "you have run out of credits" and "your API key is wrong" were indistinguishable
+     * from "the service is down" -- for the student, the teacher and the administrator alike. The
+     * real status went to debugging() only, which is off on production sites, so the one place the
+     * answer existed was the one place nobody looks. The service returns 401 for a bad key or a
+     * mismatched site URL and 402 for insufficient credits.
+     *
+     * Unknown statuses still fall through to the caller's generic message.
+     *
+     * @param int $httpcode The HTTP status returned by the service.
+     * @return string|null A language string key, or null when the status has no specific message.
+     */
+    protected static function error_key_for_status(int $httpcode): ?string {
+        switch ($httpcode) {
+            case 401:
+            case 403:
+                return 'error_apiunauthorized';
+            case 402:
+                return 'error_apinocredits';
+            case 429:
+                return 'error_apiratelimited';
+            default:
+                return null;
+        }
+    }
+
+    /**
      * Return value description.
      *
      * @return external_single_structure
@@ -547,34 +576,6 @@ class ai_chat extends external_api {
         }
 
         return $text;
-    }
-
-    /**
-     * Translate an HTTP status from the LMS-Labs service into a specific error string.
-     *
-     * ACF-FIX-2.1.24: both integrations used to collapse every non-200 into a single generic
-     * message, so "you have run out of credits" and "your API key is wrong" were indistinguishable
-     * from "the service is down" — for the student, the teacher and the administrator alike. The
-     * real status was written to debugging() only, which is off on production sites, so the one
-     * place the answer existed was the one place nobody was looking.
-     *
-     * Unknown statuses still fall through to the caller's generic message.
-     *
-     * @param int $httpcode The HTTP status returned by the service.
-     * @return string|null A language string key, or null when the status has no specific message.
-     */
-    protected static function error_key_for_status(int $httpcode): ?string {
-        switch ($httpcode) {
-            case 401:
-            case 403:
-                return 'error_apiunauthorized';
-            case 402:
-                return 'error_apinocredits';
-            case 429:
-                return 'error_apiratelimited';
-            default:
-                return null;
-        }
     }
 
     /**

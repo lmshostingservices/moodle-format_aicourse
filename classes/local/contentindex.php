@@ -206,16 +206,14 @@ class contentindex {
 
         // Get activities.
         foreach ($modinfo->get_cms() as $cm) {
-            // ACF-FIX-2.1.24: the guard used to reject any module without a view URL, which
+            // ACF-FIX-2.1.34: the guard used to reject any module without a view URL, which
             // silently dropped every mod_label from the tutor's index. Labels have no URL by
-            // design: they render inline on the course page. They are also where teachers put
+            // design -- they render inline on the course page -- and they are where teachers put
             // headings, instructions and framing text, so excluding them removed real teaching
             // content from what the tutor can read. The switch below already carries a
-            // `case 'label':` branch, which this guard made unreachable — the intent was always
-            // to index them.
-            //
-            // mod_subsection is in the same position, and any future view-less module would be
-            // too. $cm->url is not used anywhere else in this loop, so it was purely a filter.
+            // `case 'label':` branch that this guard made unreachable, so indexing them was
+            // always the intent. mod_subsection is in the same position. $cm->url is not used
+            // anywhere else in this loop, so it was purely a filter.
             if (!$cm->uservisible) {
                 continue;
             }
