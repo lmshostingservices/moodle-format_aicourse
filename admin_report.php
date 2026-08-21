@@ -49,7 +49,7 @@ $PAGE->set_heading(get_string('admin_report_title', 'format_aicourse'));
 $PAGE->set_pagelayout('admin');
 
 // ACF-FIX-2.0: Removed $PAGE->requires->css() for this plugin's own styles.css — Moodle already
-// aggregates a course format's styles.css into the theme stylesheet, so this downloaded it twice.
+// Aggregates a course format's styles.css into the theme stylesheet, so this downloaded it twice.
 
 $report = new adminreport($filter);
 

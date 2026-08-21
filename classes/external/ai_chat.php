@@ -238,6 +238,22 @@ class ai_chat extends external_api {
             $params['questiontext']
         );
 
+        // ACF-FIX-2.1.96: give teachers the format's own settings reference.
+        //
+        // A teacher asking "how do I hide the tabs?" was getting an answer about their course
+        // content, because that is all the tutor had. The settings are the part of this format
+        // teachers most need help with, and the plugin already holds a plain-language explanation
+        // of every one of them.
+        //
+        // Editors only. A learner has no use for it, it would be a large addition to every request
+        // they make, and their questions are about the course rather than how it was built.
+        if (has_capability('moodle/course:update', $context)) {
+            $reference = \format_aicourse\local\formathelp::get_reference();
+            if ($reference !== '') {
+                $contexttext = $reference . "\n\n---\n\n" . $contexttext;
+            }
+        }
+
         $postdata = [
             'siteUrl' => $siteid,
             'apiKey' => $apikey,

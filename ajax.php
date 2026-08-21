@@ -69,7 +69,7 @@ $action = required_param('action', PARAM_ALPHAEXT);
 $courseid = required_param('courseid', PARAM_INT);
 
 // Fetch the course and set the PAGE context BEFORE require_login(): require_login() without a
-// course argument resets $PAGE->context to the system context.
+// Course argument resets $PAGE->context to the system context.
 $course = get_course($courseid);
 $PAGE->set_context(context_course::instance($courseid));
 require_login($course);
@@ -101,15 +101,15 @@ foreach ($paramtypes as $name => $type) {
 }
 
 // The third argument stays false: this endpoint performs its own require_login() and
-// require_sesskey() above, and each external function performs its own require_capability().
+// Require_sesskey() above, and each external function performs its own require_capability().
 // Every function reachable through this map is registered with 'ajax' => true, so nothing here
-// is exposed that core/ajax would not already expose.
+// Is exposed that core/ajax would not already expose.
 $result = external_api::call_external_function($function, $args, false);
 
 if ($result['error']) {
     $exception = $result['exception'];
     // The old endpoint's stable codes had no 'error_' prefix; the language string keys the
-    // external functions raise do. Strip it so a cached client still recognises the code.
+    // External functions raise do. Strip it so a cached client still recognises the code.
     $errorcode = $exception->errorcode ?? 'unknownerror';
     http_response_code(400);
     echo json_encode([

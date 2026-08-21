@@ -134,8 +134,9 @@
         "removebannerlabel": "Remove banner image",
         "generatebannerlabel": "Generate banner image with AI",
         "coursename": "Introduction to Machine Learning",
-        "shortname": "ML101"
-    }
+        "shortname": "ML101",
+        "hascompletion": true
+}
 }}
 <section class="aicourse-hero-sticky-wrap" data-aicourse-hero="1" aria-label="{{cmname}}" style="{{{accentstyle}}}">{{!
 }}<div class="aicourse-hero-banner{{#hasimage}} aicourse-hero-has-image{{/hasimage}}">{{!
@@ -156,10 +157,10 @@
                         }}{{^iscompleted}}<svg aria-hidden="true" focusable="false" class="aicourse-completion-ring aicourse-completion-pending" viewBox="0 0 50 50"><circle cx="25" cy="25" r="20" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="2.5"/><path d="M17 25 L22 30 L33 19" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>{{/iscompleted}}{{!
                     }}</div>{{!
                 }}</button>{{/ismanualtoggle}}{{!
-                }}{{^ismanualtoggle}}<div class="aicourse-completion-ring-container">{{!
+                }}{{^ismanualtoggle}}{{#hascompletion}}<div class="aicourse-completion-ring-container">{{!
                     }}{{#iscompleted}}<svg aria-hidden="true" focusable="false" class="aicourse-completion-ring aicourse-completion-done" viewBox="0 0 50 50"><circle cx="25" cy="25" r="20" fill="none" stroke="#357a32" stroke-width="2.5"/><path d="M17 25 L22 30 L33 19" fill="none" stroke="#357a32" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>{{/iscompleted}}{{!
                     }}{{^iscompleted}}{{#showgrade}}<div class="aicourse-grade-display"><span class="aicourse-grade-text">{{{gradetext}}}</span></div>{{/showgrade}}{{^showgrade}}<svg aria-hidden="true" focusable="false" class="aicourse-completion-ring aicourse-completion-pending" viewBox="0 0 50 50"><circle cx="25" cy="25" r="20" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="2.5"/></svg>{{/showgrade}}{{/iscompleted}}{{!
-                }}</div>{{/ismanualtoggle}}{{!
+                }}</div>{{/hascompletion}}{{/ismanualtoggle}}{{!
                 }}<div class="aicourse-completion-requirements">{{!
                     }}{{#ismanualtoggle}}<span class="aicourse-completion-label aicourse-completion-clickable">{{{completionlabel}}}</span>{{/ismanualtoggle}}{{!
                     }}{{^ismanualtoggle}}<span class="aicourse-completion-label">{{{completionlabel}}}</span>{{/ismanualtoggle}}{{!

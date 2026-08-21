@@ -1,0 +1,27 @@
+t_welcome	Welcome to the AI Course Format. This is a short tour of what this format adds to your course. It takes about two minutes, and you can leave at any point.
+t_banner	The course banner. The banner carries the course name, its progress ring and the quick actions. You can upload your own image in the course settings, or have one generated for you.
+t_generate	Generate a banner image. This creates a banner image from your course name. It takes a minute or two and runs in the background, so you can carry on working while it finishes.
+t_ring	The progress ring. This shows how much of the course a learner has completed. It counts only activities with completion tracking switched on, so if it looks low, check which activities are being tracked.
+t_index	The course index. Every section and activity, always to hand. You can choose whether learners see it on the course page, section pages and activity pages independently, in the course settings.
+t_cards	Section cards. Each section becomes a card showing its activities and how far learners have got. You can give each one an icon, and choose a grid or a list in the course settings.
+t_icons	Section icons. Click a section's icon while editing to choose a different one. Icons make a long course scannable at a glance, and a course with none set shows a neutral placeholder rather than looking unfinished.
+t_time	Estimated time. Each activity carries an estimated duration, and the section total is the sum of them. The starting figures come from the site settings, quizzes are worked out from how many questions they contain, and you can correct any single activity yourself.
+t_activities	What is inside each section. The card lists the activities in the section and marks off the ones a learner has finished. You can cap how many are listed, or switch the list off entirely, in the course settings.
+t_sidebar	The course player sidebar. When it is switched on, the course index becomes a player sidebar: your logo, the course, a progress ring, the total time, and a row per activity showing how long it takes and whether it is done. You choose whether it starts open or collapsed.
+t_grades	Grades at a glance. This takes you straight to the gradebook for the course, without going through the menus. Learners see the same button, but it shows them only their own grades.
+t_tutor	The AI Tutor. Learners open the tutor here and ask questions about the course. It reads the course content, so its answers are about your material rather than the internet at large.
+t_studentview	See it as a learner. This is the important one. A learner sees a noticeably different page: the Course, Settings and Participants tabs are hidden by default, and so are all editing controls. Use Switch role to Student from this menu before you judge the layout.
+t_report	The reporting dashboard. Under the course menu you will find reporting on how learners are using the AI Tutor: what they asked, where they got stuck, and which activities generate the most questions. It is often the fastest way to spot a confusing piece of content.
+t_settings	Where the settings are. Everything in this tour is configurable per course under Settings, and site-wide under Plugins, Course formats, AI Course Format.
+t_done	That is the tour. You can reopen it any time from your profile preferences. Have a look as a learner next.
+s_welcome	Welcome to your course. A very quick tour of how this course works. It takes about a minute, and you can skip it.
+s_progress	Your progress. The ring shows how much of the course you have completed. It updates as you finish activities.
+s_ring	How far you have got. The ring fills as you complete activities. It counts only the activities your teacher is tracking, so it may not include everything you can see.
+s_index	Finding your way around. The course index lists every section and activity. Use it to jump straight to anything without going back to the course page first.
+s_cards	Course sections. Each card is a section of the course. The dots show which activities you have finished, and the percentage is your progress through that section.
+s_time	How long things take. Each activity shows roughly how long to allow for it, and each section shows the total. Use it to decide what you can fit into the time you have.
+s_status	What you have finished. A filled marker means you have completed that activity, an empty one means it is still waiting for you. Some activities complete themselves when you finish them; others you tick off yourself.
+s_sidebar	Your course at a glance. The panel on the left lists everything in the course. Each row shows roughly how long the activity takes and a tick once you have finished it, and the ring at the top is your progress through the whole course.
+s_grades	Checking your grades. This takes you to your own grades for the course. You only ever see your own.
+s_tutor	Ask the AI Tutor. Stuck on something? Open the tutor and ask. It knows this course's material and will help you work it out rather than simply hand you the answer.
+s_done	You are ready. That is everything. Pick a section to get started.

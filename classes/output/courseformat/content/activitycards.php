@@ -20,6 +20,7 @@ use cm_info;
 use completion_info;
 use core\output\named_templatable;
 use format_aicourse\local\activityinfo;
+use format_aicourse\local\progress;
 use moodle_url;
 use renderable;
 use renderer_base;
@@ -273,8 +274,20 @@ class activitycards implements named_templatable, renderable {
             'status' => $statuslabel,
         ]);
 
+        // ACF-FIX-2.1.47: the estimated duration, so a learner can see what an activity will cost
+        // them before opening it. Same figure the section card's total is built from -- teacher
+        // override first, then the site default for the type, with a quiz calculated from its
+        // question count -- so the parts visibly add up to the whole rather than being two
+        // separate guesses. An estimate of 0, which is how a teacher hides one, yields an empty
+        // string and the pill is not rendered.
+        $estimatedtime = progress::format_estimated_time(progress::estimate_activity_minutes($cm));
+
         return (object) [
             'issubsection' => false,
+            'hastime' => ($estimatedtime !== ''),
+            'estimatedtime' => $estimatedtime,
+            'timelabel' => ($estimatedtime === '') ? '' :
+                get_string('estimatedtimefor', 'format_aicourse', $estimatedtime),
             'cmid' => (int) $cm->id,
             'url' => $cm->url->out(false),
             'status' => $status,

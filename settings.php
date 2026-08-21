@@ -186,7 +186,7 @@ if ($hassiteconfig) {
         'format_aicourse/defaulthidesecondarynav',
         get_string('hidesecondarynav', 'format_aicourse'),
         get_string('sitedefault_desc', 'format_aicourse'),
-        1,
+        2,
         [
             0 => get_string('hidesecondarynav_show', 'format_aicourse'),
             1 => get_string('hidesecondarynav_students', 'format_aicourse'),
@@ -195,18 +195,305 @@ if ($hassiteconfig) {
     ));
 
     // ACF-FIX-2.1.31: the override, deliberately placed next to the default so the difference
-    // is visible. "Follow each course" is the safe value and stays the shipped behaviour.
+    // ACF-FIX-2.1.91: ships as "hide from everyone" rather than "follow each course".
+    //
+    // The default above only seeds courses that have never saved the option, so on any site with
+    // existing courses it changes nothing -- which is exactly the confusion it caused. The
+    // override is the control that reaches courses already created, so it is the one that has to
+    // carry the intent.
+    //
+    // This does remove per-course control out of the box, which is a real cost: an administrator
+    // who wants some courses to keep the tabs must set this back to "Follow each course". It is a
+    // deliberate trade in favour of the format's own navigation, and the tabs are still never
+    // hidden while edit mode is on.
     $settings->add(new admin_setting_configselect(
         'format_aicourse/forcehidesecondarynav',
         get_string('forcehidesecondarynav', 'format_aicourse'),
         get_string('forcehidesecondarynav_desc', 'format_aicourse'),
-        -1,
+        2,
         [
             -1 => get_string('forcehidesecondarynav_follow', 'format_aicourse'),
             0 => get_string('hidesecondarynav_show', 'format_aicourse'),
             1 => get_string('hidesecondarynav_students', 'format_aicourse'),
             2 => get_string('hidesecondarynav_all', 'format_aicourse'),
         ]
+    ));
+
+    // ACF-FIX-2.1.63: a logo for the player sidebar, separate from the site logo.
+    $settings->add(new admin_setting_configstoredfile(
+        'format_aicourse/playerlogo',
+        get_string('playerlogo', 'format_aicourse'),
+        get_string('playerlogo_desc', 'format_aicourse'),
+        'playerlogo',
+        0,
+        [
+            'maxfiles' => 1,
+            'accepted_types' => ['web_image'],
+        ]
+    ));
+
+    // ACF-FIX-2.1.103: full-width banner.
+    $settings->add(new admin_setting_configselect(
+        'format_aicourse/defaultherofullwidth',
+        get_string('herofullwidth', 'format_aicourse'),
+        get_string('herofullwidth_desc', 'format_aicourse'),
+        0,
+        [
+            0 => get_string('herofullwidth_contained', 'format_aicourse'),
+            1 => get_string('herofullwidth_full', 'format_aicourse'),
+        ]
+    ));
+
+    $settings->add(new admin_setting_configselect(
+        'format_aicourse/forceherofullwidth',
+        get_string('forceherofullwidth', 'format_aicourse'),
+        get_string('forceherofullwidth_desc', 'format_aicourse'),
+        -1,
+        [
+            -1 => get_string('forcehidebreadcrumb_leave', 'format_aicourse'),
+            0 => get_string('herofullwidth_contained', 'format_aicourse'),
+            1 => get_string('herofullwidth_full', 'format_aicourse'),
+        ]
+    ));
+
+    // ACF-FIX-2.1.102: hide the General section.
+    $settings->add(new admin_setting_configselect(
+        'format_aicourse/defaulthidegeneral',
+        get_string('hidegeneral', 'format_aicourse'),
+        get_string('hidegeneral_desc', 'format_aicourse'),
+        0,
+        [
+            0 => get_string('hidesecondarynav_show', 'format_aicourse'),
+            1 => get_string('hidesecondarynav_students', 'format_aicourse'),
+            2 => get_string('hidesecondarynav_all', 'format_aicourse'),
+        ]
+    ));
+
+    $settings->add(new admin_setting_configselect(
+        'format_aicourse/forcehidegeneral',
+        get_string('forcehidegeneral', 'format_aicourse'),
+        get_string('forcehidegeneral_desc', 'format_aicourse'),
+        -1,
+        [
+            -1 => get_string('forcehidebreadcrumb_leave', 'format_aicourse'),
+            0 => get_string('hidesecondarynav_show', 'format_aicourse'),
+            1 => get_string('hidesecondarynav_students', 'format_aicourse'),
+            2 => get_string('hidesecondarynav_all', 'format_aicourse'),
+        ]
+    ));
+
+    // ACF-FIX-2.1.85: the course index header band colour.
+    $settings->add(new admin_setting_configtext(
+        'format_aicourse/defaultplayerheadercolour',
+        get_string('playerheadercolour', 'format_aicourse'),
+        get_string('defaultplayerheadercolour_desc', 'format_aicourse'),
+        '',
+        PARAM_TEXT
+    ));
+
+    $settings->add(new admin_setting_configtext(
+        'format_aicourse/forceplayerheadercolour',
+        get_string('forceplayerheadercolour', 'format_aicourse'),
+        get_string('forceplayerheadercolour_desc', 'format_aicourse'),
+        '',
+        PARAM_TEXT
+    ));
+
+    // ACF-FIX-2.1.61: the accent colour, site-wide.
+    $settings->add(new admin_setting_configtext(
+        'format_aicourse/defaultaccentcolour',
+        get_string('accentcolour', 'format_aicourse'),
+        get_string('defaultaccentcolour_desc', 'format_aicourse'),
+        '',
+        PARAM_TEXT
+    ));
+
+    $settings->add(new admin_setting_configtext(
+        'format_aicourse/forceaccentcolour',
+        get_string('forceaccentcolour', 'format_aicourse'),
+        get_string('forceaccentcolour_desc', 'format_aicourse'),
+        '',
+        PARAM_TEXT
+    ));
+
+    // ACF-FIX-2.1.80: hide the theme's logo band.
+    $settings->add(new admin_setting_configselect(
+        'format_aicourse/defaultimmersive',
+        get_string('immersive', 'format_aicourse'),
+        get_string('immersive_desc', 'format_aicourse'),
+        0,
+        [
+            0 => get_string('hidesecondarynav_show', 'format_aicourse'),
+            1 => get_string('hidesecondarynav_students', 'format_aicourse'),
+            2 => get_string('hidesecondarynav_all', 'format_aicourse'),
+        ]
+    ));
+
+    $settings->add(new admin_setting_configselect(
+        'format_aicourse/forceimmersive',
+        get_string('forceimmersive', 'format_aicourse'),
+        get_string('forceimmersive_desc', 'format_aicourse'),
+        -1,
+        [
+            -1 => get_string('forcehidebreadcrumb_leave', 'format_aicourse'),
+            0 => get_string('hidesecondarynav_show', 'format_aicourse'),
+            1 => get_string('hidesecondarynav_students', 'format_aicourse'),
+            2 => get_string('hidesecondarynav_all', 'format_aicourse'),
+        ]
+    ));
+
+    // ACF-FIX-2.1.55: the course index drawer's starting state.
+    $settings->add(new admin_setting_configselect(
+        'format_aicourse/defaultindexstate',
+        get_string('indexstate', 'format_aicourse'),
+        get_string('indexstate_desc', 'format_aicourse'),
+        0,
+        [
+            0 => get_string('indexstate_remember', 'format_aicourse'),
+            1 => get_string('indexstate_collapsed', 'format_aicourse'),
+            2 => get_string('indexstate_open', 'format_aicourse'),
+        ]
+    ));
+
+    $settings->add(new admin_setting_configselect(
+        'format_aicourse/forceindexstate',
+        get_string('forceindexstate', 'format_aicourse'),
+        get_string('forceindexstate_desc', 'format_aicourse'),
+        -1,
+        [
+            -1 => get_string('forcehidebreadcrumb_leave', 'format_aicourse'),
+            0 => get_string('indexstate_remember', 'format_aicourse'),
+            1 => get_string('indexstate_collapsed', 'format_aicourse'),
+            2 => get_string('indexstate_open', 'format_aicourse'),
+        ]
+    ));
+
+    // ACF-FIX-2.1.52: the player sidebar.
+    $settings->add(new admin_setting_configselect(
+        'format_aicourse/defaultplayerindex',
+        get_string('playerindex', 'format_aicourse'),
+        get_string('playerindex_desc', 'format_aicourse'),
+        0,
+        [
+            0 => get_string('playerindex_off', 'format_aicourse'),
+            1 => get_string('playerindex_on', 'format_aicourse'),
+        ]
+    ));
+
+    $settings->add(new admin_setting_configselect(
+        'format_aicourse/forceplayerindex',
+        get_string('forceplayerindex', 'format_aicourse'),
+        get_string('forceplayerindex_desc', 'format_aicourse'),
+        -1,
+        [
+            -1 => get_string('forcehidebreadcrumb_leave', 'format_aicourse'),
+            0 => get_string('playerindex_off', 'format_aicourse'),
+            1 => get_string('playerindex_on', 'format_aicourse'),
+        ]
+    ));
+
+    // ACF-FIX-2.1.50: the site footer, default and override, same shape as the pair below.
+    $settings->add(new admin_setting_configselect(
+        'format_aicourse/defaulthidefooter',
+        get_string('hidefooter', 'format_aicourse'),
+        get_string('sitedefault_desc', 'format_aicourse'),
+        0,
+        [
+            0 => get_string('hidesecondarynav_show', 'format_aicourse'),
+            1 => get_string('hidesecondarynav_students', 'format_aicourse'),
+            2 => get_string('hidesecondarynav_all', 'format_aicourse'),
+        ]
+    ));
+
+    $settings->add(new admin_setting_configselect(
+        'format_aicourse/forcehidefooter',
+        get_string('forcehidefooter', 'format_aicourse'),
+        get_string('forcehidefooter_desc', 'format_aicourse'),
+        -1,
+        [
+            -1 => get_string('forcehidebreadcrumb_leave', 'format_aicourse'),
+            0 => get_string('hidesecondarynav_show', 'format_aicourse'),
+            1 => get_string('hidesecondarynav_students', 'format_aicourse'),
+            2 => get_string('hidesecondarynav_all', 'format_aicourse'),
+        ]
+    ));
+
+    // ACF-FIX-2.1.36: the site default for the breadcrumb, and its override, placed together for
+    // the same reason as the pair above: the default only seeds new courses, the override applies
+    // everywhere at once.
+    $settings->add(new admin_setting_configselect(
+        'format_aicourse/defaulthidebreadcrumb',
+        get_string('hidebreadcrumb', 'format_aicourse'),
+        get_string('sitedefault_desc', 'format_aicourse'),
+        0,
+        [
+            0 => get_string('hidesecondarynav_show', 'format_aicourse'),
+            1 => get_string('hidesecondarynav_students', 'format_aicourse'),
+            2 => get_string('hidesecondarynav_all', 'format_aicourse'),
+        ]
+    ));
+
+    $settings->add(new admin_setting_configselect(
+        'format_aicourse/forcehidebreadcrumb',
+        get_string('forcehidebreadcrumb', 'format_aicourse'),
+        get_string('forcehidebreadcrumb_desc', 'format_aicourse'),
+        -1,
+        [
+            -1 => get_string('forcehidebreadcrumb_leave', 'format_aicourse'),
+            0 => get_string('hidesecondarynav_show', 'format_aicourse'),
+            1 => get_string('hidesecondarynav_students', 'format_aicourse'),
+            2 => get_string('hidesecondarynav_all', 'format_aicourse'),
+        ]
+    ));
+
+    // ACF-FIX-2.1.46: estimated activity durations.
+    $settings->add(new admin_setting_heading(
+        'format_aicourse/timingheading',
+        get_string('timingheading', 'format_aicourse'),
+        get_string('timingheading_desc', 'format_aicourse')
+    ));
+
+    $settings->add(new admin_setting_configtextarea(
+        'format_aicourse/defaultminutes',
+        get_string('defaultminutes', 'format_aicourse'),
+        get_string('defaultminutes_desc', 'format_aicourse'),
+        \format_aicourse\local\progress::DEFAULT_MINUTES_MAP,
+        // ACF-FIX-2.1.115: plain text rather than an untyped value. The field holds
+        // "modname=minutes" lines and nothing else; the parser already ignores anything not
+        // matching that shape, so there is no case where markup here would be wanted.
+        PARAM_TEXT
+    ));
+
+    $settings->add(new admin_setting_configtext(
+        'format_aicourse/minutesperquestion',
+        get_string('minutesperquestion', 'format_aicourse'),
+        get_string('minutesperquestion_desc', 'format_aicourse'),
+        1,
+        PARAM_INT
+    ));
+
+    $settings->add(new admin_setting_configtext(
+        'format_aicourse/minutesfallback',
+        get_string('minutesfallback', 'format_aicourse'),
+        get_string('minutesfallback_desc', 'format_aicourse'),
+        5,
+        PARAM_INT
+    ));
+
+    // ACF-FIX-2.1.43: first-run tour.
+    $settings->add(new admin_setting_configcheckbox(
+        'format_aicourse/tourvoiceover',
+        get_string('tourvoiceover', 'format_aicourse'),
+        get_string('tourvoiceover_desc', 'format_aicourse'),
+        1
+    ));
+
+    $settings->add(new admin_setting_configtext(
+        'format_aicourse/tourvoice',
+        get_string('tourvoice', 'format_aicourse'),
+        get_string('tourvoice_desc', 'format_aicourse'),
+        'en-AU',
+        PARAM_TEXT
     ));
 
     $settings->add(new admin_setting_configcheckbox(
@@ -293,6 +580,17 @@ if ($hassiteconfig) {
         get_string('heroimageoverlay', 'format_aicourse'),
         get_string('heroimageoverlay_desc', 'format_aicourse'),
         45,
+        PARAM_INT
+    ));
+
+    // ACF-FIX-2.1.40: the override. The default above only seeds NEW courses -- an existing
+    // course has its own stored value and ignores it forever, which is why changing the default
+    // appears to do nothing. This applies to every course at once. -1 leaves each course alone.
+    $settings->add(new admin_setting_configtext(
+        'format_aicourse/forceheroimageoverlay',
+        get_string('forceheroimageoverlay', 'format_aicourse'),
+        get_string('forceheroimageoverlay_desc', 'format_aicourse'),
+        -1,
         PARAM_INT
     ));
 }

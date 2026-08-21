@@ -83,9 +83,35 @@ class format_aicourse extends format_topics {
      */
     public static function get_accent_style(array $options): string {
         $css = '';
+        // ACF-FIX-2.1.61: a course's own colour first, then the site's, then a site-wide force.
+        //
+        // Previously the accent existed only per course, so a site wanting one palette across
+        // every course had to set it course by course and remember to do it again on each new one.
+        // The site default seeds courses that have not chosen; the force overrides every course at
+        // once, which is what an administrator setting a brand actually wants.
         $colour = isset($options['accentcolour']) ? trim((string) $options['accentcolour']) : '';
+        if ($colour === '') {
+            $colour = trim((string) get_config('format_aicourse', 'defaultaccentcolour'));
+        }
+        $forced = trim((string) get_config('format_aicourse', 'forceaccentcolour'));
+        if ($forced !== '') {
+            $colour = $forced;
+        }
         if ($colour !== '' && preg_match('/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/', $colour)) {
             $css .= '--acf-brand:' . $colour . ';';
+        }
+
+        // ACF-FIX-2.1.85: the sidebar header band, same three-step resolution as the accent.
+        $band = isset($options['playerheadercolour']) ? trim((string) $options['playerheadercolour']) : '';
+        if ($band === '') {
+            $band = trim((string) get_config('format_aicourse', 'defaultplayerheadercolour'));
+        }
+        $forceband = trim((string) get_config('format_aicourse', 'forceplayerheadercolour'));
+        if ($forceband !== '') {
+            $band = $forceband;
+        }
+        if ($band !== '' && preg_match('/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/', $band)) {
+            $css .= '--acf-player-header-bg:' . $band . ';';
         }
         if (isset($options['herobannerfade']) && $options['herobannerfade'] !== '') {
             $fade = max(0, min(100, (int) $options['herobannerfade']));
@@ -93,11 +119,71 @@ class format_aicourse extends format_topics {
         }
         // The default of -1 means "not set" -- leave the property absent so the site-wide
         // Banner overlay strength class keeps control. 0 is a real value: no overlay at all.
-        if (isset($options['heroimageoverlay']) && (int) $options['heroimageoverlay'] >= 0) {
-            $overlay = max(0, min(100, (int) $options['heroimageoverlay']));
+        // ACF-FIX-2.1.40: a site-wide override, distinct from the site DEFAULT. The default only
+        // seeds new courses; an existing course keeps its own stored value and ignores it, which
+        // is why changing the default looks like it does nothing. -1 means "leave each course
+        // alone" and is the shipped value.
+        $overlayvalue = isset($options['heroimageoverlay']) ? (int) $options['heroimageoverlay'] : -1;
+        $forceoverlay = get_config('format_aicourse', 'forceheroimageoverlay');
+        if ($forceoverlay !== false && $forceoverlay !== '' && (int) $forceoverlay >= 0) {
+            $overlayvalue = (int) $forceoverlay;
+        }
+        // A value of -1 still means "not set": leave the property absent so the site-wide Banner
+        // overlay strength class keeps control. 0 is a real value meaning no overlay at all.
+        if ($overlayvalue >= 0) {
+            $overlay = max(0, min(100, $overlayvalue));
             $css .= '--acf-hero-scrim-a:' . number_format($overlay / 100, 2, '.', '') . ';';
         }
         return $css;
+    }
+
+    /**
+     * Set the course index drawer's starting state, once, on a user's first visit to a course.
+     *
+     * ACF-FIX-2.1.55. Moodle opens the course index by default and remembers whatever the user
+     * last chose, site-wide. On a format that already carries the course in its banner and cards,
+     * a drawer covering a third of the screen on arrival is often not what a teacher wants their
+     * learners to meet first.
+     *
+     * This writes core's own `drawer-open-index` preference, so the drawer renders in the chosen
+     * state server-side and there is no flash of it opening and closing. It is written ONCE per
+     * user per course: after that the user's own toggle is respected, because a setting that
+     * reimposed itself on every page load would be fighting the person using it.
+     *
+     * @param \stdClass $course The course being entered.
+     * @return void
+     */
+    protected static function apply_initial_index_state(\stdClass $course): void {
+        if (!isloggedin() || isguestuser()) {
+            return;
+        }
+
+        $marker = 'format_aicourse_indexstate_' . (int) $course->id;
+        if (get_user_preferences($marker, 0)) {
+            return;
+        }
+
+        $options = course_get_format($course)->get_format_options();
+        $state = isset($options['indexstate']) ? (int) $options['indexstate'] : -1;
+        if ($state < 0) {
+            $state = (int) (get_config('format_aicourse', 'defaultindexstate') ?: 0);
+        }
+        $force = get_config('format_aicourse', 'forceindexstate');
+        if ($force !== false && $force !== '' && (int) $force >= 0) {
+            $state = (int) $force;
+        }
+
+        // Mark the visit whichever way it goes, so "leave it alone" is also decided only once and
+        // a later change to the setting does not reach back into courses people have already
+        // opened and had a preference in.
+        set_user_preference($marker, 1);
+
+        // 0 means leave Moodle's own behaviour alone.
+        if ($state === 1) {
+            set_user_preference('drawer-open-index', false);
+        } else if ($state === 2) {
+            set_user_preference('drawer-open-index', true);
+        }
     }
 
     /**
@@ -115,6 +201,9 @@ class format_aicourse extends format_topics {
         // Add format body class for CSS selectors.
         $page->add_body_class('format-aicourse');
         $page->add_body_class('aicourse-clean-view');
+
+        // ACF-FIX-2.1.55: set the course index drawer's starting state on a user's first visit.
+        self::apply_initial_index_state($this->get_course());
 
         // FIX-GRADER-PHPCLASS (v1.7.56): Add aicourse-is-grader via PHP so CSS rules fire
         // immediately without FOUC. Covers teachers and non-editing teachers (grade/report:viewall).
@@ -179,6 +268,69 @@ class format_aicourse extends format_topics {
                 $page->add_body_class('aicourse-hidenav-students');
             } else if ($hidenav === 2) {
                 $page->add_body_class('aicourse-hidenav-all');
+            }
+            // ACF-FIX-2.1.103: full-width banner. A plain on/off rather than three states -- it is
+            // a layout choice for the course, not something to vary by who is looking.
+            $fw = isset($navopts['herofullwidth']) ? (int) $navopts['herofullwidth'] : -1;
+            if ($fw < 0) {
+                $fw = (int) (get_config('format_aicourse', 'defaultherofullwidth') ?: 0);
+            }
+            $forcefw = get_config('format_aicourse', 'forceherofullwidth');
+            if ($forcefw !== false && $forcefw !== '' && (int) $forcefw >= 0) {
+                $fw = (int) $forcefw;
+            }
+            if ($fw === 1) {
+                $page->add_body_class('aicourse-hero-fullwidth');
+            }
+            // ACF-FIX-2.1.102: the General section. Same three states as its neighbours.
+            $gen = isset($navopts['hidegeneral']) ? (int) $navopts['hidegeneral'] : -1;
+            if ($gen < 0) {
+                $gen = (int) (get_config('format_aicourse', 'defaulthidegeneral') ?: 0);
+            }
+            $forcegen = get_config('format_aicourse', 'forcehidegeneral');
+            if ($forcegen !== false && $forcegen !== '' && (int) $forcegen >= 0) {
+                $gen = (int) $forcegen;
+            }
+            if ($gen === 1) {
+                $page->add_body_class('aicourse-hidegeneral-students');
+            } else if ($gen === 2) {
+                $page->add_body_class('aicourse-hidegeneral-all');
+            }
+            // ACF-FIX-2.1.80: the logo band. Same three states as the settings around it.
+            $imm = isset($navopts['immersive']) ? (int) $navopts['immersive'] : -1;
+            if ($imm < 0) {
+                $imm = (int) (get_config('format_aicourse', 'defaultimmersive') ?: 0);
+            }
+            $forceimm = get_config('format_aicourse', 'forceimmersive');
+            if ($forceimm !== false && $forceimm !== '' && (int) $forceimm >= 0) {
+                $imm = (int) $forceimm;
+            }
+            if ($imm === 1) {
+                $page->add_body_class('aicourse-hidelogoband-students');
+            } else if ($imm === 2) {
+                $page->add_body_class('aicourse-hidelogoband-all');
+            }
+            // ACF-FIX-2.1.50: footer, same three states and the same site-wide override.
+            $hidefooter = isset($navopts['hidefooter']) ? (int) $navopts['hidefooter'] : 0;
+            $forcefooter = get_config('format_aicourse', 'forcehidefooter');
+            if ($forcefooter !== false && $forcefooter !== '' && (int) $forcefooter >= 0) {
+                $hidefooter = (int) $forcefooter;
+            }
+            if ($hidefooter === 1) {
+                $page->add_body_class('aicourse-hidefooter-students');
+            } else if ($hidefooter === 2) {
+                $page->add_body_class('aicourse-hidefooter-all');
+            }
+            // ACF-FIX-2.1.36: breadcrumb, same three states and the same site-wide override.
+            $hidecrumb = isset($navopts['hidebreadcrumb']) ? (int) $navopts['hidebreadcrumb'] : 0;
+            $forcecrumb = get_config('format_aicourse', 'forcehidebreadcrumb');
+            if ($forcecrumb !== false && $forcecrumb !== '' && (int) $forcecrumb >= 0) {
+                $hidecrumb = (int) $forcecrumb;
+            }
+            if ($hidecrumb === 1) {
+                $page->add_body_class('aicourse-hidecrumb-students');
+            } else if ($hidecrumb === 2) {
+                $page->add_body_class('aicourse-hidecrumb-all');
             }
             if (!empty($navopts['cardlayout'])) {
                 $page->add_body_class('aicourse-cardlist');
@@ -354,11 +506,68 @@ class format_aicourse extends format_topics {
             // Enforcement is CSS-only and deliberately so: this is a decluttering preference,
             // NOT an access control. Every tab it hides remains reachable by URL and is still
             // guarded by its own capability check, exactly as before.
+            // ACF-FIX-2.1.89: 0 leaves the tab bar where the theme puts it, 1 moves it into the
+            // site header for users who can edit.
+            'coursenavplace' => [
+                'default' => $d('coursenavplace', 0),
+                'type' => PARAM_INT,
+            ],
             'hidesecondarynav' => [
                 // ACF-FIX-2.1.30: defaults to 1 (hide from students). The tabs are chrome a learner
                 // never needs -- most sites hide Participants anyway -- and on this format they push the
                 // course cards a long way down the page for no gain. Teachers keep them.
-                'default' => $d('hidesecondarynav', 1),
+                // ACF-FIX-2.1.86: defaults to 2, hidden for everyone outside edit mode. The bar
+                // duplicates what the hero and the course index already provide, and it returns
+                // automatically the moment editing is switched on, so a teacher never loses it
+                // while working.
+                'default' => $d('hidesecondarynav', 2),
+                'type' => PARAM_INT,
+            ],
+            // ACF-FIX-2.1.103: banner spans the full content width with no gap above it.
+            'herofullwidth' => [
+                'default' => $d('herofullwidth', 0),
+                'type' => PARAM_INT,
+            ],
+            // ACF-FIX-2.1.102: hide section 0 ("General") from the course index.
+            'hidegeneral' => [
+                'default' => $d('hidegeneral', 0),
+                'type' => PARAM_INT,
+            ],
+            // ACF-FIX-2.1.85: the course index header band colour, '#rrggbb' or '' to follow the
+            // site setting. Validated where it is used, as accentcolour is.
+            'playerheadercolour' => [
+                'default' => $d('playerheadercolour', ''),
+                'type' => PARAM_TEXT,
+            ],
+            // ACF-FIX-2.1.80: hide the theme's logo band. -1 follows the site default.
+            'immersive' => [
+                'default' => $d('immersive', -1),
+                'type' => PARAM_INT,
+            ],
+            // ACF-FIX-2.1.55: the course index drawer's starting state. -1 follows the site default.
+            'indexstate' => [
+                'default' => $d('indexstate', -1),
+                'type' => PARAM_INT,
+            ],
+            // ACF-FIX-2.1.52: the player sidebar. -1 follows the site default.
+            'playerindex' => [
+                'default' => $d('playerindex', -1),
+                'type' => PARAM_INT,
+            ],
+            // ACF-FIX-2.1.50: the site footer. Same three states as the two settings above it.
+            // On a course page it is the last thing a learner needs and the first thing that gets
+            // in the way of the content.
+            'hidefooter' => [
+                'default' => $d('hidefooter', 0),
+                'type' => PARAM_INT,
+            ],
+            // ACF-FIX-2.1.36: the breadcrumb trail Moodle renders above the content. Same three
+            // states as hidesecondarynav, and the same reasoning: on this format the activity
+            // hero already names the course, the section and the activity, so the breadcrumb
+            // repeats all three immediately below it. NOT an access control -- it hides a trail,
+            // it does not restrict anything, and every destination stays reachable.
+            'hidebreadcrumb' => [
+                'default' => $d('hidebreadcrumb', 0),
                 'type' => PARAM_INT,
             ],
             // ACF-FIX-2.1.23: 0 = responsive grid (unchanged), 1 = one full-width card per row.
@@ -501,9 +710,119 @@ class format_aicourse extends format_topics {
                     'help_component' => 'format_aicourse',
                     'element_type' => 'text',
                 ],
+                'coursenavplace' => [
+                    'label' => get_string('coursenavplace', 'format_aicourse'),
+                    'help' => 'coursenavplace',
+                    'help_component' => 'format_aicourse',
+                    'element_type' => 'select',
+                    'element_attributes' => [
+                        [
+                            0 => get_string('coursenavplace_default', 'format_aicourse'),
+                            1 => get_string('coursenavplace_header', 'format_aicourse'),
+                        ],
+                    ],
+                ],
                 'hidesecondarynav' => [
                     'label' => get_string('hidesecondarynav', 'format_aicourse'),
                     'help' => 'hidesecondarynav',
+                    'help_component' => 'format_aicourse',
+                    'element_type' => 'select',
+                    'element_attributes' => [
+                        [
+                            0 => get_string('hidesecondarynav_show', 'format_aicourse'),
+                            1 => get_string('hidesecondarynav_students', 'format_aicourse'),
+                            2 => get_string('hidesecondarynav_all', 'format_aicourse'),
+                        ],
+                    ],
+                ],
+                'herofullwidth' => [
+                    'label' => get_string('herofullwidth', 'format_aicourse'),
+                    'help' => 'herofullwidth',
+                    'help_component' => 'format_aicourse',
+                    'element_type' => 'select',
+                    'element_attributes' => [
+                        [
+                            0 => get_string('herofullwidth_contained', 'format_aicourse'),
+                            1 => get_string('herofullwidth_full', 'format_aicourse'),
+                        ],
+                    ],
+                ],
+                'hidegeneral' => [
+                    'label' => get_string('hidegeneral', 'format_aicourse'),
+                    'help' => 'hidegeneral',
+                    'help_component' => 'format_aicourse',
+                    'element_type' => 'select',
+                    'element_attributes' => [
+                        [
+                            0 => get_string('hidesecondarynav_show', 'format_aicourse'),
+                            1 => get_string('hidesecondarynav_students', 'format_aicourse'),
+                            2 => get_string('hidesecondarynav_all', 'format_aicourse'),
+                        ],
+                    ],
+                ],
+                'playerheadercolour' => [
+                    'label' => get_string('playerheadercolour', 'format_aicourse'),
+                    'help' => 'playerheadercolour',
+                    'help_component' => 'format_aicourse',
+                    'element_type' => 'text',
+                ],
+                'immersive' => [
+                    'label' => get_string('immersive', 'format_aicourse'),
+                    'help' => 'immersive',
+                    'help_component' => 'format_aicourse',
+                    'element_type' => 'select',
+                    'element_attributes' => [
+                        [
+                            -1 => get_string('playerindex_site', 'format_aicourse'),
+                            0 => get_string('hidesecondarynav_show', 'format_aicourse'),
+                            1 => get_string('hidesecondarynav_students', 'format_aicourse'),
+                            2 => get_string('hidesecondarynav_all', 'format_aicourse'),
+                        ],
+                    ],
+                ],
+                'indexstate' => [
+                    'label' => get_string('indexstate', 'format_aicourse'),
+                    'help' => 'indexstate',
+                    'help_component' => 'format_aicourse',
+                    'element_type' => 'select',
+                    'element_attributes' => [
+                        [
+                            -1 => get_string('playerindex_site', 'format_aicourse'),
+                            0 => get_string('indexstate_remember', 'format_aicourse'),
+                            1 => get_string('indexstate_collapsed', 'format_aicourse'),
+                            2 => get_string('indexstate_open', 'format_aicourse'),
+                        ],
+                    ],
+                ],
+                'playerindex' => [
+                    'label' => get_string('playerindex', 'format_aicourse'),
+                    'help' => 'playerindex',
+                    'help_component' => 'format_aicourse',
+                    'element_type' => 'select',
+                    'element_attributes' => [
+                        [
+                            -1 => get_string('playerindex_site', 'format_aicourse'),
+                            0 => get_string('playerindex_off', 'format_aicourse'),
+                            1 => get_string('playerindex_on', 'format_aicourse'),
+                        ],
+                    ],
+                ],
+                'hidefooter' => [
+                    'label' => get_string('hidefooter', 'format_aicourse'),
+                    'help' => 'hidefooter',
+                    'help_component' => 'format_aicourse',
+                    'element_type' => 'select',
+                    'element_attributes' => [
+                        [
+                            0 => get_string('hidesecondarynav_show', 'format_aicourse'),
+                            1 => get_string('hidesecondarynav_students', 'format_aicourse'),
+                            2 => get_string('hidesecondarynav_all', 'format_aicourse'),
+                        ],
+                    ],
+                ],
+                'hidebreadcrumb' => [
+                    'label' => get_string('hidebreadcrumb', 'format_aicourse'),
+                    'help' => 'hidebreadcrumb',
                     'help_component' => 'format_aicourse',
                     'element_type' => 'select',
                     'element_attributes' => [
@@ -771,6 +1090,31 @@ class format_aicourse extends format_topics {
  * @return void Always sends the file or a "not found" response.
  */
 function format_aicourse_pluginfile($course, $cm, $context, $filearea, $args, $forcedownload, array $options = []) {
+    // ACF-FIX-2.1.63: the sidebar logo is a SITE-level setting, stored against the system context,
+    // so it is served here before the course-scoped handler below -- which expects a course and
+    // would reject it. Login is not required: this is site branding, shown on the login page's
+    // sibling pages and no more sensitive than the site logo itself.
+    if ($filearea === 'playerlogo') {
+        $fs = get_file_storage();
+        $filename = array_pop($args);
+        $filepath = $args ? '/' . implode('/', $args) . '/' : '/';
+        $file = $fs->get_file(
+            \context_system::instance()->id,
+            'format_aicourse',
+            'playerlogo',
+            0,
+            $filepath,
+            $filename
+        );
+        if (!$file || $file->is_directory()) {
+            send_file_not_found();
+        }
+        // Long cache: the file only changes when an administrator replaces it, and the URL carries
+        // a revision so a replacement is picked up immediately.
+        send_stored_file($file, DAYSECS, 0, $forcedownload, $options);
+        return;
+    }
+
     callbacks::pluginfile($course, $cm, $context, $filearea, $args, $forcedownload, $options);
 }
 
@@ -821,4 +1165,44 @@ function format_aicourse_output_fragment_sectioncard($args): string {
  */
 function format_aicourse_extend_navigation_course($navigation, $course, $context) {
     callbacks::extend_navigation_course($navigation, $course, $context);
+}
+
+/**
+ * Declare user preferences this plugin writes from JavaScript.
+ *
+ * ACF-FIX-2.1.43. core_user_update_user_preferences refuses any preference a plugin has not
+ * declared here, so without this the tour would run once per page load forever.
+ *
+ * @return array Preference definitions.
+ */
+function format_aicourse_user_preferences(): array {
+    return [
+        // ACF-FIX-2.1.51: one per course, so the tutor introduces itself once in each course
+        // rather than once ever. The wildcard is how core allows a family of preferences.
+        // The key is run through preg_match() by core, so it must be a DELIMITED pattern. Written
+        // as a bare string it silently matches nothing, the AJAX write is rejected, and the tutor
+        // introduces itself on every visit instead of once.
+        // ACF-FIX-2.1.55: records that a course's initial drawer state has been applied once.
+        '/^format_aicourse_indexstate_\d+$/' => [
+            'isregex' => true,
+            'type' => PARAM_INT,
+            'null' => NULL_NOT_ALLOWED,
+            'default' => 0,
+            'permissioncallback' => [core_user::class, 'is_current_user'],
+        ],
+        '/^format_aicourse_tutor_seen_\d+$/' => [
+            'isregex' => true,
+            'type' => PARAM_INT,
+            'null' => NULL_NOT_ALLOWED,
+            'default' => 0,
+            'permissioncallback' => [core_user::class, 'is_current_user'],
+        ],
+        \format_aicourse\local\tour::SEEN_PREF => [
+            'type' => PARAM_INT,
+            'null' => NULL_NOT_ALLOWED,
+            'default' => 0,
+            // A user may only ever set their own: this records whether THEY have seen the tour.
+            'permissioncallback' => [core_user::class, 'is_current_user'],
+        ],
+    ];
 }

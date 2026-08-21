@@ -47,13 +47,21 @@ const SELECTORS = {
     quickactions: 'aicourse-ai-quick-actions',
     loading: 'aicourse-ai-loading',
     welcomebody: '#aicourse-ai-welcome .aicourse-ai-message-content',
-    toggle: '.aicourse-ai-toggle, .aicourse-hero-ai-btn',
+    // ACF-FIX-2.1.51: was '.aicourse-ai-toggle, .aicourse-hero-ai-btn'. The second half was
+    // wrong: .aicourse-hero-ai-btn is the shared LAYOUT class on every round button in the hero
+    // pill, so it matched the Generate banner image button as well -- clicking that opened the
+    // tutor on top of the generation dialogue. Only the button that actually is the tutor toggle
+    // should open the tutor.
+    toggle: '.aicourse-ai-toggle',
     close: '.aicourse-ai-chatbox-close, #aicourse-ai-close',
     quickbtn: '.aicourse-ai-quick-btn',
     sendbtn: '#aicourse-ai-send, .aicourse-ai-send-btn',
     ratebtn: '.aicourse-ai-rate-btn',
     rating: '.aicourse-ai-rating',
-    herobtn: '.aicourse-hero-ai-btn',
+    // ACF-FIX-2.1.51: the tutor's own button, not every button in the hero pill. This drives
+    // aria-expanded, and setting that on the Generate banner button told a screen reader it
+    // controlled the tutor panel, which it does not.
+    herobtn: '.aicourse-ai-toggle',
 };
 
 /**
@@ -910,5 +918,36 @@ export const init = (initconfig) => {
         fetchActivityContext(0);
         updateQuizContext();
         registerQuestionNavigation();
+    }
+
+    // ACF-FIX-2.1.51: introduce the tutor once, on a user's first visit to the course.
+    //
+    // A round icon in a banner is easy to miss, and a tutor nobody opens is a tutor nobody
+    // benefits from. Opening the panel once, the first time someone lands on the course, is the
+    // cheapest way to say "this exists" -- and because it is the panel itself rather than a
+    // notice about the panel, they can simply start typing.
+    //
+    // Once per course per user, recorded in a user preference exactly like the tour, so it does
+    // not reappear on every visit. Never while editing: a teacher arranging a course does not
+    // want a chat panel opening over it. Never on top of the tour either, which is doing the same
+    // introducing job more thoroughly.
+    if (config.introduce && !document.body.classList.contains('editing')
+            && !document.querySelector('.aicourse-tour-offer, .aicourse-tour')) {
+        window.setTimeout(() => {
+            if (document.querySelector('.aicourse-tour-offer, .aicourse-tour')) {
+                return;
+            }
+            const toggle = document.querySelector(SELECTORS.toggle);
+            openPanel(toggle);
+            Ajax.call([{
+                methodname: 'core_user_update_user_preferences',
+                args: {
+                    preferences: [{
+                        type: 'format_aicourse_tutor_seen_' + config.courseid,
+                        value: '1',
+                    }],
+                },
+            }])[0].catch(() => null);
+        }, 1200);
     }
 };

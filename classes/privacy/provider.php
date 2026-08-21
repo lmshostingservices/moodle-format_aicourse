@@ -109,6 +109,21 @@ class provider implements
             'privacy:metadata:format_aicourse_ai_memory'
         );
 
+        // ACF-FIX-2.1.46: the only personal datum here is usermodified -- who last set the
+        // estimate. It is course-authoring metadata rather than anything about a learner, but it
+        // is a user id in a plugin table, so it is declared.
+        $collection->add_database_table(
+            'format_aicourse_actminutes',
+            [
+                'courseid' => 'privacy:metadata:format_aicourse_actminutes:courseid',
+                'cmid' => 'privacy:metadata:format_aicourse_actminutes:cmid',
+                'minutes' => 'privacy:metadata:format_aicourse_actminutes:minutes',
+                'usermodified' => 'privacy:metadata:format_aicourse_actminutes:usermodified',
+                'timemodified' => 'privacy:metadata:format_aicourse_actminutes:timemodified',
+            ],
+            'privacy:metadata:format_aicourse_actminutes'
+        );
+
         $collection->add_external_location_link(
             'lms_labs_ai',
             [

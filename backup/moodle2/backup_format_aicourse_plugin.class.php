@@ -64,9 +64,9 @@ class backup_format_aicourse_plugin extends backup_format_plugin {
         ]);
 
         // Item id is passed as null on purpose: backup_structure_dbops::annotate_files() then
-        // omits the itemid clause entirely and picks up every banner file in the course context.
+        // Omits the itemid clause entirely and picks up every banner file in the course context.
         // That keeps backups correct on a site that has not yet run the 2.1.5 upgrade step, where
-        // the file may still sit under itemid = courseid rather than 0.
+        // The file may still sit under itemid = courseid rather than 0.
         $banner->annotate_files('format_aicourse', 'bannerimage', null);
 
         return $plugin;

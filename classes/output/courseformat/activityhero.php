@@ -199,6 +199,12 @@ class activityhero implements named_templatable, renderable {
         $hascompletion = !empty($completioninfo['hascompletion']);
         $iscompleted = !empty($completioninfo['completed']);
 
+        // ACF-FIX-2.1.45: publish hascompletion so the template can tell "not finished yet" apart
+        // from "completion is not tracked here". Without it the ring block fell through to its
+        // pending state for any activity whose completion is switched off, showing a learner an
+        // empty circle that means "you still have this to do" for something that will never be
+        // marked complete. The value was already computed here and simply never exported.
+        $data->hascompletion = $hascompletion;
         $data->ismanualtoggle = ($ismanual && $hascompletion);
         $data->iscompleted = $iscompleted;
         $data->cmid = !empty($completioninfo['cmid']) ? (int) $completioninfo['cmid'] : 0;

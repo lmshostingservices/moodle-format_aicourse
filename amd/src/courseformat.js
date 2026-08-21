@@ -1889,25 +1889,75 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function($, Str
                 setState('loading');
                 announce(STR.bannergenLoadingtitle);
 
+                // ACF-FIX-2.1.42: the call queues the work and returns at once; the result is
+                // collected by polling.
+                //
+                // Generation takes about 110 seconds, and holding one AJAX request open for that
+                // long meant it had to outlive every intermediary between here and PHP. The
+                // shortest timeout won -- a reverse proxy at 60s, Cloudflare's fixed 100s on its
+                // lower tiers -- and the browser was handed a 504 for a generation that was in
+                // fact succeeding on the server. Polling asks a cheap question repeatedly instead
+                // of one expensive question once, so no single request is ever long enough to be
+                // cut, whatever the hosting stack does.
+                var pollAttempts = 0;
+                var POLL_EVERY = 4000;
+                // 90 polls at 4s is six minutes: comfortably past the ~110s the service takes,
+                // with room for the adhoc task to be picked up by the next cron run.
+                var POLL_LIMIT = 90;
+
+                var succeed = function(imageurl) {
+                    $generate.prop('disabled', false);
+                    var safe = safeImageUrl(imageurl);
+                    $('#aicourse-bgen-preview-img').attr('src', safe);
+                    setState('success');
+                    announce(STR.bannergenApplied);
+                    schedule(function() {
+                        overlay.find('.aicourse-bgen-btn-done').filter(':visible').first().trigger('focus');
+                    }, 80);
+                    // ACF-FIX-2.0 (bug 3): actually show the new banner in-page. If the hero
+                    // is not on this page (it is injected by a footer hook) fall back to the
+                    // reload the Done button performs anyway.
+                    self.applyHeroBanner(imageurl);
+                };
+
+                var poll = function() {
+                    pollAttempts++;
+                    if (pollAttempts > POLL_LIMIT) {
+                        $generate.prop('disabled', false);
+                        showError(STR.bannergenFailed);
+                        return;
+                    }
+                    callExternal('get_banner_status', {
+                        courseid: parseInt(courseid, 10)
+                    }).done(function(status) {
+                        if (!status) {
+                            schedule(poll, POLL_EVERY);
+                            return;
+                        }
+                        if (status.status === 'done' && status.imageurl) {
+                            succeed(status.imageurl);
+                        } else if (status.status === 'failed') {
+                            $generate.prop('disabled', false);
+                            showError(extractBannerError(status.message || STR.bannergenFailed));
+                        } else {
+                            schedule(poll, POLL_EVERY);
+                        }
+                    }).fail(function() {
+                        // A dropped poll is not a failed generation -- the task carries on
+                        // regardless of whether this browser is listening. Try again.
+                        schedule(poll, POLL_EVERY);
+                    });
+                };
+
                 callExternal('generate_banner_image', {
                     courseid: parseInt(courseid, 10)
                 }).done(function(response) {
-                    $generate.prop('disabled', false);
                     if (response && response.imageurl) {
-                        var safe = safeImageUrl(response.imageurl);
-                        $('#aicourse-bgen-preview-img').attr('src', safe);
-                        setState('success');
-                        announce(STR.bannergenApplied);
-                        schedule(function() {
-                            overlay.find('.aicourse-bgen-btn-done').filter(':visible').first().trigger('focus');
-                        }, 80);
-                        // ACF-FIX-2.0 (bug 3): actually show the new banner in-page. If the hero
-                        // is not on this page (it is injected by a footer hook) fall back to the
-                        // reload the Done button performs anyway.
-                        self.applyHeroBanner(response.imageurl);
-                    } else {
-                        showError(STR.bannergenFailed);
+                        // A server still running the synchronous version: use the image directly.
+                        succeed(response.imageurl);
+                        return;
                     }
+                    schedule(poll, POLL_EVERY);
                 }).fail(function(error) {
                     $generate.prop('disabled', false);
                     showError(extractBannerError(errorMessage(error, STR.bannergenFailed)));

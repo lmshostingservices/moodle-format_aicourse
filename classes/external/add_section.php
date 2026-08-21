@@ -64,8 +64,8 @@ class add_section extends external_api {
 
         // In Moodle 4.x, course_create_section($courseid, $position, ...) inserts the new section
         // AT the given position number. Passing position 0 tries to insert at slot 0, which is
-        // always occupied by the permanent "General" section, causing a unique key violation. To
-        // append at the end we must pass MAX(section) + 1.
+        // Always occupied by the permanent "General" section, causing a unique key violation. To
+        // Append at the end we must pass MAX(section) + 1.
         try {
             $maxsection = (int) $DB->get_field_sql(
                 'SELECT MAX(section) FROM {course_sections} WHERE course = ?',

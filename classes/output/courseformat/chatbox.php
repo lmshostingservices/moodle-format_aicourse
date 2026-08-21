@@ -146,6 +146,31 @@ class chatbox implements named_templatable, renderable {
     }
 
     /**
+     * Whether to open the tutor automatically for this user on this course.
+     *
+     * ACF-FIX-2.1.51. Once per user per course. A round icon in a banner is easy to miss, and a
+     * tutor nobody opens is a tutor nobody benefits from, so the panel introduces itself the
+     * first time someone lands on the course and then never again.
+     *
+     * Suppressed while editing -- a teacher arranging a course does not want a chat panel opening
+     * over it -- and the JavaScript additionally stands down if the first-run tour is on screen,
+     * which is doing the same introducing job more thoroughly.
+     *
+     * @param int $courseid The course being visited.
+     * @return bool
+     */
+    protected static function should_introduce_tutor(int $courseid): bool {
+        global $PAGE;
+        if (!isloggedin() || isguestuser()) {
+            return false;
+        }
+        if ($PAGE->user_is_editing()) {
+            return false;
+        }
+        return !get_user_preferences('format_aicourse_tutor_seen_' . $courseid, 0);
+    }
+
+    /**
      * The config object handed to format_aicourse/chatbox's init().
      *
      * @return array Config, JSON-encoded by js_call_amd().
@@ -166,6 +191,11 @@ class chatbox implements named_templatable, renderable {
             'activitytype' => $context->activitytype,
             'sectionid' => $context->sectionid,
             'contextaware' => in_array($context->activitytype, self::CONTEXT_AWARE_MODULES, true),
+            // ACF-FIX-2.1.51: open the tutor once on a user's first visit to this course, so they
+            // discover it exists. Decided here rather than in JavaScript because the preference
+            // is per user and per course and the browser should not be trusted to know whether
+            // it has already been shown.
+            'introduce' => self::should_introduce_tutor((int) $this->get_course()->id),
         ];
     }
 

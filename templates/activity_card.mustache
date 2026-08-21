@@ -44,6 +44,10 @@
     * name string PRE-ESCAPED activity or section name (already through format_string()); rendered
       with a triple mustache so the entities format_string() produced are not escaped twice.
     * typename string Localised module type label.
+    * hastime bool Whether an estimated duration is known and non-zero.
+    * estimatedtime string Formatted duration, for example "10 min"; shown to sighted users.
+    * timelabel string The same duration phrased for a screen reader, for example
+    *     "Estimated time: 10 min", so the pill is not announced as a bare number.
     * iscompleted bool True when the tick should be drawn in the status badge.
     * statuslabel string Localised completion status; unused for a subsection card.
     * badgeclass string CSS class of the status badge; unused for a subsection card.
@@ -59,6 +63,9 @@
         "iconurl": "https://example.org/theme/image.php/boost/page/1/monologo",
         "name": "What is machine learning?",
         "typename": "Page",
+        "hastime": true,
+        "estimatedtime": "10 min",
+        "timelabel": "Estimated time: 10 min",
         "iscompleted": true,
         "statuslabel": "Completed",
         "badgeclass": "aicourse-status-badge-completed"
@@ -70,6 +77,9 @@
 <h3 class="aicourse-activity-card-name">{{{name}}}</h3>
 <div class="aicourse-activity-card-footer">
 <span class="aicourse-activity-card-type">{{typename}}</span>
+{{#hastime}}
+<span class="aicourse-activity-card-time" title="{{timelabel}}"><svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg><span class="accesshide">{{timelabel}}</span><span aria-hidden="true">{{estimatedtime}}</span></span>
+{{/hastime}}
 {{^issubsection}}
 <span class="aicourse-status-badge {{badgeclass}}">{{#iscompleted}}<svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>{{/iscompleted}}{{statuslabel}}</span>
 {{/issubsection}}

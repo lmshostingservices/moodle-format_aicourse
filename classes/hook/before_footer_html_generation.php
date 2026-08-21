@@ -89,6 +89,24 @@ class before_footer_html_generation {
         try {
             $atopoptions = course_get_format($COURSE)->get_format_options();
             if (!empty($atopoptions['heroattop']) && !$PAGE->user_is_editing()) {
+                // ACF-FIX-2.1.95: none of this belongs on a settings or admin page.
+                //
+                // The hook fires wherever $COURSE is set, which includes /course/edit.php -- so the
+                // banner, the player sidebar, the tab relocator and the first-run tour were all being
+                // loaded onto the course settings form. Measured: five modules initialised on that page,
+                // every one of them reaching into the DOM for elements that are not there.
+                //
+                // That is how the Course format section came to open only intermittently: the form's own
+                // collapse behaviour was competing with scripts that had no business running.
+                //
+                // Restricted to the pages this format actually draws: the course itself, its sections, and
+                // activity pages within it.
+                $pagetype = (string) $PAGE->pagetype;
+                $isformatpage = strpos($pagetype, 'course-view') === 0 || strpos($pagetype, 'mod-') === 0;
+                if (!$isformatpage) {
+                    return;
+                }
+
                 $PAGE->requires->js_call_amd('format_aicourse/heroatop', 'init');
             }
         } catch (\Throwable $e) {
@@ -120,6 +138,96 @@ class before_footer_html_generation {
         // throwing it away cost a duplicate render on the most-visited page in the course.
         // section.php never reaches here: page_set_course() redirects it to course/view.php
         // before any output starts.
+        // ACF-FIX-2.1.54: publish the course accent at the document root.
+        //
+        // It was inlined on the hero element, so its custom properties were scoped to the hero's
+        // own subtree and nothing else the format draws ever saw the course's colour -- the
+        // sidebar, the tour, the chat panel and the focus ring all fell back to the theme's
+        // primary. A per-course accent that tints one banner is not really a per-course accent.
+        //
+        // Emitted here, above the course-view early return below, because that return skips
+        // everything after it on the very page the accent matters most.
+        try {
+            $accent = \format_aicourse::get_accent_style(
+                course_get_format($COURSE)->get_format_options()
+            );
+            if ($accent !== '') {
+                $PAGE->requires->js_call_amd('format_aicourse/bodyclass', 'init', [[], $accent]);
+            }
+        } catch (\Throwable $e) {
+            unset($e);
+        }
+
+        // ACF-FIX-2.1.89: move the course tab bar into the site header, for users who can edit
+        // and only when the course asks for it.
+        try {
+            $navctx = \context_course::instance($COURSE->id);
+            $navopts = course_get_format($COURSE)->get_format_options();
+            if (
+                !empty($navopts['coursenavplace'])
+                    && has_capability('moodle/course:update', $navctx)
+            ) {
+                $PAGE->requires->js_call_amd('format_aicourse/coursenav', 'init');
+            }
+        } catch (\Throwable $e) {
+            unset($e);
+        }
+
+        // ACF-FIX-2.1.52: the player sidebar. Loaded from the footer so core's course index has
+        // already been rendered and can be decorated in place. Above the course-view early return
+        // for the same reason the tour is: that return exists to avoid re-rendering the banner,
+        // and would otherwise skip this on the very page it matters most.
+        try {
+            if (\format_aicourse\local\player::is_enabled($COURSE)) {
+                // ACF-FIX-2.1.113: the config goes in the page, not in the JS call arguments.
+                //
+                // It carries a row per activity, so a course of any size pushes the argument
+                // string past the 1024-character limit js_call_amd() warns about -- 21 activities
+                // is enough. Moodle's own advice for this is to pass the data through the page
+                // rather than the call, which is what this does.
+                //
+                // A script element of type application/json is inert: the browser does not execute
+                // it, and JSON_HEX_TAG means a "</script>" appearing inside any course or activity
+                // name cannot close the element early.
+                $playerconfig = \format_aicourse\local\player::get_js_config($COURSE);
+                $encoded = json_encode(
+                    $playerconfig,
+                    JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_SLASHES
+                );
+                if ($encoded !== false) {
+                    $hook->add_html(
+                        '<script type="application/json" id="aicourse-player-config">'
+                        . $encoded . '</script>'
+                    );
+                    $PAGE->requires->js_call_amd('format_aicourse/player', 'init');
+                }
+            }
+        } catch (\Throwable $e) {
+            // The sidebar is an enhancement; never let it break a page render.
+            unset($e);
+        }
+
+        // ACF-FIX-2.1.43: offer the first-run tour.
+        //
+        // Deliberately ABOVE the course-view early return below. That return exists because
+        // format.php has already rendered the banner on the course page and re-rendering it here
+        // would duplicate it -- but it also meant anything added after it never ran on the very
+        // page the tour is mostly about. The tour only queues a JS module, so it is safe on both
+        // sides of that boundary.
+        try {
+            $tourcontext = \context_course::instance($COURSE->id);
+            if (\format_aicourse\local\tour::should_offer($tourcontext)) {
+                $PAGE->requires->js_call_amd(
+                    'format_aicourse/tour',
+                    'init',
+                    [\format_aicourse\local\tour::get_js_config($tourcontext)]
+                );
+            }
+        } catch (\Throwable $e) {
+            // The tour is a nicety; never let it break a page render.
+            unset($e);
+        }
+
         if ($PAGE->pagetype === 'course-view-aicourse') {
             return;
         }

@@ -55,7 +55,6 @@
      self-evident. UI boundaries and focus rings meet 1.4.11 (3:1).
    ========================================================================== */
 
-
 /* ==========================================================================
    1. BREAKPOINT LADDER  (documentation)
    --------------------------------------------------------------------------
@@ -74,7 +73,6 @@
    region sizes itself correctly. That removes the whole class of
    "4 columns in a 900px region" bugs.
    ========================================================================== */
-
 
 /* ==========================================================================
    2. DESIGN TOKENS — PRIMITIVES
@@ -158,7 +156,6 @@ body.format-aicourse,
     --acf-inverse-fill: rgba(255, 255, 255, 0.09);
     --acf-inverse-fill-hover: rgba(255, 255, 255, 0.16);
 
-
     /* ======================================================================
        SPACE — 4px base grid. Replaces 22 ad-hoc pixel values.
        ====================================================================== */
@@ -179,19 +176,22 @@ body.format-aicourse,
        redefinitions with a single continuous value. */
     --acf-gutter: clamp(0.75rem, 0.35rem + 1.6vw, 1.5rem);
 
-
     /* ======================================================================
        RADIUS — 7 steps. Replaces 20.
        ====================================================================== */
     --acf-radius-xs: 4px;
-    --acf-radius-sm: 6px;
-    --acf-radius-md: 10px;
-    --acf-radius-lg: 14px;
-    --acf-radius-xl: 18px;
+    /* ACF-FIX-2.1.106: square corners throughout.
+       Set at the token rather than rule by rule, so nothing is missed and nothing can drift back:
+       every card, panel and banner reads from these four. The pill token below is deliberately
+       untouched -- the status badges and the time pills are meant to be pills, and squaring them
+       would turn a deliberate shape into a mistake. */
+    --acf-radius-sm: 0;
+    --acf-radius-md: 0;
+    --acf-radius-lg: 0;
+    --acf-radius-xl: 0;
     --acf-radius-2xl: 24px;
     --acf-radius-pill: 999px;
     --acf-radius-full: 50%;
-
 
     /* ======================================================================
        TYPE — rem-based so it honours the user's font-size preference.
@@ -230,7 +230,6 @@ body.format-aicourse,
     --acf-tracking-wide: 0.04em;
     --acf-tracking-wider: 0.08em;               /* uppercase micro-labels */
 
-
     /* ======================================================================
        MOTION — 5 durations, 4 curves. Replaces 13 durations and 6 curves.
        Every duration is a token so `prefers-reduced-motion` can zero them
@@ -247,7 +246,6 @@ body.format-aicourse,
     --acf-ease-in: cubic-bezier(0.7, 0, 0.84, 0);
     --acf-ease-spring: cubic-bezier(0.34, 1.42, 0.64, 1);
 
-
     /* ======================================================================
        Z-INDEX — named scale. Chosen to sit correctly against Boost:
        Boost drawers ~1020, Bootstrap modal-backdrop 1050 / modal 1055.
@@ -261,7 +259,6 @@ body.format-aicourse,
     --acf-z-chatbox: 1035;  /* above Boost drawers, below Bootstrap modals */
     --acf-z-modal: 1060;  /* icon picker */
     --acf-z-modal-alert: 1070;  /* banner generate / remove — always on top */
-
 
     /* ======================================================================
        LAYOUT + SIZING
@@ -296,7 +293,6 @@ body.format-aicourse,
     --acf-blur-md: 10px;
     --acf-blur-lg: 18px;
 }
-
 
 /* ==========================================================================
    3. DESIGN TOKENS — SEMANTIC (light)
@@ -333,6 +329,17 @@ body.format-aicourse,
 
     /* --- Borders --------------------------------------------------------- */
     --acf-border-subtle: rgba(15, 23, 42, 0.08);
+
+    /* ACF-FIX-2.1.84: the course index dividers, deliberately a shade darker than
+       --acf-border-subtle. That token is right for a card edge, which is reinforced by the card's
+       own background and elevation; a bare line on white has nothing helping it and at 8% it was
+       barely visible. Kept separate rather than darkening --acf-border-subtle globally, which
+       would have changed every card border in the plugin along with it. */
+    --acf-player-line: rgba(15, 23, 42, 0.16);
+
+    /* ACF-FIX-2.1.85: the sidebar header band. A shade darker than --acf-surface-sunken, which
+       was too close to white to read as a distinct band once the panel around it went white. */
+    --acf-player-header-default: #eceff4;
     --acf-border-default: var(--acf-neutral-200);
     --acf-border-strong: var(--acf-neutral-300);
     --acf-border-brand: var(--acf-brand);
@@ -576,22 +583,38 @@ body.format-aicourse {
         0 40px 80px rgba(15, 23, 42, 0.16);
 
     /* --- Focus -----------------------------------------------------------
-       Deliberately NOT theme-derived: a site whose --primary is pale would
-       otherwise ship an invisible focus ring. #1d4ed8 is 6.70:1 on white and
-       the two-tone halo keeps it visible on any card, image or gradient. */
-    --acf-focus-color: var(--acf-blue-700);
+       ACF-FIX-2.1.35: the ring now follows the site's own primary colour.
+
+       It used to be pinned to #1d4ed8 on the reasoning that a pale --primary
+       would ship an invisible focus ring. That risk is real -- WCAG 1.4.11
+       wants 3:1 for a focus indicator -- but pinning it meant every site got a
+       stock blue ring that belonged to no theme, which is what made it look
+       like a stray colour rather than a deliberate one.
+
+       Both are satisfied by keeping the ring branded and guaranteeing its
+       visibility with the halo rather than with the ring's own hue. The halo is
+       drawn FIRST in the surface colour, separating the ring from whatever sits
+       behind it, and a third outer band in near-black backs the whole indicator
+       so it reads against a pale primary, a white card, a photograph or a dark
+       gradient alike. A pale brand ring on a dark outer band still clears 3:1
+       against its immediate surround, because the surround is the band.
+
+       Sites that want the old fixed blue can set --acf-focus-color themselves;
+       it is still a token. */
+    --acf-focus-color: var(--acf-brand);
     --acf-focus-halo: var(--acf-surface-raised);
+    --acf-focus-backing: rgba(2, 6, 23, 0.55);
     --acf-focus-width: 2px;
     --acf-focus-offset: 2px;
     --acf-focus-ring:
         0 0 0 var(--acf-focus-offset) var(--acf-focus-halo),
-        0 0 0 calc(var(--acf-focus-offset) + var(--acf-focus-width)) var(--acf-focus-color);
+        0 0 0 calc(var(--acf-focus-offset) + var(--acf-focus-width)) var(--acf-focus-color),
+        0 0 0 calc(var(--acf-focus-offset) + var(--acf-focus-width) + 1px) var(--acf-focus-backing);
     /* Variant for controls sitting on imagery / dark gradients. */
     --acf-focus-ring-media:
         0 0 0 2px rgba(2, 6, 23, 0.85),
         0 0 0 4px #fff;
 }
-
 
 /* ==========================================================================
    4. DESIGN TOKENS — DARK
@@ -636,6 +659,8 @@ body.aicourse-force-dark :is(.aicadmin-wrap, .aitutor-report-index) {
     --acf-text-brand: var(--acf-blue-300);      /*  8.10:1 */
 
     --acf-border-subtle: rgba(255, 255, 255, 0.10);
+    --acf-player-line: rgba(255, 255, 255, 0.20);
+    --acf-player-header-default: rgba(255, 255, 255, 0.06);
     --acf-border-default: var(--acf-neutral-700);
     --acf-border-strong: var(--acf-neutral-600);
     --acf-border-media: rgba(255, 255, 255, 0.20);
@@ -713,8 +738,11 @@ body.aicourse-force-dark :is(.aicadmin-wrap, .aitutor-report-index) {
         0 40px 80px rgba(2, 6, 23, 0.55),
         0 0 0 1px rgba(255, 255, 255, 0.08);
 
-    --acf-focus-color: var(--acf-blue-300);
+    /* ACF-FIX-2.1.35: keep the brand hue in dark mode too; only the halo and the
+       backing band change, so the ring stays the site's colour rather than
+       reverting to a stock blue the moment the page goes dark. */
     --acf-focus-halo: var(--acf-neutral-900);
+    --acf-focus-backing: rgba(255, 255, 255, 0.65);
 
     color-scheme: dark;
 }
@@ -765,6 +793,8 @@ body.aicourse-force-dark :is(.aicadmin-wrap, .aitutor-report-index) {
         --acf-text-brand: var(--acf-blue-300);
 
         --acf-border-subtle: rgba(255, 255, 255, 0.10);
+        --acf-player-line: rgba(255, 255, 255, 0.20);
+        --acf-player-header-default: rgba(255, 255, 255, 0.06);
         --acf-border-default: var(--acf-neutral-700);
         --acf-border-strong: var(--acf-neutral-600);
         --acf-border-media: rgba(255, 255, 255, 0.20);
@@ -838,13 +868,13 @@ body.aicourse-force-dark :is(.aicadmin-wrap, .aitutor-report-index) {
             0 40px 80px rgba(2, 6, 23, 0.55),
             0 0 0 1px rgba(255, 255, 255, 0.08);
 
-        --acf-focus-color: var(--acf-blue-300);
+        /* ACF-FIX-2.1.35: see the note in the explicit dark block above. */
         --acf-focus-halo: var(--acf-neutral-900);
+        --acf-focus-backing: rgba(255, 255, 255, 0.65);
 
         color-scheme: dark;
     }
 }
-
 
 /* ==========================================================================
    5. DESIGN TOKENS — USER PREFERENCES
@@ -944,7 +974,6 @@ body.aicourse-force-dark :is(.aicadmin-wrap, .aitutor-report-index) {
     }
 }
 
-
 /* ==========================================================================
    6. BASE, FOCUS SYSTEM AND SHARED PRIMITIVES
    ========================================================================== */
@@ -1037,7 +1066,6 @@ body.format-aicourse :is(
     min-inline-size: var(--acf-target-min);
     min-block-size: var(--acf-target-min);
 }
-
 
 /* ==========================================================================
    7. MOODLE / BOOST COMPATIBILITY LAYER
@@ -1376,7 +1404,6 @@ body.format-aicourse .aicourse-banner-guidance {
     line-height: var(--acf-leading-normal);
 }
 
-
 /* ==========================================================================
    8. HERO BANNER
    --------------------------------------------------------------------------
@@ -1400,6 +1427,10 @@ body.format-aicourse .aicourse-hero-sticky-wrap.aicourse-hero-align-left {
     margin-inline: 0 auto;
 }
 
+/* ACF-FIX-2.1.106: square corners on the banner, in both its modes.
+   The rounded corners read as a card floating on the page; square reads as a header belonging to
+   it, which is the shape a dedicated player has. Both the plain and the image mode are set, or the
+   two would disagree depending on whether a course had a banner image. */
 body.format-aicourse .aicourse-hero-banner {
     position: relative;
     display: flex;
@@ -1415,7 +1446,7 @@ body.format-aicourse .aicourse-hero-banner {
     block-size: auto;
     box-sizing: border-box;
     border: 1px solid var(--acf-hero-border);
-    border-radius: var(--acf-radius-xl);
+    border-radius: 0;
     background: var(--acf-hero-wash);
     box-shadow: var(--acf-elevation-2);
     overflow: hidden;
@@ -1513,7 +1544,7 @@ body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image {
     min-block-size: var(--acf-hero-image-min-h);
     align-items: stretch;
     border: none;
-    border-radius: var(--acf-radius-xl);
+    border-radius: 0;
     background: var(--acf-neutral-900);
     box-shadow: var(--acf-elevation-4);
 }
@@ -1852,7 +1883,6 @@ body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-her
     }
 }
 
-
 body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-icons :is(a, button) {
     color: var(--acf-text-on-media);
     border-color: transparent;
@@ -1963,7 +1993,6 @@ body.format-aicourse .aicourse-hero-ai-btn.aicourse-ai-delete-banner {
 body.format-aicourse .aicourse-hero-ai-btn.aicourse-ai-delete-banner::before {
     display: none;
 }
-
 
 /* ==========================================================================
    9. PROGRESS RING, PROGRESS BAR, ACTIVITY NUMBERS
@@ -2356,7 +2385,6 @@ body.format-aicourse .aicourse-hero-has-image .aicourse-activity-number.aicourse
     color: var(--acf-text-on-media);
 }
 
-
 /* ==========================================================================
    10. ACTIVITY COMPLETION (activity hero)
    ========================================================================== */
@@ -2489,7 +2517,6 @@ body.format-aicourse .aicourse-hero-has-image .aicourse-grade-text {
     color: var(--acf-text-on-media);
 }
 
-
 /* ==========================================================================
    11. SECTION CARDS
    --------------------------------------------------------------------------
@@ -2513,10 +2540,18 @@ body.format-aicourse .aicourse-cards-grid {
        real cards share the space. */
     grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--acf-card-min)), 1fr));
     gap: var(--acf-space-4);
-    align-items: stretch;
+    /* ACF-FIX-2.1.38: start, not stretch.
+       Stretch gives every card in a row the height of the tallest, which is right when their
+       contents are comparable. Since 2.1.25 the activity list is uncapped by default, so a
+       section with 13 activities sits beside one with none and the shorter cards are padded out
+       to match: measured 589px tall around 78px of content, leaving 511px of empty card. Sizing
+       each card to its own content trades a level bottom edge for cards that are actually the
+       size of what is in them. The footer keeps its `margin-block-start: auto`, so on the cards
+       that DO still share a row height it stays pinned to the bottom. */
+    align-items: start;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 992px) {
     body.format-aicourse .aicourse-cards-grid {
         gap: var(--acf-space-5);
     }
@@ -2543,7 +2578,7 @@ body.format-aicourse .aicourse-card {
     flex-direction: column;
     min-inline-size: 0;
     background: var(--acf-surface-raised);
-    border: 1px solid var(--acf-border-subtle);
+    border: 1px solid var(--acf-brand-tint-strong);
     border-radius: var(--acf-radius-xl);
     box-shadow: var(--acf-elevation-2);
     /* `overflow: hidden` was removed deliberately: it clipped the focus ring of
@@ -2579,10 +2614,12 @@ body.format-aicourse .aicourse-card::before {
     pointer-events: none;
 }
 
+/* ACF-FIX-2.1.98: hover lifts the card and deepens its shadow. It no longer changes the border
+   colour -- the accent belongs on the card at rest, and moving it on hover was what made the
+   colour read as a hover effect rather than the course's own. */
 body.format-aicourse .aicourse-card:hover {
     transform: translateY(-6px);
     box-shadow: var(--acf-elevation-4);
-    border-color: var(--acf-brand-tint-strong);
 }
 
 body.format-aicourse .aicourse-card:hover::before {
@@ -2682,9 +2719,11 @@ body.format-aicourse:not(.editing):not(.editingon):not(.editing-mode)
     color: var(--acf-text-secondary);
 }
 
+/* ACF-FIX-2.1.61: hover lifts the icon, it no longer recolours it. The tint is already the
+   accent at rest; deepening it on hover was what made the colour feel like a hover effect rather
+   than the course's own. */
 body.format-aicourse .aicourse-card:hover .aicourse-card-icon-wrap {
     transform: scale(1.08) rotate(-4deg);
-    background: var(--acf-brand-tint-strong);
 }
 
 body.format-aicourse .aicourse-card:hover .aicourse-card-icon-wrap.aicourse-icon-empty {
@@ -2751,9 +2790,14 @@ body.format-aicourse .aicourse-card .aicourse-card-time {
     padding: var(--acf-space-1) var(--acf-space-3);
     min-block-size: var(--acf-target-min);
     box-sizing: border-box;
+    /* ACF-FIX-2.1.94: the same treatment the section icon gets -- a tinted background of the
+       accent with the accent itself as the text, so the duration reads as part of the course's
+       palette rather than a grey chip stuck to the corner of the card. The tint is the weak step,
+       not the full colour: this sits behind small text, and anything stronger costs legibility for
+       no gain. */
     border: none;
-    background: transparent;
-    color: var(--acf-text-secondary);
+    background: var(--acf-brand-tint-weak);
+    color: var(--acf-text-brand);
     font-size: var(--acf-font-size-xs);
     font-weight: var(--acf-weight-medium);
     font-variant-numeric: tabular-nums;
@@ -2870,7 +2914,11 @@ body.format-aicourse .aicourse-card .aicourse-card-title {
     overflow-wrap: anywhere;
 }
 
-body.format-aicourse .aicourse-card:hover .aicourse-card-title {
+/* ACF-FIX-2.1.61: the accent belongs on the title at REST, not on hover.
+   Applying it only on hover meant a course with a chosen colour looked identical to one without
+   until the mouse moved -- and on a touch screen, never. The card heading is a heading, so it
+   takes the course's colour the way the section headings in the sidebar do. */
+body.format-aicourse .aicourse-card .aicourse-card-title {
     color: var(--acf-text-brand);
 }
 
@@ -2941,6 +2989,9 @@ body.format-aicourse .aicourse-card .aicourse-card-activity-link {
         color var(--acf-duration-fast) var(--acf-ease-standard);
 }
 
+/* ACF-FIX-2.1.93: hover adds the underline; the colour is not changed here, because whatever the
+   link's resting colour is, changing it on hover is what made the accent read as a hover effect
+   rather than the course's own colour. */
 body.format-aicourse .aicourse-card .aicourse-card-activity-link:hover {
     background: var(--acf-surface-hover);
     color: var(--acf-text-brand);
@@ -3012,13 +3063,12 @@ body.format-aicourse .aicourse-card .aicourse-card-activities-more {
     border-radius: var(--acf-radius-md);
     font-size: var(--acf-font-size-xs);
     font-weight: var(--acf-weight-medium);
-    color: var(--acf-text-secondary);
+    color: var(--acf-text-brand);
     text-decoration: none;
     transition: color var(--acf-duration-fast) var(--acf-ease-standard);
 }
 
 body.format-aicourse .aicourse-card .aicourse-card-activities-more:hover {
-    color: var(--acf-text-brand);
     text-decoration: underline;
     text-underline-offset: 2px;
 }
@@ -3058,20 +3108,23 @@ body.format-aicourse .aicourse-card-footer-left {
 
 /* Text-only link — nothing is painted, so the 44px floor is free: the label
    keeps its exact visual size and only the hit area grows. */
+/* ACF-FIX-2.1.93: the accent belongs here at REST, not on hover -- the same correction made to
+   the card title and the section icon in 2.1.61. "3 activities" is a link into the section, and a
+   link that only shows it is one when the pointer is over it is invisible on a touch screen and
+   easy to miss on a desktop. Hover now adds the underline alone. */
 body.format-aicourse .aicourse-card .aicourse-activity-count {
     display: inline-flex;
     align-items: center;
     min-block-size: var(--acf-target-min);
     font-size: var(--acf-font-size-sm);
     font-weight: var(--acf-weight-medium);
-    color: var(--acf-text-secondary);
+    color: var(--acf-text-brand);
     text-decoration: none;
     white-space: nowrap;
     transition: color var(--acf-duration-fast) var(--acf-ease-standard);
 }
 
 body.format-aicourse .aicourse-card .aicourse-activity-count:hover {
-    color: var(--acf-text-brand);
     text-decoration: underline;
     text-underline-offset: 2px;
 }
@@ -3153,13 +3206,12 @@ body.format-aicourse .aicourse-card .aicourse-card-dots-more {
     margin-inline-start: var(--acf-space-1);
     font-size: var(--acf-font-size-xs);
     font-weight: var(--acf-weight-medium);
-    color: var(--acf-text-secondary);
+    color: var(--acf-text-brand);
     text-decoration: none;
     white-space: nowrap;
 }
 
 body.format-aicourse .aicourse-card .aicourse-card-dots-more:hover {
-    color: var(--acf-text-brand);
     text-decoration: underline;
     text-underline-offset: 2px;
 }
@@ -3389,7 +3441,6 @@ body.format-aicourse .aicourse-card.selected {
     border-color: var(--acf-brand);
     box-shadow: var(--acf-elevation-4);
 }
-
 
 /* ==========================================================================
    12. GENERAL SECTION (section 0, rendered inline above the card grid)
@@ -3698,7 +3749,6 @@ body.format-aicourse .aicourse-general-section .aicourse-activity-cards-containe
     max-inline-size: none;
 }
 
-
 /* ==========================================================================
    13. ACTIVITY CARDS
    ========================================================================== */
@@ -3721,7 +3771,7 @@ body.format-aicourse .aicourse-activity-cards-grid {
     align-items: stretch;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 992px) {
     body.format-aicourse .aicourse-activity-cards-grid {
         gap: var(--acf-space-4);
     }
@@ -3792,7 +3842,7 @@ body.format-aicourse .aicourse-activity-card {
     min-inline-size: 0;
     padding: var(--acf-space-3) var(--acf-space-4);
     background: var(--acf-surface-raised);
-    border: 1px solid var(--acf-border-subtle);
+    border: 1px solid var(--acf-brand-tint-strong);
     border-radius: var(--acf-radius-lg);
     box-shadow: var(--acf-elevation-1);
     color: var(--acf-text-primary);
@@ -3807,7 +3857,6 @@ body.format-aicourse .aicourse-activity-card {
 body.format-aicourse .aicourse-activity-card:hover {
     transform: translateY(-4px);
     box-shadow: var(--acf-elevation-3);
-    border-color: var(--acf-brand-tint-strong);
     color: var(--acf-text-primary);
     text-decoration: none;
 }
@@ -3877,6 +3926,39 @@ body.format-aicourse .aicourse-activity-card-footer {
 }
 
 /* Was #9ca3af on white = 2.54:1. Tertiary token = 4.76:1, at 12px not 11px. */
+/* --- Estimated duration pill on an activity card ---------------------------
+   ACF-FIX-2.1.47. Sits beside the module type and before the status badge, so the footer reads
+   "what it is, how long it takes, where you are with it".
+
+   Quieter than the status badge on purpose. The badge is about the learner -- have they done it --
+   and changes as they work; this is a fixed property of the activity. Giving them equal weight
+   made the row read as two competing claims, so the duration takes the same muted treatment as
+   the type label it sits next to, with a pill outline to mark it as a distinct fact rather than
+   more of the type name. */
+body.format-aicourse .aicourse-activity-card-time {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    flex: none;
+    padding: 1px var(--acf-space-2);
+    border: 1px solid transparent;
+    border-radius: var(--acf-radius-pill);
+    /* ACF-FIX-2.1.94: matched to the section card's pill, so the same fact looks the same
+       wherever it appears. The border goes with the fill -- a tint and an outline together read
+       as two decisions on one small object. */
+    background: var(--acf-brand-tint-weak);
+    font-size: var(--acf-font-size-2xs);
+    font-weight: var(--acf-weight-medium);
+    line-height: var(--acf-leading-snug);
+    color: var(--acf-text-brand);
+    white-space: nowrap;
+}
+
+body.format-aicourse .aicourse-activity-card-time svg {
+    flex: none;
+    opacity: 0.75;
+}
+
 body.format-aicourse .aicourse-activity-card-type {
     font-size: var(--acf-font-size-xs);
     color: var(--acf-text-tertiary);
@@ -3979,7 +4061,6 @@ body.format-aicourse .aicourse-activity-content :is(table, pre) {
     overflow-x: auto;
 }
 
-
 /* --- Region headings ------------------------------------------------------
    lib.php renders <h2> landmarks so the <h3> card and activity titles do not
    skip a level. Two of them always carry core's .accesshide, and the General
@@ -4009,7 +4090,6 @@ body.format-aicourse .aicourse-general-heading {
 body.format-aicourse .aicourse-general-heading.accesshide {
     margin: 0;
 }
-
 
 /* ==========================================================================
    14. STATUS BADGES + COMPLETION TOGGLE
@@ -4139,7 +4219,6 @@ body.format-aicourse .aicourse-toggle-check svg {
     }
 }
 
-
 /* ==========================================================================
    15. ADD-SECTION CARD
    ========================================================================== */
@@ -4211,7 +4290,6 @@ body.format-aicourse .aicourse-add-section-card.aicourse-add-section-loading {
     pointer-events: none;
 }
 
-
 /* ==========================================================================
    16. EMPTY STATE
    ========================================================================== */
@@ -4242,7 +4320,6 @@ body.format-aicourse .aicourse-empty-state p {
     font-size: var(--acf-font-size-md);
     line-height: var(--acf-leading-normal);
 }
-
 
 /* ==========================================================================
    17. ICON PICKER MODAL
@@ -4511,7 +4588,6 @@ body.format-aicourse .aicourse-icon-remove-btn .aicourse-icon-picker-label {
         border-end-end-radius: 0;
     }
 }
-
 
 /* ==========================================================================
    18. AI CHATBOX
@@ -4892,7 +4968,6 @@ body.format-aicourse .aicourse-ai-rating-done {
     }
 }
 
-
 /* ==========================================================================
    19. AI BANNER GENERATE / REMOVE MODALS
    --------------------------------------------------------------------------
@@ -5246,7 +5321,6 @@ body.format-aicourse .aicourse-bdel-errmsg {
     text-align: start;
 }
 
-
 /* ==========================================================================
    20. COURSE INDEX (Boost drawer)
    --------------------------------------------------------------------------
@@ -5404,7 +5478,6 @@ body.format-aicourse .courseindex-chevron i {
 body.format-aicourse .courseindex :is(i, .fa, [class*="fa-"]) {
     transform: none;
 }
-
 
 /* ==========================================================================
    21. REPORT PAGES
@@ -5770,7 +5843,6 @@ body.format-aicourse .aicourse-pagination :is(.page-item.disabled a, .disabled) 
     align-items: center;
     justify-content: center;
 }
-
 
 /* --------------------------------------------------------------------------
    21a. report.php — the rules the removed inline <style> block used to carry
@@ -6169,7 +6241,6 @@ body.format-aicourse .aicourse-report-perpage select:focus-visible,
     border-radius: var(--acf-radius-xs);
 }
 
-
 /* --------------------------------------------------------------------------
    21b. admin_report.php — `.aicadmin-` namespace, `admin` pagelayout
    -------------------------------------------------------------------------- */
@@ -6465,7 +6536,6 @@ body.format-aicourse .aicourse-report-perpage select:focus-visible,
     margin-block-start: var(--acf-space-4);
 }
 
-
 /* --------------------------------------------------------------------------
    21c. index.php — `.aitutor-` namespace, `admin` pagelayout
    --------------------------------------------------------------------------
@@ -6594,7 +6664,6 @@ body.format-aicourse .aicourse-report-perpage select:focus-visible,
     margin: 0;
     font-size: var(--acf-font-size-md);
 }
-
 
 /* ==========================================================================
    22. MOTION
@@ -6789,7 +6858,6 @@ body.format-aicourse :is(.aicourse-cards-grid, .aicourse-activity-cards-grid) > 
         transform: none;
     }
 }
-
 
 /* ==========================================================================
    23. PRINT
@@ -6998,7 +7066,6 @@ body.format-aicourse :is(.aicourse-cards-grid, .aicourse-activity-cards-grid) > 
     }
 }
 
-
 /* ==========================================================================
    24. FORCED COLOURS / WINDOWS HIGH CONTRAST
    --------------------------------------------------------------------------
@@ -7129,7 +7196,6 @@ body.format-aicourse :is(.aicourse-cards-grid, .aicourse-activity-cards-grid) > 
         border: 1px solid CanvasText;
     }
 }
-
 
 /* ==========================================================================
    12. COMPACT HERO, EDGE ALIGNMENT AND LIST LAYOUT  (ACF-FIX-2.1.23)
@@ -7415,7 +7481,7 @@ body.format-aicourse.aicourse-cardlist .aicourse-cards-grid {
     gap: var(--acf-space-3);
 }
 
-@media (min-width: 768px) {
+@media (min-width: 992px) {
     body.format-aicourse.aicourse-cardlist .aicourse-cards-grid {
         gap: var(--acf-space-3);
     }
@@ -7506,10 +7572,17 @@ body.format-aicourse:not(.editing):not(.editingon):not(.editing-mode) #region-ma
      .aicourse-hidenav-students  hide for everyone without moodle/course:update
      .aicourse-hidenav-all       hide for everyone, editors included
    The class is added in lib.php::page_set_course(). */
+/* ACF-FIX-2.1.73: every hook the tab bar exposes, not just its outer wrapper.
+   The bar is rendered as `.secondary-navigation` wrapping `nav.moremenu.navigation` wrapping
+   `ul.nav.more-nav.nav-tabs`, and the <ul> carries an id of the form `moremenu-<hash>-nav-tabs`
+   where the hash is regenerated on every page load -- so the id can only be matched on its
+   prefix, never in full. Hiding the outer wrapper is enough when the whole structure is nested;
+   matching the inner elements as well covers a theme that renders the nav or the list outside
+   that wrapper, which is why the bar could survive on one theme while disappearing on another. */
 body.format-aicourse.aicourse-hidenav-students:not(.aicourse-can-edit):not(.editing):not(.editingon):not(.editing-mode)
-:is(.secondary-navigation, nav.moremenu.navigation),
+:is(.secondary-navigation, nav.moremenu.navigation, .moremenu, ul.more-nav, [id^="moremenu-"]),
 body.format-aicourse.aicourse-hidenav-all:not(.editing):not(.editingon):not(.editing-mode)
-:is(.secondary-navigation, nav.moremenu.navigation) {
+:is(.secondary-navigation, nav.moremenu.navigation, .moremenu, ul.more-nav, [id^="moremenu-"]) {
     /* stylelint-disable-next-line declaration-no-important --
        deliberate: line 1141 forces `display: flex !important` on the secondary
        nav to beat Bootstrap's .d-none utility. An !important declaration can
@@ -8224,6 +8297,136 @@ body.format-aicourse .aicourse-circles-xs .aicourse-activity-number {
    where it is safe to: the tabs are hidden AND the user is not editing.
    ========================================================================== */
 
+/* --- Space under the banner -----------------------------------------------
+   ACF-FIX-2.1.83. The gap between the banner and the first card was never stated: it was whatever
+   happened to sit between them, which is normally the course tab bar. Hide the tab bar and the two
+   ended up 1px apart.
+
+   A margin on the banner does not work here, because the banner is lifted out to #page while the
+   cards stay inside #region-main -- they are not siblings, so nothing of the banner's pushes the
+   cards down. The spacing therefore goes on the content, and only in the case where the tab bar is
+   not there to provide it, so a page that still shows the tab bar keeps its existing spacing and
+   nothing doubles up. */
+body.format-aicourse:is(.aicourse-hidenav-all, .aicourse-hidenav-students)
+:is(.format-aicourse-container, .aicourse-cards-container, .aicourse-activity-cards-container) {
+    padding-block-start: var(--acf-space-7);
+}
+
+/* --- The theme's logo band -------------------------------------------------
+   ACF-FIX-2.1.80. Themes commonly render two bands: a compact bar carrying notifications, the user
+   menu and the Edit mode toggle, and beneath it a taller band holding the site logo and the site
+   links. theme_academi calls the second `.header-main`, and it costs well over a hundred pixels of
+   vertical space on every course page.
+
+   This hides the second band only. The bar with the profile and the Edit mode toggle is never
+   touched, which is the whole difference from the previous version of this setting: nothing has to
+   be moved into the sidebar to compensate, because nothing functional is being taken away.
+
+   The logo is still in the course player sidebar for sites that use it, and the site itself is
+   still one click away from the bar above.
+
+   Never in edit mode. */
+body.format-aicourse.aicourse-hidelogoband-all:not(.editing):not(.editingon):not(.editing-mode)
+:is(.header-main, #page-header),
+body.format-aicourse.aicourse-hidelogoband-students:not(.aicourse-can-edit):not(.editing):not(.editingon):not(.editing-mode)
+:is(.header-main, #page-header) {
+    /* stylelint-disable-next-line declaration-no-important */
+    display: none !important;
+}
+
+/* --- Course tabs moved into the site header --------------------------------
+   ACF-FIX-2.1.89. Once the bar is a row of links beside Home and Dashboard rather than a band of
+   its own, it has to stop behaving like a band: no full width, no background, no bottom border,
+   and the tabs themselves sized to sit in a header rather than to be a page-level tab strip. */
+body.format-aicourse .secondary-navigation.aicourse-coursenav-moved {
+    display: flex;
+    align-items: center;
+    inline-size: auto;
+    max-inline-size: none;
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+}
+
+body.format-aicourse .secondary-navigation.aicourse-coursenav-moved .nav-tabs {
+    border: 0;
+    flex-wrap: nowrap;
+}
+
+body.format-aicourse .secondary-navigation.aicourse-coursenav-moved .nav-link {
+    padding-block: var(--acf-space-1);
+    padding-inline: var(--acf-space-2);
+    border: 0;
+    font-size: var(--acf-font-size-sm);
+    white-space: nowrap;
+}
+
+/* The active tab keeps a marker, but an underline rather than the boxed tab shape, which does not
+   belong in a header row. */
+body.format-aicourse .secondary-navigation.aicourse-coursenav-moved .nav-link.active {
+    background: transparent;
+    border-block-end: 2px solid var(--acf-brand);
+}
+
+/* --- Site footer ----------------------------------------------------------
+   ACF-FIX-2.1.50. On a course page the footer is the last thing a learner needs and the first
+   thing between them and the bottom of the content. Same three states as the settings around it:
+
+     (no class)                    show it, unchanged
+     .aicourse-hidefooter-students hide for everyone without moodle/course:update
+     .aicourse-hidefooter-all      hide for everyone, editors included
+
+   Targets core's own `<footer id="page-footer">`, which theme_academi also uses -- checked
+   against both rather than guessed, after a selector written from assumption once hid that
+   theme's entire site navigation.
+
+   `.stickyfooter` is deliberately NOT matched. It is a separate element carrying the bulk-action
+   bar in edit mode, and hiding it would take away Move, Duplicate and Delete from a teacher
+   mid-edit. The `:not(.editing)` guards make that doubly certain. */
+body.format-aicourse.aicourse-hidefooter-all:not(.editing):not(.editingon):not(.editing-mode)
+:is(#page-footer, .footer-popover),
+body.format-aicourse.aicourse-hidefooter-students:not(.aicourse-can-edit):not(.editing):not(.editingon):not(.editing-mode)
+:is(#page-footer, .footer-popover) {
+    display: none;
+}
+
+/* --- Breadcrumb -----------------------------------------------------------
+   ACF-FIX-2.1.36. The activity hero already names the course, the section and
+   the activity, so Moodle's breadcrumb repeats all three directly beneath it.
+   Same three states as the tab setting:
+
+     (no class)                    show it, unchanged
+     .aicourse-hidecrumb-students  hide for everyone without moodle/course:update
+     .aicourse-hidecrumb-all       hide for everyone, editors included
+
+   Never applied while editing: a teacher rearranging a course needs every
+   navigational handle the page has. This hides a trail, it restricts nothing —
+   every destination in it remains reachable by its own link and its own
+   capability check.
+
+   Targets core's own markup: `lib/templates/navbar.mustache` emits
+   `<nav aria-label="Breadcrumb"><ol class="breadcrumb">`, wrapped by
+   `full_header.mustache` in `#page-navbar`. Both the wrapper and the list are
+   matched, because `display: none` on the <nav> alone does not collapse a
+   margin or border on its parent.
+
+   ACF-FIX-2.1.39: `.navbar-nav` was in this list and has been removed. It is a
+   Bootstrap utility class, not a breadcrumb class, and themes use it for the
+   SITE navigation: theme_academi's navbar.mustache applies it four times, to
+   the bar holding the logo, the Home/Dashboard/My courses links and the user
+   menu. Hiding it would have removed the whole top navigation on that theme
+   the moment an administrator turned this setting on. `nav:has(> .breadcrumb)`
+   replaces it -- it matches only a <nav> that actually contains a breadcrumb
+   list, whatever the theme labels it. */
+body.format-aicourse.aicourse-hidecrumb-all:not(.editing):not(.editingon):not(.editing-mode)
+:is(#page-navbar, .page-navbar, nav:has(> .breadcrumb), .breadcrumb),
+body.format-aicourse.aicourse-hidecrumb-students:not(.aicourse-can-edit):not(.editing):not(.editingon):not(.editing-mode)
+:is(#page-navbar, .page-navbar, nav:has(> .breadcrumb), .breadcrumb) {
+    display: none;
+}
+
 /* The header band. It is empty on a course page for a student — no heading, no
    breadcrumb — so with the tabs gone there is nothing left in it to show. */
 body.format-aicourse.aicourse-hidenav-all:not(.editing):not(.editingon):not(.editing-mode) #page-header,
@@ -8321,7 +8524,21 @@ body.format-aicourse:not(.editing):not(.editingon):not(.editing-mode):has(.aicou
    above are simply skipped and the theme's spacing survives — a cosmetic
    fallback, not a broken page. For those, the same collapse keyed off the body
    class the server writes, which is the closest signal available without it. */
+/* ACF-FIX-2.1.37: line the lifted banner up with the content column beneath it.
+   heroatop.js measures the column once it has moved the banner and publishes the two
+   offsets as custom properties on the banner itself; they default to 0, so a page where
+   the JS has not run, or a theme where the banner already shares the content's box, is
+   unchanged. Padding rather than margin, so the banner's own background still spans its
+   full box and only its contents are inset -- the alignment the eye reads is the card
+   edge against the banner edge, and both are content edges. */
+body.format-aicourse.aicourse-hero-attop:not(.editing):not(.editingon):not(.editing-mode)
+.aicourse-hero-sticky-wrap {
+    padding-inline-start: calc(var(--acf-gutter) + var(--acf-hero-align-start, 0px));
+    padding-inline-end: calc(var(--acf-gutter) + var(--acf-hero-align-end, 0px));
+}
+
 @supports not selector(:has(*)) {
+
     body.format-aicourse.aicourse-hero-attop:not(.editing):not(.editingon):not(.editing-mode) #page-header {
         display: none;
     }
@@ -8398,4 +8615,1468 @@ body.format-aicourse:is(.aicourse-hidenav-all, .aicourse-hidenav-students):not(.
 body.format-aicourse:not(.editing):not(.editingon):not(.editing-mode):has(.aicourse-hero-sticky-wrap[data-aicourse-atop])
 .course-content {
     padding-block-start: 0;
+}
+
+/* --- Hero title vs the numbered circle strip -------------------------------
+   ACF-FIX-2.1.40. On a section hero the progress cluster carries one numbered circle per
+   activity. With eleven activities that strip is wide, and nothing stopped it taking the width
+   it wanted: the title was squeezed into a column a few characters across and wrapped down the
+   banner, which is unreadable.
+
+   The title now claims a guaranteed share of the row and the circle strip gives way -- it may
+   shrink and, past its minimum, scroll horizontally rather than push the heading aside. The
+   circles are a secondary navigation aid; the section name is the heading and must stay legible.
+
+   Placed here, after the hero section, because the earlier rules set inline-size: 100% on the
+   cluster and would otherwise win on source order. */
+body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image
+:is(.aicourse-hero-title-wrap, .aicourse-hero-title-group, .aicourse-hero-lede),
+body.format-aicourse .aicourse-hero-banner:not(.aicourse-hero-has-image)
+:is(.aicourse-hero-title-wrap, .aicourse-hero-title-group, .aicourse-hero-lede) {
+    flex: 1 1 auto;
+    min-inline-size: min(48%, 24rem);
+}
+
+body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-nav-progress,
+body.format-aicourse .aicourse-hero-banner:not(.aicourse-hero-has-image) .aicourse-hero-nav-progress {
+    inline-size: auto;
+    min-inline-size: 0;
+    flex: 0 1 auto;
+}
+
+body.format-aicourse .aicourse-hero-banner .aicourse-activity-number-circles {
+    min-inline-size: 0;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    scrollbar-width: none;
+}
+
+body.format-aicourse .aicourse-hero-banner .aicourse-activity-number-circles::-webkit-scrollbar {
+    display: none;
+}
+
+/* Below 700px the hero stacks, so the title has the full width and needs no floor. */
+@media (max-width: 699px) {
+    body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image
+    :is(.aicourse-hero-title-wrap, .aicourse-hero-title-group, .aicourse-hero-lede),
+    body.format-aicourse .aicourse-hero-banner:not(.aicourse-hero-has-image)
+    :is(.aicourse-hero-title-wrap, .aicourse-hero-title-group, .aicourse-hero-lede) {
+        min-inline-size: 0;
+    }
+}
+
+/* ==========================================================================
+   FIRST-RUN TOUR (ACF-FIX-2.1.43)
+   A spotlight over the real page rather than screenshots, so what is described
+   is the course the user is actually looking at. The scrim is a single element
+   with a cut-out drawn by an outsized box-shadow on the spotlight, which keeps
+   the highlighted control genuinely visible instead of dimmed-but-outlined.
+   ========================================================================== */
+
+body.aicourse-tour-open {
+    overflow: hidden;
+}
+
+.aicourse-tour {
+    position: fixed;
+    inset: 0;
+    z-index: 1080;
+}
+
+.aicourse-tour-scrim {
+    position: absolute;
+    inset: 0;
+    background: rgba(2, 6, 23, 0.62);
+    backdrop-filter: blur(1.5px);
+}
+
+/* The cut-out. A very large spread on the shadow paints everything OUTSIDE this
+   box, so the element itself stays perfectly clear. */
+.aicourse-tour-spot {
+    position: fixed;
+    border-radius: 14px;
+    box-shadow:
+        0 0 0 9999px rgba(2, 6, 23, 0.62),
+        0 0 0 2px var(--acf-brand, #194866),
+        0 0 0 6px rgba(255, 255, 255, 0.55);
+    transition:
+        inset-inline-start 220ms var(--acf-ease-out, ease),
+        inset-block-start 220ms var(--acf-ease-out, ease),
+        inline-size 220ms var(--acf-ease-out, ease),
+        block-size 220ms var(--acf-ease-out, ease);
+    pointer-events: none;
+}
+
+/* With the cut-out painting the dim, the flat scrim would double it. */
+.aicourse-tour-spot[style*="display: block"] ~ .aicourse-tour-scrim,
+.aicourse-tour:has(.aicourse-tour-spot[style*="display: block"]) .aicourse-tour-scrim {
+    background: transparent;
+    backdrop-filter: none;
+}
+
+/* --- The pointer -----------------------------------------------------------
+   ACF-FIX-2.1.49. A ring tells you where to look but not what the card is talking about, and on a
+   busy page -- a course index full of links, a row of cards -- the connection between the two is
+   not obvious. The arrow draws it explicitly. It flies in from the card's side on each step, then
+   nudges toward the target on a loop so the eye keeps being led back to it.
+
+   Motion is the whole point of it, so under prefers-reduced-motion the arrow still appears and
+   still points, it simply stops moving. */
+.aicourse-tour-arrow {
+    position: fixed;
+    inline-size: 56px;
+    block-size: 56px;
+    rotate: var(--acf-tour-arrow-angle, 0deg);
+    pointer-events: none;
+    filter: drop-shadow(0 2px 6px rgba(2, 6, 23, 0.45));
+}
+
+.aicourse-tour-arrow svg {
+    inline-size: 100%;
+    block-size: 100%;
+    fill: none;
+    stroke: var(--acf-brand, #194866);
+    stroke-width: 7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    /* A white underlay so the arrow reads on a photograph as well as on a card. */
+    paint-order: stroke;
+}
+
+.aicourse-tour-arrow::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0) 68%);
+    z-index: -1;
+}
+
+.aicourse-tour-arrow-in {
+    animation:
+        acf-tour-arrow-in 380ms var(--acf-ease-out, cubic-bezier(0.22, 1, 0.36, 1)) both,
+        acf-tour-arrow-nudge 1400ms 380ms ease-in-out infinite;
+}
+
+@keyframes acf-tour-arrow-in {
+    from {
+        opacity: 0;
+        translate: -28px 0;
+    }
+
+    to {
+        opacity: 1;
+        translate: 0 0;
+    }
+}
+
+@keyframes acf-tour-arrow-nudge {
+    0%,
+    100% {
+        translate: 0 0;
+    }
+
+    50% {
+        translate: 9px 0;
+    }
+}
+
+/* A soft pulse on the ring itself, so the highlight reads as active rather than as a static
+   border drawn round something. */
+@keyframes acf-tour-pulse {
+    0%,
+    100% {
+        box-shadow:
+            0 0 0 9999px rgba(2, 6, 23, 0.62),
+            0 0 0 2px var(--acf-brand, #194866),
+            0 0 0 6px rgba(255, 255, 255, 0.55);
+    }
+
+    50% {
+        box-shadow:
+            0 0 0 9999px rgba(2, 6, 23, 0.62),
+            0 0 0 3px var(--acf-brand, #194866),
+            0 0 0 11px rgba(255, 255, 255, 0.28);
+    }
+}
+
+.aicourse-tour-spot {
+    animation: acf-tour-pulse 2000ms ease-in-out infinite;
+}
+
+.aicourse-tour-card {
+    position: fixed;
+    inline-size: min(26rem, calc(100vw - 24px));
+    padding: 20px 22px 18px;
+    border-radius: 18px;
+    background: var(--acf-surface-raised, #fff);
+    color: var(--acf-text-primary, #1e293b);
+    box-shadow:
+        0 18px 40px rgba(2, 6, 23, 0.28),
+        0 2px 6px rgba(2, 6, 23, 0.16);
+    outline: none;
+}
+
+.aicourse-tour-card-centre {
+    inset-inline-start: 50%;
+    inset-block-start: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.aicourse-tour-count {
+    margin: 0 0 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--acf-text-secondary, #475569);
+}
+
+.aicourse-tour-title {
+    margin: 0 0 8px;
+    font-size: 1.125rem;
+    font-weight: 700;
+    line-height: 1.3;
+    color: inherit;
+}
+
+.aicourse-tour-body {
+    margin: 0 0 14px;
+    font-size: 0.9375rem;
+    line-height: 1.55;
+    color: var(--acf-text-secondary, #475569);
+}
+
+.aicourse-tour-dots {
+    display: flex;
+    gap: 6px;
+    margin-block-end: 14px;
+}
+
+.aicourse-tour-dot {
+    inline-size: 6px;
+    block-size: 6px;
+    border-radius: 50%;
+    background: var(--acf-border-strong, #cbd5e1);
+}
+
+.aicourse-tour-dot-on {
+    inline-size: 20px;
+    border-radius: 3px;
+    background: var(--acf-brand, #194866);
+}
+
+.aicourse-tour-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.aicourse-tour-spacer {
+    flex: 1 1 auto;
+}
+
+.aicourse-tour-actions button,
+.aicourse-tour-offer-actions button {
+    min-block-size: 44px;
+    padding: 0 16px;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.aicourse-tour-next,
+.aicourse-tour-offer-start {
+    background: var(--acf-brand, #194866);
+    color: #fff;
+}
+
+.aicourse-tour-back,
+.aicourse-tour-skip,
+.aicourse-tour-offer-dismiss {
+    background: transparent;
+    border-color: var(--acf-border-subtle, #e2e8f0);
+    color: var(--acf-text-secondary, #475569);
+}
+
+.aicourse-tour-mute {
+    position: absolute;
+    inset-block-start: 12px;
+    inset-inline-end: 12px;
+    inline-size: 44px;
+    block-size: 44px;
+    display: grid;
+    place-items: center;
+    border: 1px solid var(--acf-border-subtle, #e2e8f0);
+    border-radius: 10px;
+    background: transparent;
+    cursor: pointer;
+}
+
+.aicourse-tour-mute::before {
+    content: "\1F50A";
+    font-size: 1rem;
+}
+
+.aicourse-tour-mute.aicourse-tour-muted::before {
+    content: "\1F507";
+    opacity: 0.6;
+}
+
+/* The opening offer. Deliberately a card in the corner rather than a modal: it
+   interrupts nobody, and the tour only takes over once it is accepted. */
+.aicourse-tour-offer {
+    position: fixed;
+    inset-block-end: 20px;
+    inset-inline-end: 20px;
+    z-index: 1070;
+    inline-size: min(22rem, calc(100vw - 24px));
+    padding: 18px 20px 16px;
+    border-radius: 16px;
+    background: var(--acf-surface-raised, #fff);
+    box-shadow: 0 16px 36px rgba(2, 6, 23, 0.24);
+}
+
+.aicourse-tour-offer-title {
+    margin: 0 0 6px;
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.aicourse-tour-offer-body {
+    margin: 0 0 14px;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    color: var(--acf-text-secondary, #475569);
+}
+
+.aicourse-tour-offer-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .aicourse-tour-spot {
+        transition: none;
+        animation: none;
+    }
+
+    /* The arrow still appears and still points; it simply stops moving. */
+    .aicourse-tour-arrow-in {
+        animation: none;
+    }
+}
+
+/* ==========================================================================
+   COURSE PLAYER SIDEBAR (ACF-FIX-2.1.52)
+   Core's course index is a list of links. This turns it into something a learner can plan with --
+   a header carrying the course, its progress and its total time, and rows that say how long each
+   activity takes and whether it is done -- without replacing core's drawer, which would mean
+   reimplementing its collapse behaviour, its drag and drop and the JS that keeps it in step.
+   ========================================================================== */
+
+/* The header is the hero's smaller sibling: same raised surface, same radius family, same single
+   step of elevation, so the top of the sidebar and the top of the page belong together. */
+/* ACF-FIX-2.1.60: the header sits on the panel edge rather than floating in it, matching the
+   rows below. A card here framed a panel that is already a frame. */
+/* ACF-FIX-2.1.62: a plain separator, not an accent rule.
+   The coloured lines read as decoration rather than structure, and stacked against core's own
+   dividers they doubled up. The accent stays on the headings and the icons, where it labels
+   something; the lines go back to the theme's ordinary border colour. */
+/* ACF-FIX-2.1.81: the header keeps the drawer's own tint, so it reads as a band at the top of an
+   otherwise white panel -- that contrast is what makes the course name, ring and total time sit
+   apart from the list beneath them. */
+/* ACF-FIX-2.1.85: the shaded band must reach all four edges.
+   It sat inside whatever inset the drawer's own wrapper carries, so a strip of white showed down
+   each side and along the top -- and that strip, meeting the band's border, read as a second line.
+   Negative margins pull the band out to the panel edges and the padding is put back inside it, so
+   the shading is flush and only one line is drawn.
+
+   The colour is a token so a site can change it: --acf-player-header-bg is published from the
+   course settings when one is chosen, and falls back to the shade below otherwise. */
+body.aicourse-player-on .aicourse-player-header {
+    margin-block: 0;
+    margin-inline: 0;
+    padding: var(--acf-space-4);
+    background: var(--acf-player-header-bg, var(--acf-player-header-default));
+    border-block-end: 1px solid var(--acf-player-line);
+}
+
+/* ACF-FIX-2.1.101: the drawer's own header strip takes the same colour.
+   That strip -- the one carrying the close button and the options menu -- sits directly above the
+   band and was left at the theme's colour, so the top of the panel was two different shades with a
+   seam between them. It reads as one surface now, and because it uses the same token, a site that
+   changes the header colour in the settings changes both together rather than discovering the
+   second one later. */
+body.aicourse-player-on .drawer-left .drawerheader {
+    background: var(--acf-player-header-bg, var(--acf-player-header-default));
+    border-block-end: 0;
+}
+
+/* Whatever the drawer wraps its content in must not inset the band -- measured at 6px above it,
+   which showed as a strip of white between the drawer's top and the shading. */
+/* The header is itself the first child of .drawercontent, so a blanket rule on that child
+   stripped the band's own side padding and pushed the course name to the panel edge. Excluded. */
+body.aicourse-player-on .drawercontent,
+body.aicourse-player-on .drawercontent > :first-child:not(.aicourse-player-header),
+body.aicourse-player-on .courseindex {
+    padding-inline: 0;
+    padding-block-start: 0;
+    margin-block-start: 0;
+}
+
+/* The panel itself, and everything below the header, goes white with no shadow, so the sidebar
+   reads as part of the page rather than a floating tray laid over it. The drawer's own shadow is
+   the theme's, so it is cleared here too. */
+body.aicourse-player-on :is(.drawer-left, .drawercontent, .courseindex, .courseindex-section,
+.courseindex-sectioncontent) {
+    background: var(--acf-surface-raised);
+    box-shadow: none;
+}
+
+body.aicourse-player-on .drawer-left {
+    border-inline-end: 1px solid var(--acf-player-line);
+}
+
+.aicourse-player-brand {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--acf-space-3);
+    margin-block-end: var(--acf-space-3);
+}
+
+.aicourse-player-logo {
+    max-block-size: 30px;
+    max-inline-size: 55%;
+    object-fit: contain;
+}
+
+.aicourse-player-nav {
+    display: flex;
+    gap: 2px;
+    margin-inline-start: auto;
+}
+
+.aicourse-player-nav a {
+    display: grid;
+    place-items: center;
+    inline-size: 36px;
+    block-size: 36px;
+    border-radius: var(--acf-radius-md);
+    color: var(--acf-text-secondary);
+}
+
+.aicourse-player-nav a:hover,
+.aicourse-player-nav a:focus-visible {
+    background: var(--acf-surface-hover);
+    color: var(--acf-brand);
+}
+
+.aicourse-player-nav svg {
+    inline-size: 17px;
+    block-size: 17px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.aicourse-player-title-row {
+    display: flex;
+    align-items: center;
+    gap: var(--acf-space-3);
+}
+
+.aicourse-player-titles {
+    min-inline-size: 0;
+    flex: 1 1 auto;
+}
+
+.aicourse-player-coursename {
+    /* -webkit-box is what makes -webkit-line-clamp work; it is still the only cross-browser
+       way to clamp to a line count. */
+    display: -webkit-box;
+    font-size: var(--acf-font-size-md);
+    font-weight: var(--acf-weight-semibold);
+    line-height: var(--acf-leading-snug);
+    color: var(--acf-text-primary);
+    text-decoration: none;
+    overflow: hidden;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+.aicourse-player-meta {
+    margin: 2px 0 0;
+    font-size: var(--acf-font-size-2xs);
+    color: var(--acf-text-tertiary);
+}
+
+.aicourse-player-ring {
+    position: relative;
+    flex: none;
+    inline-size: 44px;
+    block-size: 44px;
+}
+
+.aicourse-player-ring svg {
+    inline-size: 100%;
+    block-size: 100%;
+    rotate: -90deg;
+}
+
+.aicourse-player-ring circle {
+    fill: none;
+    stroke-width: 4;
+}
+
+.aicourse-player-ring-bg {
+    stroke: var(--acf-border-subtle);
+}
+
+.aicourse-player-ring-fill {
+    stroke: var(--acf-status-completed, #2f855a);
+    stroke-linecap: round;
+    transition: stroke-dasharray var(--acf-duration-slow) var(--acf-ease-out);
+}
+
+.aicourse-player-ring-text {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    font-size: var(--acf-font-size-2xs);
+    font-weight: var(--acf-weight-bold);
+    color: var(--acf-text-primary);
+}
+
+/* --- Full-width banner ----------------------------------------------------
+   ACF-FIX-2.1.103. The banner normally sits inside the content column, aligned with the cards
+   beneath it. Set to full width it spans the whole area right of the course index and loses the
+   gap above, which is the shape a dedicated e-learning player has rather than a page with a
+   picture on it.
+
+   The alignment insets that heroatop.js measures are cleared, since their whole purpose is to keep
+   the banner lined up with the content column -- exactly what is being given up here. Leaving them
+   would fight the width and produce a banner that is neither aligned nor full. */
+body.format-aicourse.aicourse-hero-fullwidth .aicourse-hero-sticky-wrap {
+    /* Kept as 0px rather than 0: these are consumed by calc() in the alignment rules, and a
+       bare 0 there is invalid. */
+    /* stylelint-disable length-zero-no-unit */
+    --acf-hero-align-start: 0px;
+    --acf-hero-align-end: 0px;
+    /* stylelint-enable length-zero-no-unit */
+
+    inline-size: 100%;
+    max-inline-size: none;
+    margin-block-start: 0;
+    padding-block-start: 0;
+    padding-inline: 0;
+}
+
+/* Two things hold the width, both found by walking the ancestor chain and reading each box rather
+   than guessing at which one it was:
+
+   1. The wrap carries 47px of its own inline padding -- the gutter that keeps the banner aligned
+      with the content column. The earlier rule setting `padding-inline: 0` was losing to the base
+      rule's specificity, so it measured 47px regardless.
+   2. `#page` adds 48px of padding on the trailing edge.
+
+   With the drawer open the banner then spans 342 to 1452 of a 1500px window: full width of the
+   area beside the course index, which is what was wanted. With the drawer closed the content is
+   centred instead, so the centring is released too -- otherwise "full width" would depend on
+   whether the sidebar happened to be open. */
+body.format-aicourse.aicourse-hero-fullwidth #page > .aicourse-hero-sticky-wrap,
+body.format-aicourse.aicourse-hero-fullwidth .main-inner > .aicourse-hero-sticky-wrap,
+body.format-aicourse.aicourse-hero-fullwidth .aicourse-hero-sticky-wrap[data-aicourse-hero] {
+    max-inline-size: none;
+    margin-inline: 0;
+    padding-inline: 0;
+}
+
+body.format-aicourse.aicourse-hero-fullwidth #page.drawers {
+    padding-inline-end: 0;
+}
+
+/* An ACTIVITY page keeps the banner inside #region-main rather than lifting it to #page, so none
+   of the rules above reach it and the banner stayed inset. Measured on an activity page: the wrap
+   carried 24px of its own inline padding and #page-content another 48px, against 0/0 on the course
+   page.
+
+   Rather than adding #region-main to the list above -- which would only work until the next
+   wrapper differs -- the wrap is pulled back out to the edges of its container with a negative
+   margin equal to the padding it sits inside. That works wherever it is nested, because it is
+   stated relative to its own surroundings rather than to a particular ancestor. */
+body.format-aicourse.aicourse-hero-fullwidth
+:is(#region-main, #region-main-box) .aicourse-hero-sticky-wrap {
+    inline-size: auto;
+    margin-inline: calc(var(--acf-fw-gap) * -1);
+    padding-inline: 0;
+}
+
+body.format-aicourse.aicourse-hero-fullwidth #page-content {
+    padding-inline: var(--acf-fw-gap);
+}
+
+/* --- One gutter for everything in full-width mode --------------------------
+   ACF-FIX-2.1.110. The gaps were coming from three different places: the container's own padding,
+   the space under the banner, and the grid's gap between cards. Three values that happened to look
+   close but were never the same, so the eye caught the difference even where the numbers did not
+   look far apart.
+
+   They now all read from one token. Whatever it is set to, the distance from the course index to
+   the first card, from the banner down to the cards, and between every pair of cards is identical
+   -- horizontally and vertically. Change the number in one place and the whole grid stays square.
+
+   24px at the default, stepping up on wider screens where the same gap starts to look mean against
+   a bigger card. */
+body.format-aicourse.aicourse-hero-fullwidth {
+    --acf-fw-gap: 24px;
+}
+
+@media (min-width: 1200px) {
+    body.format-aicourse.aicourse-hero-fullwidth {
+        --acf-fw-gap: 32px;
+    }
+}
+
+@media (min-width: 1600px) {
+    body.format-aicourse.aicourse-hero-fullwidth {
+        --acf-fw-gap: 40px;
+    }
+}
+
+body.format-aicourse.aicourse-hero-fullwidth
+:is(.format-aicourse-container, .aicourse-cards-container, .aicourse-activity-cards-container) {
+    padding-block-start: var(--acf-fw-gap);
+    padding-inline: 0;
+    /* The container carries a 16px top margin of its own on top of the padding, so the space under
+       the banner was 48px against a 32px token. The token sets the whole distance; the margin goes
+       or the two add up. */
+    margin-block-start: 0;
+}
+
+/* The horizontal inset was 55px against the same 32px token, and it came from two places rather
+   than one: the region-main wrapper sits 40px inside #page, and a div within it adds another 15px
+   of its own padding. Both are cleared and the gutter is stated once, on #page-content, so the
+   distance from the course index to the first card is the token and nothing else. */
+body.format-aicourse.aicourse-hero-fullwidth
+:is(#region-main, #region-main-box, #region-main > div, #region-main-box > div) {
+    padding-inline: 0;
+    margin-inline: 0;
+}
+
+/* The last 8px. Dumping every box between #page and the cards grid in one pass -- rather than
+   testing the elements I suspected -- showed the inset was 8px on #topofscroll.main-inner plus
+   32px on #page-content: 40 against a 32px token. The gutter is stated once on #page-content, so
+   main-inner contributes nothing. */
+body.format-aicourse.aicourse-hero-fullwidth #topofscroll.main-inner {
+    padding-inline: 0;
+}
+
+/* And the last 17px. The container's own 16px top margin survived the earlier rule because that
+   rule sets `margin-block-start` while the theme sets the physical `margin-top`, which wins on a
+   tie. Both are stated. */
+body.format-aicourse.aicourse-hero-fullwidth .format-aicourse-container {
+    margin-top: 0;
+    margin-block-start: 0;
+}
+
+body.format-aicourse.aicourse-hero-fullwidth
+:is(.aicourse-cards-grid, .aicourse-activity-cards-grid) {
+    gap: var(--acf-fw-gap);
+}
+
+body.format-aicourse.aicourse-hero-fullwidth .aicourse-hero-banner {
+    border-radius: 0;
+}
+
+/* --- Hiding the General section -------------------------------------------
+   ACF-FIX-2.1.102. Section 0 is Moodle's "General" -- it holds the announcements forum and little
+   else, and on a course whose content starts at Section 1 it is a heading a learner has to read
+   past before reaching anything they came for.
+
+   Section 0 is matched by `data-number="0"`, which core sets, rather than by :first-child: a
+   course can have section 0 hidden or delegated and something else sitting first, and matching on
+   position would then hide the wrong thing.
+
+   Never in edit mode -- a teacher needs to reach it to manage announcements, and it returns the
+   moment editing is switched on, like every other visibility rule here. */
+body.format-aicourse.aicourse-hidegeneral-all:not(.editing):not(.editingon):not(.editing-mode)
+:is(.courseindex-section[data-number="0"], .aicourse-card[data-section="0"]),
+body.format-aicourse.aicourse-hidegeneral-students:not(.aicourse-can-edit):not(.editing):not(.editingon):not(.editing-mode)
+:is(.courseindex-section[data-number="0"], .aicourse-card[data-section="0"]) {
+    display: none;
+}
+
+/* --- The whole row is the click target ------------------------------------
+   ACF-FIX-2.1.97. Core sizes the link to its text, so on a 342px row only the words themselves
+   were clickable -- a learner aiming at the row and landing an inch to the right of a short name
+   got nothing, with no way to tell why. The icon, the duration and all the empty space between
+   them were dead.
+
+   The link is stretched over the row with an absolutely positioned ::after rather than by making
+   the link itself fill the row, because the icon and the time pill are siblings of the link, not
+   children of it: sizing the link to the row would push them out of place. The overlay leaves the
+   layout untouched and simply covers it.
+
+   The section chevron is lifted above the overlay so collapsing a section still works -- without
+   that, stretching the link would take the collapse control away, which is a worse problem than
+   the one being fixed. */
+body.aicourse-player-on .courseindex-item.aicourse-player-row,
+body.aicourse-player-on .courseindex-item.courseindex-section-title {
+    position: relative;
+}
+
+/* The link must NOT be a positioned ancestor, or the overlay below resolves against the link's own
+   box -- which is the text -- and covers exactly the area that was already clickable. Measured:
+   with the link positioned, a click in the empty space still missed. */
+body.aicourse-player-on .courseindex-item.aicourse-player-row .courseindex-link,
+body.aicourse-player-on .courseindex-item.courseindex-section-title .courseindex-link {
+    position: static;
+}
+
+body.aicourse-player-on .courseindex-item.aicourse-player-row .courseindex-link::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+}
+
+/* On a section heading the overlay starts AFTER the chevron rather than covering the whole row.
+   Raising the chevron above the overlay with z-index did not hold -- measured unreachable at both
+   2 and 3, the two elements being in stacking contexts a single step could not reliably resolve.
+   Leaving a gap is not subject to that: the overlay simply is not there, so the chevron is hit
+   because nothing is on top of it. Losing the ability to collapse a section would be a worse fault
+   than the one being fixed. */
+body.aicourse-player-on .courseindex-item.courseindex-section-title .courseindex-link::after {
+    content: "";
+    position: absolute;
+    inset-block: 0;
+    inset-inline: 2rem 0;
+    z-index: 1;
+}
+
+/* Anything on the row with its own job stays above the overlay. Measured at z-index 2 the chevron
+   was still being covered, so it sits at 3: the overlay and the chevron are in different stacking
+   contexts and a single step was not reliably winning. Losing the chevron would be a worse fault
+   than the one being fixed -- a section that cannot be collapsed. */
+body.aicourse-player-on .courseindex-item .courseindex-chevron,
+body.aicourse-player-on .courseindex-item [data-action],
+body.aicourse-player-on .courseindex-item .dropdown,
+body.aicourse-player-on .courseindex-item .courseindex-locked {
+    position: relative;
+    z-index: 3;
+}
+
+/* --- Panel width and section heading spacing -------------------------------
+   ACF-FIX-2.1.86. Core's drawer is 285px, which was chosen for a plain list of links. This panel
+   carries an icon, a name, a duration and a completion tick on every row, so names were being
+   truncated far earlier than they need to be. Widened by 20% to 342px, with the off-screen
+   position and the content offset moved with it -- all three are keyed to the same width in core,
+   and changing one without the others leaves the drawer either peeking on screen when closed or
+   overlapping the content when open.
+
+   The chevron on a section heading also sat in a large fixed gutter sized for a plain list. Halved,
+   which is the single biggest recovery of horizontal space in the panel. */
+/* ACF-FIX-2.1.105: the widened drawer is DESKTOP ONLY.
+   These rules shipped in 2.1.86 with no media query. Below Moodle's drawer breakpoint the course
+   index is an overlay that slides over the content, and the content has no offset at all -- so
+   forcing a 342px width and a 342px margin pushed the page off the side of the screen. Measured on
+   a 390px phone: the content started at 342px, leaving 48px of usable width, the banner rendered
+   8px wide and the document scrolled horizontally to 541px.
+
+   The breakpoint is 992px, not 768px. At 768 the offset was still being applied and squeezed the
+   content to 296px on a 768px screen -- an iPad in portrait is 768-834 wide, so it landed exactly
+   in the range this breaks. 992px keeps tablets on the overlay behaviour, where the course index
+   slides over the content instead of taking a column from it. */
+@media (min-width: 992px) {
+    body.aicourse-player-on .drawer-left {
+        /* Core sets `width` on `.drawer` from a SCSS variable, at a specificity this cannot reach
+           and in the physical property rather than the logical one -- so both are stated. */
+        /* stylelint-disable-next-line declaration-no-important */
+        width: 342px !important;
+        /* Core also caps it with max-width at the same value, so width alone changes nothing.
+           Both have to move. */
+        /* stylelint-disable-next-line declaration-no-important */
+        max-width: 342px !important;
+    }
+}
+
+/* Core offsets the content with MARGIN, not padding. Adding padding on top of it produced
+   285 + 342 = 627px of gap to the right of the panel. The margin is what has to move.
+   Desktop only, for the reason above: on a phone the drawer overlays the content and there is no
+   offset to correct. */
+@media (min-width: 992px) {
+    body.aicourse-player-on.drawer-open-index #page.drawers,
+    body.aicourse-player-on.drawer-open-index .drawers.show-drawer-left {
+        /* stylelint-disable-next-line declaration-no-important */
+        margin-left: 342px !important;
+        padding-left: 0;
+    }
+}
+
+@media (min-width: 992px) {
+    body.aicourse-player-on .drawer-left:not(.show) {
+        /* stylelint-disable-next-line declaration-no-important */
+        left: -342px !important;
+    }
+}
+
+body.aicourse-player-on .courseindex-item.courseindex-section-title .courseindex-chevron {
+    inline-size: auto;
+    min-inline-size: 0;
+    margin-inline-end: var(--acf-space-1);
+    padding-inline: 2px;
+}
+
+body.aicourse-player-on .courseindex-item.courseindex-section-title {
+    gap: var(--acf-space-1);
+}
+
+/* --- Rows -----------------------------------------------------------------
+   ACF-FIX-2.1.60: full-bleed rows, not cards.
+
+   The previous version borrowed the activity card's treatment -- border, radius, elevation, a
+   status bar on the leading edge -- which is right for a card floating on a page and wrong inside
+   a 280px panel. Fifteen bordered rectangles nested inside a bordered panel is a box in a box in
+   a box, and the eye spends its effort on the containers rather than the list.
+
+   A sidebar list wants the opposite: rows that run edge to edge, separated by nothing more than a
+   hairline. The card vocabulary stays where it belongs, on the cards.
+
+   The accent is carried by the section heading and the activity icon; the completion tick at the
+   end of the row says what the old leading edge said, so the edge has gone with it. */
+/* Every wrapper between the drawer and the row contributes a little inset; measured, the rows
+   came out 269px inside a 272px panel. Zeroing the inline padding on all of them is what makes
+   "edge to edge" actually reach the edge. */
+body.aicourse-player-on
+:is(.courseindex, .courseindex-section, .courseindex-sectioncontent, .courseindex-item-content) {
+    padding-inline: 0;
+    margin-inline: 0;
+}
+
+/* .courseindex-item-content is the one that actually held the last 3px -- it sat at x=9 inside a
+   section at x=6, and it is not a class the other rules touch. Found by walking the ancestor
+   chain and measuring each box, rather than adding likely-looking selectors until something
+   moved. */
+body.aicourse-player-on .courseindex-item-content {
+    inline-size: 100%;
+}
+
+body.aicourse-player-on .courseindex-item.aicourse-player-row {
+    display: flex;
+    align-items: center;
+    gap: var(--acf-space-2);
+    margin: 0;
+    padding: 9px var(--acf-space-4) 9px var(--acf-space-3);
+    background: var(--acf-surface-raised);
+    border: 0;
+    border-block-end: 1px solid var(--acf-player-line);
+    border-radius: 0;
+    box-shadow: none;
+    transition: background var(--acf-duration-fast) var(--acf-ease-standard);
+}
+
+/* ACF-FIX-2.1.61: hover is a leading marker, not a filled block.
+   A full-width tint across the row painted the site colour behind the completion tick and the
+   activity icon, which on a dark primary looked like a bruise rather than a highlight. A 3px
+   leading edge plus a barely-there wash says "this row" without repainting everything in it --
+   and it uses the same shape the current-page marker does, so hover reads as a lighter version of
+   selection rather than a different idea. */
+/* --- theme_academi's own course index hover -------------------------------
+   ACF-FIX-2.1.69. Read from that theme's standard.scss rather than guessed at. It sets, inside
+   `.drawercontent .courseindex`:
+
+     .courseindex-item:hover, .courseindex-item:hover a { color: white; background: primary; }
+     .courseindex-section .courseindex-item:hover        { background: primary; border-color: primary; }
+     .courseindex-sectioncontent .courseindex-item.pageitem { background-color: primary; }
+
+   That is a solid block of the site's primary with white text on every hover, and the same for the
+   current activity -- which is the "big ugly primary rectangle". Nothing written against core's
+   selectors could reach it, because the theme's rules are more specific and load later, which is
+   why the previous three attempts at this had no effect on that theme.
+
+   These match the theme's own shape, so they land at equal specificity and win on order, with
+   !important for the declarations the theme sets directly. The row keeps the same faint wash used
+   everywhere else and the text keeps its colour. */
+body.aicourse-player-on .drawercontent .courseindex .courseindex-item.aicourse-player-row:hover,
+body.aicourse-player-on .drawercontent .courseindex .courseindex-item.aicourse-player-row:hover a,
+body.aicourse-player-on .drawercontent .courseindex .courseindex-section
+.courseindex-item.aicourse-player-row:hover {
+    /* stylelint-disable-next-line declaration-no-important */
+    background: var(--acf-surface-hover) !important;
+    /* stylelint-disable-next-line declaration-no-important */
+    color: var(--acf-text-primary) !important;
+    /* stylelint-disable-next-line declaration-no-important */
+    border-color: var(--acf-border-subtle) !important;
+}
+
+body.aicourse-player-on .drawercontent .courseindex
+.courseindex-item.aicourse-player-row:hover :is(.courseindex-link, .courseindex-link span) {
+    /* stylelint-disable-next-line declaration-no-important */
+    color: var(--acf-text-primary) !important;
+}
+
+/* The current activity: a tint of the primary rather than a solid fill of it. */
+body.aicourse-player-on .drawercontent .courseindex .courseindex-sectioncontent
+.courseindex-item.aicourse-player-row.pageitem {
+    /* stylelint-disable-next-line declaration-no-important */
+    background-color: var(--acf-brand-tint-weak) !important;
+}
+
+/* Section headings keep the accent on hover on this theme too.
+   ACF-FIX-2.1.71: and lose the border with it. theme_academi sets `border-color: $primary` on
+   `.courseindex-section .courseindex-item:hover`, and the 2.1.69 override only reached rows
+   carrying .aicourse-player-row -- which is added to ACTIVITY rows, never to section headings. So
+   a heading kept the theme's primary border, and because the top border had already been zeroed
+   it drew on three sides only: an outline round the sides and bottom with nothing across the top.
+   Transparent on all four edges, so nothing is drawn at all. */
+body.aicourse-player-on .drawercontent .courseindex
+.courseindex-item.courseindex-section-title:hover,
+body.aicourse-player-on .drawercontent .courseindex .courseindex-section
+.courseindex-item.courseindex-section-title:hover,
+body.aicourse-player-on .drawercontent .courseindex
+.courseindex-item.courseindex-section-title:hover a {
+    /* stylelint-disable-next-line declaration-no-important */
+    background: transparent !important;
+    /* stylelint-disable-next-line declaration-no-important */
+    color: var(--acf-brand) !important;
+    /* stylelint-disable-next-line declaration-no-important */
+    border-color: transparent !important;
+}
+
+/* The same for a theme that does not wrap the index in .drawercontent. */
+body.aicourse-player-on .courseindex-item.courseindex-section-title:hover {
+    /* stylelint-disable-next-line declaration-no-important */
+    border-color: transparent !important;
+    background: transparent;
+}
+
+/* ACF-FIX-2.1.68: core's hover forces the text to pure black.
+   `$courseindex-link-hover-color: black` is applied to the row, the link and the chevron, so
+   hovering jumped the label from the theme's body colour to #000 -- a visible flicker on every
+   row, and wrong in dark mode where the text should get lighter, not black. The row also has to
+   keep its own hover background rather than inherit core's.
+
+   Text stays put; only the background moves. That is the whole hover effect now: a wash you can
+   barely see, which is enough to say "this row" without repainting anything on it.
+
+   !important because core sets these on the same elements at a specificity this cannot outrank. */
+body.aicourse-player-on .courseindex-item.aicourse-player-row:hover,
+body.aicourse-player-on .courseindex-item.aicourse-player-row:focus-within {
+    background: var(--acf-surface-hover);
+    box-shadow: none;
+    /* stylelint-disable-next-line declaration-no-important */
+    color: var(--acf-text-primary) !important;
+}
+
+body.aicourse-player-on .courseindex-item.aicourse-player-row:hover .courseindex-link,
+body.aicourse-player-on .courseindex-item.aicourse-player-row:hover .courseindex-chevron,
+body.aicourse-player-on .courseindex-item.aicourse-player-row:focus-within .courseindex-link,
+body.aicourse-player-on .courseindex-item.aicourse-player-row:focus-within .courseindex-chevron {
+    /* stylelint-disable-next-line declaration-no-important */
+    color: var(--acf-text-primary) !important;
+}
+
+/* Section headings keep the accent on hover too, rather than dropping to black. */
+body.aicourse-player-on .courseindex-item.courseindex-section-title:hover .courseindex-link,
+body.aicourse-player-on .courseindex-item.courseindex-section-title:hover .courseindex-chevron {
+    /* stylelint-disable-next-line declaration-no-important */
+    color: var(--acf-brand) !important;
+}
+
+/* The current page. A single leading marker in the accent, which is the one place a row needs to
+   assert itself over its neighbours. */
+/* ACF-FIX-2.1.65: core fills the current item with the theme's PRIMARY at full strength
+   ($courseindex-item-page-bg: $primary), which on a dark navy paints a solid block behind the
+   activity icon and the completion tick and reads as a selection error rather than a highlight.
+   A tint of the same colour marks the row just as clearly and lets everything on it stay legible.
+
+   !important because core's own declaration reaches the same element and cannot otherwise be
+   outranked; the colour is still the theme's, only its weight has changed. */
+body.aicourse-player-on .courseindex-item.aicourse-player-row.pageitem {
+    /* stylelint-disable-next-line declaration-no-important */
+    background: var(--acf-brand-tint-weak) !important;
+    box-shadow: none;
+    font-weight: var(--acf-weight-semibold);
+}
+
+/* Core also forces the text on that row to the contrast colour it picked for a solid primary
+   background. With the background now a tint, that text needs to go back to normal or it is
+   white on near-white. */
+body.aicourse-player-on .courseindex-item.aicourse-player-row.pageitem,
+body.aicourse-player-on .courseindex-item.aicourse-player-row.pageitem .courseindex-link {
+    /* stylelint-disable-next-line declaration-no-important */
+    color: var(--acf-text-primary) !important;
+}
+
+/* ACF-FIX-2.1.66: the last row in a section drops its rule, because whatever follows already
+   separates the sections and two lines a few pixels apart is what the doubling was.
+
+   The previous selector had a SPACE before .aicourse-player-row, so it looked for a row nested
+   INSIDE the last <li> -- but the <li> IS the row. It matched nothing, which is why the doubled
+   line survived being "fixed". Written without the space it targets the element itself. */
+body.aicourse-player-on .courseindex-sectioncontent > li:last-child.aicourse-player-row,
+body.aicourse-player-on .courseindex-item.aicourse-player-row:last-child {
+    border-block-end: 0;
+}
+
+/* Core draws its own separator around the section wrapper. With rows carrying one too, the two
+   met at the section boundary. Ours is the one that goes. */
+body.aicourse-player-on .courseindex-section {
+    border-block-end: 0;
+    border-block-start: 0;
+}
+
+/* The activity icon at the head of the row, in the accent so the row is identifiable by shape and
+   colour before it is read. Core's completion circle is hidden with it: it duplicated the tick at
+   the end of the row and told a learner nothing about what the activity is. */
+.aicourse-player-row-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    inline-size: 1.375rem;
+    block-size: 1.375rem;
+    color: var(--acf-brand);
+}
+
+/* Moodle's module icons are monochrome SVGs served as images, so they cannot inherit a colour
+   directly. Masking with the image lets the accent show through, which is what makes the icon
+   column read as part of the course's palette rather than a row of stock greys. The image itself
+   is kept as a fallback for a browser without mask support. */
+.aicourse-player-row-icon img {
+    inline-size: 16px;
+    block-size: 16px;
+    object-fit: contain;
+}
+
+@supports (mask-image: url("")) {
+    .aicourse-player-row-icon img {
+        background: currentColor;
+        mask-image: var(--acf-player-icon);
+        mask-repeat: no-repeat;
+        mask-position: center;
+        mask-size: contain;
+    }
+}
+
+body.aicourse-player-on .courseindex-item.aicourse-player-row .completioninfo {
+    /* stylelint-disable-next-line declaration-no-important */
+    display: none !important;
+}
+
+/* The time, quiet and right-aligned. No pill here: a bordered chip on every row rebuilds the
+   boxed look the rows just shed. */
+.aicourse-player-row-time {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    flex: none;
+    margin-inline-start: auto;
+    font-size: var(--acf-font-size-2xs);
+    color: var(--acf-text-tertiary);
+    white-space: nowrap;
+}
+
+.aicourse-player-row-time svg {
+    inline-size: 10px;
+    block-size: 10px;
+    flex: none;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    opacity: 0.7;
+}
+
+/* The tick. Shape as well as colour: an outlined circle when incomplete and a filled one with a
+   check when done, because colour alone would fail WCAG 1.4.1. */
+.aicourse-player-tick {
+    flex: none;
+    display: grid;
+    place-items: center;
+    inline-size: 17px;
+    block-size: 17px;
+    border: 2px solid var(--acf-border-strong);
+    border-radius: 50%;
+}
+
+.aicourse-player-tick-done {
+    border-color: var(--acf-status-done-line);
+    background: var(--acf-status-done-line);
+}
+
+.aicourse-player-tick svg {
+    inline-size: 10px;
+    block-size: 10px;
+    fill: none;
+    stroke: var(--acf-surface-raised);
+    stroke-width: 3.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+/* --- Scrolling ------------------------------------------------------------
+   ACF-FIX-2.1.61. Two separate problems that look like one.
+
+   Scroll chaining: the drawer's scrollers ship with `overscroll-behavior: auto`, which means a
+   wheel gesture that reaches the top or bottom of the index carries on into the page behind it.
+   The reader is looking at the sidebar and the course jumps. `contain` stops the gesture at the
+   boundary, so the two scroll independently, which is what a panel pinned beside the content
+   should do.
+
+   The scrollbar itself: a permanent track down a 280px panel is a visible seam beside content
+   that has none. Hidden visually only -- the element still scrolls by wheel, trackpad, touch,
+   Page Up and Down, and arrow keys, and the content stays reachable. Nothing here sets
+   `overflow: hidden`, which would genuinely trap it. */
+body.aicourse-player-on
+:is(.drawer-left, #theme_boost-drawers-courseindex, .drawercontent, .courseindex) {
+    overscroll-behavior: contain;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+body.aicourse-player-on
+:is(.drawer-left, #theme_boost-drawers-courseindex, .drawercontent, .courseindex)::-webkit-scrollbar {
+    inline-size: 0;
+    block-size: 0;
+    display: none;
+}
+
+/* --- Section headings and dividers ----------------------------------------
+   ACF-FIX-2.1.59. The accent reached the sidebar but only ever showed in hover and active states
+   -- the row hover border, the current-page edge, the icon tile tint -- so at rest a course with a
+   custom colour looked identical to one without. A per-course accent nobody can see until they
+   move the mouse is not doing its job.
+
+   It now carries the three things that structure the panel: the course name at the top, each
+   section heading, and the rule that separates one section from the next. Those are the parts a
+   reader uses to orient, which is exactly where a course's own colour belongs -- and it leaves the
+   activity rows themselves neutral, so the accent marks structure rather than shouting over the
+   content. */
+body.aicourse-player-on .aicourse-player-coursename {
+    color: var(--acf-brand);
+}
+
+/* ACF-FIX-2.1.74: one divider above every section heading.
+   2.1.62 removed this because it doubled with the separator on the last activity row. That
+   doubling was fixed properly in 2.1.66 -- the last row in a section now drops its rule -- so the
+   heading is free to carry the line again, and it needs to: with sections COLLAPSED there are no
+   rows at all, so nothing was drawing a divider and the list ran together.
+
+   Same weight and colour as the row separators, so every line in the panel matches whether the
+   sections are open or closed. */
+body.aicourse-player-on .courseindex-item.courseindex-section-title {
+    background: var(--acf-surface-raised);
+}
+
+/* The 4px between the band's bottom border and the first heading -- enough to read as a second
+   line under the first -- comes from `padding-top` on `.courseindex-section`, not from anything on
+   the heading itself. Found by walking down from the header and measuring each box in turn rather
+   than guessing at the heading, which is where the two previous attempts went. Cleared on the
+   first section only, so the spacing between later sections is untouched. */
+body.aicourse-player-on .courseindex-section:first-child {
+    padding-block-start: 0;
+}
+
+body.aicourse-player-on .courseindex-section:first-child .courseindex-item.courseindex-section-title {
+    margin-block-start: 0;
+    padding-block-start: 0;
+    border-block-start: 0;
+}
+
+body.aicourse-player-on .courseindex-item.courseindex-section-title {
+    margin-block-start: var(--acf-space-2);
+    padding-block-start: var(--acf-space-2);
+    border-block-start: 1px solid var(--acf-player-line);
+}
+
+body.aicourse-player-on .courseindex-section:first-child .courseindex-item.courseindex-section-title {
+    margin-block-start: 0;
+    padding-block-start: 0;
+}
+
+body.aicourse-player-on .courseindex-item.courseindex-section-title .courseindex-link,
+body.aicourse-player-on .courseindex-item.courseindex-section-title .courseindex-chevron {
+    color: var(--acf-brand);
+    font-weight: var(--acf-weight-semibold);
+    letter-spacing: var(--acf-tracking-tight);
+}
+
+/* The activity icon at the head of the row, in the same rounded tile the activity cards use so
+   the two read as the same object at different sizes. Core's completion circle is hidden with it:
+   it duplicated the tick at the end of the row, and it told a learner nothing about what the
+   activity actually is. */
+.aicourse-player-row-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    inline-size: 1.5rem;
+    block-size: 1.5rem;
+    border-radius: var(--acf-radius-sm);
+    background: var(--acf-brand-tint-weak);
+}
+
+.aicourse-player-row-icon img {
+    inline-size: 15px;
+    block-size: 15px;
+    object-fit: contain;
+}
+
+/* Core's own rule wins on specificity here, and the element is 24x0 -- invisible but still
+   reserving 24px at the head of every row, which left the icons indented against nothing.
+   !important is the sheet's established remedy for a core rule that cannot otherwise be reached;
+   see the numbered rationales elsewhere in this file. */
+body.aicourse-player-on .courseindex-item.aicourse-player-row .completioninfo {
+    /* stylelint-disable-next-line declaration-no-important */
+    display: none !important;
+}
+
+/* The time pill: the same bordered, clock-marked treatment as an activity card's. */
+.aicourse-player-row-time {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    flex: none;
+    margin-inline-start: auto;
+    padding: 1px var(--acf-space-2);
+    border: 1px solid var(--acf-border-subtle);
+    border-radius: var(--acf-radius-pill);
+    font-size: var(--acf-font-size-2xs);
+    font-weight: var(--acf-weight-medium);
+    color: var(--acf-text-secondary);
+    white-space: nowrap;
+}
+
+.aicourse-player-row-time svg {
+    inline-size: 10px;
+    block-size: 10px;
+    flex: none;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    opacity: 0.75;
+}
+
+/* The tick. Shape as well as colour: an outlined circle when incomplete and a filled one with a
+   check when done, because colour alone would fail WCAG 1.4.1. The green is the same
+   --acf-status-done token the cards and the hero ring use. */
+.aicourse-player-tick {
+    flex: none;
+    display: grid;
+    place-items: center;
+    inline-size: 18px;
+    block-size: 18px;
+    border: 2px solid var(--acf-border-strong);
+    border-radius: 50%;
+}
+
+.aicourse-player-tick-done {
+    border-color: var(--acf-status-done-line);
+    background: var(--acf-status-done-line);
+}
+
+.aicourse-player-tick svg {
+    inline-size: 11px;
+    block-size: 11px;
+    fill: none;
+    stroke: var(--acf-surface-raised);
+    stroke-width: 3.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+/* ==========================================================================
+   IMMERSIVE MODE (ACF-FIX-2.1.56)
+   Hides the site header on course pages so the learning content has the full height.
+
+   This one is deliberately opt-in and deliberately paired with the player sidebar, because it
+   takes things away: the site header carries notifications, messaging, the user menu and log out,
+   and Moodle's accessibility conformance assumes those are reachable. The sidebar header grows a
+   compact set of the same links when this is on, so nothing is actually lost -- it moves.
+
+   Never in edit mode: a teacher needs the full page furniture while arranging a course.
+   ========================================================================== */
+
+/* ==========================================================================
+   SETTINGS PAGES (ACF-FIX-2.1.92)
+   The site settings page and the Course format section of a course's settings.
+
+   Moodle renders both as a flat run of label-and-field rows with the help text in small grey
+   type, and at forty settings that is a wall. The changes here are structural rather than
+   decorative: give each setting a card of its own so the eye can find where one ends and the next
+   begins, make the description readable rather than fine print, and let the code names that
+   identify a setting recede instead of competing with its title.
+
+   Scoped by page id and by the course format fieldset, so nothing here touches any other admin
+   page or any other part of a course's settings form.
+   ========================================================================== */
+
+/* The design tokens are declared on `body.format-aicourse`, which an admin page does not have --
+   so every var() below resolved to nothing and the cards rendered with no background, border or
+   radius at all. Measured: transparent background, 0px border, 0px radius, with the selectors
+   matching all 43 settings correctly. The tokens are therefore declared here as well, on the
+   settings page itself, rather than relying on a scope that page never enters. */
+body#page-admin-setting-formatsettingaicourse,
+body.path-course-edit {
+    --acf-surface-raised: #fff;
+    --acf-surface-sunken: #f8fafc;
+    --acf-border-subtle: rgba(15, 23, 42, 0.10);
+    --acf-border-strong: #cbd5e1;
+    --acf-border-brand: var(--bs-primary, #194866);
+    --acf-text-primary: #1e293b;
+    --acf-text-secondary: #475569;
+    --acf-text-tertiary: #64748b;
+    --acf-text-brand: var(--bs-primary, #194866);
+    --acf-brand: var(--bs-primary, #194866);
+    --acf-space-1: 0.25rem;
+    --acf-space-2: 0.5rem;
+    --acf-space-3: 0.75rem;
+    --acf-space-4: 1rem;
+    --acf-space-5: 1.25rem;
+    --acf-space-6: 1.5rem;
+    --acf-radius-sm: 0.25rem;
+    --acf-radius-md: 0.5rem;
+    --acf-radius-lg: 0.75rem;
+    --acf-radius-pill: 999px;
+    --acf-font-size-2xs: 0.75rem;
+    --acf-font-size-sm: 0.875rem;
+    --acf-font-size-md: 1rem;
+    --acf-font-size-lg: 1.125rem;
+    --acf-weight-medium: 500;
+    --acf-weight-semibold: 600;
+    --acf-weight-bold: 700;
+    --acf-leading-snug: 1.35;
+    --acf-leading-relaxed: 1.6;
+    --acf-elevation-1: 0 1px 2px rgba(15, 23, 42, 0.05);
+    --acf-focus-ring: 0 0 0 2px #fff, 0 0 0 4px var(--bs-primary, #194866);
+}
+
+body#page-admin-setting-formatsettingaicourse #adminsettings .form-item,
+body.path-course-edit #id_courseformathdr .fitem {
+    /* ACF-FIX-2.1.99: flow-root, so the card contains its own contents.
+       Moodle floats the label and the setting inside each row. A float does not add to its
+       parent's height, so the card was being sized as though it were empty and any description
+       longer than a line or two ran out through the bottom border -- worse the more there was to
+       say, which is exactly backwards. flow-root establishes a block formatting context, which
+       contains the floats without the side effects of overflow: hidden. */
+    display: flow-root;
+    padding: var(--acf-space-4) var(--acf-space-5);
+    margin-block-end: var(--acf-space-3);
+    background: var(--acf-surface-raised);
+    border: 1px solid var(--acf-border-subtle);
+    border-radius: var(--acf-radius-lg);
+    box-shadow: var(--acf-elevation-1);
+}
+
+body#page-admin-setting-formatsettingaicourse #adminsettings .form-item:hover,
+body.path-course-edit #id_courseformathdr .fitem:hover {
+    border-color: var(--acf-border-brand);
+}
+
+/* The setting's name. Moodle sizes this as a form label; it is really a heading. */
+body#page-admin-setting-formatsettingaicourse #adminsettings .form-label label,
+body#page-admin-setting-formatsettingaicourse #adminsettings .form-label > .float-left,
+body.path-course-edit #id_courseformathdr .fitem .col-form-label label {
+    font-size: var(--acf-font-size-md);
+    font-weight: var(--acf-weight-semibold);
+    line-height: var(--acf-leading-snug);
+    color: var(--acf-text-primary);
+}
+
+/* The `format_aicourse | settingname` line under each label. Useful when reading documentation
+   or writing an upgrade script, noise the rest of the time. */
+body#page-admin-setting-formatsettingaicourse #adminsettings .form-label .form-shortname {
+    display: inline-block;
+    margin-block-start: 4px;
+    padding: 1px var(--acf-space-2);
+    background: var(--acf-surface-sunken);
+    border-radius: var(--acf-radius-pill);
+    font-family: var(--acf-font-mono, monospace);
+    font-size: var(--acf-font-size-2xs);
+    color: var(--acf-text-tertiary);
+    opacity: 0.75;
+}
+
+/* The description. This is where the explanation actually lives, so it gets read as prose. */
+body#page-admin-setting-formatsettingaicourse #adminsettings .form-description,
+body#page-admin-setting-formatsettingaicourse #adminsettings .form-defaultinfo {
+    max-inline-size: 68ch;
+    margin-block-start: var(--acf-space-2);
+    font-size: var(--acf-font-size-sm);
+    line-height: var(--acf-leading-relaxed);
+    color: var(--acf-text-secondary);
+}
+
+body#page-admin-setting-formatsettingaicourse #adminsettings .form-description strong {
+    color: var(--acf-text-primary);
+    font-weight: var(--acf-weight-semibold);
+}
+
+body#page-admin-setting-formatsettingaicourse #adminsettings .form-description em {
+    color: var(--acf-text-tertiary);
+}
+
+/* Inline code in a description -- module names, hex colours, the modulename=minutes lines. */
+body#page-admin-setting-formatsettingaicourse #adminsettings .form-description code {
+    padding: 1px 5px;
+    background: var(--acf-surface-sunken);
+    border: 1px solid var(--acf-border-subtle);
+    border-radius: var(--acf-radius-sm);
+    font-size: 0.9em;
+    color: var(--acf-text-brand);
+}
+
+/* "Default: Hide from students" -- a fact about the setting, not part of its explanation. */
+body#page-admin-setting-formatsettingaicourse #adminsettings .form-defaultinfo {
+    display: inline-block;
+    margin-inline-start: var(--acf-space-2);
+    padding: 1px var(--acf-space-2);
+    background: var(--acf-surface-sunken);
+    border-radius: var(--acf-radius-pill);
+    font-size: var(--acf-font-size-2xs);
+    color: var(--acf-text-tertiary);
+}
+
+/* Section headings within the settings page. */
+body#page-admin-setting-formatsettingaicourse #adminsettings .form-item h3,
+body#page-admin-setting-formatsettingaicourse #adminsettings > h3 {
+    margin-block: var(--acf-space-6) var(--acf-space-3);
+    padding-block-end: var(--acf-space-2);
+    border-block-end: 2px solid var(--acf-brand);
+    font-size: var(--acf-font-size-lg);
+    font-weight: var(--acf-weight-bold);
+    color: var(--acf-text-brand);
+}
+
+/* Inputs, so a select or a text field does not look like an afterthought beside all this. */
+body#page-admin-setting-formatsettingaicourse #adminsettings select,
+body#page-admin-setting-formatsettingaicourse #adminsettings input[type="text"],
+body.path-course-edit #id_courseformathdr select,
+body.path-course-edit #id_courseformathdr input[type="text"] {
+    padding: var(--acf-space-2) var(--acf-space-3);
+    border: 1px solid var(--acf-border-strong);
+    border-radius: var(--acf-radius-md);
+    background: var(--acf-surface-raised);
+    font-size: var(--acf-font-size-sm);
+}
+
+body#page-admin-setting-formatsettingaicourse #adminsettings select:focus-visible,
+body#page-admin-setting-formatsettingaicourse #adminsettings input[type="text"]:focus-visible,
+body.path-course-edit #id_courseformathdr select:focus-visible,
+body.path-course-edit #id_courseformathdr input[type="text"]:focus-visible {
+    border-color: var(--acf-brand);
+    box-shadow: var(--acf-focus-ring);
+    outline: none;
 }

@@ -70,7 +70,19 @@ class observer {
      * @param \core\event\course_module_deleted $event The event.
      */
     public static function course_module_deleted(\core\event\course_module_deleted $event): void {
+        global $DB;
+
         self::purge_course_content($event->courseid);
+
+        // ACF-FIX-2.1.46: drop this activity's duration override with it. Nothing in core knows
+        // about that table, and a course module id is reused eventually, so a row left behind
+        // would one day attach a stale estimate to an unrelated activity.
+        try {
+            $DB->delete_records('format_aicourse_actminutes', ['cmid' => $event->objectid]);
+        } catch (\dml_exception $e) {
+            debugging('format_aicourse: could not remove activity duration override: '
+                . $e->getMessage(), DEBUG_DEVELOPER);
+        }
     }
 
     /**
@@ -106,6 +118,8 @@ class observer {
         try {
             $DB->delete_records('format_aicourse_chats', ['courseid' => $event->courseid]);
             $DB->delete_records('format_aicourse_ai_memory', ['courseid' => $event->courseid]);
+            // ACF-FIX-2.1.46: duration overrides are keyed by courseid for exactly this.
+            $DB->delete_records('format_aicourse_actminutes', ['courseid' => $event->courseid]);
         } catch (\dml_exception $e) {
             debugging(
                 'format_aicourse: could not purge course data on course deletion: ' . $e->getMessage(),

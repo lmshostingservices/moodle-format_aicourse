@@ -52,5 +52,23 @@
         <INDEX NAME="unique_memory" UNIQUE="true" FIELDS="courseid, activityid, userid"/>
       </INDEXES>
     </TABLE>
+    <TABLE NAME="format_aicourse_actminutes" COMMENT="Per-activity estimated duration overrides set by a teacher">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Denormalised so a course purge is one delete"/>
+        <FIELD NAME="cmid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="minutes" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="0 means hide the badge for this activity"/>
+        <FIELD NAME="usermodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="courseid" TYPE="foreign" FIELDS="courseid" REFTABLE="course" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="cmid" UNIQUE="true" FIELDS="cmid"/>
+        <INDEX NAME="courseid_cmid" UNIQUE="false" FIELDS="courseid, cmid"/>
+      </INDEXES>
+    </TABLE>
   </TABLES>
 </XMLDB>

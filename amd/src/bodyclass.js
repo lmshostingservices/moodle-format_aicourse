@@ -35,12 +35,45 @@ const ALLOWED = /^aicourse-[a-z-]+$/;
  * Add the supplied body classes.
  *
  * @param {string[]} classes Body classes to add.
+ * @param {string} [accent] Pre-validated CSS custom-property declarations for the course accent.
  * @returns {void}
  */
-export const init = (classes) => {
-    if (!Array.isArray(classes)) {
-        return;
+export const init = (classes, accent) => {
+    if (Array.isArray(classes)) {
+        classes.filter((name) => ALLOWED.test(name))
+            .forEach((name) => document.body.classList.add(name));
     }
-    classes.filter((name) => ALLOWED.test(name))
-        .forEach((name) => document.body.classList.add(name));
+
+    // ACF-FIX-2.1.54: publish the course's accent at the document root.
+    //
+    // The accent was set as an inline style on the hero element, so its custom properties were
+    // scoped to the hero's own subtree. Everything else the format draws -- the section cards,
+    // the activity cards, the focus ring, the tour, the chat panel and now the player sidebar --
+    // lives elsewhere in the DOM and therefore never saw the course's colour at all: they fell
+    // back to the theme's primary. A per-course accent that only tints one banner is not really
+    // a per-course accent.
+    //
+    // Setting the same properties on <body> lets every one of them inherit it. The hero keeps its
+    // inline copy, which still wins for the hero itself, so nothing about the banner changes.
+    if (accent && typeof accent === 'string') {
+        // Only custom properties, and only ones this plugin owns: the value reaches here from
+        // course settings, and although it is validated server-side this is a second gate.
+        accent.split(';').forEach((declaration) => {
+            const parts = declaration.split(':');
+            if (parts.length !== 2) {
+                return;
+            }
+            const name = parts[0].trim();
+            const value = parts[1].trim();
+            if (!/^--acf-[a-z0-9-]+$/.test(name) || !/^[#a-zA-Z0-9.%,()\s-]+$/.test(value)) {
+                return;
+            }
+            // On <body>, not <html>. The stylesheet declares --acf-brand on body.format-aicourse
+            // (deriving it from the theme's primary), and a declaration on body beats one
+            // inherited from html -- so setting it at the root left every element inside body
+            // still reading the theme colour. An inline style on body outranks the stylesheet
+            // rule on the same element, which is what makes the course accent actually win.
+            document.body.style.setProperty(name, value);
+        });
+    }
 };

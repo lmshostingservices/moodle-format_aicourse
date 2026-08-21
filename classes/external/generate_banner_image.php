@@ -88,6 +88,97 @@ class generate_banner_image extends external_api {
             throttle::BANNER_WINDOW
         );
 
+        // ACF-FIX-2.1.42: validate credentials HERE, before queueing.
+        //
+        // The first version of this split left the check to the task, which meant a site with no
+        // API key queued happily and only reported the problem when cron got round to it -- the
+        // teacher saw a spinner, then a failure minutes later, for something knowable instantly.
+        // The unit tests caught it. The check runs in both places: here so the teacher is told
+        // at once, and again in the task because configuration can change between the two.
+        credentials::require_configured();
+
+        // ACF-FIX-2.1.42: queue the work, do not do it here.
+        //
+        // Generation takes about 110 seconds. Done inline it had to outlive every intermediary
+        // between the browser and PHP, and the shortest timeout won: a reverse proxy at 60s,
+        // Cloudflare's fixed 100s on its lower tiers, PHP-FPM at 30s. Sites behind one saw a 504
+        // and no banner. Raising this plugin's cURL timeout could never have helped -- the
+        // connection was already severed upstream of PHP.
+        //
+        // The browser now gets an answer immediately and polls get_banner_status for the result.
+        $task = new \format_aicourse\task\generate_banner();
+        $task->set_custom_data(['courseid' => (int) $course->id]);
+        $task->set_component('format_aicourse');
+        self::set_status((int) $course->id, 'queued', '');
+        \core\task\manager::queue_adhoc_task($task);
+
+        return [
+            'status' => 'queued',
+            'imageurl' => '',
+            'message' => '',
+        ];
+    }
+
+    /**
+     * Record the state of a course's banner generation.
+     *
+     * Stored in plugin config rather than a new table: it is one short string per course that is
+     * read a few times a minute while a teacher watches a spinner and is meaningless afterwards.
+     * A table would need an install step, an upgrade step, a backup decision and a privacy
+     * declaration for data with a lifetime of about two minutes.
+     *
+     * @param int $courseid The course being generated for.
+     * @param string $state One of queued, running, done, failed.
+     * @param string $detail The image URL when done, the failure reason when failed.
+     * @return void
+     */
+    public static function set_status(int $courseid, string $state, string $detail): void {
+        set_config(
+            'bannerstatus_' . $courseid,
+            json_encode(['state' => $state, 'detail' => $detail, 'time' => time()]),
+            'format_aicourse'
+        );
+    }
+
+    /**
+     * Read back the state of a course's banner generation.
+     *
+     * @param int $courseid The course to report on.
+     * @return array{state: string, detail: string, time: int}
+     */
+    public static function get_status(int $courseid): array {
+        $raw = get_config('format_aicourse', 'bannerstatus_' . $courseid);
+        if ($raw === false || $raw === '') {
+            return ['state' => 'idle', 'detail' => '', 'time' => 0];
+        }
+        $decoded = json_decode($raw, true);
+        if (!is_array($decoded) || !isset($decoded['state'])) {
+            return ['state' => 'idle', 'detail' => '', 'time' => 0];
+        }
+        return [
+            'state' => (string) $decoded['state'],
+            'detail' => (string) ($decoded['detail'] ?? ''),
+            'time' => (int) ($decoded['time'] ?? 0),
+        ];
+    }
+
+    /**
+     * Call the image service and store the result against the course.
+     *
+     * This is the whole of the previous synchronous implementation, unchanged apart from being
+     * reachable from the adhoc task. Keeping it byte-identical in behaviour is deliberate: the
+     * request shape, the credit cost and the validation of the response are all as they were, so
+     * moving the work off the web request cannot alter what the service is asked for or what is
+     * accepted back.
+     *
+     * @param \stdClass $course The course to generate for.
+     * @return string The moodle_url of the stored image.
+     */
+    public static function generate_and_store(\stdClass $course): string {
+        global $CFG;
+
+        $context = \context_course::instance($course->id);
+
         [$siteid, $apikey] = credentials::require_configured();
 
         $postdata = [
@@ -229,10 +320,7 @@ class generate_banner_image extends external_api {
             $file->get_filename()
         );
 
-        return [
-            'imageurl' => $fileurl->out(false),
-            'creditsused' => (int) ($result['creditsUsed'] ?? 5),
-        ];
+        return $fileurl->out(false);
     }
 
     /**
@@ -294,8 +382,32 @@ class generate_banner_image extends external_api {
      */
     public static function execute_returns(): external_single_structure {
         return new external_single_structure([
-            'imageurl' => new external_value(PARAM_URL, 'URL of the stored banner image'),
-            'creditsused' => new external_value(PARAM_INT, 'Number of credits the generation cost'),
+            // ACF-FIX-2.1.42: the call queues an image rather than producing one. imageurl and
+            // creditsused are kept in the structure, defaulted, so a browser still running the
+            // previous AMD bundle reads an empty string and a zero instead of failing on a
+            // missing key.
+            'status' => new external_value(PARAM_ALPHA, 'queued, running, done or failed'),
+            'imageurl' => new external_value(
+                // ACF-FIX-2.1.115: declared as a URL rather than an untyped string. The value is a
+                // pluginfile URL this plugin builds itself, so the URL type both documents the
+                // contract and has Moodle validate it on the way out.
+                PARAM_URL,
+                'Empty when queued; the URL once done',
+                VALUE_DEFAULT,
+                ''
+            ),
+            'message' => new external_value(
+                PARAM_TEXT,
+                'Failure reason when status is failed',
+                VALUE_DEFAULT,
+                ''
+            ),
+            'creditsused' => new external_value(
+                PARAM_INT,
+                'Retained for compatibility; always 0 here',
+                VALUE_DEFAULT,
+                0
+            ),
         ]);
     }
 }

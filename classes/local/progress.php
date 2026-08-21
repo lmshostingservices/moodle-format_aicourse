@@ -29,6 +29,27 @@ use completion_info;
  */
 class progress {
     /**
+     * @var string Shipped default minutes per module type, one pair per line.
+     *
+     * These are the figures the format used before they were configurable, kept as the starting
+     * point so upgrading changes nothing until an administrator decides otherwise. quiz is absent
+     * deliberately: it is calculated from its question count instead.
+     */
+    public const DEFAULT_MINUTES_MAP = "assign=30
+book=20
+forum=10
+h5pactivity=10
+lesson=25
+page=10
+resource=5
+scorm=30
+url=3
+workshop=45";
+
+    /** @var array Per-request cache of duration overrides, keyed by course id then cm id. */
+    private static $overridecache = [];
+
+    /**
      * Get whole-course progress for a user.
      *
      * ACF-FIX-2.0: $needactivities added. Most callers (the hero ring, the course-home progress bar,
@@ -244,20 +265,138 @@ class progress {
      * @return int Minutes.
      */
     public static function estimate_activity_minutes($cm) {
-        $times = [
-            'quiz' => 15,
-            'assign' => 30,
-            'forum' => 10,
-            'book' => 20,
-            'page' => 5,
-            'url' => 3,
-            'resource' => 5,
-            'lesson' => 25,
-            'scorm' => 30,
-            'h5pactivity' => 10,
-            'workshop' => 45,
-        ];
-        return isset($times[$cm->modname]) ? $times[$cm->modname] : 5;
+        // ACF-FIX-2.1.46: three sources, most specific first.
+        //
+        // 1. A teacher's override for this exact activity, set by clicking the badge in edit mode.
+        // Nothing else can be as accurate as the person who wrote the activity, so it wins
+        // outright -- including a deliberate 0, which hides the badge rather than falling back.
+        // 2. The site's per-module-type defaults, editable under the format's settings, so an
+        // administrator can say what an assignment is worth on THEIR site rather than inheriting
+        // a number chosen here.
+        // 3. For a quiz, a per-question figure multiplied by the question count, because "a quiz"
+        // is not a duration: a five-question check and a fifty-question exam differ by an order
+        // of magnitude and a single default is wrong for both.
+        $override = self::get_activity_override($cm);
+        if ($override !== null) {
+            return $override;
+        }
+
+        $defaults = self::get_default_minutes();
+
+        if ($cm->modname === 'quiz') {
+            $perquestion = (int) (get_config('format_aicourse', 'minutesperquestion') ?: 1);
+            $questions = self::count_quiz_questions($cm);
+            if ($questions > 0) {
+                return max(1, $perquestion * $questions);
+            }
+        }
+
+        if (isset($defaults[$cm->modname])) {
+            return (int) $defaults[$cm->modname];
+        }
+        return (int) (get_config('format_aicourse', 'minutesfallback') ?: 5);
+    }
+
+    /**
+     * A teacher's per-activity duration override, if one has been set.
+     *
+     * Cached per request: a course-home render asks for every activity in the course, and one
+     * query for the lot beats one query per activity.
+     *
+     * @param \cm_info $cm Course module.
+     * @return int|null Minutes, or null when no override exists.
+     */
+    public static function get_activity_override($cm): ?int {
+        global $DB;
+        $courseid = (int) $cm->course;
+        // ACF-FIX-2.1.46: a class property rather than a function static, so a save in the same
+        // request can genuinely clear it. With a function static it could not be reached, and the
+        // external function reported the value from BEFORE the change -- a teacher who cleared an
+        // override was told the old number was still in force.
+        if (!array_key_exists($courseid, self::$overridecache)) {
+            self::$overridecache[$courseid] = $DB->get_records_menu(
+                'format_aicourse_actminutes',
+                ['courseid' => $courseid],
+                '',
+                'cmid, minutes'
+            );
+        }
+        $cmid = (int) $cm->id;
+        return array_key_exists($cmid, self::$overridecache[$courseid])
+            ? (int) self::$overridecache[$courseid][$cmid]
+            : null;
+    }
+
+    /**
+     * Clear the per-request override cache.
+     *
+     * Called after a save so the value just written is the one rendered back, rather than the
+     * value read earlier in the same request.
+     *
+     * @return void
+     */
+    public static function purge_override_cache(): void {
+        self::$overridecache = [];
+    }
+
+    /**
+     * Site-configured default minutes per module type.
+     *
+     * Stored as one "modname=minutes" pair per line rather than a fixed set of fields, so a site
+     * running third-party activity modules can give those a sensible figure too instead of having
+     * every one of them fall to the catch-all.
+     *
+     * @return array modname => minutes.
+     */
+    public static function get_default_minutes(): array {
+        $raw = (string) get_config('format_aicourse', 'defaultminutes');
+        if (trim($raw) === '') {
+            $raw = self::DEFAULT_MINUTES_MAP;
+        }
+        $out = [];
+        foreach (preg_split('/\r\n|\r|\n/', $raw) as $line) {
+            $line = trim($line);
+            if ($line === '' || strpos($line, '=') === false) {
+                continue;
+            }
+            [$name, $minutes] = explode('=', $line, 2);
+            $name = trim($name);
+            $minutes = (int) trim($minutes);
+            if ($name !== '' && $minutes >= 0) {
+                $out[$name] = $minutes;
+            }
+        }
+        return $out;
+    }
+
+    /**
+     * How many questions a quiz contains.
+     *
+     * Counts slots rather than questions in the bank: a random slot draws one question at attempt
+     * time, so a quiz of ten random slots is ten questions to the learner even though the bank
+     * holds fifty.
+     *
+     * @param \cm_info $cm Course module, expected to be a quiz.
+     * @return int Question count, 0 when it cannot be determined.
+     */
+    public static function count_quiz_questions($cm): int {
+        global $DB;
+        static $cache = [];
+        $cmid = (int) $cm->id;
+        if (array_key_exists($cmid, $cache)) {
+            return $cache[$cmid];
+        }
+        $count = 0;
+        try {
+            if ($DB->get_manager()->table_exists('quiz_slots')) {
+                $count = (int) $DB->count_records('quiz_slots', ['quizid' => $cm->instance]);
+            }
+        } catch (\Throwable $e) {
+            // A quiz subplugin schema we do not recognise: fall back to the type default.
+            $count = 0;
+        }
+        $cache[$cmid] = $count;
+        return $count;
     }
 
     /**

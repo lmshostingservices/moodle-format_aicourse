@@ -29,11 +29,16 @@ defined('MOODLE_INTERNAL') || die();
 
 $string['accentcolour'] = 'Accent colour';
 $string['accentcolour_desc'] = 'The colour this format tints everything with: the hero banner background, card borders and hover states, icon wells, progress chips and the keyboard focus ring. Leave empty to keep following your theme\'s primary colour. Set here it applies to every course using this format; an individual course can override it in its own course settings.';
-$string['accentcolour_help'] = 'A colour in `#rrggbb` form, for example `#0f6cbf`. Leave empty to use the site-wide accent colour set by your administrator, which itself falls back to your theme\'s primary colour.
+$string['accentcolour_help'] = 'The accent colour is the one colour that marks the structure of your course. It is used for:
 
-This tints the hero banner background, card borders and hover states, icon wells, progress chips and the focus ring &mdash; everything the format colours is derived from this one value, so they stay consistent with each other.
+* section and card headings
+* activity icons
+* the headings and dividers in the course index
+* the outline that appears when you tab to a button with the keyboard
 
-Anything that is not a valid hex colour is ignored rather than applied.';
+Enter a hex colour — six characters after a hash, like <code>#194866</code> for navy or <code>#b5179e</code> for magenta. Your theme\'s own primary colour is used if you leave this empty.
+
+*Tip:* pick something with reasonable contrast against white. Very pale colours will make headings hard to read.';
 $string['activities'] = 'activities';
 $string['activity'] = 'activity';
 $string['activitydisplaycards'] = 'Beautiful activity cards';
@@ -187,6 +192,8 @@ $string['bannerimage_ratio_formats'] = 'Accepted formats: JPG · PNG · WebP  ·
 $string['bannerimage_ratio_hint'] = 'Ideal image size is 1920 × 600 px (or 1600 × 500 px minimum). Centre your subject — edges may be cropped on narrow screens. Dark or high-contrast images give the best result with the white text overlay.';
 $string['bannerimage_ratio_title'] = 'Recommended ratio: 16:5';
 $string['bannerimageheader'] = 'Course Banner Image';
+$string['bannerqueued'] = 'Generating your banner image. This takes one to two minutes and continues even if you leave this page \u2014 the banner will appear when it is ready.';
+$string['bannerstillrunning'] = 'Still generating. You can leave this page; the banner will be there when it is done.';
 $string['cachedef_ajaxratelimit'] = 'AI Tutor and banner generation rate limit counters';
 $string['cachedef_coursecontent'] = 'Course content index used by the AI Tutor';
 $string['cardactivitiesmore'] = 'View all activities in {$a}';
@@ -235,10 +242,25 @@ $string['courseindex_home_section'] = 'Course home + Section pages';
 $string['courseindex_none'] = 'Hide on all pages';
 $string['courseindex_section'] = 'Section pages only';
 $string['courseindex_section_activity'] = 'Section + Activity pages';
+$string['coursenavplace'] = 'Where the course tabs appear';
+$string['coursenavplace_default'] = 'Below the banner, as the theme renders them';
+$string['coursenavplace_header'] = 'In the site header, beside Home and Dashboard';
+$string['coursenavplace_help'] = 'Course, Settings, Participants, Grades and Reports are links only teachers use — but as a full-width row under the banner they take up space on every page, including for people who never click them.
+
+* **Below the banner** — leave them where your theme puts them.
+* **In the site header** — move them up to sit beside Home, Dashboard and My courses, where a teacher already looks for links like these.
+
+This only affects people who can edit the course. What students see is decided by the "Course navigation tabs" setting instead.
+
+The tabs go back to their normal place while Edit mode is on.';
 $string['courseprogress'] = 'Course Progress';
 $string['coursesectionsregion'] = 'Course sections';
 $string['currentsection'] = 'This section';
+$string['defaultaccentcolour_desc'] = 'A hex colour such as <code>#194866</code>, used by any course that has not chosen its own. Leave empty to follow the theme\'s primary colour.<br /><br />The accent is used for section and card headings, activity icons, the course index headings and dividers, and focus rings.';
 $string['defaultgreetingname'] = 'there';
+$string['defaultminutes'] = 'Default minutes by activity type';
+$string['defaultminutes_desc'] = 'How long each <strong>type</strong> of activity is assumed to take. These figures add up to the time shown on each section card and in the course index.<br /><br />Write one line per activity type, as <code>modulename=minutes</code>, using Moodle\'s internal names:<br /><br /><code>assign=30<br />page=10<br />forum=10<br />url=3</code><br /><br />Any type you do not list falls back to the number in "Fallback minutes" below — so if you run third-party activities, add them here to stop them all showing the same figure.<br /><br />Quizzes are deliberately not in this list: they are worked out from how many questions they contain, using the setting below.<br /><br />Set a type to <code>0</code> to hide the time for that type completely.<br /><br /><em>Remember:</em> these are starting points. A teacher can correct any single activity, and their figure always wins.';
+$string['defaultplayerheadercolour_desc'] = 'The background of the band at the top of the course index, for any course that has not chosen its own. A hex colour such as <code>#eceff4</code>. Leave empty for the default shade.';
 $string['deletesection'] = 'Delete section';
 $string['deletesectionconfirm'] = 'Are you sure you want to delete this section? This action cannot be undone.';
 $string['deletesectionnamed'] = 'Delete section: {$a}';
@@ -252,6 +274,10 @@ $string['displaysettings_desc'] = 'Defaults applied to new courses that use the 
 $string['duplicatesection'] = 'Duplicate section';
 $string['duplicatesectionnamed'] = 'Duplicate section: {$a}';
 $string['editsectionnamed'] = 'Edit section: {$a}';
+$string['edittime'] = 'Edit estimated time';
+$string['edittime_invalid'] = 'Enter a whole number of minutes between 0 and 10000.';
+$string['edittime_prompt'] = 'Estimated minutes for this activity. Leave blank to use the site default, or enter 0 to hide the badge.';
+$string['edittime_saved'] = 'Estimated time updated';
 $string['enabletutor'] = 'Enable AI Tutor';
 $string['enabletutor_desc'] = 'When enabled, the AI Tutor chat bubble is shown to students and teachers on course and activity pages using AI Course Format. Uncheck to hide the tutor completely across all courses.';
 $string['error_activitynotfound'] = 'That activity could not be found.';
@@ -295,9 +321,30 @@ $string['esttime_hm'] = '{$a->hours} hr {$a->mins} min';
 $string['esttime_m'] = '{$a} min';
 $string['externalservice'] = 'External AI service';
 $string['externalservice_desc'] = 'When a user asks the AI Tutor a question, this plugin sends their user ID, their first name, the course ID and name, the question text and the text content of the course to <a href="https://lms-labs.com">lms-labs.com</a>, which is operated by LMS-Labs outside your Moodle site. Nothing is sent unless both a Site ID and an API Key are set below and a user actively asks a question. Set "Enable AI Tutor" to No to stop all transmission. See the plugin privacy policy and Site administration &gt; Users &gt; Privacy and policies &gt; Plugin privacy registry for the full field list.';
+$string['forceaccentcolour'] = 'Force accent colour on all courses';
+$string['forceaccentcolour_desc'] = 'A hex colour applied to every course using this format, overriding each course\'s own choice. Unlike the default above, this DOES affect existing courses. Leave empty to let each course decide.';
+$string['forceherofullwidth'] = 'Force banner width on all courses';
+$string['forceherofullwidth_desc'] = 'Applies one choice to every course using this format at once, overriding each course\'s own setting. Unlike the default above, this DOES affect existing courses.';
+$string['forceheroimageoverlay'] = 'Force overlay opacity on all courses';
+$string['forceheroimageoverlay_desc'] = 'Applies one overlay opacity to every course using this format at once, overriding each course\'s own setting. Unlike the site default above, this DOES affect existing courses. Set it to -1 to leave each course alone.';
+$string['forcehidebreadcrumb'] = 'Force breadcrumb visibility';
+$string['forcehidebreadcrumb_desc'] = 'Applies one breadcrumb setting to every course using this format at once, overriding each course\'s own choice. Leave as \'Let each course decide\' to respect the per-course setting.';
+$string['forcehidebreadcrumb_leave'] = 'Let each course decide';
+$string['forcehidefooter'] = 'Force footer visibility';
+$string['forcehidefooter_desc'] = 'Applies one footer setting to every course using this format at once, overriding each course\'s own choice. Unlike the site default above, this DOES affect existing courses. Leave as \'Let each course decide\' to respect the per-course setting.';
+$string['forcehidegeneral'] = 'Force General section setting on all courses';
+$string['forcehidegeneral_desc'] = 'Applies one choice to every course using this format at once, overriding each course\'s own setting. Unlike the default above, this DOES affect existing courses.';
 $string['forcehidesecondarynav'] = 'Course navigation tabs (override all courses)';
-$string['forcehidesecondarynav_desc'] = 'Forces the course navigation tabs setting on <strong>every</strong> course using this format, ignoring what each course has chosen.<br /><br />The "Course navigation tabs" default above only applies to newly created courses &mdash; an existing course that has ever had its settings saved keeps its own stored value and will not pick up a change to the default. Use this override when you want the tabs hidden everywhere without editing each course.<br /><br />Leave it on <strong>Follow each course</strong> to keep per-course control. Tabs are never hidden while edit mode is on, whatever this is set to.';
+$string['forcehidesecondarynav_desc'] = 'Applies one choice to <strong>every</strong> course using this format at once, ignoring what each course has chosen for itself.<br /><br /><strong>Why this exists.</strong> The "Course navigation tabs" setting above only affects <em>brand new</em> courses. A course that has ever had its settings saved keeps its own stored value and will never pick up a change you make to the default. This override is the only way to change courses that already exist.<br /><br /><em>Example:</em> you have 200 courses and want the tabs gone from all of them. Setting the default above does nothing. Setting this to "Hide from everyone" does it immediately.<br /><br />Choose <strong>Follow each course\'s own setting</strong> if you would rather decide course by course.';
 $string['forcehidesecondarynav_follow'] = 'Follow each course\'s own setting';
+$string['forceimmersive'] = 'Force logo band setting on all courses';
+$string['forceimmersive_desc'] = 'Applies one choice to every course using this format at once, overriding each course\'s own setting. Unlike the default above, this DOES affect existing courses.';
+$string['forceindexstate'] = 'Force first-entry state on all courses';
+$string['forceindexstate_desc'] = 'Applies one choice to every course using this format at once, overriding each course\'s own setting. Still applied only once per user per course.';
+$string['forceplayerheadercolour'] = 'Force course index header colour';
+$string['forceplayerheadercolour_desc'] = 'A hex colour applied to every course using this format, overriding each course\'s own choice. Unlike the default above, this DOES affect existing courses. Leave empty to let each course decide.';
+$string['forceplayerindex'] = 'Force player sidebar on all courses';
+$string['forceplayerindex_desc'] = 'Applies one choice to every course using this format at once, overriding each course\'s own setting. Unlike the default above, this DOES affect existing courses.';
 $string['generatebannerimage'] = 'Generate AI banner image';
 $string['gotocourse'] = 'Course Home';
 $string['gradefraction'] = '{$a->current}/{$a->max}';
@@ -334,7 +381,18 @@ The default is 110, which matches the compact banner layout. Set it to 0 to let 
 Courses **with** a banner image ignore this: an image banner is sized by its own layout so the picture always has a sensible aspect ratio.';
 $string['herobannerwidth'] = 'Hero banner width';
 $string['herobannerwidth_help'] = 'Set the maximum width of the hero banner in pixels to match your theme\'s content width. For example, if your Moodle theme has a 1200px content area, set this to 1200. Set to 0 (default) for full width up to 1400px.';
+$string['herofullwidth'] = 'Banner width';
+$string['herofullwidth_contained'] = 'Aligned with the course content';
+$string['herofullwidth_desc'] = 'Whether the course banner lines up with the cards below it, or spans the whole area beside the course index.<br /><br />Full width also removes the gap above the banner, so it sits directly under the site header. That gives the page the look of a dedicated e-learning player rather than a web page with a picture at the top.';
+$string['herofullwidth_full'] = 'Full width, edge to edge';
+$string['herofullwidth_help'] = 'Whether the course banner lines up with the cards below it, or spans the whole width beside the course index.
+
+* **Aligned with the course content** - the banner starts and ends where the cards do. This is the default and suits a course that reads like a page.
+* **Full width, edge to edge** - the banner fills the area beside the course index and the gap above it is removed, so it sits directly under the site header.
+
+Full width gives the page the feel of a dedicated e-learning player. It works best with the course player sidebar switched on, and with a banner image wide enough not to look stretched.';
 $string['heroimageoverlay'] = 'Hero image overlay opacity';
+$string['heroimageoverlay_desc'] = 'How dark the layer between the banner image and the banner text is, as a percentage from 0 to 100.<br /><br /><strong>0-25 — very light.</strong> The photograph is barely touched. Only safe on an image that is already dark or low-contrast; white text will be hard to read over a bright or pale photo.<br /><strong>30-40 — light.</strong> The image stays clearly visible. A good choice for dark, evenly lit photographs.<br /><strong>45-55 — medium (recommended).</strong> The balance point. 45 is the shipped default and keeps white title text above the WCAG AA contrast floor on all but the very lightest images.<br /><strong>60-75 — dark.</strong> The title is unmistakable on any image, including a near-white one, at the cost of muting the photograph.<br /><strong>80-100 — very dark.</strong> The image reads as texture behind the text rather than as a picture.<br /><br />As a rule of thumb the overlay must reach about <strong>54</strong> to guarantee readable white text over a worst-case white image; below that, readability depends on the image being dark enough on its own.<br /><br />This is the starting value for new courses. Each course can change it in its own settings, and changing it here does <strong>not</strong> alter courses that already exist \u2014 use \'Force overlay opacity on all courses\' below for that.';
 $string['heroimageoverlay_help'] = 'How dark the overlay between the banner **image** and the banner text is, as a percentage. Leave it at **-1** to follow the site-wide "Banner overlay strength" setting.
 
 * **-1** &mdash; follow the site setting (Light 55, Medium 62, Strong 72).
@@ -346,14 +404,52 @@ $string['heroimageoverlay_help'] = 'How dark the overlay between the banner **im
 The overlay is a single flat tone, not a gradient, so it dims the whole image evenly. Below about 55 the title can become hard to read over a light photo &mdash; check your own images before going lower.
 
 This has no effect on courses with no banner image.';
+$string['hidebreadcrumb'] = 'Breadcrumb trail';
+$string['hidebreadcrumb_desc'] = 'Whether Moodle\'s breadcrumb trail is shown on this course\'s pages. The activity hero already names the course, the section and the activity, so on many sites the breadcrumb repeats all three directly beneath it. This hides the trail only — it is not an access control, and every page in it stays reachable. It is never hidden while editing.';
+$string['hidebreadcrumb_help'] = 'The breadcrumb is the small trail of links near the top of the page, like *Home ▸ My courses ▸ Workplace Safety ▸ Section 1*.
+
+On this format the banner already tells you the course, the section and the activity you are in — so the breadcrumb usually repeats all three, immediately below it.
+
+* **Show** — leave it as your theme draws it.
+* **Hide from students** — teachers keep it, students do not.
+* **Hide from everyone** — nobody sees it while reading the course.
+
+This hides a trail, it does not lock anything: every page it pointed at is still reachable, and still checks permissions in the normal way. It returns in Edit mode.';
+$string['hidefooter'] = 'Site footer';
+$string['hidefooter_help'] = 'The site footer is the strip at the very bottom of every page, usually holding a copyright line, contact details or policy links.
+
+On a course page it is the last thing a learner needs and the first thing between them and the end of the content.
+
+* **Show** — leave it as your theme draws it.
+* **Hide from students** — teachers keep it, students do not.
+* **Hide from everyone** — nobody sees it while reading the course.
+
+The editing toolbar that appears at the bottom of the screen while you build a course is a different thing and is **never** hidden, so Move, Duplicate and Delete always stay available. The footer returns in Edit mode.';
 $string['hidefromothers'] = 'Hide section';
+$string['hidegeneral'] = 'Hide the General section';
+$string['hidegeneral_desc'] = 'Section 0 of a Moodle course is called "General". It usually holds only the Announcements forum, and on a course whose real content starts at Section 1 it is a heading learners read past before reaching anything they came for.<br /><br />This hides it from the course index and the section cards.<br /><br />It always comes back in edit mode, so a teacher can still manage announcements.';
+$string['hidegeneral_help'] = 'Section 0 of a Moodle course is called "General". It usually holds only the Announcements forum, and on a course whose real content starts at Section 1 it is a heading learners read past before reaching anything they came for.
+
+* **Show** - leave it in the course index and the cards.
+* **Hide from students** - teachers still see it, students do not.
+* **Hide from everyone** - nobody sees it while reading the course.
+
+This hides the section from view. It does not delete anything and does not stop announcements being posted or emailed - the forum still works exactly as before.
+
+It always comes back in edit mode, so a teacher can still reach it.';
 $string['hidesecondarynav'] = 'Course navigation tabs';
 $string['hidesecondarynav_all'] = 'Hide from everyone';
-$string['hidesecondarynav_help'] = 'Whether Moodle\'s row of course tabs (Course, Settings, Participants, Grades, Reports, More) appears on this course\'s pages. Hiding it lets the banner sit at the very top of the page.
+$string['hidesecondarynav_help'] = 'The Course navigation tabs are the row of links Moodle puts above your course content: Course, Settings, Participants, Grades, Reports and More.
 
-The tabs are always shown while edit mode is on, so you never lose access to course settings.
+This format already gives you the same places to go — the banner has quick links, and the course index lists every section and activity — so the tabs are often just a duplicate row taking up space.
 
-This is a display preference, not a permission: every page behind those tabs stays reachable by its own URL and is still protected by its own capability checks. Choose **Hide from students** if you want teachers to keep the tabs.';
+* **Show** — leave them exactly as your theme draws them.
+* **Hide from students** — teachers and anyone who can edit the course still see them. Students do not.
+* **Hide from everyone** — nobody sees them while simply reading the course.
+
+**They always come back when you turn Edit mode on**, so you never lose them while you are building the course.
+
+*Example:* a short induction course looks much cleaner with them set to Hide from everyone. A large course where teachers constantly check Grades might prefer Hide from students.';
 $string['hidesecondarynav_show'] = 'Show';
 $string['hidesecondarynav_students'] = 'Hide from students';
 $string['icon_alert_triangle'] = 'Warning triangle';
@@ -405,6 +501,38 @@ $string['iconcategory_work'] = 'Work & industry';
 $string['iconnumber'] = 'Number {$a}';
 $string['iconsaved'] = 'Icon saved';
 $string['iconsaveerror'] = 'Error saving icon';
+$string['immersive'] = 'Hide the site logo band';
+$string['immersive_desc'] = 'Most themes render two bands above the page: a compact bar carrying notifications, the user menu and the Edit mode toggle, and beneath it a taller band holding the site logo and the site links.<br /><br />This hides the second band only, which on many themes is well over a hundred pixels of vertical space on every course page. <strong>The bar with the profile and the Edit mode toggle is never hidden</strong>, so nothing is taken away — only the logo band, which the course player sidebar can carry instead.<br /><br />The band always returns in edit mode.';
+$string['immersive_help'] = 'Most themes put two bands across the top of every page:
+
+1. a thin bar with notifications, messages and your profile menu
+2. a taller band underneath holding the site logo and links like Home and Dashboard
+
+This setting hides the **second** band only, which is often 100–150 pixels of height on every single course page.
+
+* **Show** — leave both bands alone.
+* **Hide from students** — teachers keep the logo band, students do not.
+* **Hide from everyone** — nobody sees the logo band while reading the course.
+
+**The thin bar with your profile and the Edit mode switch is never hidden**, so nothing is taken away — and if you turn on the player sidebar, your logo appears there instead.
+
+The band always comes back in Edit mode.';
+$string['indexstate'] = 'Course index on first entry';
+$string['indexstate_collapsed'] = 'Start collapsed';
+$string['indexstate_desc'] = 'How the course index drawer appears the first time a user opens a course.<br /><br />Moodle opens it by default and then remembers whatever the user last chose, site-wide. This decides only the starting point: it is applied once per user per course, and after that the user\'s own toggle is respected, because a setting that reimposed itself on every page load would be fighting the person using it.';
+$string['indexstate_help'] = 'This decides whether the course index panel is already open the first time someone enters the course.
+
+Moodle normally opens it and then remembers whatever that person last chose, across the whole site.
+
+* **Remember the user\'s choice** — leave Moodle\'s normal behaviour alone.
+* **Start collapsed** — closed on first entry, so the course content gets the full width of the screen.
+* **Start open** — open on first entry, so learners can see the whole course straight away.
+
+**This only sets the starting point.** After that first visit the learner\'s own choice is respected — if they open the panel, it stays open next time. A setting that forced it every page load would be fighting the person using it.
+
+*Example:* a course meant to be read straight through suits Start collapsed. A reference course people dip in and out of suits Start open.';
+$string['indexstate_open'] = 'Start open';
+$string['indexstate_remember'] = 'Remember the user\'s choice';
 $string['inprogress'] = 'In Progress';
 $string['js_completionerror'] = 'Failed to update completion status';
 $string['js_done'] = 'Done';
@@ -421,6 +549,10 @@ $string['labelseparator'] = ', ';
 $string['listseparator'] = ' • ';
 $string['markasdonefor'] = 'Mark {$a} as done';
 $string['markasdoneundo'] = 'Mark {$a} as not done';
+$string['minutesfallback'] = 'Fallback minutes';
+$string['minutesfallback_desc'] = 'The time used for any activity type not listed in the box above. Keep it small — it is a guess, and a wrong number that looks confident is worse than a modest one.';
+$string['minutesperquestion'] = 'Minutes per quiz question';
+$string['minutesperquestion_desc'] = 'A quiz\'s estimated time is this number multiplied by how many questions it has.<br /><br /><em>Example:</em> at 1 minute per question, a 10-question quiz shows "10 min" and a 40-question exam shows "40 min".<br /><br />This is done per quiz rather than using one flat figure because "a quiz" is not a length — a quick check and a final exam are completely different, and a single default would be wrong for both.<br /><br />Randomly chosen questions count as one each, because that is what the learner actually answers. A quiz with no questions yet falls back to the fallback figure below.';
 $string['nactivities'] = '{$a} activities';
 $string['nextactivity'] = 'Next activity';
 $string['nextactivitynamed'] = 'Next activity: {$a}';
@@ -436,11 +568,51 @@ $string['page-course-view-aicourse'] = 'Any course main page in AI Course format
 $string['page-course-view-aicourse-x'] = 'Any course page in AI Course format';
 $string['percentcomplete'] = '{$a}% complete';
 $string['percentvalue'] = '{$a}%';
+$string['player_dashboard'] = 'Dashboard';
+$string['player_done'] = 'Completed';
+$string['player_home'] = 'Home';
+$string['player_mycourses'] = 'My courses';
+$string['player_navlabel'] = 'Site navigation';
+$string['player_notdone'] = 'Not completed';
+$string['player_progress'] = '{$a}% of this course complete';
+$string['playerheadercolour'] = 'Course index header colour';
+$string['playerheadercolour_help'] = 'This is the background of the band at the very top of the course index — the part holding your logo, the course name, the progress ring and the total time.
+
+The rest of the panel is white, so this band is what separates the course information from the list of activities beneath it.
+
+Enter a hex colour like <code>#eceff4</code>. Leave it empty to use the site setting, and if that is empty too, a light grey.
+
+*Tip:* keep it subtle. This is a background behind text, not a feature colour — something close to white usually reads best.';
+$string['playerindex'] = 'Course player sidebar';
+$string['playerindex_desc'] = 'Replaces the plain course index with a player-style sidebar: the course name, a progress ring, the total estimated time, links back to Home, Dashboard and My courses, and a row per activity showing how long it takes and whether it is finished.<br /><br />It decorates Moodle\'s own course index rather than replacing it, so collapsing sections, drag and drop while editing, and the highlighting of the current page all keep working.';
+$string['playerindex_help'] = 'The course index is the panel that slides out on the left, listing every section and activity in the course.
+
+Moodle\'s version is a plain list of links. The **player sidebar** turns it into something a learner can plan with:
+
+* your logo at the top
+* the course name, a progress ring, and the total time the course takes
+* every activity showing its own icon, how long it takes, and a green tick once it is finished
+
+It still behaves like Moodle\'s course index underneath — sections still collapse, drag and drop still works while editing, and the page you are on is still highlighted.
+
+* **Plain course index** — Moodle\'s normal list.
+* **Player sidebar** — the richer version described above.';
+$string['playerindex_off'] = 'Plain course index';
+$string['playerindex_on'] = 'Player sidebar';
+$string['playerindex_site'] = 'Use the site default';
+$string['playerlogo'] = 'Course player logo';
+$string['playerlogo_desc'] = 'A logo for the course player sidebar, used instead of the site logo. Useful when a course is branded for a client rather than the institution hosting it.<br /><br />Leave empty to fall back to the site logo, then the theme\'s. Any web image format works; it is scaled to fit the sidebar header, so an image around 240x60 with transparent padding trimmed will look best. Very large files are scaled down for display but still downloaded at full size, so a trimmed image loads faster.';
 $string['pluginname'] = 'AI Course Format';
 $string['previousactivity'] = 'Previous activity';
 $string['previousactivitynamed'] = 'Previous activity: {$a}';
 $string['previoussection'] = 'Previous section';
 $string['previoussectionnamed'] = 'Previous section: {$a}';
+$string['privacy:metadata:format_aicourse_actminutes'] = 'Per-activity estimated durations set by a teacher.';
+$string['privacy:metadata:format_aicourse_actminutes:cmid'] = 'The activity the estimate applies to.';
+$string['privacy:metadata:format_aicourse_actminutes:courseid'] = 'The course the activity belongs to.';
+$string['privacy:metadata:format_aicourse_actminutes:minutes'] = 'The estimated duration in minutes.';
+$string['privacy:metadata:format_aicourse_actminutes:timemodified'] = 'When the estimate was last changed.';
+$string['privacy:metadata:format_aicourse_actminutes:usermodified'] = 'The user who last set this estimate.';
 $string['privacy:metadata:format_aicourse_ai_memory'] = 'A short rolling summary, held per user and per activity, of the topics the user has previously asked the AI Tutor about. It is used to give continuity between tutoring sessions and never stores answers to assessed work.';
 $string['privacy:metadata:format_aicourse_ai_memory:activityid'] = 'The ID of the course module the memory relates to.';
 $string['privacy:metadata:format_aicourse_ai_memory:courseid'] = 'The ID of the course the memory relates to.';
@@ -474,6 +646,7 @@ $string['privacy:metadata:lms_labs_ai:sectionname'] = 'The name of the course se
 $string['privacy:metadata:lms_labs_ai:siteurl'] = 'The URL of this Moodle site, used by the service to identify the subscription the request belongs to.';
 $string['privacy:metadata:lms_labs_ai:studentname'] = 'The first name of the user asking the question, so that the AI can address them by name.';
 $string['privacy:metadata:lms_labs_ai:userid'] = 'The ID of the user asking the question.';
+$string['privacy:metadata:preference:tourseen'] = 'Whether this user has seen or dismissed the first-run tour of the course format.';
 $string['privacy:path:chats'] = 'AI Tutor conversations';
 $string['privacy:path:corrections'] = 'AI Tutor corrections written by you';
 $string['privacy:path:memory'] = 'AI Tutor memory';
@@ -512,5 +685,77 @@ $string['shownavchevrons_help'] = 'When enabled, elegant navigation chevrons app
 $string['sitedefault_desc'] = 'The starting value for new courses using this format. Each course can change it in its own course settings, and changing it here does not alter courses that already exist.';
 $string['siteid'] = 'Site URL';
 $string['siteid_desc'] = 'The full URL of this Moodle site, including the scheme — for example <code>https://moodle.example.com</code>. This identifies your site to the LMS-Labs AI service. It must be a valid URL: anything else is discarded when you save, and the AI Tutor will then report that it is not configured.';
+$string['taskgeneratebanner'] = 'Generate AI course banner image';
+$string['timingheading'] = 'Estimated activity durations';
+$string['timingheading_desc'] = 'The time badge on each section card is the sum of its activities\' estimated durations. These settings decide the starting figure for each type of activity; a teacher can override any single activity by clicking its badge with editing turned on, and that override always wins.';
+$string['tour_back'] = 'Back';
+$string['tour_finish'] = 'Finish';
+$string['tour_mute'] = 'Mute narration';
+$string['tour_next'] = 'Next';
+$string['tour_offer_body'] = 'A two-minute walkthrough of this course format, narrated. You can skip or mute it at any point.';
+$string['tour_offer_dismiss'] = 'No thanks';
+$string['tour_offer_start'] = 'Start tour';
+$string['tour_offer_title'] = 'Take a quick tour?';
+$string['tour_progress'] = 'Step {$a->current} of {$a->total}';
+$string['tour_s_cards_body'] = 'Each card is a section of the course. The dots show which activities you have finished, and the percentage is your progress through that section.';
+$string['tour_s_cards_title'] = 'Course sections';
+$string['tour_s_done_body'] = 'That is everything. Pick a section to get started.';
+$string['tour_s_done_title'] = 'You are ready';
+$string['tour_s_grades_body'] = 'This takes you to your own grades for the course. You only ever see your own.';
+$string['tour_s_grades_title'] = 'Checking your grades';
+$string['tour_s_index_body'] = 'The course index lists every section and activity. Use it to jump straight to anything without going back to the course page first.';
+$string['tour_s_index_title'] = 'Finding your way around';
+$string['tour_s_progress_body'] = 'The ring shows how much of the course you have completed. It updates as you finish activities.';
+$string['tour_s_progress_title'] = 'Your progress';
+$string['tour_s_ring_body'] = 'The ring fills as you complete activities. It counts only the activities your teacher is tracking, so it may not include everything you can see.';
+$string['tour_s_ring_title'] = 'How far you have got';
+$string['tour_s_sidebar_body'] = 'The panel on the left lists everything in the course. Each row shows roughly how long the activity takes and a tick once you have finished it, and the ring at the top is your progress through the whole course.';
+$string['tour_s_sidebar_title'] = 'Your course at a glance';
+$string['tour_s_status_body'] = 'A filled marker means you have completed that activity, an empty one means it is still waiting for you. Some activities complete themselves when you finish them; others you tick off yourself.';
+$string['tour_s_status_title'] = 'What you have finished';
+$string['tour_s_time_body'] = 'Each activity shows roughly how long to allow for it, and each section shows the total. Use it to decide what you can fit into the time you have.';
+$string['tour_s_time_title'] = 'How long things take';
+$string['tour_s_tutor_body'] = 'Stuck on something? Open the tutor and ask. It knows this course\'s material and will help you work it out rather than simply hand you the answer.';
+$string['tour_s_tutor_title'] = 'Ask the AI Tutor';
+$string['tour_s_welcome_body'] = 'A very quick tour of how this course works. It takes about a minute, and you can skip it.';
+$string['tour_s_welcome_title'] = 'Welcome to your course';
+$string['tour_skip'] = 'Skip tour';
+$string['tour_t_activities_body'] = 'The card lists the activities in the section and marks off the ones a learner has finished. You can cap how many are listed, or switch the list off entirely, in the course settings.';
+$string['tour_t_activities_title'] = 'What is inside each section';
+$string['tour_t_banner_body'] = 'The banner carries the course name, its progress ring and the quick actions. You can upload your own image in the course settings, or have one generated for you.';
+$string['tour_t_banner_title'] = 'The course banner';
+$string['tour_t_cards_body'] = 'Each section becomes a card showing its activities and how far learners have got. You can give each one an icon, and choose a grid or a list in the course settings.';
+$string['tour_t_cards_title'] = 'Section cards';
+$string['tour_t_done_body'] = 'You can reopen it any time from your profile preferences. Have a look as a learner next.';
+$string['tour_t_done_title'] = 'That is the tour';
+$string['tour_t_generate_body'] = 'This creates a banner image from your course name. It takes a minute or two and runs in the background, so you can carry on working while it finishes.';
+$string['tour_t_generate_title'] = 'Generate a banner image';
+$string['tour_t_grades_body'] = 'This takes you straight to the gradebook for the course, without going through the menus. Learners see the same button, but it shows them only their own grades.';
+$string['tour_t_grades_title'] = 'Grades at a glance';
+$string['tour_t_icons_body'] = 'Click a section\'s icon while editing to choose a different one. Icons make a long course scannable at a glance, and a course with none set shows a neutral placeholder rather than looking unfinished.';
+$string['tour_t_icons_title'] = 'Section icons';
+$string['tour_t_index_body'] = 'Every section and activity, always to hand. You can choose whether learners see it on the course page, section pages and activity pages independently, in the course settings.';
+$string['tour_t_index_title'] = 'The course index';
+$string['tour_t_report_body'] = 'Under the course menu you will find reporting on how learners are using the AI Tutor: what they asked, where they got stuck, and which activities generate the most questions. It is often the fastest way to spot a confusing piece of content.';
+$string['tour_t_report_title'] = 'The reporting dashboard';
+$string['tour_t_ring_body'] = 'This shows how much of the course a learner has completed. It counts only activities with completion tracking switched on, so if it looks low, check which activities are being tracked.';
+$string['tour_t_ring_title'] = 'The progress ring';
+$string['tour_t_settings_body'] = 'Everything in this tour is configurable per course under Settings, and site-wide under Plugins, Course formats, AI Course Format.';
+$string['tour_t_settings_title'] = 'Where the settings are';
+$string['tour_t_sidebar_body'] = 'When it is switched on, the course index becomes a player sidebar: your logo, the course, a progress ring, the total time, and a row per activity showing how long it takes and whether it is done. You choose whether it starts open or collapsed.';
+$string['tour_t_sidebar_title'] = 'The course player sidebar';
+$string['tour_t_studentview_body'] = 'This is the important one. A learner sees a noticeably different page: the Course, Settings and Participants tabs are hidden by default, and so are all editing controls. Use Switch role to Student from this menu before you judge the layout.';
+$string['tour_t_studentview_title'] = 'See it as a learner';
+$string['tour_t_time_body'] = 'Each activity carries an estimated duration, and the section total is the sum of them. The starting figures come from the site settings, quizzes are worked out from how many questions they contain, and you can correct any single activity yourself.';
+$string['tour_t_time_title'] = 'Estimated time';
+$string['tour_t_tutor_body'] = 'Learners open the tutor here and ask questions about the course. It reads the course content, so its answers are about your material rather than the internet at large.';
+$string['tour_t_tutor_title'] = 'The AI Tutor';
+$string['tour_t_welcome_body'] = 'This is a short tour of what this format adds to your course. It takes about two minutes, and you can leave at any point.';
+$string['tour_t_welcome_title'] = 'Welcome to the AI Course Format';
+$string['tour_unmute'] = 'Unmute narration';
+$string['tourvoice'] = 'Tour narration language';
+$string['tourvoice_desc'] = 'The BCP-47 language tag the narration prefers, for example en-AU for Australian English or en-GB for British English. Used to pick the closest available voice, and to name the pre-generated audio files if you supply them.';
+$string['tourvoiceover'] = 'Tour narration';
+$string['tourvoiceover_desc'] = 'Whether the first-run tour reads each step aloud. Learners and teachers can mute it themselves, and the choice is remembered.';
 $string['viewallactivities'] = 'View all activities';
 $string['viewsection'] = 'View section';

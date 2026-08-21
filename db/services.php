@@ -120,6 +120,27 @@ $functions = [
         'readonlysession' => true,
     ],
 
+    // ACF-FIX-2.1.46: inline editing of an activity's estimated duration.
+    'format_aicourse_set_activity_minutes' => [
+        'classname' => 'format_aicourse\\external\\set_activity_minutes',
+        'methodname' => 'execute',
+        'description' => 'Set or clear the estimated duration for one activity.',
+        'type' => 'write',
+        'ajax' => true,
+        'capabilities' => 'moodle/course:update',
+    ],
+
+    // ACF-FIX-2.1.42: polled while the adhoc task runs. Read-only, no remote call, no credits.
+    'format_aicourse_get_banner_status' => [
+        'classname' => 'format_aicourse\\external\\get_banner_status',
+        'methodname' => 'execute',
+        'description' => 'Report the state of a queued banner image generation.',
+        'type' => 'read',
+        'ajax' => true,
+        'capabilities' => 'moodle/course:update',
+        'readonlysession' => true,
+    ],
+
     'format_aicourse_generate_banner_image' => [
         'classname' => 'format_aicourse\external\generate_banner_image',
         'methodname' => 'execute',
