@@ -215,14 +215,20 @@ const align = (hero) => {
     // Only in full-width mode. Everywhere else the banner is meant to sit inside the content column
     // with its normal spacing, and changing the page offset there would move the whole layout.
     const fitHeader = () => {
-        if (!document.body.classList.contains('aicourse-hero-fullwidth')) {
-            return;
-        }
         const page = document.querySelector('#page.drawers') || document.querySelector('#page');
-        if (!page) {
+        // An activity page draws a different hero element from a course page, so both are looked
+        // for. Querying only the course one meant this returned early on every activity page --
+        // measured as a 19px gap surviving there while the course page corrected to 0.
+        const hero = document.querySelector('.aicourse-hero-banner')
+            || document.querySelector('.aicourse-activity-hero')
+            || document.querySelector('.aicourse-activity-hero-banner')
+            || document.querySelector('.aicourse-hero-sticky-wrap');
+        if (!page || !hero) {
             return;
         }
-        let lowest = 0;
+
+        // The lowest edge of whatever fixed or sticky band is genuinely at the top of the page.
+        let headerBottom = 0;
         document.querySelectorAll('nav, header, .navbar, #header, .header-main').forEach((el) => {
             const style = window.getComputedStyle(el);
             if (style.position !== 'fixed' && style.position !== 'sticky') {
@@ -232,12 +238,40 @@ const align = (hero) => {
                 return;
             }
             const box = el.getBoundingClientRect();
-            // Only bands across the top: a fixed element further down the page is something else.
-            if (box.height > 0 && box.top <= 4 && box.bottom > lowest) {
-                lowest = box.bottom;
+            if (box.height > 0 && box.top <= 4 && box.bottom > headerBottom) {
+                headerBottom = box.bottom;
             }
         });
-        page.style.marginBlockStart = Math.round(lowest) + 'px';
+        if (headerBottom <= 0) {
+            return;
+        }
+
+        // ACF-FIX-2.1.119: correct by the MEASURED difference, do not assume where the offset
+        // lives.
+        //
+        // The earlier version set this margin to the header's height, on the assumption that the
+        // margin was what cleared the header. On theme_academi it is not: reported from a live
+        // page, the header ends at 61px, #page carries only 20px of margin, and the banner lands
+        // at 80px -- so the clearance comes from somewhere else and that 20px is an extra on top
+        // of it. Setting the margin to 61 would have pushed the banner further down, not less.
+        //
+        // Taking the difference between where the banner is and where it should be works whatever
+        // is producing the offset, on any theme, without needing to know which element owns it.
+        // ACF-FIX-2.1.144: the sticky banner needs the same offset, so it pins directly beneath the
+    // header rather than under it or below a gap. Published as a variable so the CSS can use the
+    // measured value rather than a number that would be wrong on any theme but this one.
+    document.documentElement.style.setProperty(
+        '--acf-hero-sticky-top', Math.round(headerBottom) + 'px'
+    );
+
+    const current = parseFloat(window.getComputedStyle(page).marginBlockStart) || 0;
+        const gap = Math.round(hero.getBoundingClientRect().top - headerBottom);
+        if (gap === 0) {
+            return;
+        }
+        // Never negative: pulling the banner above the header would slide it underneath.
+        const corrected = Math.max(0, Math.round(current - gap));
+        page.style.marginBlockStart = corrected + 'px';
     };
 
     fitHeader();
@@ -249,8 +283,12 @@ const align = (hero) => {
     if (document.readyState !== 'complete') {
         window.addEventListener('load', fitHeader, {once: true});
     }
-    window.setTimeout(fitHeader, 250);
-    window.setTimeout(fitHeader, 1000);
+    const refit = () => {
+        fitHeader();
+        fitFullWidth();
+    };
+    window.setTimeout(refit, 250);
+    window.setTimeout(refit, 1000);
 
     // And whenever the header itself changes size, which a theme can do without a window resize.
     if (typeof window.ResizeObserver === 'function') {
@@ -263,6 +301,7 @@ const align = (hero) => {
     window.addEventListener('resize', () => {
         remeasure();
         fitHeader();
+        fitFullWidth();
     });
 
     window.addEventListener('resize', remeasure);
@@ -310,10 +349,70 @@ const align = (hero) => {
  *
  * @returns {void}
  */
-export const init = () => {
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', lift, {once: true});
+// ACF-FIX-2.1.127: pull the banner out to the page edges when its container is narrower.
+//
+// Reported from a live activity page: the wrap measured 342-1381 with no padding, no margin and
+// no max-width of its own -- so nothing was insetting it. Its CONTAINER was simply narrower
+// than the page. On a stock Moodle #region-main and #page are the same width, which is why this
+// never appeared in testing; a theme or an activity plugin can constrain the main region and
+// then the banner inherits that width.
+//
+// Measuring the difference between the wrap's box and the page's box gives the exact pull,
+// whatever is causing the difference and whatever the drawer is doing.
+//
+// An earlier attempt at this made things worse -- the wrap had `inline-size: auto` at the time,
+// so it shrank to its content and the pull chased a moving edge. The width is stated at 100%
+// now, and the measurement is taken with the previous correction cleared so runs cannot
+// compound.
+const fitFullWidth = () => {
+    const wrap = document.querySelector('.aicourse-hero-sticky-wrap');
+    const page = document.querySelector('#page');
+    if (!wrap || !page) {
         return;
     }
-    lift();
+    // Zero the margins before measuring, not merely clear the inline ones. The stylesheet also
+    // sets a negative margin here, so removing only the inline value left that in place and the
+    // measurement was taken from an already-pulled position -- the correction then REPLACED the
+    // stylesheet's pull instead of completing it, and the banner came up exactly that much short.
+    wrap.style.setProperty('margin-left', '0px', 'important');
+    wrap.style.setProperty('margin-right', '0px', 'important');
+    const box = wrap.getBoundingClientRect();
+    const target = page.getBoundingClientRect();
+    const left = Math.round(box.left - target.left);
+    const right = Math.round(target.right - box.right);
+    // A couple of pixels of slack: sub-pixel geometry reports a 1px difference on boxes that
+    // already line up, and correcting that would set a margin on every page for nothing.
+    if (left > 2) {
+        wrap.style.setProperty('margin-left', '-' + left + 'px', 'important');
+    }
+    if (right > 2) {
+        wrap.style.setProperty('margin-right', '-' + right + 'px', 'important');
+    }
+    // A box that already lines up keeps its zeroed margins rather than the stylesheet's, so the
+    // two cannot fight on a page that needs no correction at all.
+};
+
+
+export const init = () => {
+    // ACF-FIX-2.1.127: the pull runs whether or not the banner is lifted.
+    //
+    // lift() moves the banner to be a direct child of #page, and returns early when it cannot or
+    // need not -- which is every activity page, where the banner is already where it belongs.
+    // Everything nested inside lift() therefore never ran there, including the width correction.
+    // On a stock Moodle that went unnoticed because #region-main and #page are the same width;
+    // it only shows on a site where the main region is narrower.
+    const start = () => {
+        lift();
+        fitFullWidth();
+        // Again once the page has settled: a container's width can change after first paint.
+        window.setTimeout(fitFullWidth, 300);
+        window.setTimeout(fitFullWidth, 1200);
+        window.addEventListener('resize', fitFullWidth);
+    };
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', start, {once: true});
+        return;
+    }
+    start();
 };

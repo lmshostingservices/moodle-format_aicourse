@@ -232,28 +232,59 @@ if ($hassiteconfig) {
         ]
     ));
 
-    // ACF-FIX-2.1.103: full-width banner.
-    $settings->add(new admin_setting_configselect(
-        'format_aicourse/defaultherofullwidth',
-        get_string('herofullwidth', 'format_aicourse'),
-        get_string('herofullwidth_desc', 'format_aicourse'),
-        0,
-        [
-            0 => get_string('herofullwidth_contained', 'format_aicourse'),
-            1 => get_string('herofullwidth_full', 'format_aicourse'),
-        ]
-    ));
+    global $PAGE;
 
-    $settings->add(new admin_setting_configselect(
-        'format_aicourse/forceherofullwidth',
-        get_string('forceherofullwidth', 'format_aicourse'),
-        get_string('forceherofullwidth_desc', 'format_aicourse'),
-        -1,
-        [
-            -1 => get_string('forcehidebreadcrumb_leave', 'format_aicourse'),
-            0 => get_string('herofullwidth_contained', 'format_aicourse'),
-            1 => get_string('herofullwidth_full', 'format_aicourse'),
-        ]
+    // ACF-FIX-2.1.134: category tabs and search for this page.
+    //
+    // Fifty-nine settings in one column is a scroll rather than a page. The module groups them by
+    // what each setting is called, so a new setting files itself without anyone maintaining a list.
+    // Queued here rather than from a hook, because this is the only page it applies to.
+    $PAGE->requires->js_call_amd('format_aicourse/settingsui', 'init', [[
+        'all' => get_string('settingsui_all', 'format_aicourse'),
+        'other' => get_string('settingsui_other', 'format_aicourse'),
+        'searchplaceholder' => get_string('settingsui_search', 'format_aicourse'),
+        'nomatches' => get_string('settingsui_nomatches', 'format_aicourse'),
+        'filterby' => get_string('settingsui_filterby', 'format_aicourse'),
+        'newlabel' => get_string('settingsui_new', 'format_aicourse'),
+        // ACF-FIX-2.1.137: derived from the version markers where that works, with the list as a
+        // fallback.
+        //
+        // Every settings block carries an ACF-FIX-2.1.NNN comment written when the setting was
+        // added, so the release each one arrived in is already recorded beside it -- a far better
+        // source than a list somebody has to prune. settingsmeta reads those markers.
+        //
+        // It is not reliable yet: settings are written three ways in this file (a literal name, a
+        // name built in a loop, and the suffix lists those loops read), and the parser does not
+        // handle all three correctly. Rather than ship a filter that silently shows the wrong
+        // settings, the list is kept and used whenever the derivation returns fewer results than
+        // it -- so the page is always right, and the derivation can be finished without touching
+        // this line again.
+        'recent' => (function () {
+            $derived = \format_aicourse\local\settingsmeta::get_recent();
+            $known = [
+                'defaultcardcolour', 'defaultcardopacity', 'forcecardcolour', 'forcecardopacity',
+                'defaultindexcolour', 'defaultindexopacity', 'forceindexcolour',
+                'forceindexopacity', 'defaultindexheadingcolour', 'forceindexheadingcolour',
+                'defaultindexiconcolour', 'forceindexiconcolour', 'defaulthidetimeindex',
+                'forcehidetimeindex', 'defaulthidetimesectioncards',
+                'forcehidetimesectioncards', 'defaulthidetimeactivitycards',
+                'forcehidetimeactivitycards', 'defaulthidetimetotal', 'forcehidetimetotal',
+                'defaulthidegeneral', 'forcehidegeneral',
+            ];
+            return count($derived) >= count($known) ? $derived : $known;
+        })(),
+    ]]);
+
+    // ACF-FIX-2.1.120: say plainly which themes this is built against.
+    //
+    // The format overrides parts of core's course index, navigation and header. Boost and
+    // theme_academi are the two it is developed and measured against; another theme may position
+    // those differently and produce a layout fault that looks like a plugin bug. Saying so, and
+    // giving people somewhere to write, is more useful than letting them guess.
+    $settings->add(new admin_setting_heading(
+        'format_aicourse/themesupport',
+        get_string('themesupport', 'format_aicourse'),
+        get_string('themesupport_desc', 'format_aicourse')
     ));
 
     // ACF-FIX-2.1.102: hide the General section.
@@ -280,6 +311,140 @@ if ($hassiteconfig) {
             1 => get_string('hidesecondarynav_students', 'format_aicourse'),
             2 => get_string('hidesecondarynav_all', 'format_aicourse'),
         ]
+    ));
+
+    // ACF-FIX-2.1.130: the estimated-time pills, four places.
+    $acftimes = ['hidetimeindex', 'hidetimesectioncards', 'hidetimeactivitycards', 'hidetimetotal'];
+    foreach ($acftimes as $acftime) {
+        $settings->add(new admin_setting_configselect(
+            'format_aicourse/default' . $acftime,
+            get_string($acftime, 'format_aicourse'),
+            get_string('default' . $acftime . '_desc', 'format_aicourse'),
+            0,
+            [
+                0 => get_string('hidesecondarynav_show', 'format_aicourse'),
+                1 => get_string('hidetime_hide', 'format_aicourse'),
+            ]
+        ));
+        $settings->add(new admin_setting_configselect(
+            'format_aicourse/force' . $acftime,
+            get_string('force' . $acftime, 'format_aicourse'),
+            get_string('force' . $acftime . '_desc', 'format_aicourse'),
+            -1,
+            [
+                -1 => get_string('forcehidebreadcrumb_leave', 'format_aicourse'),
+                0 => get_string('hidesecondarynav_show', 'format_aicourse'),
+                1 => get_string('hidetime_hide', 'format_aicourse'),
+            ]
+        ));
+    }
+
+    // ACF-FIX-2.1.144: the sticky banner.
+    $settings->add(new admin_setting_configselect(
+        'format_aicourse/defaultherosticky',
+        get_string('herosticky', 'format_aicourse'),
+        get_string('defaultherosticky_desc', 'format_aicourse'),
+        1,
+        [
+            0 => get_string('herosticky_no', 'format_aicourse'),
+            1 => get_string('herosticky_yes', 'format_aicourse'),
+        ]
+    ));
+
+    $settings->add(new admin_setting_configselect(
+        'format_aicourse/forceherosticky',
+        get_string('forceherosticky', 'format_aicourse'),
+        get_string('forceherosticky_desc', 'format_aicourse'),
+        -1,
+        [
+            -1 => get_string('forcehidebreadcrumb_leave', 'format_aicourse'),
+            0 => get_string('herosticky_no', 'format_aicourse'),
+            1 => get_string('herosticky_yes', 'format_aicourse'),
+        ]
+    ));
+
+    // ACF-FIX-2.1.126: the section heading band and the activity icon colour.
+    foreach (['indexheadingcolour', 'indexiconcolour'] as $acfcolour) {
+        $settings->add(new admin_setting_configtext(
+            'format_aicourse/default' . $acfcolour,
+            get_string($acfcolour, 'format_aicourse'),
+            get_string('default' . $acfcolour . '_desc', 'format_aicourse'),
+            '',
+            PARAM_TEXT
+        ));
+        $settings->add(new admin_setting_configtext(
+            'format_aicourse/force' . $acfcolour,
+            get_string('force' . $acfcolour, 'format_aicourse'),
+            get_string('force' . $acfcolour . '_desc', 'format_aicourse'),
+            '',
+            PARAM_TEXT
+        ));
+    }
+
+    // ACF-FIX-2.1.125: the course index surface.
+    $settings->add(new admin_setting_configtext(
+        'format_aicourse/defaultindexcolour',
+        get_string('indexcolour', 'format_aicourse'),
+        get_string('defaultindexcolour_desc', 'format_aicourse'),
+        '',
+        PARAM_TEXT
+    ));
+
+    $settings->add(new admin_setting_configtext(
+        'format_aicourse/defaultindexopacity',
+        get_string('indexopacity', 'format_aicourse'),
+        get_string('defaultindexopacity_desc', 'format_aicourse'),
+        100,
+        PARAM_INT
+    ));
+
+    $settings->add(new admin_setting_configtext(
+        'format_aicourse/forceindexcolour',
+        get_string('forceindexcolour', 'format_aicourse'),
+        get_string('forceindexcolour_desc', 'format_aicourse'),
+        '',
+        PARAM_TEXT
+    ));
+
+    $settings->add(new admin_setting_configtext(
+        'format_aicourse/forceindexopacity',
+        get_string('forceindexopacity', 'format_aicourse'),
+        get_string('forceindexopacity_desc', 'format_aicourse'),
+        -1,
+        PARAM_INT
+    ));
+
+    // ACF-FIX-2.1.124: the card surface.
+    $settings->add(new admin_setting_configtext(
+        'format_aicourse/defaultcardcolour',
+        get_string('cardcolour', 'format_aicourse'),
+        get_string('defaultcardcolour_desc', 'format_aicourse'),
+        '#fafbfc',
+        PARAM_TEXT
+    ));
+
+    $settings->add(new admin_setting_configtext(
+        'format_aicourse/defaultcardopacity',
+        get_string('cardopacity', 'format_aicourse'),
+        get_string('defaultcardopacity_desc', 'format_aicourse'),
+        100,
+        PARAM_INT
+    ));
+
+    $settings->add(new admin_setting_configtext(
+        'format_aicourse/forcecardcolour',
+        get_string('forcecardcolour', 'format_aicourse'),
+        get_string('forcecardcolour_desc', 'format_aicourse'),
+        '',
+        PARAM_TEXT
+    ));
+
+    $settings->add(new admin_setting_configtext(
+        'format_aicourse/forcecardopacity',
+        get_string('forcecardopacity', 'format_aicourse'),
+        get_string('forcecardopacity_desc', 'format_aicourse'),
+        -1,
+        PARAM_INT
     ));
 
     // ACF-FIX-2.1.85: the course index header band colour.

@@ -2,6 +2,1055 @@
 
 All notable changes to this plugin will be documented in this file.
 
+## [2.1.150] - 2026-08-20
+
+### Fixed
+
+- **The three hero variants had drifted apart.** Measured across course, section and activity pages
+  before changing anything:
+
+  | | Icon group | Completion ring |
+  |---|---|---|
+  | Course / section | `rgba(2,6,23,0.62)` + `blur(10px)` + white border | not present |
+  | Activity | identical | **transparent, no blur, no border, no radius** |
+
+  So the green tick sat directly on the banner image with nothing behind it, while every other
+  control on the same banner had a glass panel. That was the inconsistency -- not the tick itself.
+
+  It now carries the same glass, read from the same values rather than approximated: two panels on
+  one banner that are *nearly* the same read worse than two that differ clearly. Hover matches the
+  icon buttons -- the panel lifts slightly and nothing changes hue.
+
+- **The activity title was smaller than the course title.** The course hero adds
+  `aicourse-title-{{titlesize}}`, which is what carries the font size; the activity hero never gets
+  that class, so it fell back to the base and rendered smaller than the course title beside it in
+  the same course.
+
+  The base is set in CSS rather than by adding a class to the template, so it stays in one place and
+  cannot fall out of step with the size options a course can choose.
+
+  | Page | Title | Weight |
+  |---|---|---|
+  | Course | 26px | 700 |
+  | Section | 26px | 700 |
+  | Activity | 22px → **26px** | 700 |
+
+  All three now match.
+
+## [2.1.149] - 2026-08-20
+
+### Fixed
+
+- **The section band changed colour when expanded or current.** Hover was held in 2.1.132, but a
+  heading has other states that carry their own colour: `active` and `pageitem` while the section is
+  the one being viewed, `focus` from the keyboard, and the expanded state once its chevron turns
+  down. Core styles `pageitem` with the theme's primary and theme_academi restyles hover -- so an
+  expanded or current heading still shifted under the pointer even though the resting band was
+  right.
+
+  Every state is now listed in one rule rather than four that can disagree with each other. This is
+  the third time a heading state has been fixed in isolation and left the next one to surface;
+  gathering them stops that.
+
+  Verified across all three, reading background, text and chevron each time:
+
+  | State | Background | Text | Chevron |
+  |---|---|---|---|
+  | At rest | `rgb(15, 108, 191)` | white | white |
+  | Expanded | same | white | white |
+  | Expanded + hovered | same | white | white |
+
+  Nothing changes in any of them.
+
+## [2.1.148] - 2026-08-20
+
+### Fixed
+
+- **The course index reverted to Moodle's plain list on grade pages.** The player module was
+  restricted to course and activity pages, so a learner opening their grades lost the activity
+  icons, durations and completion ticks -- and got them back on returning to the course. The panel
+  should not change shape depending on which page of a course someone is on.
+
+  Grade pages are inside the course and render the same course index, so they now qualify.
+
+  | Page | Sidebar | Rows | Icons |
+  |---|---|---|---|
+  | Course | yes | 15 | 15 |
+  | Grade report | **yes** | **15** | **15** |
+  | Course settings form | no | 0 | 0 |
+
+  **The third row is the one that mattered to check.** This guard exists because the hook fires
+  wherever `$COURSE` is set, which once loaded five modules onto the course settings form and made
+  its Course format section open only intermittently. `grade-report-` was added specifically rather
+  than anything broader, and the settings form confirmed still excluded.
+
+### Not done: the banner on grade pages
+
+  The banner is rendered by the format's own renderer on course pages and by `activityhero` on
+  activity pages, using the current course module. A grade page has neither a section nor a module,
+  so it needs a third variant -- plus a decision about what its navigation and progress ring should
+  show with no activity context. That is a feature rather than a guard change and is left for a
+  session with room to build and verify it.
+
+## [2.1.147] - 2026-08-20
+
+### Fixed
+
+- **The settings page filter counts were wrong.** Two separate faults, both found by listing every
+  setting against the category it was being given rather than trusting the totals.
+
+  **Timing settings were scattered.** `hidetimesectioncards` matched `/card/` and landed in Cards;
+  `hidetimeindex` matched the index patterns and landed in Course index. First match wins, and
+  Timing was last -- so a tab that holds eleven settings was showing three.
+
+  | | Before | After |
+  |---|---|---|
+  | Timing | 3 | **11** |
+  | Cards | 10 | 6 |
+  | Course index | 10 | 6 |
+
+  Timing now comes first, and the order of the whole list is the design rather than the order I
+  happened to write them in. Colour stays ahead of the areas it applies to, so every colour is in
+  one place -- someone theming a site wants them together rather than spread across four tabs.
+
+  **Section headings were being counted as settings.** A heading renders as a `.form-item` with no
+  setting name, and the matcher fell back to searching its whole text -- so a heading landed in
+  whichever category its prose happened to mention, and the totals counted things a reader cannot
+  change. Headings are now excluded from the counts and from every category, while still showing
+  under "All settings".
+
+  Matching on the name alone also stops a setting being filed by a word in its description:
+  "the accent colour is used for card headings" should not put an accent setting under Cards.
+
+  Verified against the full list including the settings built in loops, which never appear as
+  literal names: **68 settings, every one categorised, nothing left in Other.**
+
+## [2.1.146] - 2026-08-20
+
+### Changed
+
+- **Room under the progress ring**, so it no longer sits hard against the first section band.
+
+  Padding alone could not do it: the header's height is fixed and its contents are centred, so the
+  padding had nowhere to go -- it measured 5px against the 16px asked for. The block itself had to
+  grow.
+
+  Raising the shared height token from 152px to 164px does both sides at once. The banner reads the
+  same number, so the two edges stayed aligned without a second change -- which is the whole reason
+  that token exists rather than the two heights being set separately.
+
+  | | |
+  |---|---|
+  | Gap under the ring | 5px → **11px** |
+  | Sidebar top block | 164px |
+  | Banner | **164px** — matched, difference 0 |
+
+## [2.1.145] - 2026-08-20
+
+### Changed
+
+- **More of the section card is clickable.** Hit-testing six points across a card found only the
+  title reaching the card's link; everything else either hit nothing or was captured by an element
+  above the overlay.
+
+  The overlay is raised above the card's contents, and the elements that lead somewhere *else* are
+  lifted back above it -- an activity row must still open that activity, not the section.
+
+  | Point | Reaches |
+  |---|---|
+  | Title | the card link |
+  | Activity row | that activity — correct, it is its own link |
+  | "N activities" | the section — correct |
+  | Time pill | the section |
+  | Empty space beside a row | that row's activity |
+  | **Card icon** | **still nothing** |
+
+  Most of a card's area is activity rows, and those are full-width links in their own right, so
+  clicking almost anywhere now goes somewhere sensible.
+
+### Known: the icon corner is still dead
+
+  The card header carries `z-index: var(--acf-z-content)`, which outranks the overlay -- that is why
+  the icon reaches nothing and why the title only worked because it *is* the link. Setting the
+  header's `z-index` to `auto` did not change the result, so something else in that corner is still
+  above the overlay and I did not isolate it.
+
+  Recorded rather than guessed at. The next step is to hit-test the icon corner specifically and
+  walk what `elementFromPoint` returns there, rather than adjusting z-index values and re-measuring
+  the whole card.
+
+## [2.1.144] - 2026-08-20
+
+### Added
+
+- **Sticky banner**, on by default, with a per-course setting, a site default and a site-wide
+  override. The banner follows the page as it scrolls, so the progress ring and the next/previous
+  controls stay reachable however far down a learner is.
+
+  Verified at a 700px viewport, scrolling 600px:
+
+  | Setting | Position | Banner top before | after |
+  |---|---|---|---|
+  | Sticky on | `sticky` | 61 | **61** — pinned |
+  | Sticky off | `relative` | 61 | −421 — scrolled away |
+
+  **The offset is measured, not assumed.** The banner pins to whatever the visible header's bottom
+  edge actually is, published from the same measurement the banner already uses for its top gap. A
+  fixed number would leave a gap on one theme and slide the banner under the header on another --
+  the same assumption that made the top-gap fix wrong on theme_academi in 2.1.107.
+
+  Three cases where it does not apply, each for a reason:
+
+  - **While editing**, because a teacher dragging an activity needs the page to behave normally.
+  - **Under `prefers-reduced-motion`**, where an element moving against the scroll is exactly what
+    that setting exists to stop.
+  - **Below 992px**, where the banner is a large share of a small screen and pinning it would leave
+    very little room for the content it introduces.
+
+  The help text says when to switch it off rather than only what it does: on a short course the
+  banner never leaves the screen anyway, and on a small laptop it costs height for the whole visit.
+
+### Note
+
+  This release skips 2.1.142 and 2.1.143. Both were attempts at merging the sidebar's top two rows;
+  each broke the panel -- the first pulled core's drawer out of its layout, the second lost the logo
+  and navigation icons -- and both were reverted. The version numbers are left unused rather than
+  reassigned so the changelog matches what was actually built.
+
+## [2.1.141] - 2026-08-20
+
+### Attempted and reverted: 2px between section bands
+
+  **The gap is still 8px.** The margin is set to the 2px asked for, but the margin is not what
+  decides the distance.
+
+  Four measurements now agree:
+
+  | Attempt | Result |
+  |---|---|
+  | Section margin 5px | 8px gap |
+  | Section margin 2px | 8px gap |
+  | Flex column, 2px gap, no margins | **10px gap** -- worse |
+  | Trace of the space between two bands | nothing in it |
+
+  The trace is the informative one: no element occupies the gap, and there is no padding, border or
+  margin anywhere along the chain from one band to the next. I thought the missing ~6px was
+  whitespace between inline-level boxes, which is why the flex column was tried -- flex removes
+  whitespace entirely. It came back 10px, so that theory was wrong and the change was reverted
+  rather than left in place making things worse.
+
+  The margin stays at 2px because that is the value asked for and the correct property for the job.
+  A comment marks it clearly: **the next step is to find the remaining 6px, not to change this
+  number again.** Three sessions have now adjusted this value without moving the result.
+
+## [2.1.140] - 2026-08-20
+
+### Changed
+
+- **The settings page is a three-column grid with card shadows and a hover lift.** One column of
+  sixty-five cards on a wide screen left two thirds of the page empty and turned every lookup into a
+  scroll.
+
+  | Width | Columns | Card | Overflow |
+  |---|---|---|---|
+  | 1500 | **3** | 439px | none |
+  | 810 | 1 | 668px | none |
+  | 390 | 1 | 374px | none |
+
+  Three things had to be found rather than assumed:
+
+  1. **The grid belongs on the fieldset, not the form.** The settings are not direct children of
+     `#adminsettings` -- Moodle wraps them in a fieldset -- so a grid on the form laid out exactly
+     one child and the cards inside stayed in a column. Found by walking up from a card:
+     `form > div.settingsform > fieldset > 74 items`.
+  2. **The shadow resolved to nothing.** `--acf-elevation-2` and `-4` were never declared for admin
+     pages; only `-1` had been carried across when this page got its own tokens. The rule was
+     present and matching while the shadow measured `none`.
+  3. **Labels are right-aligned by core**, because in Moodle's own layout the label is a left column
+     facing the controls. In a card it is the title, so it goes top-left.
+
+  `auto-fill` with a minimum rather than a fixed three columns, so the grid folds to one on a phone
+  by itself. `align-items: start`, or every row would be as tall as its longest card.
+
+### Known
+
+  A 7px horizontal overflow remains at 390px. Capping the track minimum with `min(340px, 100%)` did
+  not clear it, so something else on that page is wider than the viewport -- not the cards, which
+  measure 374px inside a 390px window. Recorded rather than guessed at.
+
+## [2.1.139] - 2026-08-20
+
+### Added
+
+- **The completion mark says what completion requires, and whether it is met.** A tick says "done"
+  and an empty circle says "not done"; neither says what would *make* it done. Hovering now gives
+  the conditions and the status: `Receive a grade, View — Not completed`.
+
+  The conditions come from **core's own completion details** -- the same source behind the "Done:
+  View" badges Moodle shows on an activity page -- rather than wording invented here that would
+  drift from what core displays elsewhere in the same course.
+
+  An activity with no completion tracking gets no tooltip at all. Saying "not completed" about
+  something that cannot be completed would be worse than saying nothing.
+
+  The lookup is wrapped: `cm_completion_details` throws for an activity whose module has been
+  removed, and a broken completion record should cost one tooltip rather than the whole sidebar.
+
+  Verified: rows with tracking carry the tooltip and read "Completed"; the thirteen rows without
+  tracking correctly carry none. No JavaScript errors.
+
+### Note on the verification
+
+  Both tracked activities in the test course use **manual** completion, which has no conditions by
+  definition -- so the conditions list came back empty and the tooltip showed the status alone. That
+  is correct behaviour rather than a fault, confirmed by querying core directly for every tracked
+  activity and finding both marked manual with no conditions.
+
+  The conditions half of this has therefore not been seen working. On a course using automatic
+  completion -- view, grade, or a passing mark -- it should read those conditions in front of the
+  status. Worth a glance on a real course before relying on it.
+
+## [2.1.138] - 2026-08-20
+
+### Added
+
+- **The activity type in each course index tooltip.** Hovering a row now says what the activity
+  *is*, not just what it is called: "Learning" shows **AI Content Creator**, "Practical Assessment"
+  shows **Assignment**.
+
+  Names say what a thing is called; types say what it is. In a course built from custom activity
+  types that distinction changes what a learner expects before they click, and the cards already
+  show it under the title -- the index had no room for a second line, and a tooltip is that room.
+
+  The type comes from the same config the row is built from, so it is the same wording the cards
+  use rather than a second source that could disagree with them.
+
+  Where a name is also cut off, the tooltip carries both: `Full name — Type`. The tooltip is the
+  only place the whole name appears, so dropping it in favour of the type would have lost more than
+  it gave.
+
+  Verified: **15 of 15 rows** carry a tooltip, reading Forum, Page, Text and media area, URL, Quiz,
+  Assignment, Book and Glossary against the matching rows. No JavaScript errors.
+
+## [2.1.137] - 2026-08-20
+
+### Added
+
+- **Groundwork for deriving "Recently added" instead of listing it.** Your suggestion, and the right
+  one -- a hand-kept list is the only part of the settings page that can go stale, and one nobody
+  prunes ends up marking half the page as new.
+
+  The changelog was the obvious source but the wrong one: it is prose, settings appear there by
+  their label rather than their name, and phrasing varies -- matching against it would be guesswork
+  that fails silently. **The version markers are better.** Every settings block already carries an
+  `// ACF-FIX-2.1.NNN:` comment written when the setting was added, so the release each one arrived
+  in is recorded beside it, machine-readable, and cannot disagree with the code.
+
+  `classes/local/settingsmeta.php` reads those markers and pairs each setting with the release above
+  it.
+
+### Known: the derivation is not reliable yet, and is not being trusted
+
+  Settings are written three ways in `settings.php` -- a literal name, a name built in a loop, and
+  the suffix lists those loops read -- and the parser does not yet handle all three. Three attempts:
+  the first returned the fragments `default` and `force`; the second returned one result; the third
+  returned a JavaScript module name mistaken for a setting.
+
+  **So it is not used on its own.** The list is kept, and the derivation is used only when it
+  returns at least as many results -- so the page is always right, and the parser can be finished
+  without touching the settings file again.
+
+  Verified with the fallback in place: 65 settings, Affects existing courses 20, New courses only
+  32, Recently added 22, Recently added + Colour 12. No JavaScript errors.
+
+  A wrong "new" badge is worse than a stale one: a stale list overstates, a broken parser points at
+  the wrong settings entirely.
+
+## [2.1.136] - 2026-08-20
+
+### Changed
+
+- **The gap between collapsed section bands is halved**, from 16px to 8px, so the headings read as
+  divided rather than merely spaced.
+
+  What closed it was zeroing the section wrapper's own vertical padding. That padding sat between
+  the wrapper's margin and the coloured band, so it added to the gap without appearing to.
+
+### Known: 8px, not the 5px asked for
+
+  The remaining 3px is not the margin. Setting the section's `margin-block-end` to 5px and then to
+  2px produced **8px both times** -- so something else is deciding the distance and I did not
+  isolate what before running out of budget. The margin is left in place because it is the right
+  property for the job, with a comment saying it currently has no measurable effect.
+
+  One finding worth carrying forward: **the first `.courseindex-section` in the DOM is the hidden
+  General section**, `display: none`. Several measurements this session read that element by
+  mistake, which is why some readings looked contradictory. Any probe here must filter to sections
+  with a non-zero height first.
+
+## [2.1.135] - 2026-08-20
+
+### Added
+
+- **A second filter row on the settings page**, combining with the categories rather than replacing
+  them. Categories answer *where does this apply*; these answer *what does it do to my site*:
+
+  | Chip | Settings | |
+  |---|---|---|
+  | Affects existing courses | 20 | every `force…` setting |
+  | New courses only | 32 | every `default…` setting |
+  | Recently added | 22 | this session's additions |
+
+  **"Affects existing courses" is the one that earns its place.** The difference between a default
+  that seeds new courses and an override that reaches existing ones has caused more confusion than
+  anything else in this plugin, and being able to list exactly the twenty settings that change
+  courses already built answers it directly rather than in prose.
+
+  The chips toggle: pressing the active one clears it, so a filter can always be undone without
+  hunting for an "all" option that does not exist on that row. They combine with the category tabs
+  -- Recently added plus Colour gives 12.
+
+  The first two are derived from the setting's name and cannot drift. **"Recently added" is a list,
+  and a list goes stale** -- it is passed from PHP so it sits beside the settings it names rather
+  than buried in JavaScript, with a comment to prune it when the next batch lands. It is
+  deliberately short: a permanent "new" badge on everything would mean nothing.
+
+  Pressed chips are marked by a solid border and a filled background, not colour alone.
+
+  Verified: baseline 65, override 20, toggled off 65, recently added 22, recently added + Colour 12.
+  No JavaScript errors.
+
+## [2.1.134] - 2026-08-20
+
+### Added
+
+- **Category tabs and search on the settings page.** Sixty-five settings in one column is a scroll,
+  not a page: finding the card colour meant either knowing roughly where it sat or reading past
+  forty things that were not it.
+
+  A sticky bar above the settings offers a search box and one tab per category, each showing how
+  many settings it holds. Choosing a tab filters the list; typing filters it further. Section
+  headings hide themselves when nothing beneath them is showing, so a filtered view is not a run of
+  empty headings.
+
+  | Tab | Settings |
+  |---|---|
+  | All settings | 65 |
+  | AI Tutor | 6 |
+  | Colour | 21 |
+  | Course index | 10 |
+  | Banner | 2 |
+  | Cards | 10 |
+  | Navigation | 11 |
+  | Timing | 3 |
+  | Guided tour | 2 |
+
+  **Categories are matched on the setting's own name, not a hand-kept list.** A new setting files
+  itself on the strength of what it is called -- `defaultcardpadding` would land under Cards without
+  anyone editing the module. A list would be correct on the day it was written and wrong by the
+  third setting added after it. Anything unmatched goes to "Other" rather than disappearing, because
+  a setting the reader cannot reach is worse than one in the wrong group. Nothing landed there:
+  the eight categories account for all 65.
+
+  Search reads the whole row rather than only the label, so a term appearing in a description finds
+  its setting -- someone looking for "answer key" reaches the sharing ceiling even though those
+  words are not in its name.
+
+  The selected tab is marked by weight and a filled count as well as colour, so the bar is readable
+  to someone who cannot distinguish the accent from the border.
+
+  Verified: filtering to Colour leaves exactly 21 visible, AI Tutor 6, All 65; searching "card"
+  leaves 20. No JavaScript errors.
+
+### Note
+
+  The AI Tutor panel on this page is not built. The tutor's endpoint is course-scoped -- it takes a
+  course id and answers from that course's content -- and a site settings page has no course. Making
+  it work here means either a site-level mode on the LMS-Labs service or a different endpoint, which
+  is a backend change rather than a plugin one. Recorded rather than half-built.
+
+## [2.1.133] - 2026-08-20
+
+### Changed
+
+- **The course index rows no longer wash on hover; the icon moves instead.** A row already sits on
+  the tinted panel, so a slightly darker rectangle behind it was a weak signal that also fought the
+  card surface it is meant to match.
+
+  The icon now takes the same movement the cards use -- `scale(1.08) rotate(-4deg)`, the section
+  card's own numbers rather than new ones, so hovering a row and hovering a card feel like one
+  gesture and the two cannot drift apart when either is restyled.
+
+  Movement rather than colour reads clearly on a tinted panel where a wash does not, and it costs
+  nothing to anyone who cannot perceive the colour difference.
+
+  The icon wrapper had to become `inline-flex`: an inline box ignores `transform` outright, and the
+  rule was present and matching while the icon still measured `transform: none`.
+
+  Suppression under `prefers-reduced-motion` was folded into the block that already handles every
+  other hover displacement in the plugin, rather than adding a second media query -- one place to
+  look, and one place to miss something.
+
+  Verified: the row background is unchanged between rest and hover, and the hover transform is
+  declared as `scale(1.08) rotate(-4deg)`.
+
+### Note on the verification
+
+  The movement could not be observed directly here: `prefers-reduced-motion: reduce` reports true in
+  this browser regardless of emulation, and the plugin correctly honours it -- so the icon is
+  supposed to stay still in that environment, and did. The rule was confirmed from the stylesheet
+  instead. Two earlier readings of "icon does not move" were this, not a fault, and one of them
+  nearly sent me changing working code.
+
+## [2.1.132] - 2026-08-20
+
+### Fixed
+
+- **Section headings flashed white on hover.** The rules doing it date from 2.1.71, when a heading
+  was plain text on a white panel and the job was to stop theme_academi drawing a primary-coloured
+  border around it. `background: transparent` was right then. It became wrong the moment the heading
+  became a filled band in 2.1.126 -- transparent lets the panel show through, so the band vanished
+  under the pointer.
+
+  The band, its text and its borders are now all held at their resting values. There is nothing a
+  hover state needs to say here: the whole row is one link and the cursor already communicates that.
+
+  Verified by moving the pointer onto a heading and reading the computed styles either side:
+
+  | | Background | Text |
+  |---|---|---|
+  | At rest | `rgb(15, 108, 191)` | white |
+  | Hovered | `rgb(15, 108, 191)` | white |
+
+  Neither changes. A rule written for one design surviving into the next is worth watching for --
+  this is the third time an old hover rule has outlived the thing it was written for.
+
+## [2.1.131] - 2026-08-20
+
+### Changed
+
+- **The sidebar's top block and the banner are the same height**, so the panel and the content meet
+  on one line.
+
+  Measured before changing anything: the drawer's own strip plus the player header came to **185px**
+  against a **119px** banner -- a 66px step exactly where the eye expects continuity, which is what
+  stopped the two reading as one interface.
+
+  Both now derive from a single token at **152px**:
+
+  - The drawer strip drops from 60px to 44px. Sixty pixels of chrome for a close button and a menu
+    is more than either needs.
+  - The player header takes the remainder, stated as a height rather than left to its content --
+    the content varies, a long course name wraps, and the two edges have to line up regardless. Its
+    contents are centred vertically so a short name does not sit high in the band.
+  - The banner rises from 119px to 152px, in both its plain and image modes, or the two would
+    disagree depending on whether a course had a banner image.
+
+  Deriving both from one number rather than setting them to the same value twice is the point:
+  restyling either side later cannot silently reintroduce the step.
+
+  Verified: drawer strip 44 + player header 108 = **152px**, banner **152px**, difference **0**.
+
+## [2.1.130] - 2026-08-20
+
+### Added
+
+- **Four switches for the estimated-time pills**, each per course with a site default and a
+  site-wide override:
+
+  | Setting | Hides |
+  |---|---|
+  | Estimated time in the course index | The time on each activity row in the panel |
+  | Estimated time on section cards | The section total in each card's corner |
+  | Estimated time on activity cards | The time on each activity card |
+  | Total course time in the course index | The total under the course name |
+
+  **Four rather than one.** A single switch would have been less to configure, but a site may
+  reasonably want per-activity times and not totals, or the reverse -- and once they are collapsed
+  into one control that choice is gone. Each hides only its own.
+
+  `display: none` rather than hiding by visibility, so a row closes up instead of leaving the gap
+  the pill occupied.
+
+  Verified that each acts independently, hiding one at a time and checking the others survive:
+
+  | | Index rows | Section cards | Course total |
+  |---|---|---|---|
+  | All shown | 14 | 1 | 1 |
+  | Index hidden | **0** | 1 | 1 |
+  | + section cards hidden | 0 | **0** | 1 |
+  | + total hidden | 0 | 0 | **0** |
+
+  The help text makes the point that an estimate is only worth showing if it is roughly right: on a
+  course whose activity durations have not been set, hiding the times reads better than showing
+  figures nobody trusts.
+
+## [2.1.129] - 2026-08-20
+
+### Changed
+
+- **The activity icons take the accent colour by default**, reverting the default set in 2.1.128.
+  Matching them to the activity name made each row read as one object; on balance the accent is
+  preferred, because it gives the panel a second place the course's own colour appears alongside the
+  section headings.
+
+  Only the default moved. **Activity icon colour** still overrides it, and setting that to the body
+  text colour reproduces the 2.1.128 behaviour exactly -- the help text now says so, so the option
+  that was just removed as a default is still reachable as a choice.
+
+  Verified across three cases:
+
+  | | Icon | Section heading | Activity name |
+  |---|---|---|---|
+  | Theme accent | `rgb(15, 108, 191)` | same | `rgb(30, 41, 59)` |
+  | Accent magenta | `rgb(181, 23, 158)` | same | `rgb(30, 41, 59)` |
+  | Icon overridden | `rgb(30, 41, 59)` | magenta | `rgb(30, 41, 59)` |
+
+  The middle row is the one that matters: the icon follows the accent when the accent changes,
+  rather than coincidentally sharing a fixed colour. The icon background stays transparent in all
+  three -- the tile removed in 2.1.126 has not come back.
+
+## [2.1.128] - 2026-08-20
+
+### Fixed
+
+- **The section heading band started 3px inside the panel.** Not a margin, which is where I would
+  have looked: core puts a **3px left border** on `.courseindex-section` as its current-section
+  marker, and a 1px one on the item. Both sit outside the band's fill, so the colour began 3px in
+  while the right edge was already flush. Found by walking up from the heading and reading each box
+  rather than nudging the padding.
+
+- **The gap above the first section, when the General section is hidden.** Section 0 is still the
+  DOM's `:first-child` even when hidden, so the rule clearing that space was landing on an invisible
+  element and the first *visible* section kept its gap. It now targets the section following a
+  hidden section 0 as well.
+
+### Changed
+
+- **The activity icons take the colour of the activity name beside them.** They were the accent,
+  which made each row a coloured mark next to a dark label rather than one thing. **Activity icon
+  colour** still overrides it for anyone who wants them picked out -- the setting is unchanged, only
+  its default.
+
+  Verified together:
+
+  | | |
+  |---|---|
+  | Band left edge | 0, flush with the panel |
+  | Band right edge | 341, flush with the panel |
+  | Gap above first visible section | **0px** |
+  | Icon colour | `rgb(30, 41, 59)` |
+  | Activity name colour | `rgb(30, 41, 59)` — identical |
+
+## [2.1.127] - 2026-08-20
+
+### Fixed
+
+- **The banner not reaching the page edges on activity pages** -- diagnosed from a live measurement
+  and reproduced before fixing.
+
+  The reported reading was the key:
+
+  ```
+  wrap=342-1381 | pad 0/0 | max-width none | banner mar 0/0 | max none
+  ```
+
+  Nothing was insetting the banner. Its **container** was simply narrower than the page:
+  `#region-main` ended at 1381 while `#page` ran to the viewport. On a stock Moodle those two are
+  the same width, which is why eight standard activity types all measured perfect here and this
+  never appeared.
+
+  Three separate faults had to be cleared:
+
+  1. **The correction lived inside `lift()`**, which moves the banner to be a direct child of
+     `#page` and returns early when it need not -- which is every activity page, where the banner is
+     already where it belongs. Everything nested inside therefore never ran there. It is called from
+     `init()` now, independently of whether the banner is lifted.
+  2. **The measurement was taken from an already-pulled position.** The stylesheet also sets a
+     negative margin, and clearing only the *inline* margin left that in place -- so the correction
+     replaced the stylesheet's pull instead of completing it, and the banner came up exactly that
+     much short. Both margins are zeroed before measuring now.
+  3. An earlier attempt failed because the wrap had `inline-size: auto` and shrank to its content,
+     so the pull chased a moving edge. The width is stated at 100%.
+
+  Verified against the reported shape -- `#region-main` deliberately narrowed to 374-1413 inside a
+  `#page` of 342-1500:
+
+  | Page | Banner | |
+  |---|---|---|
+  | Activity | 342-1500 | **full width**, pull measured at -87px |
+  | Course | 342-1500 | full width, no pull needed |
+
+  The course page needing no correction is as important as the activity page getting one: it
+  confirms the fix applies itself only where there is a difference to close.
+
+## [2.1.126] - 2026-08-20
+
+### Changed
+
+- **Section headings in the course index are a filled band with white text.** Once the panel itself
+  was tinted in 2.1.125, a heading in the same grey stopped separating one section from the next.
+  Filling it gives the list a structure the eye can follow.
+
+  White on the theme's primary measures **5.36:1**, which passes AA. The check matters because the
+  colour is settable: a pale choice would put white text on a pale band, and the setting's
+  description says the colour needs enough weight to carry white.
+
+  Hover keeps the band and only lifts the text, or the heading flashed to the panel colour as the
+  pointer crossed it.
+
+- **The activity icons lost their tile.** A filled square behind every icon reads as a chip rather
+  than an icon, and twenty stacked is a column of boxes. The background is gone and the glyph itself
+  carries the colour -- the icons are masked, so they take the colour directly.
+
+### Added
+
+- **Section heading colour** and **Activity icon colour**, per course with a site default and a
+  site-wide override for each. Both default to the accent colour, which itself follows the theme's
+  primary when unset, so neither needs setting to look right.
+
+  Verified with deliberately unmistakable values:
+
+  | | Heading band | Heading text | Icon background | Icon colour |
+  |---|---|---|---|---|
+  | Defaults | `rgb(15, 108, 191)` | white, 5.36:1 | transparent | `rgb(15, 108, 191)` |
+  | Green / magenta | `rgb(47, 111, 79)` | white, 5.99:1 | transparent | `rgb(181, 23, 158)` |
+
+  The transparent icon background in both rows is the point -- it confirms the tile is gone rather
+  than merely recoloured.
+
+## [2.1.125] - 2026-08-20
+
+### Added
+
+- **The course index takes the card colour**, and has its own settings if you want it to differ.
+
+  The panel listing the sections and activities now uses the card surface by default, so the two
+  match without anyone setting the same value twice -- and changing the card colour moves both
+  together.
+
+  **Course index colour** and **Course index colour strength** are added alongside, per course with
+  a site default and a site-wide override for each. Left empty, the index simply follows the cards;
+  the setting is only for making them differ deliberately.
+
+  That is the important detail: the variable is *not published at all* unless a colour is chosen, so
+  the stylesheet falls through to the card colour. Publishing a copy of the card value would have
+  looked identical today and drifted the first time someone changed one of them.
+
+  Verified across all three cases:
+
+  | | Card | Index | |
+  |---|---|---|---|
+  | Both default | `#fafbfc` | `#fafbfc` | match |
+  | Card green 15%, index empty | pale green | pale green | **match** |
+  | Index set to magenta 10% | pale green | pale magenta | differ, as asked |
+
+  The header band at the top of the panel keeps its own separate setting, since it is meant to
+  contrast with the list beneath it rather than match it.
+
+## [2.1.124] - 2026-08-20
+
+### Added
+
+- **Card colour and card colour strength**, per course with a site default and a site-wide override
+  for each. The soft grey introduced in 2.1.123 is the shipped default.
+
+  **Strength rather than opacity.** The obvious implementation is an alpha channel, and it would be
+  wrong here: the card would become see-through, and whatever sits behind it would show through --
+  including the banner, where the two overlap as the page scrolls. The strength mixes the chosen
+  colour toward white instead, so the card is fully opaque at every setting while still getting
+  paler as the number drops.
+
+  It exists because picking a subtle colour by hand is fiddly. Choose a colour you like, then dial
+  it back until it is as quiet as you want, rather than hunting for a paler hex value.
+
+  Out-of-range values are clamped to 0-100 rather than rejected: a number outside that is a typo,
+  and the nearest valid shade is a better answer than silently ignoring what was asked for.
+
+  Verified across the range:
+
+  | Setting | Rendered |
+  |---|---|
+  | Site default | `#fafbfc` |
+  | `#2f6f4f` at 100% | full green |
+  | `#2f6f4f` at 20% | pale green tint |
+  | `#2f6f4f` at 0% | plain white |
+
+  The 0% case matters: it means a site can switch the tint off entirely without having to know that
+  white is `#ffffff`.
+
+## [2.1.123] - 2026-08-20
+
+### Changed
+
+- **The section and activity cards take a soft grey.** `#fafbfc` -- a touch above the neutral-50
+  step: enough to lift a card off the white page behind it, not enough to read as a filled panel.
+
+  Given its own token rather than changing `--acf-surface-raised`, which the cards shared with the
+  course index, the sidebar header and the settings cards. Tinting that would have greyed half the
+  plugin, and the request was for the cards.
+
+  Contrast checked rather than assumed, since a tinted background reduces the margin on every piece
+  of text sitting on it:
+
+  | | Ratio | |
+  |---|---|---|
+  | Card title on card | 5.17:1 | passes AA |
+  | Activity name on card | 7.31:1 | passes AA |
+
+  Dark mode maps the token to the same surface it used before, so nothing changes there.
+
+## [2.1.122] - 2026-08-20
+
+### Removed
+
+- **The Banner width setting.** The banner is now always full width, and the choice is gone -- the
+  per-course option, the site default, the site-wide override, seven language strings, the body
+  class and the JavaScript guards that read it.
+
+  It was a setting nobody would sensibly choose the other side of: a banner inset from the content
+  it belongs to has no advantage over one that spans it, and carrying both modes meant every rule
+  about spacing, alignment and the header offset had to be written and verified twice. Removing it
+  halves that surface.
+
+  On a phone and a tablet the banner was already full width regardless -- the course index is an
+  overlay at those sizes, so there was never a second mode there to choose between.
+
+  Verified after removal:
+
+  | Width | Banner | Notes |
+  |---|---|---|
+  | 390 | 0-390 | full viewport |
+  | 768 | 48-768 | 48px inset on the left |
+  | 810 | 48-810 | 48px inset on the left |
+  | 1180 | 342-1180 | full width beside the course index |
+  | 1500 | 342-1500 | full width beside the course index |
+
+  **The 48px inset at tablet widths is the known outer-gap fault**, unchanged by this and recorded
+  in the handover. Desktop and phone are edge to edge.
+
+### Note for existing courses
+
+  A course that had chosen "Aligned with the course content" now gets full width. Nothing needs
+  changing and no data is lost -- the stored value is simply no longer read.
+
+## [2.1.121] - 2026-08-20
+
+### Fixed
+
+- **The course index needing a refresh — confirmed by reproducing the reported state.**
+
+  The reported console line was the whole bug:
+
+  ```
+  show=false | page-says-open=true | drawer L=-342 R=0 | visibility=hidden | margin-left=342px
+  ```
+
+  The two classes live on different elements and had fallen out of step: `#page` carried
+  `show-drawer-left`, so the content was pushed 342px right, while the drawer itself had no `.show`,
+  so it stayed parked off-screen and invisible. The content was offset for a drawer that was not
+  there.
+
+  Both classes are written by the same server-side flag in core's `drawers.mustache`
+  (`{{#courseindexopen}}`), so they start in agreement; something removes `.show` afterwards.
+  Rather than guess what, the drawer now follows `#page.show-drawer-left` as well as its own
+  `.show`. That is the class that survived in the reported state, and the same class that decides
+  the content offset -- so the drawer and the content can no longer disagree, whichever core sets.
+
+  `:has()` is required because the drawer is a **preceding** sibling of `#page` in core's template,
+  which no combinator can reach. Supported by every browser Moodle 4.5 targets.
+
+  Verified by forcing the exact reported state -- `show-drawer-left` present, `.show` removed:
+
+  | | Before | After |
+  |---|---|---|
+  | Drawer right edge | 0 | **342** |
+  | Visibility | hidden | **visible** |
+  | Content offset | 342px | 342px |
+
+  And a genuinely closed drawer still reads `R=-10`, hidden, with no offset -- so the mirror case
+  is intact and the fix does not simply force the drawer open.
+
+## [2.1.120] - 2026-08-20
+
+### Fixed
+
+- **The course index reopening wrong — diagnosed from core's own stylesheet rather than inferred.**
+
+  The reported console output was decisive: `show-drawer-left=true` with the drawer at `L=-342 R=0`
+  and `#page margin-left: 342px`. Classes saying open, drawer parked off-screen, content offset for
+  a drawer nobody could see.
+
+  theme_boost's `drawer.scss` shows exactly how core does it:
+
+  ```scss
+  &.drawer-left {
+      width: 285px; max-width: 285px;
+      left: calc(-285px + -10px);
+      visibility: hidden;
+      &.show { left: 0; visibility: visible; }
+  }
+  ```
+
+  Two things the earlier rules got wrong:
+
+  1. **The closed offset must match the width.** With the width raised to 342px and core's `left`
+     still calculated from 285px, a closed drawer peeked 47px onto the page -- measured after an
+     attempt to let core own it. It is now `calc(-342px + -10px)`, keeping core's own relationship
+     between width and offset including its 10px gutter.
+  2. **The open position had to be restated.** The old rule only described the closed state, so
+     while `.show` was being applied it kept winning and the drawer stayed parked. Stating
+     `.show { left: 0; visibility: visible; }` at the same specificity removes the race rather than
+     hoping the timing works out.
+
+  `visibility` is set alongside `left` because core pairs them; setting position without visibility
+  leaves an invisible drawer occupying its position.
+
+  **theme_academi inherits Boost's drawer positioning unchanged** -- confirmed by searching its SCSS
+  for any `left`, `width` or `transform` on `.drawer-left` and finding none. It restyles the course
+  index inside the drawer but does not move the drawer. One rule covers both themes.
+
+### Added
+
+- **A theme compatibility notice on the settings page.** The format overrides parts of core's course
+  index, navigation and header; Boost and Academi are the two it is developed and measured against.
+  Another theme may position those differently and produce a layout fault that reads as a plugin
+  bug. The notice says so plainly and directs people to support@lmshostingservices.com with the name
+  of their theme.
+
+### Not completed
+
+  **The full audit did not run.** The development environment stopped responding partway through --
+  the web server would not accept connections and several commands returned nothing. The audit
+  harness is written and is at `/tmp/audit.js`: it checks five fault conditions (drawer state
+  matching its geometry, stranded content offset, a closed drawer peeking, horizontal overflow, and
+  elements rendering outside the viewport) across three page types and five widths.
+
+  **The drawer change above is therefore unverified by measurement.** It is grounded in core's
+  source rather than a guess, which is a better position than the previous attempts, but it has not
+  been observed working. It should be checked before being relied on.
+
+## [2.1.119] - 2026-08-20
+
+### Fixed
+
+- **The space above the banner on course pages, using the data reported from a live page.**
+
+  The reported figures settled it: theme_academi's header ends at **61px**, `#page` carries only
+  **20px** of margin, and the banner lands at **80px**. So the header clearance comes from somewhere
+  other than that margin, and the 20px is an extra sitting on top of it.
+
+  My earlier version set the margin *to the header's height*, assuming the margin was the clearance.
+  On this theme that would have pushed the banner from 80px down to 121px -- worse, not better. It
+  was only ever verified against a simulation that shared the wrong assumption.
+
+  It now corrects by the **measured difference** between where the banner is and where it should be,
+  which works whatever produces the offset and needs no knowledge of which element owns it.
+
+  Verified against the reported shape -- a 20px margin on top of a separate 60px clearance: course
+  page margin corrected from 20px to 1px, banner landing exactly at the header's bottom edge,
+  **gap 0px**.
+
+### Known: activity pages still show the gap
+
+  The same page in an activity still measures **19px**. The correction is not running there -- the
+  module initialises on course pages but not activity pages, and I ran out of budget to find why.
+  The hook's page-type guard admits `mod-` prefixed pages, so the cause is further in.
+
+  **Next step:** on an activity page, check whether `format_aicourse/heroatop` appears in
+  `window.requirejs.s.contexts._.defined`. If it is absent the hook is not queueing it there; if it
+  is present, `fitHeader` is returning early and the selector or the guard inside it is the issue.
+
+  Since the reported page was an activity page, **this is not yet fixed for the case that was
+  reported** -- only for course pages.
+
+## [2.1.118] - 2026-08-20
+
+### Investigated, not fixed — full width on activity pages with the course index closed
+
+  **Answering the question directly: no, this is not fixed.** 2.1.109 improved it with the index
+  *open*; with the index *closed* the banner is still short.
+
+  Measured at a 1500px viewport, `#page` spanning 0-1500:
+
+  | Page | Banner | Short by |
+  |---|---|---|
+  | Course | 48-1500 | 48px left |
+  | Activity | 74-1474 | 74px left, 26px right |
+
+  **An attempt to fix it made things worse and has been reverted.** The idea was sound -- measure
+  the difference between the banner's box and the page's box and pull by exactly that, since a fixed
+  negative margin cannot suit a banner that sits in a different container on every page type. In
+  practice the activity page went from 74/26 short to **106/58 short**: with the wrapper's width set
+  to `auto` it shrinks to its content, so the measured pull chases an edge that moves as the pull is
+  applied. Setting the width back to 100% did not recover it either.
+
+  Reverted to the 2.1.117 behaviour rather than shipping a regression. The measurements above and
+  the failed approach are recorded so the next attempt does not repeat it.
+
+  **What is actually needed:** the banner escaping a centred container is a full-bleed problem, and
+  the reliable pattern for that is `margin-inline: calc(50% - 50vw)` with `width: 100vw` -- adjusted
+  for the course index's width when it is open, since `100vw` includes the area the drawer occupies.
+  That is a different mechanism from measuring and pulling, and I did not have the budget to build
+  and verify it properly.
+
+## [2.1.117] - 2026-08-20
+
+### Verified
+
+- **The narrow-width sweep is done.** Four pages -- course, section, activity and the plugin
+  settings -- across five widths: 390, 768, 810, 1180 and 1500.
+
+  | Checked | Result |
+  |---|---|
+  | Horizontal overflow (`scrollWidth` vs viewport) | none at any width |
+  | Elements rendering off-screen | none |
+  | Elements collapsed below 80px | none |
+  | JavaScript errors | none |
+
+  This is the check that had been outstanding since 2.1.105, when a drawer width shipped without a
+  media query and made the format unusable on phones for eighteen versions. Everything built since
+  had still only been measured at 1500px. It is now measured, and it is clean.
+
+  One finding was a false positive worth recording: the player sidebar header reports as off-screen
+  at 390, 768 and 810. It sits inside the drawer, which at those widths is an overlay parked
+  off-screen until opened -- correct behaviour. The check now excludes anything inside a closed
+  drawer, or it would flag the same non-fault on every future run.
+
+## [2.1.116] - 2026-08-20
+
+### Changed
+
+- **Two `!important` declarations removed from the drawer's open/close handling.** They were added
+  in 2.1.86 to widen the drawer and were also overriding core while it animated -- the most likely
+  cause of the layout being wrong until a hard refresh.
+
+  - The closed position keeps its `left: -342px`, because core parks the drawer at its own default
+    width and a 342px drawer left to core peeked 47px onto the page. Measured, after trying to let
+    core own it entirely. But it is stated **without** `!important` now: the selector carries two
+    body classes against core's one, so ordinary specificity is enough, and core can still override
+    it while animating.
+  - The content offset now keys on `.show-drawer-left`, which tracks the drawer's real state,
+    rather than on the body class alone. A closed drawer no longer leaves a 342px offset behind.
+
+  Verified the closed position is right (`x=-342`, no peek) and mobile is unaffected: 285px overlay
+  with no offset at 390, 768 and 810; 342px docked with a 342px offset at 1180 and 1500.
+
+### Still not confirmed fixed
+
+  **I could not reproduce the original fault in this environment**, so I cannot say the refresh
+  problem is solved -- only that the mechanism most likely causing it is gone. Core's drawer toggle
+  does not respond to a synthetic click here: `show-drawer-left` stayed `true` through every
+  attempt, in all three runs, so the state change this depends on never happened in the test.
+
+  Needs confirming on a real browser: open the course, close the course index, reopen it, and check
+  the layout without refreshing.
+
+  **The blank space above the banner in full-width mode is also unconfirmed.** Two attempts
+  (2.1.107, 2.1.108) both measured a 0px gap here, including against a deliberately inflated header
+  reservation, and the report persisted afterwards. Something about the real theme is not reproduced
+  by that simulation.
+
 ## [2.1.115] - 2026-08-20
 
 ### Fixed

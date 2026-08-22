@@ -123,6 +123,295 @@ const buildHeader = (config, strings) => {
  * @param {Object} strings Localised labels.
  * @returns {void}
  */
+/**
+ * Describe what completion requires, and whether it is met.
+ *
+ * ACF-FIX-2.1.139. A tick says "done" and an empty circle says "not done"; neither says what would
+ * make it done. The conditions come from core's own completion details, so the wording matches what
+ * Moodle already shows on the activity page rather than being invented here.
+ *
+ * @param {Element} mark The tick element.
+ * @param {Object} data That activity's data.
+ * @param {Object} strings Localised labels.
+ * @returns {void}
+ */
+const describeCompletion = (mark, data, strings) => {
+    if (!data.tracked) {
+        // Nothing is required, so there is nothing to explain. Saying "not completed" about an
+        // activity that cannot be completed would be worse than saying nothing at all.
+        mark.removeAttribute('title');
+        return;
+    }
+    const status = data.complete ? strings.done : strings.notdone;
+    const conditions = (data.requirements || []).join(', ');
+    // ACF-FIX-2.1.153: the title attribute is kept as the FALLBACK only -- it is what a browser
+    // with JavaScript disabled, a screen reader in browse mode, or a touch device with no hover
+    // will use. The rich panel below replaces it wherever it can actually be shown, and clears it
+    // while doing so, because a native tooltip fading in over a styled one is the worst of both.
+    mark.setAttribute('title', conditions ? conditions + ' \u2014 ' + status : status);
+};
+
+/* --------------------------------------------------------------------------
+   The completion tooltip (ACF-FIX-2.1.153)
+
+   The title attribute could say what completion requires, but it could not say it well: no
+   per-condition state, no way to show which ones are already met, ~1s before the browser shows it,
+   no styling, and it disappears the moment the pointer moves. A learner looking at a green tick is
+   asking three questions -- what was required, did I pass, and when did I finish -- and the answer
+   is a small panel, not a sentence.
+
+   One panel is built for the whole page and moved, rather than one per row: a course index can hold
+   a hundred ticks, and a hundred detached DOM subtrees waiting for a hover is a hundred too many.
+   -------------------------------------------------------------------------- */
+
+const TIP_ID = 'aicourse-completion-tip';
+const TIP_GAP = 10;
+
+let tipEl = null;
+let tipOwner = null;
+let tipHideTimer = null;
+
+/**
+ * The single tooltip element, created on first use.
+ *
+ * @returns {Element}
+ */
+const getTip = () => {
+    if (tipEl && tipEl.isConnected) {
+        return tipEl;
+    }
+    tipEl = document.createElement('div');
+    tipEl.id = TIP_ID;
+    tipEl.className = 'aicourse-tip';
+    tipEl.setAttribute('role', 'tooltip');
+    // Hidden from the accessibility tree until it is shown AND owned: an empty tooltip announced
+    // as a live region would be noise on every page load.
+    tipEl.hidden = true;
+    document.body.appendChild(tipEl);
+    return tipEl;
+};
+
+/**
+ * One condition row: a state marker and the wording core supplies.
+ *
+ * @param {Object} condition {text, met, failed}
+ * @returns {Element}
+ */
+const buildCondition = (condition) => {
+    const li = document.createElement('li');
+    li.className = 'aicourse-tip-item '
+        + (condition.met ? 'aicourse-tip-met' : (condition.failed ? 'aicourse-tip-failed' : 'aicourse-tip-unmet'));
+
+    const marker = document.createElement('span');
+    marker.className = 'aicourse-tip-marker';
+    marker.setAttribute('aria-hidden', 'true');
+    // Shape as well as colour, for the same reason the tick itself carries one: a tick for met, a
+    // cross for failed, an empty ring for simply not done yet.
+    if (condition.met) {
+        marker.innerHTML = '<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>';
+    } else if (condition.failed) {
+        marker.innerHTML = '<svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/>'
+            + '<line x1="6" y1="6" x2="18" y2="18"/></svg>';
+    }
+
+    const text = document.createElement('span');
+    text.className = 'aicourse-tip-text';
+    text.textContent = condition.text;
+
+    li.appendChild(marker);
+    li.appendChild(text);
+    return li;
+};
+
+/**
+ * Fill the panel for one activity.
+ *
+ * @param {Element} tip The panel.
+ * @param {Object} data That activity's data.
+ * @param {Object} strings Localised labels.
+ * @returns {boolean} False when there is nothing worth showing.
+ */
+const fillTip = (tip, data, strings) => {
+    const conditions = data.conditions || [];
+    const hasfacts = Boolean(data.grade) || Boolean(data.completedon);
+    if (!conditions.length && !hasfacts) {
+        return false;
+    }
+
+    tip.textContent = '';
+
+    const status = document.createElement('p');
+    status.className = 'aicourse-tip-status '
+        + (data.complete ? 'aicourse-tip-status-done' : 'aicourse-tip-status-pending');
+    status.textContent = data.complete ? strings.done : strings.notdone;
+    tip.appendChild(status);
+
+    if (conditions.length) {
+        const head = document.createElement('p');
+        head.className = 'aicourse-tip-head';
+        head.textContent = strings.requires;
+        tip.appendChild(head);
+
+        const list = document.createElement('ul');
+        list.className = 'aicourse-tip-list';
+        conditions.forEach((condition) => list.appendChild(buildCondition(condition)));
+        tip.appendChild(list);
+    }
+
+    if (hasfacts) {
+        const facts = document.createElement('div');
+        facts.className = 'aicourse-tip-facts';
+        [data.grade, data.completedon].forEach((fact) => {
+            if (!fact) {
+                return;
+            }
+            const p = document.createElement('p');
+            p.className = 'aicourse-tip-fact';
+            p.textContent = fact;
+            facts.appendChild(p);
+        });
+        tip.appendChild(facts);
+    }
+
+    return true;
+};
+
+/**
+ * Place the panel beside its tick, kept inside the viewport.
+ *
+ * Fixed positioning, measured after the content is in place. The sidebar is a narrow column at the
+ * inline-start edge, so the panel opens to its inline-end by default and only flips when there is
+ * genuinely no room -- a panel that flips on every row reads as jitter.
+ *
+ * @param {Element} tip The panel.
+ * @param {Element} anchor The tick.
+ * @returns {void}
+ */
+const placeTip = (tip, anchor) => {
+    const a = anchor.getBoundingClientRect();
+    const t = tip.getBoundingClientRect();
+    const vw = document.documentElement.clientWidth;
+    const vh = document.documentElement.clientHeight;
+    const rtl = document.documentElement.dir === 'rtl';
+
+    let left = rtl ? (a.left - TIP_GAP - t.width) : (a.right + TIP_GAP);
+    const flipped = rtl ? (left < TIP_GAP) : (left + t.width > vw - TIP_GAP);
+    if (flipped) {
+        left = rtl ? (a.right + TIP_GAP) : (a.left - TIP_GAP - t.width);
+    }
+    left = Math.max(TIP_GAP, Math.min(left, vw - t.width - TIP_GAP));
+
+    // Centred on the tick, then pulled back inside the viewport rather than allowed to run off the
+    // bottom of a row near the end of a long index.
+    let top = a.top + (a.height / 2) - (t.height / 2);
+    top = Math.max(TIP_GAP, Math.min(top, vh - t.height - TIP_GAP));
+
+    tip.style.left = Math.round(left) + 'px';
+    tip.style.top = Math.round(top) + 'px';
+};
+
+/**
+ * Hide the panel and release the tick that owned it.
+ *
+ * @returns {void}
+ */
+const hideTip = () => {
+    window.clearTimeout(tipHideTimer);
+    if (!tipEl) {
+        return;
+    }
+    tipEl.hidden = true;
+    tipEl.classList.remove('aicourse-tip-in');
+    if (tipOwner) {
+        tipOwner.removeAttribute('aria-describedby');
+        // The native tooltip comes back the moment ours is not on screen, so the information is
+        // never unavailable -- only ever shown one way at a time.
+        if (tipOwner.dataset.aicourseTitle) {
+            tipOwner.setAttribute('title', tipOwner.dataset.aicourseTitle);
+        }
+        tipOwner = null;
+    }
+};
+
+/**
+ * Show the panel for one tick.
+ *
+ * @param {Element} anchor The tick.
+ * @param {Object} data That activity's data.
+ * @param {Object} strings Localised labels.
+ * @returns {void}
+ */
+const showTip = (anchor, data, strings) => {
+    window.clearTimeout(tipHideTimer);
+    if (tipOwner === anchor && tipEl && !tipEl.hidden) {
+        return;
+    }
+    hideTip();
+
+    const tip = getTip();
+    if (!fillTip(tip, data, strings)) {
+        return;
+    }
+
+    tipOwner = anchor;
+    // Suppress the browser's own tooltip while ours is up, remembering it so hideTip() can restore
+    // it. Removing it permanently would strip the fallback from anyone who never triggers hover.
+    const native = anchor.getAttribute('title');
+    if (native !== null) {
+        anchor.dataset.aicourseTitle = native;
+        anchor.removeAttribute('title');
+    }
+    anchor.setAttribute('aria-describedby', TIP_ID);
+
+    // Measured while visible but transparent: a hidden element has no box, so it cannot be placed.
+    tip.hidden = false;
+    placeTip(tip, anchor);
+    // Next frame, so the transition has a start state to animate from rather than appearing at its
+    // end state on the first paint.
+    window.requestAnimationFrame(() => {
+        if (tipOwner === anchor) {
+            tip.classList.add('aicourse-tip-in');
+        }
+    });
+};
+
+/**
+ * Bind the tooltip to one tick.
+ *
+ * Pointer and keyboard both open it; Escape, blur, scroll and any pointer leaving close it. The
+ * short close delay lets the pointer cross the gap between the tick and the panel without the panel
+ * vanishing underneath it.
+ *
+ * @param {Element} mark The tick element.
+ * @param {Object} data That activity's data.
+ * @param {Object} strings Localised labels.
+ * @returns {void}
+ */
+const bindTip = (mark, data, strings) => {
+    if (!data.tracked) {
+        return;
+    }
+    // Reachable by keyboard: the tick carries information nothing else on the row does, so it has
+    // to be focusable for that information to be available without a mouse.
+    mark.setAttribute('tabindex', '0');
+
+    const open = () => showTip(mark, data, strings);
+    const close = () => {
+        window.clearTimeout(tipHideTimer);
+        tipHideTimer = window.setTimeout(hideTip, 120);
+    };
+
+    mark.addEventListener('mouseenter', open);
+    mark.addEventListener('focus', open);
+    mark.addEventListener('mouseleave', close);
+    mark.addEventListener('blur', close);
+    mark.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            hideTip();
+        }
+    });
+};
+
 const decorateRow = (row, data, strings) => {
     if (row.dataset.aicoursePlayer === '1') {
         return;
@@ -169,8 +458,10 @@ const decorateRow = (row, data, strings) => {
         const mark = document.createElement('span');
         mark.className = 'aicourse-player-tick'
             + (data.complete ? ' aicourse-player-tick-done' : '');
+        describeCompletion(mark, data, strings);
         mark.setAttribute('role', 'img');
         mark.setAttribute('aria-label', data.complete ? strings.done : strings.notdone);
+        bindTip(mark, data, strings);
         mark.innerHTML = data.complete
             ? '<svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>'
             : '';
@@ -205,16 +496,39 @@ const titleIfClipped = (row) => {
     // not visibly cut, which would put a tooltip on almost every row.
     const clipped = label.scrollWidth > label.clientWidth + 2;
     const full = (label.textContent || '').trim();
-    if (clipped && full) {
-        if (label.getAttribute('title') !== full) {
-            label.setAttribute('title', full);
+    // ACF-FIX-2.1.138: the activity's TYPE goes in the tooltip as well as its name.
+    //
+    // "Learning" and "Final Quiz" say what a thing is called, not what it is -- and in a course
+    // built from custom activity types, knowing that one is an AI Content Creator and another an
+    // Assignment changes what a learner expects before they click. The cards already show it under
+    // the title; the index had no room for a second line, and a tooltip is that room.
+    //
+    // The type comes from the same config the row is built from, so it is the same wording the
+    // cards use rather than a second source that could disagree.
+    const type = (row.dataset.aicourseType || '').trim();
+    let tip = '';
+    if (clipped && full && type) {
+        // Both, when the name is cut off: the tooltip is the only place the whole name appears, so
+        // dropping it in favour of the type would lose more than it gives.
+        tip = full + ' — ' + type;
+    } else if (type) {
+        tip = type;
+    } else if (clipped && full) {
+        tip = full;
+    }
+    if (tip) {
+        if (label.getAttribute('title') !== tip) {
+            label.setAttribute('title', tip);
         }
-    } else if (label.dataset.aicourseTitled === '1') {
+        label.dataset.aicourseTitled = '1';
+        return;
+    }
+    if (label.dataset.aicourseTitled === '1') {
         // No longer clipped -- the drawer widened, or the name changed. Remove the tooltip rather
         // than leave a stale one on text that is fully visible.
         label.removeAttribute('title');
     }
-    label.dataset.aicourseTitled = clipped ? '1' : '0';
+    label.dataset.aicourseTitled = '0';
 };
 
 /**
@@ -226,6 +540,12 @@ const titleIfClipped = (row) => {
  */
 const decorate = (config, strings) => {
     document.querySelectorAll('.courseindex-item').forEach((row) => {
+        // Stash the type before measuring, so titleIfClipped has it whichever order they run in.
+        const id = cmidOf(row);
+        if (id && config.activities[id] && config.activities[id].type) {
+            row.dataset.aicourseType = config.activities[id].type;
+        }
+
         // Section headings get the tooltip treatment too: they are the longest names in the panel
         // and the first thing clipped.
         titleIfClipped(row);
@@ -268,6 +588,77 @@ const readConfig = () => {
     }
 };
 
+/* --------------------------------------------------------------------------
+   Merging the drawer's own header into the brand row (ACF-FIX-2.1.154)
+
+   Core gives the course index a 44px strip of its own carrying two controls -- a close button and
+   the collapse/expand dropdown -- directly above this plugin's header band. Three rows of chrome
+   before the first section is one more than the panel needs, and the banner is sized to match the
+   whole block, so the cost is paid twice: once in the sidebar and once across the top of the page.
+
+   Two previous attempts moved the BRAND INTO core's strip and failed -- the strip's own flex rules
+   collapsed the logo and the nav icons to nothing. This goes the other way: core's two controls are
+   adopted INTO the brand row, which this plugin owns outright, and the emptied strip is collapsed.
+   Nothing of core's layout has to cooperate.
+
+   The controls keep their own markup, their data attributes and their event bindings. Boost
+   delegates drawer toggling and Bootstrap delegates the dropdown from `document`, so both keep
+   working from anywhere in the tree -- what matters is that the nodes are moved intact rather than
+   recreated.
+
+   Measured on the live site before writing this: `.drawer-left` matches TWO drawers stacked at the
+   same coordinates -- `theme_boost-drawers-primary` and `theme_boost-drawers-courseindex`, both
+   342x851 at 0,60, each with a 341x44 `.drawerheader`. Only the second one is the course index, so
+   every selector here names it by id. The primary drawer's own close button measured 0x0 and its
+   header content is empty; reaching for `.drawer-left` finds that one first.
+   -------------------------------------------------------------------------- */
+
+const CI_DRAWER = '#theme_boost-drawers-courseindex';
+
+/**
+ * Move the drawer's close button and options menu into the brand row.
+ *
+ * @param {Element} header The plugin's own header block.
+ * @returns {void}
+ */
+const adoptDrawerControls = (header) => {
+    const drawer = document.querySelector(CI_DRAWER);
+    const brand = header.querySelector('.aicourse-player-brand');
+    if (!drawer || !brand) {
+        return;
+    }
+    const strip = drawer.querySelector('.drawerheader');
+    if (!strip || brand.querySelector('.aicourse-player-drawerctl')) {
+        return;
+    }
+
+    const slot = document.createElement('div');
+    slot.className = 'aicourse-player-drawerctl';
+
+    // Order matters: the menu sits inboard and the close button ends the row, which is where a
+    // close control is looked for in every other panel on the site.
+    const menu = strip.querySelector('.drawerheadercontent');
+    const close = strip.querySelector('.drawertoggle');
+    if (menu) {
+        slot.appendChild(menu);
+    }
+    if (close) {
+        slot.appendChild(close);
+    }
+
+    // Nothing to adopt -- a theme that renders its own strip, or a Moodle version that names these
+    // differently. The strip is left exactly as it was rather than collapsed over its contents.
+    if (!slot.childElementCount) {
+        return;
+    }
+
+    brand.appendChild(slot);
+    // The class is what the stylesheet keys the collapsed strip and the shorter top block off, so
+    // it is set only once the move has actually succeeded. A failed adopt leaves three rows, which
+    // is the old layout -- not a broken one.
+    document.body.classList.add('aicourse-index-merged');
+};
+
 export const init = async(passed) => {
     // The argument is still honoured so an older cached page, or anything else calling this
     // directly, keeps working.
@@ -281,7 +672,14 @@ export const init = async(passed) => {
         return;
     }
 
-    const [home, dashboard, mycourses, navlabel, progress, esttime, done, notdone] = await Promise.all([
+    // ACF-FIX-2.1.153: the body class is set BEFORE the strings are awaited. It changes the drawer
+    // width by 57px and the content offset by 342px, and those are layout properties -- applying it
+    // after a network round-trip made the whole page jump once the strings landed. Nothing about the
+    // class depends on them.
+    document.body.classList.add('aicourse-player-on');
+
+    const [home, dashboard, mycourses, navlabel, progress, esttime, done, notdone, requires]
+        = await Promise.all([
         getString('player_home', 'format_aicourse'),
         getString('player_dashboard', 'format_aicourse'),
         getString('player_mycourses', 'format_aicourse'),
@@ -290,13 +688,17 @@ export const init = async(passed) => {
         getString('estimatedtimefor', 'format_aicourse'),
         getString('player_done', 'format_aicourse'),
         getString('player_notdone', 'format_aicourse'),
+        getString('player_requires', 'format_aicourse'),
     ]);
-    const strings = {home, dashboard, mycourses, navlabel, progress, esttime, done, notdone};
-
-    document.body.classList.add('aicourse-player-on');
+    const strings = {home, dashboard, mycourses, navlabel, progress, esttime, done, notdone, requires};
 
     if (!document.getElementById(HEADER_ID)) {
         index.parentNode.insertBefore(buildHeader(config, strings), index);
+    }
+
+    const header = document.getElementById(HEADER_ID);
+    if (header) {
+        adoptDrawerControls(header);
     }
 
     decorate(config, strings);
@@ -309,6 +711,17 @@ export const init = async(passed) => {
         const observer = new window.MutationObserver(() => decorate(config, strings));
         observer.observe(index, {childList: true, subtree: true});
     }
+
+    // The tooltip is anchored to a fixed position, so anything that moves its tick underneath it
+    // has to close it rather than leave it pointing at empty space. Passive listeners: neither
+    // handler can cancel the scroll it is reacting to.
+    window.addEventListener('scroll', hideTip, {passive: true, capture: true});
+    window.addEventListener('resize', hideTip, {passive: true});
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            hideTip();
+        }
+    });
 
     // Whether a name is clipped depends on the drawer's width, so it is re-checked when that
     // changes -- a window resize, or the drawer itself being resized by the theme.

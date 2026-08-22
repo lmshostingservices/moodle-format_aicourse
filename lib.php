@@ -113,6 +113,80 @@ class format_aicourse extends format_topics {
         if ($band !== '' && preg_match('/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/', $band)) {
             $css .= '--acf-player-header-bg:' . $band . ';';
         }
+
+        // ACF-FIX-2.1.124: the card surface, colour and opacity, same three-step resolution.
+        $cardcolour = isset($options['cardcolour']) ? trim((string) $options['cardcolour']) : '';
+        if ($cardcolour === '') {
+            $cardcolour = trim((string) get_config('format_aicourse', 'defaultcardcolour'));
+        }
+        $forcecard = trim((string) get_config('format_aicourse', 'forcecardcolour'));
+        if ($forcecard !== '') {
+            $cardcolour = $forcecard;
+        }
+
+        $cardopacity = isset($options['cardopacity']) ? (int) $options['cardopacity'] : -1;
+        if ($cardopacity < 0) {
+            $cardopacity = (int) get_config('format_aicourse', 'defaultcardopacity');
+        }
+        $forceopacity = get_config('format_aicourse', 'forcecardopacity');
+        if ($forceopacity !== false && $forceopacity !== '' && (int) $forceopacity >= 0) {
+            $cardopacity = (int) $forceopacity;
+        }
+        // Clamped rather than rejected: a value outside 0-100 is a typo, and the nearest valid
+        // shade is a better answer than silently ignoring what was asked for.
+        $cardopacity = max(0, min(100, $cardopacity));
+
+        // ACF-FIX-2.1.126: the section heading band, and the activity icon colour. Both default
+        // to the accent when unset, so they are published only when someone chooses otherwise.
+        foreach (
+            ['indexheadingcolour' => '--acf-index-heading-bg',
+                  'indexiconcolour' => '--acf-index-icon'] as $optname => $var
+        ) {
+            $val = isset($options[$optname]) ? trim((string) $options[$optname]) : '';
+            if ($val === '') {
+                $val = trim((string) get_config('format_aicourse', 'default' . $optname));
+            }
+            $forced = trim((string) get_config('format_aicourse', 'force' . $optname));
+            if ($forced !== '') {
+                $val = $forced;
+            }
+            if ($val !== '' && preg_match('/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/', $val)) {
+                $css .= $var . ':' . $val . ';';
+            }
+        }
+
+        // ACF-FIX-2.1.125: the course index surface, resolved the same way. Left unset it is not
+        // published at all, and the stylesheet falls through to the card colour -- so the two match
+        // by default and only diverge if someone asks them to.
+        $indexcolour = isset($options['indexcolour']) ? trim((string) $options['indexcolour']) : '';
+        if ($indexcolour === '') {
+            $indexcolour = trim((string) get_config('format_aicourse', 'defaultindexcolour'));
+        }
+        $forceindex = trim((string) get_config('format_aicourse', 'forceindexcolour'));
+        if ($forceindex !== '') {
+            $indexcolour = $forceindex;
+        }
+        $indexopacity = isset($options['indexopacity']) ? (int) $options['indexopacity'] : -1;
+        if ($indexopacity < 0) {
+            $indexopacity = (int) get_config('format_aicourse', 'defaultindexopacity');
+        }
+        $forceindexop = get_config('format_aicourse', 'forceindexopacity');
+        if ($forceindexop !== false && $forceindexop !== '' && (int) $forceindexop >= 0) {
+            $indexopacity = (int) $forceindexop;
+        }
+        $indexopacity = max(0, min(100, $indexopacity));
+        if ($indexcolour !== '' && preg_match('/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/', $indexcolour)) {
+            $css .= '--acf-index-bg:color-mix(in srgb,' . $indexcolour . ' '
+                . $indexopacity . '%,#fff);';
+        }
+
+        if ($cardcolour !== '' && preg_match('/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/', $cardcolour)) {
+            // Mixing with color-mix rather than an alpha channel: the card sits on the page background, and an
+            // alpha would let whatever is behind it show through -- including the banner where they
+            // overlap on scroll. Mixing toward white keeps the card opaque at any strength.
+            $css .= '--acf-surface-card:color-mix(in srgb,' . $cardcolour . ' '
+                . $cardopacity . '%,#fff);';
+        }
         if (isset($options['herobannerfade']) && $options['herobannerfade'] !== '') {
             $fade = max(0, min(100, (int) $options['herobannerfade']));
             $css .= '--acf-hero-wash-tint:' . $fade . '%;';
@@ -269,19 +343,6 @@ class format_aicourse extends format_topics {
             } else if ($hidenav === 2) {
                 $page->add_body_class('aicourse-hidenav-all');
             }
-            // ACF-FIX-2.1.103: full-width banner. A plain on/off rather than three states -- it is
-            // a layout choice for the course, not something to vary by who is looking.
-            $fw = isset($navopts['herofullwidth']) ? (int) $navopts['herofullwidth'] : -1;
-            if ($fw < 0) {
-                $fw = (int) (get_config('format_aicourse', 'defaultherofullwidth') ?: 0);
-            }
-            $forcefw = get_config('format_aicourse', 'forceherofullwidth');
-            if ($forcefw !== false && $forcefw !== '' && (int) $forcefw >= 0) {
-                $fw = (int) $forcefw;
-            }
-            if ($fw === 1) {
-                $page->add_body_class('aicourse-hero-fullwidth');
-            }
             // ACF-FIX-2.1.102: the General section. Same three states as its neighbours.
             $gen = isset($navopts['hidegeneral']) ? (int) $navopts['hidegeneral'] : -1;
             if ($gen < 0) {
@@ -295,6 +356,41 @@ class format_aicourse extends format_topics {
                 $page->add_body_class('aicourse-hidegeneral-students');
             } else if ($gen === 2) {
                 $page->add_body_class('aicourse-hidegeneral-all');
+            }
+            // ACF-FIX-2.1.130: the estimated-time pills, four places, resolved in one loop rather
+            // than four near-identical blocks.
+            foreach (
+                [
+                'hidetimeindex' => 'aicourse-notime-index',
+                'hidetimesectioncards' => 'aicourse-notime-sectioncards',
+                'hidetimeactivitycards' => 'aicourse-notime-activitycards',
+                'hidetimetotal' => 'aicourse-notime-total',
+                ] as $timeopt => $timeclass
+            ) {
+                $tv = isset($navopts[$timeopt]) ? (int) $navopts[$timeopt] : -1;
+                if ($tv < 0) {
+                    $tv = (int) (get_config('format_aicourse', 'default' . $timeopt) ?: 0);
+                }
+                $tf = get_config('format_aicourse', 'force' . $timeopt);
+                if ($tf !== false && $tf !== '' && (int) $tf >= 0) {
+                    $tv = (int) $tf;
+                }
+                if ($tv === 1) {
+                    $page->add_body_class($timeclass);
+                }
+            }
+            // ACF-FIX-2.1.144: the sticky banner. On unless switched off.
+            $sticky = isset($navopts['herosticky']) ? (int) $navopts['herosticky'] : -1;
+            if ($sticky < 0) {
+                $stickydefault = get_config('format_aicourse', 'defaultherosticky');
+                $sticky = ($stickydefault === false || $stickydefault === '') ? 1 : (int) $stickydefault;
+            }
+            $forcesticky = get_config('format_aicourse', 'forceherosticky');
+            if ($forcesticky !== false && $forcesticky !== '' && (int) $forcesticky >= 0) {
+                $sticky = (int) $forcesticky;
+            }
+            if ($sticky === 1) {
+                $page->add_body_class('aicourse-hero-sticky');
             }
             // ACF-FIX-2.1.80: the logo band. Same three states as the settings around it.
             $imm = isset($navopts['immersive']) ? (int) $navopts['immersive'] : -1;
@@ -523,14 +619,58 @@ class format_aicourse extends format_topics {
                 'default' => $d('hidesecondarynav', 2),
                 'type' => PARAM_INT,
             ],
-            // ACF-FIX-2.1.103: banner spans the full content width with no gap above it.
-            'herofullwidth' => [
-                'default' => $d('herofullwidth', 0),
-                'type' => PARAM_INT,
-            ],
             // ACF-FIX-2.1.102: hide section 0 ("General") from the course index.
             'hidegeneral' => [
                 'default' => $d('hidegeneral', 0),
+                'type' => PARAM_INT,
+            ],
+            // ACF-FIX-2.1.130: where the estimated-time pills appear. 1 hides.
+            'hidetimeindex' => [
+                'default' => $d('hidetimeindex', 0),
+                'type' => PARAM_INT,
+            ],
+            'hidetimesectioncards' => [
+                'default' => $d('hidetimesectioncards', 0),
+                'type' => PARAM_INT,
+            ],
+            'hidetimeactivitycards' => [
+                'default' => $d('hidetimeactivitycards', 0),
+                'type' => PARAM_INT,
+            ],
+            'hidetimetotal' => [
+                'default' => $d('hidetimetotal', 0),
+                'type' => PARAM_INT,
+            ],
+            // ACF-FIX-2.1.144: the banner follows the page as it scrolls. 1 = sticky, 0 = not.
+            'herosticky' => [
+                'default' => $d('herosticky', 1),
+                'type' => PARAM_INT,
+            ],
+            // ACF-FIX-2.1.126: the section heading band and the activity icon colour.
+            'indexheadingcolour' => [
+                'default' => $d('indexheadingcolour', ''),
+                'type' => PARAM_TEXT,
+            ],
+            'indexiconcolour' => [
+                'default' => $d('indexiconcolour', ''),
+                'type' => PARAM_TEXT,
+            ],
+            // ACF-FIX-2.1.125: the course index surface. Empty follows the card colour.
+            'indexcolour' => [
+                'default' => $d('indexcolour', ''),
+                'type' => PARAM_TEXT,
+            ],
+            'indexopacity' => [
+                'default' => $d('indexopacity', -1),
+                'type' => PARAM_INT,
+            ],
+            // ACF-FIX-2.1.124: the card surface colour and how strongly it is applied.
+            'cardcolour' => [
+                'default' => $d('cardcolour', ''),
+                'type' => PARAM_TEXT,
+            ],
+            'cardopacity' => [
+                'default' => $d('cardopacity', -1),
                 'type' => PARAM_INT,
             ],
             // ACF-FIX-2.1.85: the course index header band colour, '#rrggbb' or '' to follow the
@@ -735,18 +875,6 @@ class format_aicourse extends format_topics {
                         ],
                     ],
                 ],
-                'herofullwidth' => [
-                    'label' => get_string('herofullwidth', 'format_aicourse'),
-                    'help' => 'herofullwidth',
-                    'help_component' => 'format_aicourse',
-                    'element_type' => 'select',
-                    'element_attributes' => [
-                        [
-                            0 => get_string('herofullwidth_contained', 'format_aicourse'),
-                            1 => get_string('herofullwidth_full', 'format_aicourse'),
-                        ],
-                    ],
-                ],
                 'hidegeneral' => [
                     'label' => get_string('hidegeneral', 'format_aicourse'),
                     'help' => 'hidegeneral',
@@ -759,6 +887,92 @@ class format_aicourse extends format_topics {
                             2 => get_string('hidesecondarynav_all', 'format_aicourse'),
                         ],
                     ],
+                ],
+                'hidetimeindex' => [
+                    'label' => get_string('hidetimeindex', 'format_aicourse'),
+                    'help' => 'hidetimeindex',
+                    'help_component' => 'format_aicourse',
+                    'element_type' => 'select',
+                    'element_attributes' => [[
+                        0 => get_string('hidesecondarynav_show', 'format_aicourse'),
+                        1 => get_string('hidetime_hide', 'format_aicourse'),
+                    ]],
+                ],
+                'hidetimesectioncards' => [
+                    'label' => get_string('hidetimesectioncards', 'format_aicourse'),
+                    'help' => 'hidetimesectioncards',
+                    'help_component' => 'format_aicourse',
+                    'element_type' => 'select',
+                    'element_attributes' => [[
+                        0 => get_string('hidesecondarynav_show', 'format_aicourse'),
+                        1 => get_string('hidetime_hide', 'format_aicourse'),
+                    ]],
+                ],
+                'hidetimeactivitycards' => [
+                    'label' => get_string('hidetimeactivitycards', 'format_aicourse'),
+                    'help' => 'hidetimeactivitycards',
+                    'help_component' => 'format_aicourse',
+                    'element_type' => 'select',
+                    'element_attributes' => [[
+                        0 => get_string('hidesecondarynav_show', 'format_aicourse'),
+                        1 => get_string('hidetime_hide', 'format_aicourse'),
+                    ]],
+                ],
+                'hidetimetotal' => [
+                    'label' => get_string('hidetimetotal', 'format_aicourse'),
+                    'help' => 'hidetimetotal',
+                    'help_component' => 'format_aicourse',
+                    'element_type' => 'select',
+                    'element_attributes' => [[
+                        0 => get_string('hidesecondarynav_show', 'format_aicourse'),
+                        1 => get_string('hidetime_hide', 'format_aicourse'),
+                    ]],
+                ],
+                'herosticky' => [
+                    'label' => get_string('herosticky', 'format_aicourse'),
+                    'help' => 'herosticky',
+                    'help_component' => 'format_aicourse',
+                    'element_type' => 'select',
+                    'element_attributes' => [[
+                        0 => get_string('herosticky_no', 'format_aicourse'),
+                        1 => get_string('herosticky_yes', 'format_aicourse'),
+                    ]],
+                ],
+                'indexheadingcolour' => [
+                    'label' => get_string('indexheadingcolour', 'format_aicourse'),
+                    'help' => 'indexheadingcolour',
+                    'help_component' => 'format_aicourse',
+                    'element_type' => 'text',
+                ],
+                'indexiconcolour' => [
+                    'label' => get_string('indexiconcolour', 'format_aicourse'),
+                    'help' => 'indexiconcolour',
+                    'help_component' => 'format_aicourse',
+                    'element_type' => 'text',
+                ],
+                'indexcolour' => [
+                    'label' => get_string('indexcolour', 'format_aicourse'),
+                    'help' => 'indexcolour',
+                    'help_component' => 'format_aicourse',
+                    'element_type' => 'text',
+                ],
+                'indexopacity' => [
+                    'label' => get_string('indexopacity', 'format_aicourse'),
+                    'help' => 'indexopacity',
+                    'help_component' => 'format_aicourse',
+                    'element_type' => 'text',
+                ],
+                'cardcolour' => [
+                    'label' => get_string('cardcolour', 'format_aicourse'),
+                    'help' => 'cardcolour',
+                    'help_component' => 'format_aicourse',
+                    'element_type' => 'text',
+                ],
+                'cardopacity' => [
+                    'label' => get_string('cardopacity', 'format_aicourse'),
+                    'help' => 'cardopacity',
+                    'help_component' => 'format_aicourse',
+                    'element_type' => 'text',
                 ],
                 'playerheadercolour' => [
                     'label' => get_string('playerheadercolour', 'format_aicourse'),

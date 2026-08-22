@@ -99,10 +99,24 @@ class before_footer_html_generation {
                 // That is how the Course format section came to open only intermittently: the form's own
                 // collapse behaviour was competing with scripts that had no business running.
                 //
-                // Restricted to the pages this format actually draws: the course itself, its sections, and
-                // activity pages within it.
+                // Restricted to the pages this format actually draws: the course itself, its
+                // sections, and activity pages within it.
+                //
+                // ACF-FIX-2.1.148: grade pages join that list. They are inside the course and they
+                // render the same course index, so leaving them out meant a learner opening their
+                // grades saw the panel revert to Moodle's plain list -- no activity icons, no
+                // durations, no completion ticks -- and then get them back on returning to the
+                // course. The panel should not change shape depending on which page of a course
+                // someone is on.
+                //
+                // Narrow on purpose. This guard exists because the hook fires wherever $COURSE is
+                // set, which put five modules on the course settings form and made the Course
+                // format section open only intermittently. `grade-report-` is added rather than
+                // anything broader for that reason.
                 $pagetype = (string) $PAGE->pagetype;
-                $isformatpage = strpos($pagetype, 'course-view') === 0 || strpos($pagetype, 'mod-') === 0;
+                $isformatpage = strpos($pagetype, 'course-view') === 0
+                    || strpos($pagetype, 'mod-') === 0
+                    || strpos($pagetype, 'grade-report-') === 0;
                 if (!$isformatpage) {
                     return;
                 }
