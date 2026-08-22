@@ -175,11 +175,31 @@ const bindTicks = async(config) => {
         if (!data) {
             return;
         }
+
+        // ACF-FIX-2.1.179: the WHOLE ROW opens the course index's panel, not just the tick.
+        //
+        // 2.1.178 bound the panel to the tick and gave the name a plain `title` summary -- type,
+        // time, status. That is a different, smaller thing than what the course index shows, and
+        // having two hover behaviours on one row taught the learner that hovering here means
+        // something other than hovering there. The card is meant to read as the index; a summary
+        // tooltip is not the index's tooltip.
+        //
+        // Both anchors are bound. The link is what a pointer will actually find -- it is the whole
+        // row -- and the tick is kept because bindTip makes it focusable, which is what puts this
+        // information within reach of a keyboard. Whichever is entered first owns the panel;
+        // showTip() swaps owners rather than stacking, so crossing from one to the other inside a
+        // single row does not flicker.
+        //
+        // The link keeps its server-rendered `title` as the no-JavaScript fallback. bindTip stashes
+        // and restores it around the panel, so the browser's own tooltip never appears underneath.
+        const link = row.querySelector('.aicourse-card-activity-link');
         const mark = row.querySelector('.aicourse-card-activity-state');
-        // The tick becomes focusable inside bindTip, which is what makes this reachable without a
-        // mouse. It sits inside the row's link, so a click on it still follows the activity link --
-        // the tooltip is additional information, not a competing control.
-        bindTip(mark, data, strings);
+        if (link) {
+            bindTip(link, data, strings);
+        }
+        if (mark) {
+            bindTip(mark, data, strings);
+        }
     });
 };
 

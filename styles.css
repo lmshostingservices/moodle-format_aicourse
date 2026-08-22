@@ -3327,21 +3327,24 @@ body.format-aicourse .aicourse-card .aicourse-card-progress {
 
 body.format-aicourse .aicourse-card .aicourse-card-progress-bar {
     display: block;
-    inline-size: 68px;
-    block-size: 5px;
-    border-radius: var(--acf-radius-full);
-    /* ACF-FIX-2.1.178: --acf-border-subtle, not --acf-surface-sunken. Sunken is #f8fafc, which on
-       a white card is invisible -- so the "bar" rendered as a floating green lozenge with no
-       trough behind it, and the ring as an arc with no circle. A progress indicator with no track
-       cannot show what is LEFT, which is half of what it is for. This token is a translucent ink,
-       so it stays correct in dark mode without a second declaration. */
-    background: var(--acf-border-subtle);
+    inline-size: 76px;
+    /* ACF-FIX-2.1.178b: the hero bar's own numbers, declaration for declaration.
+       --acf-radius-pill (999px) and NOT --acf-radius-full, which is `50%` -- a percentage radius
+       resolves against the box's own dimensions, so on a 34x5 fill it drew a 17x2.5 ellipse. That
+       is the pointed lens shape that did not look like a progress bar, because it was not one.
+       999px clamps to a true capsule at any width, which is why the hero uses it.
+       6px and --acf-track match the hero as well: the card is reporting the same quantity with the
+       same instrument, so the instrument is the same declarations rather than similar ones. */
+    block-size: 6px;
+    border-radius: var(--acf-radius-pill);
+    background: var(--acf-track);
     overflow: hidden;
 }
 
 body.format-aicourse .aicourse-card .aicourse-card-progress-bar-fill {
     display: block;
     block-size: 100%;
+    /* inherit, so the fill's caps match the trough's -- and the trough is now a real pill. */
     border-radius: inherit;
     background: var(--acf-status-done-line);
     /* Matches the hero bar's own fill duration so the two animate as one system.
@@ -3380,8 +3383,8 @@ body.format-aicourse .aicourse-card-ring-fill {
 }
 
 body.format-aicourse .aicourse-card-ring-track {
-    /* Same reasoning as the bar's trough above. */
-    stroke: var(--acf-border-subtle);
+    /* The hero ring's track token, for the same reason the bar uses the hero bar's. */
+    stroke: var(--acf-track);
 }
 
 body.format-aicourse .aicourse-card-ring-fill {
