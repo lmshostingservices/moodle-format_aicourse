@@ -341,7 +341,14 @@ body.format-aicourse,
     /* --- Text (contrast measured against --acf-surface-raised) ----------- */
     --acf-text-primary: var(--acf-neutral-800);   /* 14.63:1 */
     --acf-text-secondary: var(--acf-neutral-600);   /*  7.58:1 */
-    --acf-text-tertiary: var(--acf-neutral-500);   /*  4.76:1 — the FLOOR */
+    /* ACF-FIX-2.1.170: was --acf-neutral-500 (#64748b). 4.76:1 is a true measurement and it was
+       taken against the wrong thing: --acf-surface-raised is white, but this token is also used on
+       the sidebar header (#eceff4) and other tinted surfaces, where the same colour measures
+       4.13:1 and fails WCAG 2.2 AA for body text. The sidebar's duration line ("2 hr 40 min") was
+       shipping at 4.13:1. The floor now clears 4.5:1 on every surface this token is used on --
+       4.92:1 on the sidebar, 5.42:1 sunken, 5.67:1 raised -- while staying a clear step lighter
+       than --acf-text-secondary (7.58:1), so the type hierarchy is unchanged. */
+    --acf-text-tertiary: #5b6879;   /* 4.92:1 on the DARKEST surface it is used on — the FLOOR */
     --acf-text-inverse: var(--acf-neutral-0);
     --acf-text-brand: var(--acf-brand);         /*  9.72:1 at the default navy */
     --acf-text-on-brand: var(--acf-neutral-0);
@@ -2568,7 +2575,15 @@ body.format-aicourse .aicourse-cards-grid {
        with three sections in a wide container left a ragged gap to the right of the last card
        while the hero above ran the full width. auto-fit collapses the empty tracks and lets the
        real cards share the space. */
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--acf-card-min)), 1fr));
+    /* ACF-FIX-2.1.177: an explicit column count, not auto-fit.
+       auto-fit was chosen in 2.1.14 to stop a course with three sections leaving a ragged gap to
+       the right of the last card. It does that by collapsing the empty tracks and letting the real
+       cards share the whole row -- which is fine at five sections and wrong at two, where each card
+       inflated to ~700px and a section with four activities in it rendered as a mostly empty slab.
+       Reported as "the section cards are too big - do 3 cards across not 2".
+       A card is a summary. Its width should come from the layout, not from how many of them the
+       course happens to have. Three across on a desktop, two on a tablet, one on a phone. */
+    grid-template-columns: minmax(0, 1fr);
     gap: var(--acf-space-4);
     /* ACF-FIX-2.1.38: start, not stretch.
        Stretch gives every card in a row the height of the tallest, which is right when their
@@ -2579,6 +2594,46 @@ body.format-aicourse .aicourse-cards-grid {
        size of what is in them. The footer keeps its `margin-block-start: auto`, so on the cards
        that DO still share a row height it stays pinned to the bottom. */
     align-items: start;
+}
+
+@media (min-width: 768px) {
+    body.format-aicourse .aicourse-cards-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (min-width: 1400px) {
+    body.format-aicourse .aicourse-cards-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+/* The viewport tiers above are the floor. Where container queries are supported the count is
+   driven by the space the grid ACTUALLY has, which is the honest measurement: opening the course
+   index takes 342px off the content column without changing the viewport by a pixel, so a
+   viewport-only rule keeps three columns in a space that now only fits two. The container is
+   already declared on .aicourse-cards-container (container-type: inline-size, name acf-cards);
+   this is the first thing to use it. */
+@supports (container-type: inline-size) {
+    body.format-aicourse .aicourse-cards-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    /* 560px, not 700: at a 1024px viewport with the course index open the grid has 634px, which a
+       700px threshold pushed to a SINGLE 634px card -- the exact "too big" complaint, reproduced by
+       the fix meant to solve it. 560 is two 264px cards plus the gap, which is the narrowest a
+       two-up row can be while each card still reads as a card. */
+    @container acf-cards (min-width: 560px) {
+        body.format-aicourse .aicourse-cards-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @container acf-cards (min-width: 1080px) {
+        body.format-aicourse .aicourse-cards-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+    }
 }
 
 @media (min-width: 992px) {
@@ -3136,6 +3191,232 @@ body.format-aicourse .aicourse-card-activity-state.aicourse-actstate-none {
     border: 0;
     border-radius: 0;
     background: var(--acf-border-strong);
+}
+
+
+/* ==========================================================================
+   SECTION CARD ROWS, BROUGHT LEVEL WITH THE COURSE INDEX (ACF-FIX-2.1.178)
+   --------------------------------------------------------------------------
+   The card listed a coloured dot and a name. The course index sitting beside it
+   on the same screen listed the module's own icon, an estimated time and a
+   completion tick. Two descriptions of the same activities in two different
+   visual languages, a few hundred pixels apart.
+
+   The row is brought up to the index rather than the index down to the row. The
+   sizes below are the index's own numbers (17px tick, 2xs time, 10px glyph), not
+   numbers picked to look similar -- so the two lists read as one system.
+
+   Order in the row is deliberate: icon, name, time, state. Identity first, then
+   what it is, then what it costs, then whether it is done. The state is last
+   because it is the thing the eye scans DOWN the column for, and a column only
+   forms if the item is at a fixed edge.
+   ========================================================================== */
+
+body.format-aicourse .aicourse-card .aicourse-card-activity-icon {
+    flex: 0 0 auto;
+    inline-size: 18px;
+    block-size: 18px;
+    object-fit: contain;
+    /* Module icons are supplied at wildly different weights and a few are nearly
+       black. A slight lift stops the icon column out-shouting the names beside
+       it without washing out the ones that are already pale. */
+    opacity: 0.9;
+}
+
+/* The estimated time. Pushed to the inline-end by its own auto margin rather
+   than by a spacer on the name, so a row with no time still puts the state
+   marker in exactly the same place -- the column stays a column. */
+body.format-aicourse .aicourse-card .aicourse-card-activity-time {
+    flex: 0 0 auto;
+    margin-inline-start: auto;
+    padding-inline: 6px;
+    padding-block: 1px;
+    border-radius: var(--acf-radius-full);
+    background: var(--acf-surface-sunken);
+    font-size: var(--acf-font-size-2xs);
+    font-variant-numeric: tabular-nums;
+    color: var(--acf-text-tertiary);
+    white-space: nowrap;
+}
+
+/* The state marker becomes the index's tick: a 17px ring that fills green when
+   the activity is done. `:where()` keeps this at (0,2,0) so the per-state rules
+   above still win on colour. */
+body.format-aicourse .aicourse-card .aicourse-card-activity-state {
+    /* A row with no time has no auto margin ahead of this, so it carries its
+       own -- otherwise the marker would sit against the name on those rows and
+       break the column it is meant to form. */
+    margin-inline-start: auto;
+}
+
+body.format-aicourse .aicourse-card :is(
+.aicourse-card-activity-state.aicourse-actstate-completed,
+.aicourse-card-activity-state.aicourse-actstate-not_started,
+.aicourse-card-activity-state.aicourse-actstate-in_progress) {
+    position: relative;
+    inline-size: 17px;
+    block-size: 17px;
+    border-width: 2px;
+    border-style: solid;
+    border-radius: var(--acf-radius-full);
+    background: transparent;
+    border-color: var(--acf-border-strong);
+    box-shadow: none;
+}
+
+body.format-aicourse .aicourse-card .aicourse-card-activity-state.aicourse-actstate-completed {
+    border-color: var(--acf-status-done-line);
+    background: var(--acf-status-done-line);
+}
+
+/* The check is drawn rather than marked up: two borders of an empty box, rotated.
+   The alternative is an inline SVG in every row of every card, which is a lot of
+   bytes for a tick -- and the row already carries its state in the link's
+   accessible name, so this glyph is decoration either way. */
+body.format-aicourse .aicourse-card .aicourse-card-activity-state.aicourse-actstate-completed::after {
+    content: "";
+    position: absolute;
+    inset-block-start: 2px;
+    inset-inline-start: 4.5px;
+    inline-size: 4px;
+    block-size: 7px;
+    border: solid var(--acf-surface-raised);
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+body.format-aicourse .aicourse-card .aicourse-card-activity-state.aicourse-actstate-in_progress {
+    border-color: var(--acf-status-doing-solid);
+}
+
+body.format-aicourse .aicourse-card .aicourse-card-activity-state.aicourse-actstate-in_progress::after {
+    content: "";
+    position: absolute;
+    inset: 3px;
+    border-radius: var(--acf-radius-full);
+    background: var(--acf-status-doing-solid);
+}
+
+/* Hovering the icon or the tick must not change what the row means, so the whole
+   row keeps one hover treatment and these two just come up to full strength. */
+body.format-aicourse .aicourse-card .aicourse-card-activity-link:hover .aicourse-card-activity-icon {
+    opacity: 1;
+}
+
+
+/* --- The card's progress: the hero's indicator, at card scale ---------------
+   The footer showed a flat "33%" pill. The hero shows a ring that fills and a
+   number that counts up, and the card is reporting the same quantity -- so it
+   now uses the same instrument. A learner reads one thing in two places rather
+   than learning two notations for progress in one product. */
+body.format-aicourse .aicourse-card .aicourse-card-progress {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--acf-space-2);
+    text-decoration: none;
+    padding: 0;
+    background: none;
+    border: 0;
+}
+
+/* ACF-FIX-2.1.178: the .aicourse-progress-badge class is deliberately NOT on this element.
+   That class draws a filled pill via ::before, and with the ring and bar inside it the pill
+   rendered as a rounded slab BEHIND both of them -- which read as the ring overlapping the bar.
+   The ring is the indicator now; a badge around a badge is two states for one fact. Anything
+   still carrying .aicourse-progress-badge elsewhere is unaffected. */
+
+body.format-aicourse .aicourse-card .aicourse-card-progress-bar {
+    display: block;
+    inline-size: 68px;
+    block-size: 5px;
+    border-radius: var(--acf-radius-full);
+    /* ACF-FIX-2.1.178: --acf-border-subtle, not --acf-surface-sunken. Sunken is #f8fafc, which on
+       a white card is invisible -- so the "bar" rendered as a floating green lozenge with no
+       trough behind it, and the ring as an arc with no circle. A progress indicator with no track
+       cannot show what is LEFT, which is half of what it is for. This token is a translucent ink,
+       so it stays correct in dark mode without a second declaration. */
+    background: var(--acf-border-subtle);
+    overflow: hidden;
+}
+
+body.format-aicourse .aicourse-card .aicourse-card-progress-bar-fill {
+    display: block;
+    block-size: 100%;
+    border-radius: inherit;
+    background: var(--acf-status-done-line);
+    /* Matches the hero bar's own fill duration so the two animate as one system.
+       The width is written server-side, so this animates from the 0 set below. */
+    transition: inline-size 1.8s cubic-bezier(0.22, 1, 0.36, 1),
+        width 1.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+body.format-aicourse .aicourse-card-ring {
+    position: relative;
+    display: grid;
+    place-items: center;
+    /* ACF-FIX-2.1.178: 40px, not 34. The figure sits INSIDE the ring, and the widest it gets is
+       "100%" -- which at 34px with a 3.5 stroke leaves 27px of usable middle and pushed the text
+       out past the arc. 40px leaves 33px, which fits it with room to spare at every locale's
+       percent notation. */
+    inline-size: 42px;
+    block-size: 42px;
+    flex: none;
+}
+
+body.format-aicourse .aicourse-card-ring-svg {
+    position: absolute;
+    inset: 0;
+    inline-size: 100%;
+    block-size: 100%;
+    /* 12 o'clock start, clockwise -- the hero ring's orientation. A ring that
+       starts at 3 o'clock reads as a different control. */
+    transform: rotate(-90deg);
+}
+
+body.format-aicourse .aicourse-card-ring-track,
+body.format-aicourse .aicourse-card-ring-fill {
+    fill: none;
+    stroke-width: 3.5;
+}
+
+body.format-aicourse .aicourse-card-ring-track {
+    /* Same reasoning as the bar's trough above. */
+    stroke: var(--acf-border-subtle);
+}
+
+body.format-aicourse .aicourse-card-ring-fill {
+    stroke: var(--acf-status-done-line);
+    stroke-linecap: round;
+    transition: stroke-dasharray 1.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+body.format-aicourse .aicourse-card-ring-text {
+    position: relative;
+    /* Stated in px, not a token: this has to fit a fixed 33px aperture, so it must not move when
+       a token is retuned for body copy. */
+    font-size: 10px;
+    letter-spacing: -0.01em;
+    font-weight: var(--acf-weight-bold);
+    font-variant-numeric: tabular-nums;
+    color: var(--acf-text-primary);
+    line-height: 1;
+}
+
+/* Nothing moves for a reader who has asked for that. The end state is written
+   directly, which is the information; the sweep was never the information. */
+@media (prefers-reduced-motion: reduce) {
+    body.format-aicourse .aicourse-card-ring-fill,
+    body.format-aicourse .aicourse-card .aicourse-card-progress-bar-fill {
+        transition: none;
+    }
+}
+
+/* Below the two-column breakpoint the bar is the first thing to go: the ring
+   carries the same figure in a quarter of the width. */
+@media (max-width: 480px) {
+    body.format-aicourse .aicourse-card .aicourse-card-progress-bar {
+        display: none;
+    }
 }
 
 /* The "+N" overflow chip, the same idiom the footer progress dots already use
@@ -10756,7 +11037,8 @@ body.aicourse-index-merged {
     display: flex;
     align-items: center;
     flex: none;
-    gap: 2px;
+    /* ACF-FIX-2.1.175: 0, was 2px. The two controls read as one pair. */
+    gap: 0;
     margin-inline-start: var(--acf-space-2);
     /* ACF-FIX-2.1.165: no divider rule. It was drawn to separate "go somewhere else" from "act on
        this panel" when there were three nav icons and two controls -- five things that needed
@@ -10839,7 +11121,16 @@ body.aicourse-index-merged .aicourse-player-logo {
        and flex duly took the space out of the logo: 80px, then 122px, never the size asked for. The
        row is budgeted so nothing has to give (logo 170 + gap 6 + nav 30 + controls 82 = 288 in a
        ~300px row), so the logo is now simply the size it is stated to be. */
-    flex: 0 0 auto;
+    /* ACF-FIX-2.1.170: shrink restored. `0 0 auto` was correct for the stated 342px panel and wrong
+       everywhere else -- Moodle themes ship the course index anywhere from 285px up and the user
+       can drag it narrower still. With no shrink here the row simply grew past the panel and the
+       close button was pushed outside it and clipped: the exact 2.1.154 fault, live again below a
+       327px panel, invisible until the permanent 8px overflow reading was removed. The logo is the
+       only item on this row that can afford to give (the nav is the sidebar's way out, the controls
+       are how the panel is closed), so it is the one that gives. `object-fit: contain` scales the
+       image into the narrower box instead of cropping it. */
+    flex: 0 1 auto;
+    min-inline-size: 0;
     /* ACF-FIX-2.1.168b: 195px — half again as big as the 130px it was rendering at.
        The budget, stated so the next person can check it rather than re-derive it:
          panel 342 − header padding 2x12 = 318 usable
@@ -10849,7 +11140,8 @@ body.aicourse-index-merged .aicourse-player-logo {
          logo ................................. 208 available, 195 taken
        No percentage cap: a percentage of a box whose width depends on this element is how the
        previous three attempts each ended up smaller than the number they asked for. */
-    inline-size: 187px;
+    /* ACF-FIX-2.1.175: 205px, up from 187. The row is budgeted below and still fits. */
+    inline-size: 205px;
     max-inline-size: none;
     /* block-size is explicit, so a max-block-size beside it can only ever contradict it -- and did:
        the base rule's 30px cap, then a 32px cap here, both silently winning over a 34px request.
@@ -10864,11 +11156,18 @@ body.aicourse-index-merged .aicourse-player-logo {
 }
 
 body.aicourse-index-merged .aicourse-player-drawerctl {
-    margin-inline-start: 8px;
-    /* ACF-FIX-2.1.168: pulled out into the header's own right-hand padding so the controls sit
-       against the panel edge rather than floating 16px inside it. With one nav icon instead of
-       three there is no longer a cluster here that needs framing. */
-    margin-inline-end: calc(var(--acf-space-3) * -1 + 4px);
+    /* ACF-FIX-2.1.175: 2px, was 8. With one nav icon and two controls this row holds three things
+       that all mean "act on this panel or leave it", and an 8px seam in the middle of them read as
+       two separate groups. 2px matches the gap INSIDE this control pair, so the three now sit as
+       one cluster hard against the panel's right edge. */
+    margin-inline-start: 2px;
+    /* ACF-FIX-2.1.170: the -8px end margin that was here is gone. It pulled the controls out into
+       the header's right padding, which left the close button 5px from the panel edge while the
+       logo sat 12px in from the left -- an asymmetry that reads as a mistake -- and it made the row
+       report an 8px scroll overflow permanently, masking the width at which a real clip would
+       begin. The nav's `margin-inline-start: auto` already pushes this group as far right as the
+       row allows, so the correct inset falls out of the header's own padding at any drawer width. */
+    margin-inline-end: 0;
 }
 
 /* Five controls in a 310px row is tight, so they come down a step in merged mode. 30px still clears
@@ -10888,8 +11187,10 @@ body.aicourse-index-merged .aicourse-player-nav a {
 .aicourse-player-drawerctl :is(.aicourse-player-close, .drawertoggle, .btn, .btn-icon) {
     display: grid;
     place-items: center;
-    inline-size: 32px;
-    block-size: 32px;
+    /* ACF-FIX-2.1.175: 30px, was 32 -- matching the nav icon beside them exactly, so the three
+       boxes are one rhythm. Still clears the WCAG 2.2 AA 24px target minimum. */
+    inline-size: 30px;
+    block-size: 30px;
     padding: 0;
     border: 0;
     border-radius: var(--acf-radius-md);
@@ -10977,8 +11278,43 @@ body.aicourse-index-merged .aicourse-player-drawerctl .dropdown-menu {
       to give it scale. It is given its own step up, which is what "the heading is too small" is
       asking for. */
 body.format-aicourse .aicourse-hero-banner .aicourse-hero-title-group .aicourse-hero-title {
-    font-size: clamp(1.375rem, 1rem + 1.6vw, 2rem);   /* 22 -> 32px */
     line-height: 1.15;
+}
+
+/* ACF-FIX-2.1.176: the activity title reads the COURSE title's own size token, at a specificity
+   nothing else on the page outranks. This is the fourth attempt at "the activity heading is too
+   small" and the first that addresses why the previous three failed.
+
+   FOUR rules were competing for this one property, and the smallest was winning:
+
+     (0,5,1)  ....has-image .aicourse-hero-title:not([class*="aicourse-title-"])
+                                                        --acf-hero-title-compact   max 26px
+     (0,4,1)  ....aicourse-hero-title-group .aicourse-hero-title                   max 32px
+     (0,4,1)  ....has-image .aicourse-hero-title        --acf-font-size-3xl        max 34px
+     (0,3,1)  .aicourse-hero-title.aicourse-title-xl    tier                       max 28px
+
+   The :not() rule scores highest, so on an activity page -- which emitted no tier class -- it won,
+   and the heading rendered at the COMPACT size on a banner that is not compact.
+
+   Adding the tier class in 2.1.172 was a real fix to a real gap and STILL did not solve this: all
+   it does is stop the :not() rule matching, after which the winner becomes a 32px rule -- and the
+   tier itself tops out at 28px, BELOW the compact size it was supposedly overriding. Three
+   attempts, each aimed at a different one of these four rules, none of them the one in charge.
+
+   The size is now stated once, here, last in the sheet, at (0,5,1), reading the same token the
+   course banner reads. The two headings match because they are the same declaration -- not because
+   two numbers were tuned to agree and will drift apart the next time either is touched. It no
+   longer depends on the tier class being emitted at all, so a stale template cache cannot bring
+   the small heading back. */
+body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image
+.aicourse-hero-title-group .aicourse-hero-title {
+    font-size: var(--acf-font-size-3xl);
+}
+
+/* Gradient mode: the course banner uses --acf-font-size-hero there, so this does too. */
+body.format-aicourse .aicourse-hero-banner:not(.aicourse-hero-has-image)
+.aicourse-hero-title-group .aicourse-hero-title {
+    font-size: var(--acf-font-size-hero);
 }
 
 /* The eyebrow keeps its place in the hierarchy: still clearly subordinate, but no longer so faint
@@ -12024,18 +12360,21 @@ body#page-admin-setting-formatsettingaicourse .acfs-head:focus-visible {
    Everything moves up roughly one step. The relationships are unchanged, so the
    hierarchy still reads — it is simply legible now. Stated in rem so a browser
    or OS text-size preference still scales all of it. */
+/* ACF-FIX-2.1.170: up one more step. 17/15/14 was legible; it was not confident, and the page has
+   width it was not spending. The measure is narrowed to compensate (62ch -> 58ch below), so the
+   line length in millimetres is close to unchanged -- the type is bigger, not the paragraph. */
 body#page-admin-setting-formatsettingaicourse #adminsettings .form-label label {
-    font-size: 1.0625rem;   /* 17px, was 15 */
-    line-height: 1.4;
+    font-size: 1.1875rem;   /* 19px, was 17 */
+    line-height: 1.35;
 }
 
 body#page-admin-setting-formatsettingaicourse #adminsettings .form-description {
-    font-size: 0.9375rem;   /* 15px, was 13 */
-    line-height: 1.65;
+    font-size: 1rem;        /* 16px, was 15 — matches Moodle's own body size */
+    line-height: 1.6;
 }
 
 body#page-admin-setting-formatsettingaicourse #adminsettings .form-defaultinfo {
-    font-size: 0.875rem;    /* 14px, was 12 */
+    font-size: 0.9375rem;   /* 15px, was 14 */
 }
 
 body#page-admin-setting-formatsettingaicourse #adminsettings .form-shortname {
@@ -12098,6 +12437,19 @@ body#page-admin-setting-formatsettingaicourse #adminsettings .acfs-intro h3 {
         flex-wrap: wrap;
         gap: 0.6rem;
         padding: 0.85rem;
+        /* ACF-FIX-2.1.170: start, not centre. On a phone the description under the title wraps to
+           three lines, so a centred icon floats down beside the second line and the title appears
+           to start from nowhere -- the row reads as broken alignment rather than as an icon and a
+           heading. Aligning to the start puts the icon back on the title's own line. */
+        align-items: flex-start;
+    }
+
+    /* The optical correction that goes with it: the icon box is 34px and the title's cap-height
+       starts a little below its own line box, so a hard top alignment sits the icon fractionally
+       high. 2px puts the two centres level. */
+    .acfs-head > .acfs-icon,
+    .acfs-head > [class*="acfs-ic"] {
+        margin-block-start: 2px;
     }
 
     .acfs-headtext {
@@ -12118,6 +12470,7 @@ body#page-admin-setting-formatsettingaicourse #adminsettings .acfs-intro h3 {
     :is(select, input[type="text"], input[type="password"], input[type="url"], textarea) {
         max-inline-size: 100%;
     }
+
 
     .acfs-preview {
         max-inline-size: 100%;
@@ -12215,18 +12568,6 @@ textarea) {
     border-radius: 10px;
 }
 
-body#page-admin-setting-formatsettingaicourse #adminsettings select {
-    /* The arrow, and the room for it. */
-    background-image: var(--acfs-chevron);
-    background-repeat: no-repeat;
-    background-position: right 0.85rem center;
-    background-size: 12px 8px;
-    padding-inline-end: 2.5rem;
-    appearance: none;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    cursor: pointer;
-}
 
 [dir="rtl"] body#page-admin-setting-formatsettingaicourse #adminsettings select {
     background-position: left 0.85rem center;
@@ -12246,7 +12587,10 @@ body#page-admin-setting-formatsettingaicourse #adminsettings textarea {
    are three steps apart, which is what lets the eye find the control without
    reading the prose first. */
 body#page-admin-setting-formatsettingaicourse #adminsettings .acfs-body .form-item {
-    padding-block: 1.6rem;
+    /* ACF-FIX-2.1.170: 1.35rem, was 1.6. The type and the illustration both went up a step, so the
+       row is taller on its own; keeping the old padding on top of that turns the panel into a
+       column of widely spaced islands. The divider does the separating. */
+    padding-block: 1.35rem;
 }
 
 body#page-admin-setting-formatsettingaicourse #adminsettings .acfs-body
@@ -12349,7 +12693,10 @@ body#page-admin-setting-formatsettingaicourse .acfs-sfig {
    narrower than the diagram is legible at. */
 @media (min-width: 1080px) {
     body#page-admin-setting-formatsettingaicourse #adminsettings .acfs-body .form-item {
-        grid-template-columns: minmax(0, 1fr) minmax(15rem, 20rem);
+        /* ACF-FIX-2.1.170: 24rem, was 20. The illustration is the thing on this page that explains
+           a setting fastest, and it was the smallest thing on the row -- a 320px picture beside
+           573px of prose. The left column still clears the 58ch measure below at every width. */
+        grid-template-columns: minmax(0, 1fr) minmax(17rem, 24rem);
     }
 
     body#page-admin-setting-formatsettingaicourse .acfs-sfig {
@@ -12358,11 +12705,18 @@ body#page-admin-setting-formatsettingaicourse .acfs-sfig {
         margin-block-start: 0.35rem;
     }
 
-    /* The prose keeps its own measure inside the wider left column. */
+    /* The prose keeps its own measure inside the wider left column. 58ch at 16px is the same
+       physical line length 62ch was at 15px, so the paragraph shape is unchanged by the type
+       going up a step -- the words are bigger, the column is not wider. */
     body#page-admin-setting-formatsettingaicourse #adminsettings .acfs-body .form-description {
-        max-inline-size: 62ch;
+        max-inline-size: 58ch;
     }
 }
+
+/* ACF-FIX-2.1.173: the 1500px tier that widened the illustration to 30rem is gone. It was written
+   to soak up empty width on a wide screen, which is treating the symptom -- the page now carries a
+   1120px measure (see "The page has a measure" below), so that width never arrives and a 30rem
+   wireframe would only push the prose column below its own measure. One cap, one column width. */
 
 /* --- The figure ----------------------------------------------------------- */
 .acfs-sfigone {
@@ -12383,9 +12737,10 @@ body#page-admin-setting-formatsettingaicourse .acfs-sfigone svg {
 /* ACF-FIX-2.1.167: 13px, not 11. These are the smallest labels on the page and the page has
    already been reported once as hard to read; a caption nobody can read is decoration. */
 .acfs-sfigone figcaption {
-    margin-block-start: 0.35rem;
+    margin-block-start: 0.4rem;
     color: var(--acfs-ink-2);
-    font-size: 0.8125rem;
+    /* ACF-FIX-2.1.170: 14px, was 13. Up with the rest of the page. */
+    font-size: 0.875rem;
     font-weight: 600;
     letter-spacing: 0.02em;
     text-align: center;
@@ -12402,9 +12757,9 @@ body#page-admin-setting-formatsettingaicourse .acfs-sfig-all {
 
 .acfs-sfignote {
     grid-column: 1 / -1;
-    margin: 0.3rem 0 0;
+    margin: 0.45rem 0 0;
     color: rgb(var(--c) / 1);
-    font-size: 0.8125rem;
+    font-size: 0.875rem;
     font-weight: 600;
     line-height: 1.35;
     text-align: center;
@@ -12415,12 +12770,15 @@ body#page-admin-setting-formatsettingaicourse .acfs-sfig-all {
    never hidden. A setting whose meaning is a layout should show the layout on
    the device most people are using. */
 @media (max-width: 1079px) {
+    /* ACF-FIX-2.1.170: 16rem / 28rem, up from 13 / 24. Both are still capped -- the diagram stays
+       an illustration rather than becoming a full-bleed picture -- but at 13rem the single
+       wireframe was 208px on a 390px phone and its internal detail was reading as texture. */
     body#page-admin-setting-formatsettingaicourse .acfs-sfig:not(.acfs-sfig-all) {
-        max-inline-size: 13rem;
+        max-inline-size: 16rem;
     }
 
     body#page-admin-setting-formatsettingaicourse .acfs-sfig-all {
-        max-inline-size: 24rem;
+        max-inline-size: 28rem;
         gap: 0.4rem;
     }
 }
@@ -12449,10 +12807,21 @@ body#page-admin-setting-formatsettingaicourse .acfs-sfig-all {
    what the :is() rules above score, and it is honest — a multi-select is not a
    dropdown and should not be given a dropdown's arrow. */
 body#page-admin-setting-formatsettingaicourse #adminsettings select:not([multiple]) {
-    padding-inline-end: 2.75rem;
+    /* ACF-FIX-2.1.170: this is now the ONLY place the chevron and its gutter are declared. There
+       were two rules for it -- a plain `select` block at (2,0,2) asking for 2.5rem/0.85rem and this
+       one at (2,1,2) asking for 2.75rem/0.9rem -- so every edit to the weaker one did nothing, and
+       the gutter reduction below was measured as having no effect. Seventh instance in this sheet
+       of the same duplicate-declaration trap; the weaker block is deleted rather than corrected.
+
+       2.1rem, not 2.75: a native select does not wrap or ellipsize, it stops mid-word, and on a
+       280px panel the longest option here was cut to "...own setti", which reads as a rendering
+       fault rather than as truncation. This buys back 11px. It does not fully solve it -- at 360px
+       a 32-character option cannot fit a 244px control at a legible size, and shrinking the type
+       to force it would trade a visible truncation for an illegible label. */
+    padding-inline-end: 2.1rem;
     background-image: var(--acfs-chevron);
     background-repeat: no-repeat;
-    background-position: right 0.9rem center;
+    background-position: right 0.7rem center;
     background-size: 12px 8px;
     appearance: none;
     -webkit-appearance: none;
@@ -12469,28 +12838,63 @@ select:not([multiple]) {
 
 /* --- The course-index open button stays reachable (ACF-FIX-2.1.167) --------
    Making the banner span the full width when the course index is closed put it
-   over the top-left corner of the page — which is exactly where Boost puts the
+   over the top-left corner of the page - which is exactly where the theme puts the
    button that opens the index again. The banner is `position: sticky` at
    `--acf-z-sticky` (20), so it won not because it was later but because it was
    higher, and the only way back into the course index disappeared underneath it.
 
-   The toggle is lifted above the banner rather than the banner being inset
-   around it: a banner that stops short of the corner is not full width, and
-   full width is the thing that was asked for. The button carries its own
-   background, so it reads perfectly well sitting on top of the image.
+   The toggle is lifted above the banner rather than the banner being inset around
+   it: a banner that stops short of the corner is not full width, and full width is
+   the thing that was asked for. The button carries its own background, so it reads
+   perfectly well sitting on top of the image.
 
-   Every selector core and Boost use for this control is listed, because the
-   markup has moved between Moodle versions and a control that vanishes is far
-   worse than a redundant selector. */
+   ACF-FIX-2.1.172 - DO NOT ADD `position` TO THIS RULE. Measured, from the live
+   activity page, not assumed:
+
+       .drawer-toggles  position: static   (wrapper, parent #topofscroll)
+       .drawer-toggler  position: fixed    x 0, y 71, 38x45
+       hero             y 61 - 181, full width
+
+   The toggler is FIXED. Two consequences, and two shipped bugs, one from each:
+
+   1. It is already a positioned box, so `z-index` applies to it as it stands. It
+      needs nothing else from us. 2.1.167-2.1.170 wrote `position: relative` here
+      "so z-index would work", which instead REPLACED `fixed` and dropped the button
+      into normal document flow. On an activity page that flow is the banner's own,
+      so the button rendered inside the banner beside the nav icons rather than
+      pinned at the page edge. That is the "activity page does not match the section
+      page" report.
+
+   2. Removing the position override is correct, but the rule still has to REACH the
+      browser. 2.1.171 removed it and simultaneously left a stray comment-close
+      sequence in the prose above, which ended the comment early; everything after
+      parsed as a selector and this entire rule was discarded. With no z-index the
+      fixed button sat under the sticky banner on all three page types. Two separate
+      faults, opposite causes, identical symptom - which is why "it is hidden again"
+      after a fix that was itself correct.
+
+   Never write the two-character comment-close sequence inside comment prose. The
+   gate script at /root/harness/cssvalidate.py fails the build on it now.
+
+   Every selector core and the themes use for this control is listed, because the
+   markup has moved between Moodle versions and a control that vanishes is far worse
+   than a redundant selector. */
 body.format-aicourse :is(
 .drawer-toggles,
 .drawer-toggler,
-.drawer-toggler .btn,
 [data-toggler="drawers"][data-action="toggle"],
 [data-region="drawer-toggle"]) {
-    position: relative;
     /* One step above --acf-z-sticky (20). Not --acf-z-modal, which a dialogue
-       needs to sit above this. */
+       needs to sit above this. NO `position` - see above. */
+    z-index: 25;
+}
+
+/* Inside the pinned container, where a local stacking context changes no placement.
+   The button needs its own z-index because the wrapper is static: a static parent
+   creates no stacking context, so the button does not inherit the lift above. */
+body.format-aicourse .drawer-toggler .btn,
+body.format-aicourse .drawer-toggles .btn {
+    position: relative;
     z-index: 25;
 }
 
@@ -12705,4 +13109,44 @@ body#page-admin-setting-formatsettingaicourse #adminsettings .acfs-intro {
 
 body#page-admin-setting-formatsettingaicourse #adminsettings .acfs-list {
     margin-block: 0 2.5rem;
+}
+
+/* --- The page has a measure, not just a width (ACF-FIX-2.1.173) -------------
+   Reported from the live page: a large empty band running down the middle of every
+   setting, between the end of the prose and the start of the illustration.
+
+   The cause is that this page had no maximum width at all. "Use the full width,
+   left aligned" was the instruction and it was taken literally, so on a wide theme
+   container the row stretched to ~1700px while its two occupants did not: the prose
+   stops at its 58ch measure because a 1700px line of body copy is unreadable, and
+   the illustration stops at its own cap because a wireframe blown up to 600px is
+   just a big rectangle. Neither should grow, so all the extra width went into the
+   gap between them. Widening the two to close the gap would fix the emptiness by
+   making both elements worse.
+
+   The row is given a maximum instead, computed from what actually has to fit
+   rather than picked to look right at one screen size:
+
+       prose measure  58ch at 16px .................  ~570px
+       column gap  2.5rem .........................     40px
+       illustration  24rem ........................    384px
+       panel body padding  2 x 1.5rem .............     48px
+       accent rail + borders ......................     ~6px
+       ------------------------------------------------------
+                                                      ~1048px
+
+   1120px leaves a little slack for a wider default font without the gap reopening.
+   Left aligned, so it stays where it was rather than centring into a new position.
+
+   Applied to every top-level block so they share one left edge and one right edge;
+   capping only the list would leave the search field and the intro running wider
+   than the panels beneath them, which reads as a mistake rather than as a measure. */
+body#page-admin-setting-formatsettingaicourse #adminsettings :is(
+.acfs-controls,
+.acfs-intro,
+.acfs-hint,
+.acfs-list,
+.acfs-save) {
+    max-inline-size: 1120px;
+    margin-inline-end: auto;
 }

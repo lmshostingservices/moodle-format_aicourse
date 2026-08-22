@@ -112,9 +112,42 @@ const lift = () => {
  * @param {HTMLElement} hero The banner wrapper, already moved.
  * @returns {void}
  */
+
+/**
+ * The column the banner has to line its edges up with, on whichever page type this is.
+ *
+ * ACF-FIX-2.1.170. This used to be the single selector `.format-aicourse-container`, and that
+ * element is emitted by format.php -- the course format's own renderer. format.php runs on course
+ * and section pages. It does NOT run on an activity page, which is served by mod/<mod>/view.php,
+ * so on every activity page this lookup returned null.
+ *
+ * Two things followed from that null, and both are faults that were reported from live pages:
+ *
+ *   1. measure() returned on its first line, so the banner never received
+ *      --acf-hero-align-start/end and never lined up with the content beneath it.
+ *   2. More seriously, the ResizeObserver below observed nothing but the banner's own parent, and
+ *      even when it did fire, measure() bailed at the same line. The course index drawer opening
+ *      or closing changes the content column's width without changing the window's, so that
+ *      observer is the ONLY thing that re-measures on a drawer toggle. With it inert, the banner
+ *      kept whatever width it had at load: close the course index on an activity page and the
+ *      banner did not expand to fill the space. That is the "still not going full width" report,
+ *      and it was never a CSS problem.
+ *
+ * The fallbacks are the containers Moodle actually uses for the main column on an activity page,
+ * most specific first. #region-main is Boost's; [role="main"] and <main> are the standards-based
+ * ones a custom theme is most likely to keep; #page-content is the last resort.
+ *
+ * @returns {HTMLElement|null} The content column, or null if nothing recognisable is present.
+ */
+const contentColumn = () => document.querySelector('.format-aicourse-container')
+    || document.getElementById('region-main')
+    || document.querySelector('[role="main"]')
+    || document.querySelector('main')
+    || document.querySelector('#page-content');
+
 const align = (hero) => {
     const measure = () => {
-        const content = document.querySelector('.format-aicourse-container');
+        const content = contentColumn();
         if (!content) {
             return;
         }
@@ -195,7 +228,9 @@ const align = (hero) => {
     // late web font, a responsive breakpoint, a theme animating its layout. Debounced, because a
     // drawer transition fires it on every frame.
     if (typeof window.ResizeObserver === 'function') {
-        const content = document.querySelector('.format-aicourse-container');
+        // ACF-FIX-2.1.170: same resolver as measure() uses. Observing an element that does not
+        // exist on this page type is how the drawer toggle stopped re-measuring the banner.
+        const content = contentColumn();
         const observer = new window.ResizeObserver(remeasure);
         if (content) {
             observer.observe(content);
@@ -493,6 +528,12 @@ const fitActivityWidth = (hero) => {
     hero.style.marginInlineEnd = '0px';
     void hero.offsetWidth;
 
+    // ACF-FIX-2.1.174: the page's horizontal overflow with this function's margins OFF. The check
+    // at the end of this function compares against it, so a page that already scrolled sideways on
+    // its own is not blamed on the banner. Read after the reset above, which is why it is here and
+    // not at the top of the function.
+    const overflowbefore = document.documentElement.scrollWidth;
+
     // ACF-FIX-2.1.165: the edges are the WINDOW and the DRAWER, stated directly.
     //
     // Measuring against #page was the wrong anchor twice over. On one theme #page is 100% wide and
@@ -543,6 +584,30 @@ const fitActivityWidth = (hero) => {
         hero.style.marginInlineStart = '0px';
     }
     if (after.right > right + 1) {
+        hero.style.marginInlineEnd = '0px';
+    }
+
+    // ACF-FIX-2.1.174: and then check the only thing that actually matters.
+    //
+    // The two tests above check the BANNER's own box against the edges this function measured. That
+    // is not the same question as "does the page now scroll sideways", and the difference is where
+    // the horizontal scrollbar kept coming from: with the course index open the drawer is an
+    // overlay and the theme offsets #page to sit beside it, so a banner whose right edge lands
+    // exactly on documentElement.clientWidth passes both tests above while the document as a whole
+    // is 342px wider than the window. The banner was measured, approved, and the page scrolled
+    // anyway -- reported as "the course index opening is pushing the whole page to the right".
+    //
+    // scrollWidth against clientWidth is the direct test for that, so it is the one used. It is
+    // taken as a BEFORE/AFTER comparison rather than an absolute: a page that already scrolled
+    // sideways for some other reason must not make this function permanently give up, or the
+    // banner would be inset on every such theme for a reason that has nothing to do with it.
+    //
+    // Reverting to zero leaves the banner sitting inside the content column, which is a cosmetic
+    // shortfall. A page that pans sideways is a broken one. When the two cannot both be had, this
+    // takes the cosmetic loss every time.
+    const de = document.documentElement;
+    if (de.scrollWidth > de.clientWidth + 1 && de.scrollWidth > overflowbefore + 1) {
+        hero.style.marginInlineStart = '0px';
         hero.style.marginInlineEnd = '0px';
     }
 };
@@ -650,7 +715,40 @@ export const init = () => {
     // ACF-FIX-2.1.158: heroinject announces the banner once it has been moved out of its template.
     // Not {once: true} -- a page can replace the banner (core re-renders parts of an activity page
     // through the reactive state manager), and the second placement needs the same treatment.
-    document.addEventListener('format_aicourse:heroplaced', attach);
+    // ACF-FIX-2.1.174: lift() FIRST, then attach. This one missing call is why the activity page
+    // never matched the course and section pages.
+    //
+    // Compare the two, which is exactly the right comparison to make:
+    //
+    //   course / section : format.php renders the banner into the page, lift() moves it to be a
+    //                      DIRECT CHILD of #page. When the course index opens, the theme offsets
+    //                      #page to sit beside the drawer and the banner moves with its parent.
+    //                      Nothing has to be measured or corrected. It is simply right.
+    //
+    //   activity         : heroinject places the banner from its <template> AFTER this module has
+    //                      already run, because the hook queues heroatop early and heroinject last.
+    //                      lift() had therefore already returned at its first line -- no banner in
+    //                      the DOM yet -- and the only thing listening for the placement was
+    //                      attach(), which measures but never moves. So the banner stayed inside
+    //                      #region-main, which is confirmed by a live probe reporting
+    //                      heroParent: "region-main".
+    //
+    // Everything that has gone wrong with the activity banner follows from that one difference. A
+    // banner stuck inside the content column cannot be full width, so fitActivityWidth() fakes it
+    // with negative margins; those margins are measured against the drawer, so every open and close
+    // re-runs the measurement; and a measurement taken against a moving overlay is what produced
+    // the banner not expanding on close, the nav icons disappearing behind the open drawer, and the
+    // horizontal scrollbar.
+    //
+    // Lifting the activity banner does not paper over those symptoms, it removes the condition that
+    // creates them: the banner becomes a child of #page like the other two page types, and inherits
+    // the behaviour that already works there. fitActivityWidth() then finds no #region-main ancestor
+    // and returns at its own first line, which is the correct outcome -- there is nothing left for
+    // it to correct.
+    document.addEventListener('format_aicourse:heroplaced', () => {
+        lift();
+        attach();
+    });
 
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', start, {once: true});

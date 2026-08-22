@@ -455,7 +455,7 @@ const showTip = (anchor, data, strings) => {
  * @param {Object} strings Localised labels.
  * @returns {void}
  */
-const bindTip = (mark, data, strings) => {
+export const bindTip = (mark, data, strings) => {
     if (!data.tracked) {
         return;
     }
@@ -662,7 +662,7 @@ const decorate = (config, strings) => {
  *
  * @returns {Object|null} The config, or null when absent or unreadable.
  */
-const readConfig = () => {
+export const readConfig = () => {
     const node = document.getElementById('aicourse-player-config');
     if (!node) {
         return null;

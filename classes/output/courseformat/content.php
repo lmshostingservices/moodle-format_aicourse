@@ -394,6 +394,13 @@ class content extends topics_content implements named_templatable, renderable {
             'hasprogress' => $hasprogress,
             'badgeclass' => ($percentage == 100) ? 'aicourse-progress-badge-complete' : 'aicourse-progress-badge',
             'percenttext' => get_string('percentvalue', 'format_aicourse', $percentage),
+            // ACF-FIX-2.1.178: the raw number, for the ring. The badge shipped only the localised
+            // string ("33%"), which cannot be turned back into a stroke length or a bar width
+            // without parsing a translated string -- so the card had no way to draw the same
+            // indicator the hero draws. The figure is emitted alongside the text rather than
+            // instead of it: the text stays the accessible value.
+            'percentnum' => $percentage,
+            'ringdash' => round(($percentage / 100) * 100.53, 2),
             'hasdots' => false,
             'dots' => [],
             'moredots' => null,
@@ -560,6 +567,21 @@ class content extends topics_content implements named_templatable, renderable {
                     'section' => $plainname,
                 ]);
 
+            // ACF-FIX-2.1.178: a card row now carries what a course-index row carries.
+            //
+            // The card listed a coloured dot and a name. The course index beside it listed the
+            // module's own icon, an estimated time and a completion tick, and the two were
+            // describing the same activities in two different visual languages on the same screen.
+            // The row is brought level with the index rather than the index being brought down to
+            // the row: the icon identifies the activity by shape before it is read, the time tells
+            // a learner what they are committing to, and the tick is the one piece of state they
+            // actually came to check.
+            //
+            // Everything here comes from helpers that already existed and are already called for
+            // the index, so this adds no query the page was not making: get_icon_url() is served
+            // from modinfo, estimate_activity_minutes() reads the same cached per-module table, and
+            // the status came from $progressdata above.
+            $minutes = progress::estimate_activity_minutes($cm);
             $items[] = (object) [
                 // Already escaped by moodle_url::out(); see the template PHPDoc. A label and a
                 // subsection have no URL of their own, so they point at the section that holds
@@ -568,6 +590,26 @@ class content extends topics_content implements named_templatable, renderable {
                 'name' => format_string($cm->name),
                 'label' => $label,
                 'stateclass' => 'aicourse-actstate-' . ($status ?? 'none'),
+                // The cmid is what lets the browser match this row to the richer payload the
+                // player already ships (completion conditions, grade, completion date) instead of
+                // this exporter fetching and escaping all of it a second time.
+                'cmid' => (int) $cm->id,
+                'iconurl' => $cm->get_icon_url()->out(false),
+                'modname' => $cm->modname,
+                'typename' => activityinfo::get_activity_type_name($cm),
+                'hastime' => $minutes > 0,
+                'timetext' => progress::format_estimated_time($minutes),
+                'iscomplete' => ($status === 'completed'),
+                'istracked' => ($status !== null && $status !== 'none'),
+                // Hovering the NAME answers "what is this?" -- which is a different question from
+                // the one the tick answers ("am I done, and what would done mean?"). Built here
+                // rather than in JavaScript so it works on a page where the player sidebar is
+                // switched off, and so it is present before any script has run.
+                'nametitle' => implode(get_string('labelseparator', 'format_aicourse'), array_filter([
+                    activityinfo::get_activity_type_name($cm),
+                    $minutes > 0 ? progress::format_estimated_time($minutes) : null,
+                    $status !== null ? activityinfo::get_status_label($status) : null,
+                ])),
             ];
         }
 

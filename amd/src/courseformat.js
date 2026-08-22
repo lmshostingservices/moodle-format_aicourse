@@ -979,7 +979,28 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function($, Str
             // carries the final figure, so a screen reader is told the answer once instead of being
             // read a hundred intermediate numbers.
             if ($text.length && newPercentage < 100) {
-                var from = (self.lastPercentage === null) ? 0 : self.lastPercentage;
+                // ACF-FIX-2.1.175: always count from zero.
+                //
+                // This started at self.lastPercentage, so the count-up only ever showed the DELTA.
+                // On a hard reload lastPercentage is null and it ran 0 -> 63, which is what it was
+                // meant to do. But animateRing also runs on every progress refresh -- completing an
+                // activity fires completionchange, which refetches and calls this again -- and by
+                // then lastPercentage is 60, so the ring "counted up" 61, 62, 63. Three numbers.
+                // That is the "only counting the last couple of numbers" report, and it is why it
+                // looked right on first load and wrong every time after.
+                //
+                // Counting the delta is correct for a figure being CORRECTED in place. It is wrong
+                // for this one: the hero ring is a reading of how far the learner has got, and the
+                // sweep from empty to that point is the whole point of the animation. The stroke
+                // below already redraws from zero on every call -- the number now matches the ring
+                // instead of contradicting it.
+                //
+                // lastPercentage is still tracked: it drives the pulse-on-increase above, which is
+                // the one thing here that genuinely needs the previous value.
+                var from = 0;
+                // Set before the first animation frame, so the server-rendered figure cannot paint
+                // for one frame and then visibly jump back to zero.
+                $text.text('0%');
                 if (reduced || from === newPercentage) {
                     $text.text(newPercentage + '%');
                 } else {

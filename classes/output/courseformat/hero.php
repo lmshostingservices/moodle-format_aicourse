@@ -307,7 +307,7 @@ class hero implements named_templatable, renderable {
      *                          The first bound the measure falls within wins.
      * @return string The tier name, or 'xs' when the measure exceeds every bound.
      */
-    protected static function size_tier(int $measure, array $thresholds): string {
+    public static function size_tier(int $measure, array $thresholds): string {
         foreach ($thresholds as $bound => $tier) {
             if ($measure <= $bound) {
                 return $tier;

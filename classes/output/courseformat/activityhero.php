@@ -121,6 +121,25 @@ class activityhero implements named_templatable, renderable {
             // the accent custom properties because it sits outside the content container.
             'accentstyle' => \format_aicourse::get_accent_style($options),
             'cmname' => format_string($cm->name),
+            // ACF-FIX-2.1.172: the activity title gets the same size tier the course and section
+            // titles get.
+            //
+            // This is why "the activity heading is small again" kept coming back and why no amount
+            // of CSS ever fixed it: hero.mustache emits
+            //     <span class="aicourse-hero-title aicourse-title-{{titlesize}}">
+            // while activity_hero.mustache emitted
+            //     <span class="aicourse-hero-title">
+            // with no tier at all, because this exporter never computed one. Every tier rule in the
+            // stylesheet is keyed to `.aicourse-title-*`, so the activity title fell through to the
+            // base size -- 26px against the course title's 34px -- on every activity page, at every
+            // title length, permanently. A class that is never emitted cannot be styled.
+            //
+            // Same thresholds and same helper as hero.php, so the two page types step down together
+            // rather than drifting apart the next time the scale is tuned.
+            'titlesize' => hero::size_tier(
+                \core_text::strlen(html_to_text(format_string($cm->name), 0, false)),
+                [28 => 'xl', 48 => 'lg', 72 => 'md', 104 => 'sm']
+            ),
             'hasimage' => !empty($imageurl),
             'imageurl' => (string) $imageurl,
             'hassection' => !empty($currentsection),

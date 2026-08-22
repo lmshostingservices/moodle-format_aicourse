@@ -130,13 +130,31 @@
                 "url": "https://example.org/mod/page/view.php?id=12",
                 "name": "What is machine learning?",
                 "label": "What is machine learning?, Module 1: Foundations (Completed)",
-                "stateclass": "aicourse-actstate-completed"
+                "stateclass": "aicourse-actstate-completed",
+                "cmid": 12,
+                "iconurl": "https://example.org/theme/image.php/boost/page/1/monologo",
+                "modname": "page",
+                "typename": "Page",
+                "nametitle": "Page, 5 min, Completed",
+                "hastime": true,
+                "timetext": "5 min",
+                "iscomplete": true,
+                "istracked": true
             },
             {
                 "url": "https://example.org/mod/quiz/view.php?id=13",
                 "name": "Foundations knowledge check",
                 "label": "Foundations knowledge check, Module 1: Foundations (Not Started)",
-                "stateclass": "aicourse-actstate-not_started"
+                "stateclass": "aicourse-actstate-not_started",
+                "cmid": 13,
+                "iconurl": "https://example.org/theme/image.php/boost/quiz/1/monologo",
+                "modname": "quiz",
+                "typename": "Quiz",
+                "nametitle": "Quiz, 15 min, Not started",
+                "hastime": true,
+                "timetext": "15 min",
+                "iscomplete": false,
+                "istracked": true
             }
         ],
         "moreactivities": {
@@ -150,6 +168,8 @@
         "hasprogress": true,
         "badgeclass": "aicourse-progress-badge",
         "percenttext": "33%",
+        "percentnum": 33,
+        "ringdash": 33.17,
         "hasdots": true,
         "dots": [
             {
@@ -199,7 +219,12 @@
 {{#hasactivities}}
 <ul class="aicourse-card-activities">
 {{#activities}}
-<li class="aicourse-card-activity"><a href="{{{url}}}" class="aicourse-card-activity-link" aria-label="{{label}}"><span class="aicourse-card-activity-state {{stateclass}}" aria-hidden="true"></span><span class="aicourse-card-activity-name">{{{name}}}</span></a></li>
+<li class="aicourse-card-activity" data-cmid="{{cmid}}" data-modname="{{modname}}"><a href="{{{url}}}" class="aicourse-card-activity-link" aria-label="{{label}}">{{!
+}}<img class="aicourse-card-activity-icon" src="{{iconurl}}" alt="" aria-hidden="true" loading="lazy">{{!
+}}<span class="aicourse-card-activity-name" title="{{nametitle}}">{{{name}}}</span>{{!
+}}{{#hastime}}<span class="aicourse-card-activity-time" aria-hidden="true">{{timetext}}</span>{{/hastime}}{{!
+}}{{#istracked}}<span class="aicourse-card-activity-state {{stateclass}}" aria-hidden="true"></span>{{/istracked}}{{!
+}}</a></li>
 {{/activities}}
 {{#moreactivities}}
 <li class="aicourse-card-activity"><a href="{{url}}" class="aicourse-card-activities-more" aria-label="{{label}}" title="{{label}}">+{{remaining}}</a></li>
@@ -224,7 +249,16 @@
 {{/hasdots}}
 </div>
 {{#hasprogress}}
-<a href="{{sectionurl}}" class="{{badgeclass}}" tabindex="-1" aria-hidden="true">{{percenttext}}</a>
+<a href="{{sectionurl}}" class="aicourse-card-progress" tabindex="-1" aria-hidden="true" data-acf-ring="{{percentnum}}">{{!
+}}<span class="aicourse-card-progress-bar"><span class="aicourse-card-progress-bar-fill" style="width:{{percentnum}}%"></span></span>{{!
+}}<span class="aicourse-card-ring">{{!
+}}<svg class="aicourse-card-ring-svg" viewBox="0 0 36 36" aria-hidden="true" focusable="false">{{!
+}}<circle class="aicourse-card-ring-track" cx="18" cy="18" r="16"></circle>{{!
+}}<circle class="aicourse-card-ring-fill" cx="18" cy="18" r="16" stroke-dasharray="{{ringdash}} 100.53"></circle>{{!
+}}</svg>{{!
+}}<span class="aicourse-card-ring-text">{{percenttext}}</span>{{!
+}}</span>{{!
+}}</a>
 {{/hasprogress}}
 </div>
 {{/hasfooter}}
