@@ -164,6 +164,105 @@ const rect = (x, y, w, h, f, rd) =>
     '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h
     + '" rx="' + (rd === undefined ? 2 : rd) + '" fill="' + f + '"/>';
 
+/* ---------------------------------------------------------------------------
+   ACF-FIX-2.1.180: FURNITURE, NOT BLOCKS.
+   ---------------------------------------------------------------------------
+   Every diagram on this page was assembled from plain rectangles. A rectangle
+   in the top-left is a sidebar only if you already know that; a reader who is
+   trying to work out what a setting does gets a grey grid and has to read the
+   prose anyway, which is the job the picture was added to do.
+
+   These helpers draw the things the product actually has -- a sidebar with
+   activity rows, a hero with a progress ring, a card with a tick and a footer
+   bar -- at 200x112. The miniature then LOOKS like the page it is describing,
+   so "hide the General section" is answered by seeing a band disappear rather
+   than by decoding which grey box moved.
+
+   They compose, so a diagram stays one readable expression: chrome() + sidebar()
+   + hero() + card(). Every part takes a state so the same helper can draw the
+   thing switched on, switched off, or absent.
+   --------------------------------------------------------------------------- */
+
+/** @var {String} Ink for anything drawn on top of a filled accent surface. */
+const INK = 'rgb(255 255 255 / 0.85)';
+
+/** @var {String} The same, one step quieter -- secondary lines inside a filled panel. */
+const INK2 = 'rgb(255 255 255 / 0.5)';
+
+/**
+ * A line of text.
+ *
+ * @param {Number} x Left edge.
+ * @param {Number} y Top edge.
+ * @param {Number} w Width.
+ * @param {String} f Fill.
+ * @param {Number} h Height; 3.5 by default, which is a body line at this scale.
+ * @returns {String} SVG.
+ */
+const line = (x, y, w, f, h) => rect(x, y, w, h === undefined ? 3.5 : h, f, 1.75);
+
+/**
+ * A small square standing in for a module icon.
+ *
+ * @param {Number} x Left edge.
+ * @param {Number} y Top edge.
+ * @param {String} f Fill.
+ * @returns {String} SVG.
+ */
+const icon = (x, y, f) => rect(x, y, 7, 7, f, 2);
+
+/**
+ * A completion tick: a filled disc with a check, or an empty ring.
+ *
+ * @param {Number} cx Centre x.
+ * @param {Number} cy Centre y.
+ * @param {Boolean} done Whether it is complete.
+ * @param {String} f The accent fill.
+ * @returns {String} SVG.
+ */
+const tick = (cx, cy, done, f) => (done
+    ? '<circle cx="' + cx + '" cy="' + cy + '" r="4" fill="' + f + '"/>'
+        + '<path d="M' + (cx - 1.9) + ' ' + cy + ' l1.4 1.5 l2.6-3" stroke="#fff" stroke-width="1.2"'
+        + ' fill="none" stroke-linecap="round" stroke-linejoin="round"/>'
+    : '<circle cx="' + cx + '" cy="' + cy + '" r="3.6" fill="none" stroke="' + f
+        + '" stroke-width="1.4"/>');
+
+/**
+ * A progress ring with a filled arc.
+ *
+ * @param {Number} cx Centre x.
+ * @param {Number} cy Centre y.
+ * @param {Number} r Radius.
+ * @param {Number} pct How much of it is filled, 0-100.
+ * @param {String} f Arc colour.
+ * @param {String} track Track colour.
+ * @returns {String} SVG.
+ */
+const ring = (cx, cy, r, pct, f, track) => {
+    const c = 2 * Math.PI * r;
+    return '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="' + track
+        + '" stroke-width="2.4"/>'
+        + '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="' + f
+        + '" stroke-width="2.4" stroke-linecap="round" stroke-dasharray="'
+        + ((pct / 100) * c).toFixed(2) + ' ' + c.toFixed(2)
+        + '" transform="rotate(-90 ' + cx + ' ' + cy + ')"/>';
+};
+
+/**
+ * A progress bar with its trough.
+ *
+ * @param {Number} x Left edge.
+ * @param {Number} y Top edge.
+ * @param {Number} w Width.
+ * @param {Number} pct Fill proportion, 0-100.
+ * @param {String} f Fill colour.
+ * @param {String} track Trough colour.
+ * @returns {String} SVG.
+ */
+const meter = (x, y, w, pct, f, track) => rect(x, y, w, 3, track, 1.5)
+    + rect(x, y, Math.max(2, (w * pct) / 100), 3, f, 1.5);
+
+
 /**
  * The diagram for one setting, on a 200x112 page.
  *
@@ -177,126 +276,188 @@ const settingDiagram = (base) => {
     const on = 'rgb(var(--c) / 0.85)';
     const soft = 'rgb(var(--c) / 0.3)';
     const off = 'rgb(var(--c) / 0.14)';
+    const faint = 'rgb(var(--c) / 0.07)';
     const plate = rect(0, 0, 200, 112, 'rgb(var(--c) / 0.05)', 6);
-    const side = (f) => rect(0, 0, 50, 112, f, 6);
-    const body = (f) => rect(58, 34, 64, 34, f) + rect(128, 34, 64, 34, f)
-        + rect(58, 74, 64, 30, f) + rect(128, 74, 64, 30, f);
-    const bar = (f) => rect(58, 6, 134, 22, f);
+
+    /* The site's own top bar. Present on every page of the product, so present in
+       every diagram -- it is the fixed point the rest is positioned against. */
+    const topbar = (f) => rect(0, 0, 200, 9, f === undefined ? faint : f, 6)
+        + rect(0, 5, 200, 4, f === undefined ? faint : f, 0);
+
+    /* The course index: a logo mark, the course name, a progress ring, then the
+       activity rows -- icon, name, tick -- which is exactly what the panel holds. */
+    const sidebar = (state) => {
+        const shown = state !== 'off';
+        if (!shown) {
+            return '';
+        }
+        const solid = state === 'on';
+        const bg = solid ? on : off;
+        const fg = solid ? INK : soft;
+        const fg2 = solid ? INK2 : off;
+        let out = rect(0, 9, 50, 103, bg, 0)
+            + rect(5, 14, 16, 5, fg, 1.5)
+            + line(5, 25, 26, fg, 4)
+            + ring(41, 27, 5, 63, fg, fg2);
+        [36, 48, 60, 72, 84].forEach((y, i) => {
+            out += icon(5, y, fg2) + line(15, y + 2, 20 - (i % 2) * 5, fg)
+                + tick(44, y + 3.5, i < 2, fg);
+        });
+        return out;
+    };
+
+    /* The hero: an image band carrying the course name, its meta line and the
+       progress ring at the inline-end. */
+    const hero = (state, x, w) => {
+        if (state === 'off') {
+            return '';
+        }
+        const solid = state === 'on';
+        const bg = solid ? on : off;
+        const fg = solid ? INK : soft;
+        const fg2 = solid ? INK2 : off;
+        return rect(x, 13, w, 26, bg, 3)
+            + line(x + 7, 20, w * 0.42, fg, 5)
+            + line(x + 7, 29, w * 0.28, fg2, 3)
+            + ring(x + w - 15, 26, 7, 63, fg, fg2);
+    };
+
+    /* A section card: header icon and title, activity rows with ticks, and the
+       footer that carries the count, the bar and the ring. */
+    const card = (x, y, w, h, state, rows) => {
+        const solid = state === 'on';
+        const bg = solid ? soft : faint;
+        const fg = solid ? on : soft;
+        let out = rect(x, y, w, h, bg, 3) + icon(x + 5, y + 5, fg)
+            + line(x + 15, y + 6, w * 0.5, fg, 4);
+        // ACF-FIX-2.1.180b: the footer's height is reserved BEFORE the rows are laid out.
+        // The first version stopped rows 10px from the bottom and then drew a 10px-tall ring at
+        // the same edge, so on a card with four rows the ring sat on top of the last row's tick.
+        // Rendering the whole sheet is what showed it; the arithmetic looked fine.
+        const FOOT = 17;
+        const n = rows === undefined ? 3 : rows;
+        for (let i = 0; i < n; i++) {
+            const ry = y + 18 + i * 9;
+            if (ry + 7 > y + h - FOOT) {
+                break;
+            }
+            out += icon(x + 5, ry, fg) + line(x + 15, ry + 2, w * 0.42, fg)
+                + tick(x + w - 9, ry + 3.5, i === 0, fg);
+        }
+        const fy = y + h - FOOT + 6;
+        return out + meter(x + 5, fy + 1, w * 0.4, 63, fg, faint)
+            + ring(x + w - 11, fy + 2, 5, 63, fg, faint);
+    };
+
+    /* The two-up card grid, which is what a course actually renders. */
+    const grid = (state, rows) => card(56, 45, 68, 62, state, rows)
+        + card(130, 45, 62, 62, state, rows);
 
     switch (base) {
         case 'showcourseindex':
         case 'playerindex':
         case 'indexstate':
-            return plate + side(on) + rect(8, 12, 34, 5, 'rgb(255 255 255 / 0.75)')
-                + rect(8, 26, 28, 4, 'rgb(255 255 255 / 0.5)')
-                + rect(8, 36, 34, 4, 'rgb(255 255 255 / 0.5)')
-                + rect(8, 46, 30, 4, 'rgb(255 255 255 / 0.5)')
-                + bar(off) + body(off);
+            return plate + topbar() + sidebar('on') + hero('soft', 56, 136) + grid('off', 2);
         case 'hidegeneral':
-            return plate + side(off) + bar(off)
-                + rect(58, 34, 134, 14, soft) + rect(58, 54, 64, 24, on) + rect(128, 54, 64, 24, on)
-                + rect(58, 84, 64, 20, on) + rect(128, 84, 64, 20, on);
+            // The General band, present and then not: the thing the setting removes is the thing
+            // the picture shows, so the two cards below simply move up.
+            return plate + topbar() + sidebar('off') + hero('soft', 56, 136)
+                + rect(56, 45, 136, 12, soft, 3) + line(61, 49, 40, on, 4)
+                + card(56, 62, 68, 45, 'on', 2) + card(130, 62, 62, 45, 'on', 2);
         case 'showherobanner':
         case 'herobannerfade':
         case 'heroimageoverlay':
         case 'scrimstrength':
-            return plate + side(off) + bar(on)
-                + rect(66, 12, 58, 5, 'rgb(255 255 255 / 0.8)')
-                + rect(66, 21, 36, 3, 'rgb(255 255 255 / 0.5)') + body(off);
+            return plate + topbar() + sidebar('off') + hero('on', 56, 136) + grid('off', 2);
         case 'heroattop':
-            return plate + rect(0, 0, 200, 24, on, 6) + side(off) + rect(58, 30, 134, 8, soft)
-                + body(off);
+            return plate + hero('on', 0, 200) + topbar(off) + sidebar('off') + grid('off', 2);
         case 'herosticky':
-            return plate + side(off) + bar(on)
-                + rect(58, 34, 134, 6, soft) + body(off)
-                + '<path d="M182 44 v54 M176 92 l6 6 6-6" stroke="' + on
-                + '" stroke-width="2.5" fill="none" stroke-linecap="round"/>';
+            return plate + topbar() + sidebar('off') + hero('on', 56, 136) + grid('off', 2)
+                + '<path d="M196 46 v50 M191 90 l5 6 5-6" stroke="' + on
+                + '" stroke-width="2.2" fill="none" stroke-linecap="round"/>';
         case 'displayascards':
         case 'cardlayout':
-            return plate + side(off) + bar(off)
-                + rect(58, 34, 64, 34, on) + rect(128, 34, 64, 34, on)
-                + rect(58, 74, 64, 30, soft) + rect(128, 74, 64, 30, soft);
+            return plate + topbar() + sidebar('off') + hero('soft', 56, 136) + grid('on', 3);
         case 'showactivitiesoncards':
         case 'cardactivitylimit':
-            return plate + side(off) + bar(off)
-                + rect(58, 34, 134, 70, soft)
-                + rect(66, 42, 60, 6, on) + rect(66, 54, 118, 5, on)
-                + rect(66, 64, 100, 5, on) + rect(66, 74, 110, 5, on);
+            // One wide card so the ROWS are the subject: this setting is about what is inside a
+            // card, not about how many cards there are.
+            return plate + topbar() + sidebar('off') + hero('soft', 56, 136)
+                + card(56, 45, 136, 62, 'on', 4);
         case 'cardtitlesize':
-            return plate + side(off) + bar(off)
-                + rect(58, 36, 90, 12, on) + rect(58, 56, 70, 7, soft)
-                + rect(58, 72, 134, 30, off);
+            return plate + topbar() + sidebar('off') + hero('soft', 56, 136)
+                + rect(56, 45, 136, 62, faint, 3) + line(61, 51, 78, on, 7)
+                + line(61, 64, 56, soft, 4) + line(61, 74, 62, off) + line(61, 83, 50, off);
         case 'activitydisplaymode':
-            return plate + side(off) + bar(off)
-                + rect(58, 34, 134, 15, on) + rect(58, 54, 134, 15, soft)
-                + rect(58, 74, 134, 15, soft);
+            return plate + topbar() + sidebar('off') + hero('soft', 56, 136)
+                + card(56, 45, 136, 29, 'on', 1) + card(56, 78, 136, 29, 'off', 1);
         case 'shownavchevrons':
-            return plate + side(off) + bar(off) + body(off)
-                + rect(58, 92, 30, 12, on) + rect(162, 92, 30, 12, on);
+            return plate + topbar() + sidebar('off') + hero('soft', 56, 136) + grid('off', 2)
+                + '<circle cx="49" cy="76" r="8" fill="' + on + '"/>'
+                + '<path d="M51.5 72.5 l-3.5 3.5 l3.5 3.5" stroke="#fff" stroke-width="1.6"'
+                + ' fill="none" stroke-linecap="round" stroke-linejoin="round"/>'
+                + '<circle cx="192" cy="76" r="8" fill="' + on + '"/>'
+                + '<path d="M189.5 72.5 l3.5 3.5 l-3.5 3.5" stroke="#fff" stroke-width="1.6"'
+                + ' fill="none" stroke-linecap="round" stroke-linejoin="round"/>';
         case 'hidesecondarynav':
         case 'coursenavplace':
-            return plate + rect(0, 0, 200, 10, soft, 6) + rect(0, 14, 200, 8, on, 0)
-                + side(off) + rect(58, 30, 134, 74, off);
+            return plate + topbar(on) + rect(0, 11, 200, 8, soft, 0)
+                + line(6, 13, 22, on, 4) + line(34, 13, 26, on, 4) + line(66, 13, 20, on, 4)
+                + sidebar('off')
+                + rect(56, 22, 136, 26, off, 3) + line(63, 29, 56, soft, 5)
+                + line(63, 38, 38, off, 3) + ring(177, 35, 7, 63, soft, off)
+                + card(56, 54, 68, 53, 'off', 2) + card(130, 54, 62, 53, 'off', 2);
         case 'hidebreadcrumb':
-            return plate + rect(6, 6, 90, 5, on) + side(off) + bar(off) + body(off);
+            return plate + topbar() + line(6, 13, 26, on) + line(38, 13, 30, on)
+                + line(74, 13, 22, on) + sidebar('off') + hero('soft', 56, 136) + grid('off', 2);
         case 'hidefooter':
-            return plate + side(off) + bar(off) + rect(58, 34, 134, 54, off)
-                + rect(0, 100, 200, 12, on, 0);
+            return plate + topbar() + sidebar('off') + hero('soft', 56, 136)
+                + card(56, 45, 136, 46, 'off', 3) + rect(0, 98, 200, 14, on, 0)
+                + line(8, 103, 34, INK) + line(50, 103, 26, INK2);
         case 'immersive':
-            return plate + rect(0, 0, 200, 14, on, 6) + side(off) + bar(off) + body(off);
+            return plate + topbar(on) + sidebar('off') + hero('soft', 56, 136) + grid('off', 2);
         case 'hidetimeindex':
         case 'hidetimetotal':
-            return plate + side(off) + rect(8, 20, 22, 7, on, 3.5) + rect(8, 34, 22, 7, on, 3.5)
-                + rect(8, 48, 22, 7, on, 3.5) + bar(off) + body(off);
+            // The time pills are the subject, so the sidebar is drawn open and they are the only
+            // thing in it carrying the accent.
+            return plate + topbar() + rect(0, 9, 50, 103, off, 0)
+                + [36, 48, 60, 72].map((y) => icon(5, y, soft) + line(15, y + 2, 14, soft)
+                    + rect(33, y + 1, 13, 5, on, 2.5)).join('')
+                + line(5, 25, 26, soft, 4)
+                + hero('soft', 56, 136) + grid('off', 2);
         case 'hidetimesectioncards':
-            return plate + side(off) + bar(off) + body(off)
-                + rect(96, 40, 22, 7, on, 3.5) + rect(166, 40, 22, 7, on, 3.5);
+            return plate + topbar() + sidebar('off') + hero('soft', 56, 136) + grid('off', 2)
+                + rect(103, 50, 16, 5, on, 2.5) + rect(174, 50, 16, 5, on, 2.5);
         case 'hidetimeactivitycards':
-            return plate + side(off) + bar(off) + rect(58, 34, 134, 15, off)
-                + rect(58, 54, 134, 15, off) + rect(160, 38, 26, 7, on, 3.5)
-                + rect(160, 58, 26, 7, on, 3.5);
+            return plate + topbar() + sidebar('off') + hero('soft', 56, 136)
+                + card(56, 45, 136, 62, 'off', 4)
+                + [63, 72, 81].map((y) => rect(168, y, 16, 5, on, 2.5)).join('');
         case 'minutes':
         case 'minutesperquestion':
         case 'minutesfallback':
-            return plate + side(off) + bar(off) + rect(58, 34, 134, 15, off)
-                + rect(150, 38, 36, 7, on, 3.5) + rect(58, 54, 134, 15, off)
-                + rect(150, 58, 36, 7, on, 3.5) + rect(58, 74, 134, 15, off)
-                + rect(150, 78, 36, 7, on, 3.5);
+            return plate + topbar() + sidebar('off') + hero('soft', 56, 136)
+                + card(56, 45, 136, 62, 'off', 4)
+                + [63, 72, 81, 90].map((y) => rect(162, y, 22, 5, on, 2.5)).join('');
         case 'accentcolour':
-            return plate + side(on) + bar(on) + rect(58, 34, 64, 34, on)
-                + rect(128, 34, 64, 34, soft) + rect(58, 74, 134, 30, soft);
+            return plate + topbar() + sidebar('on') + hero('on', 56, 136) + grid('on', 2);
         case 'indexheadingcolour':
-            return plate + side(off) + rect(4, 8, 42, 12, on, 2) + rect(4, 46, 42, 12, on, 2)
-                + bar(off) + body(off);
-        case 'indexiconcolour':
-            return plate + side(off) + rect(8, 14, 8, 8, on, 2) + rect(8, 28, 8, 8, on, 2)
-                + rect(8, 42, 8, 8, on, 2) + rect(8, 56, 8, 8, on, 2) + bar(off) + body(off);
-        case 'indexcolour':
-        case 'indexopacity':
-        case 'playerheadercolour':
-            return plate + side(on) + bar(off) + body(off);
-        case 'cardcolour':
-        case 'cardopacity':
-            return plate + side(off) + bar(off) + body(on);
-        case 'playerlogo':
-            return plate + side(off) + rect(8, 10, 34, 10, on, 2) + bar(off) + body(off);
-        case 'colourmode':
-            return rect(0, 0, 100, 112, 'rgb(var(--c) / 0.08)', 6)
-                + rect(100, 0, 100, 112, 'rgb(var(--c) / 0.55)', 6)
-                + rect(10, 20, 80, 30, soft) + rect(110, 20, 80, 30, 'rgb(255 255 255 / 0.35)');
-        case 'tourvoiceover':
-        case 'tourvoice':
-            return plate + side(off) + bar(off) + body(off)
-                + '<circle cx="100" cy="56" r="24" fill="' + soft + '"/>'
-                + '<circle cx="100" cy="56" r="12" fill="' + on + '"/>';
+            return plate + topbar() + rect(0, 9, 50, 103, off, 0)
+                + rect(3, 22, 44, 10, on, 2) + line(7, 25, 30, INK, 4)
+                + rect(3, 62, 44, 10, on, 2) + line(7, 65, 26, INK, 4)
+                + [36, 48].map((y) => icon(5, y, soft) + line(15, y + 2, 22, soft)).join('')
+                + [76, 88].map((y) => icon(5, y, soft) + line(15, y + 2, 20, soft)).join('')
+                + hero('soft', 56, 136) + grid('off', 2);
         case 'enabletutor':
         case 'apikey':
         case 'siteid':
         case 'shareassessmentanswers':
-            return plate + side(off) + bar(off) + rect(58, 34, 78, 16, off, 8)
-                + rect(96, 58, 96, 18, on, 9) + rect(58, 84, 62, 14, off, 7);
+            // A conversation, which is what the tutor is.
+            return plate + topbar() + sidebar('off') + hero('soft', 56, 136)
+                + rect(56, 47, 74, 16, off, 8) + line(62, 53, 50, soft)
+                + rect(112, 68, 80, 16, on, 8) + line(118, 74, 56, INK)
+                + rect(56, 89, 62, 14, off, 7) + line(62, 94, 40, soft);
         default:
-            return plate + side(off) + bar(off) + body(soft);
+            return plate + topbar() + sidebar('off') + hero('soft', 56, 136) + grid('off', 2);
     }
 };
 
