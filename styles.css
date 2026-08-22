@@ -1816,6 +1816,12 @@ body.format-aicourse :is(.aicourse-hero-nav, .aicourse-hero-home, .aicourse-hero
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    /* ACF-FIX-2.1.184: border-box, so 44 means 44.
+       These four carry `border: 1px solid transparent` (the resting state of their focus ring) and
+       were sizing content-box, so they measured 46x46. The AI button beside them declares
+       `border: none` and measured 44x44 -- a 2px difference between neighbours in the same row,
+       produced by a border nobody can see. */
+    box-sizing: border-box;
     inline-size: var(--acf-target-min);
     block-size: var(--acf-target-min);
     flex-shrink: 0;
@@ -1925,10 +1931,38 @@ body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-her
     color: var(--acf-text-on-media);
 }
 
-body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-icons svg {
+/* ACF-FIX-2.1.184: the 22px glyph applies to BOTH ends of the banner, not just the left one.
+   This rule was scoped to `.aicourse-hero-icons`, which is the LEFT cluster only. The chevron at
+   the inline-end lives in `.aicourse-hero-nav-progress`, so it kept the 24px default and every
+   icon on the right rendered 2px larger than every icon on the left -- on the same row, a few
+   hundred pixels apart, which is exactly where a 2px difference is visible.
+
+   Reported twice. The first fix matched the CONTAINERS (both 46px) and the boxes did agree; what
+   was never compared was what is drawn inside them. Measured from the browser's own matched-rules
+   rather than read out of the sheet, which is how the second one was found in a single pass.
+
+   Scoped to the icon BUTTONS by name rather than to "any svg in these containers". The first
+   attempt at this widened the container list and excluded only `.aicourse-completion-ring` -- and
+   `.aicourse-hero-nav-progress` also holds the COURSE banner's progress ring, so that version
+   crushed a 58px progress ring to 22px on every course and section page. Caught by re-measuring
+   the course hero rather than only the activity hero it was written for.
+
+   Naming the buttons cannot do that: an indicator is not in the list, so it cannot be caught by
+   it, whatever container a future template puts it in. */
+body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image
+:is(.aicourse-hero-nav, .aicourse-hero-home, .aicourse-hero-grades, .aicourse-hero-back,
+.aicourse-hero-ai-btn, .aicourse-hero-completion-toggle) svg:not(.aicourse-completion-ring) {
     inline-size: 22px;
     block-size: 22px;
 }
+
+/* ACF-FIX-2.1.184c: `:not(.aicourse-completion-ring)` above is load-bearing, not belt-and-braces.
+   On a manual-completion activity the template wraps the ring in the toggle BUTTON --
+   `.aicourse-hero-completion-toggle > .aicourse-completion-ring-container > svg` -- so naming the
+   buttons is not enough on its own: one of them contains an indicator. Without the exclusion the
+   36px ring rendered at 22px on every manual-completion activity.
+   Third time in this change that widening a selector caught an indicator that only looked like an
+   icon. The exclusion is by the indicator's own class, so it holds wherever a template puts it. */
 
 body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-nav {
     border-radius: var(--acf-radius-full);
@@ -1961,6 +1995,8 @@ body.format-aicourse .aicourse-hero-ai-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    /* Same box model as the four icon links beside it -- see the note there. */
+    box-sizing: border-box;
     inline-size: var(--acf-target-min);
     block-size: var(--acf-target-min);
     flex-shrink: 0;
