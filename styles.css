@@ -1964,18 +1964,15 @@ body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image
    Third time in this change that widening a selector caught an indicator that only looked like an
    icon. The exclusion is by the indicator's own class, so it holds wherever a template puts it. */
 
+/* ACF-FIX-2.1.186b: the chevron has NO surface of its own. See the consolidated note further down
+   -- this block used to give it a scrim, a border and a blur, and the block below gave it a second,
+   different one. Only the colour survives here. */
 body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-nav {
-    border-radius: var(--acf-radius-full);
-    border-color: var(--acf-border-media);
-    /* 0.55 fill: white glyphs = 4.76:1 worst case over a pure-white photo. */
-    background: var(--acf-media-scrim);
     color: var(--acf-text-on-media);
-    backdrop-filter: blur(var(--acf-blur-sm));
-    -webkit-backdrop-filter: blur(var(--acf-blur-sm));
 }
 
 body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-nav:hover {
-    background: var(--acf-media-hover);
+    background: var(--acf-surface-hover);
     transform: scale(1.06);
 }
 
@@ -11967,17 +11964,32 @@ body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image
     box-shadow: none;
 }
 
-/* The chevrons join the panel too: they were the one control in the cluster with no surface of its
-   own, so against a busy photo they read as artefacts rather than buttons. */
+/* ACF-FIX-2.1.186b: the chevron carries no surface of its own, exactly like the icons opposite it.
+   THE ASYMMETRY WAS NEVER THE ICON. Reported four times as "the right side is bigger", and the
+   first three fixes measured the glyph (22px, matched), the button box (44px, matched) and the
+   panel height (68px, matched) and each time reported symmetry. What none of them compared was the
+   per-button BACKGROUND: the four icons on the left are transparent inside the shared glass pill,
+   and the chevron on the right had its own tinted, blurred tile behind it. A visible square behind
+   one control and nothing behind the other reads as a size difference, because a filled 44px box
+   simply IS bigger than an unfilled one -- which is what the eye was reporting all along and the
+   measurements could not see.
+   The comment this replaces argued the chevron needed a surface so it would not read as an artefact
+   against a busy photo. That was true when the chevron sat directly on the image; it stopped being
+   true when the cluster gained the glass pill both ends now share. The pill IS the surface.
+   Two rules were setting this, with different radii and different fills -- the duplicate-declaration
+   trap again -- so they are consolidated here into one that sets nothing. */
 body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-nav {
-    border-radius: var(--acf-radius-md);
-    background: rgba(255, 255, 255, 0.10);
+    background: transparent;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border-color: transparent;
     color: var(--acf-text-on-media);
     transition: background var(--acf-duration-fast) var(--acf-ease-standard);
 }
 
+/* Hover is the one place it does gain a surface -- the same one the left icons gain. */
 body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-nav:hover {
-    background: rgba(255, 255, 255, 0.20);
+    background: var(--acf-surface-hover);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -12988,13 +13000,24 @@ body.format-aicourse .aicourse-hero-banner .aicourse-grade-display {
     font-size: var(--acf-font-size-xs);
 }
 
-/* Both clusters end up the same height whatever is inside them. The section
-   banner's is sized by its percentage ring; the activity banner's by a smaller
-   ring and a line of text, which came out 12px shorter. A floor derived from the
-   same ring token keeps the two banners' right-hand corners level — which is the
-   thing the eye actually compares when moving between the two pages. */
-body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-nav-progress {
-    min-block-size: calc(var(--acf-hero-ring-image) + var(--acf-space-2) + 2px);
+/* ACF-FIX-2.1.186: the floor applies to BOTH clusters, not just the right-hand one.
+   The note this replaces said "both clusters end up the same height", and the rule under it set a
+   floor on `.aicourse-hero-nav-progress` alone. It was solving the wrong symmetry: it levelled the
+   right-hand corner of the ACTIVITY banner with the right-hand corner of the SECTION banner -- two
+   different pages, compared from memory -- while leaving the left and right pills of the SAME
+   banner 12px apart, which is a comparison the eye makes in a single glance and cannot miss.
+
+   Reported three times as "the right side is bigger". The first two fixes measured the icon
+   BUTTONS, found them identical, and declared it done. The buttons were never the problem: the
+   panels around them were, and nothing had ever measured those.
+
+   One floor, both clusters, sized to clear the tallest thing either can hold (the course banner's
+   progress ring, which is larger than the activity banner's completion ring). Cross-page symmetry
+   is preserved because both pages read the same token; same-page symmetry now holds too, because
+   the same declaration sets both ends. */
+body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image
+:is(.aicourse-hero-icons, .aicourse-hero-nav-progress) {
+    min-block-size: calc(var(--acf-hero-ring-image) + var(--acf-space-2) + 4px);
     box-sizing: border-box;
 }
 
