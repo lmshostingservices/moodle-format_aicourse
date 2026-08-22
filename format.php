@@ -184,6 +184,26 @@ echo '</div>';
 // Initialize AMD module for icon picker and progress animations.
 $PAGE->requires->js_call_amd('format_aicourse/courseformat', 'init');
 
+// ACF-FIX-2.1.183: the section-card module is queued HERE, beside courseformat, and not in the
+// footer hook.
+//
+// It spent three releases never running on the page it exists for, and the reason is worth keeping:
+// it was queued in before_footer_html_generation(), after that method's `$allowedpage` guard. That
+// guard admits activity, section, grades, participants, enrol, badges, competency and report pages
+// -- and `course-view-aicourse` counts as a "section page" there only when a section parameter is
+// present. The COURSE HOME PAGE, the one page section cards are actually on, fails every branch and
+// the method returns before the queue is reached. Moving it up beside heroatop in that same file
+// then swapped it for a subtler version of the same fault: that block is inside
+// `if (!empty($options['heroattop']))`, so the cards would have depended on an unrelated banner
+// setting being on.
+//
+// format.php has neither problem. It is included by exactly the pages that render section cards,
+// it is where courseformat is already queued for the same reason, and there is no guard between
+// the top of the file and here that a working course page can fail. The lesson is not about this
+// hook: it is that a module verified in a harness is only verified WHEN IT RUNS, and where it is
+// queued from is part of whether it runs.
+$PAGE->requires->js_call_amd('format_aicourse/cards', 'init');
+
 // ACF-FIX-2.0: Release the Moodle session lock only now that all rendering is finished, so.
 // Completion data cached in the session and any queued \core\notification messages survive.
 // Concurrent AJAX requests from the same browser session still benefit from the early release.

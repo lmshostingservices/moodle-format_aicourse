@@ -122,6 +122,7 @@ class before_footer_html_generation {
                 }
 
                 $PAGE->requires->js_call_amd('format_aicourse/heroatop', 'init');
+
             }
         } catch (\Throwable $e) {
             unset($e);
@@ -279,11 +280,6 @@ class before_footer_html_generation {
         // Ensure JS runs on section/activity/grade pages too.
         $PAGE->requires->js_call_amd('format_aicourse/courseformat', 'init');
 
-        // ACF-FIX-2.1.178: section-card behaviour -- the progress ring counts up and the completion
-        // ticks explain themselves. Queued unconditionally alongside courseformat rather than being
-        // gated on the player: the ring animation has nothing to do with the sidebar, and the module
-        // checks for cards itself and returns when a page has none.
-        $PAGE->requires->js_call_amd('format_aicourse/cards', 'init');
 
         // Check course index visibility setting (bitmask: 1=home, 2=section, 4=activity).
         $courseindexsetting = isset($options['showcourseindex']) ? (int)$options['showcourseindex'] : 7;
