@@ -11113,7 +11113,7 @@ body.aicourse-index-merged {
 /* Both controls take the nav icon's box exactly, so the row is one rhythm rather than core's
    button chrome sitting next to this plugin's. Core's .btn and .btn-icon bring their own padding,
    border, radius and line-height; all of it is reset here. */
-.aicourse-player-drawerctl :is(.drawertoggle, .btn, .btn-icon) {
+.aicourse-player-drawerctl :is(.aicourse-player-close, .drawertoggle, .btn, .btn-icon) {
     display: grid;
     place-items: center;
     inline-size: 32px;
@@ -11127,8 +11127,8 @@ body.aicourse-index-merged {
     box-shadow: none;
 }
 
-.aicourse-player-drawerctl :is(.drawertoggle, .btn, .btn-icon):hover,
-.aicourse-player-drawerctl :is(.drawertoggle, .btn, .btn-icon):focus-visible {
+.aicourse-player-drawerctl :is(.aicourse-player-close, .drawertoggle, .btn, .btn-icon):hover,
+.aicourse-player-drawerctl :is(.aicourse-player-close, .drawertoggle, .btn, .btn-icon):focus-visible {
     background: var(--acf-surface-hover);
     color: var(--acf-brand);
 }
@@ -11140,12 +11140,27 @@ body.aicourse-index-merged {
     font-size: 15px;
 }
 
-/* Core marks the close button `hidden` on the drawer it is not currently serving; the one this
-   plugin adopts belongs to the open course index, so it must not inherit that. The dropdown
-   wrapper is unhidden for the same reason. */
-body.aicourse-index-merged .aicourse-player-drawerctl :is(.drawertoggle, .drawerheadercontent) {
-    /* stylelint-disable-next-line declaration-no-important -- beats Bootstrap's own .hidden. */
+/* ACF-FIX-2.1.156: only the dropdown wrapper needs unhiding now. Core marks it `hidden` on the
+   drawer it is not currently serving, and the one adopted here belongs to the open course index.
+   The close button is this plugin's own element (see player.js) precisely so that core's drawer JS
+   -- which rewrites `hidden`, `tabindex` and `data-aria-hidden-tab-index` on its own toggle as the
+   drawer opens and closes -- has nothing here to reach for. 2.1.154 moved core's button and it
+   arrived invisible; the merged row rendered with a menu and no way to close the panel. */
+body.aicourse-index-merged .aicourse-player-drawerctl .drawerheadercontent {
+    /* stylelint-disable-next-line declaration-no-important -- beats Moodle's own .hidden. */
     display: flex !important;
+}
+
+/* Our close button. Sized and coloured with the nav icons above rather than with core's button
+   chrome, and drawn as an SVG so it does not depend on the icon font being loaded. */
+.aicourse-player-close svg {
+    inline-size: 16px;
+    block-size: 16px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
 }
 
 body.aicourse-index-merged .aicourse-player-drawerctl .drawerheadercontent {

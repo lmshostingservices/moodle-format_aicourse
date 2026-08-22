@@ -283,9 +283,21 @@ class before_footer_html_generation {
         $courseindexsetting = isset($options['showcourseindex']) ? (int)$options['showcourseindex'] : 7;
         $hideindex = false;
 
+        // ACF-FIX-2.1.155: the activity-page branch is gone. lib.php::page_set_course() now reads
+        // bit 2 correctly and adds the class server-side, in the <body> tag, before a pixel is
+        // painted. Deciding it here as well meant the class arrived after the whole page had
+        // streamed, and applying it then flips `display` on the drawer and four ancestor boxes'
+        // margins at once -- properties core animates, so the entire content column visibly
+        // reflowed a beat after load. That was the jerk on activity pages.
+        //
+        // It also could not be undone: bodyclass.js only ever ADDS. When the two halves disagreed
+        // -- which they did for every value of the mask except 3 and 7 -- whichever one said "hide"
+        // won permanently.
+        //
+        // Section pages return before this point, and the remaining page types below (grade,
+        // participants, enrol, badges, competency, report) have never had a bit of their own; they
+        // are judged by lib.php on bit 0, as they always were.
         if ($issectionpage && ($courseindexsetting & 2) === 0) {
-            $hideindex = true;
-        } else if ($isactivitypage && ($courseindexsetting & 4) === 0) {
             $hideindex = true;
         }
 
@@ -293,6 +305,9 @@ class before_footer_html_generation {
         // <script>. They cannot be added with $PAGE->add_body_class() here because the
         // <body> tag has already been written by the time a footer hook runs; the course
         // pages themselves handle it server-side in format_aicourse::page_set_course().
+        // (ACF-FIX-2.1.155: "the course pages" now includes activity pages -- see above. Anything
+        // added here is applied a full page-load late, so nothing that affects layout belongs in
+        // this list.)
         // Collecting them and making one js_call_amd removes the last inline scripts, which
         // any Content-Security-Policy that forbids inline script would otherwise block.
         $lateclasses = [];

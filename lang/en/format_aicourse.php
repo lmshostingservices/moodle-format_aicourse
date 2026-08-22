@@ -681,6 +681,7 @@ $string['page-course-view-aicourse'] = 'Any course main page in AI Course format
 $string['page-course-view-aicourse-x'] = 'Any course page in AI Course format';
 $string['percentcomplete'] = '{$a}% complete';
 $string['percentvalue'] = '{$a}%';
+$string['player_closeindex'] = 'Close course index';
 $string['player_completedon'] = 'Completed {$a}';
 $string['player_dashboard'] = 'Dashboard';
 $string['player_done'] = 'Completed';

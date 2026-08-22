@@ -619,9 +619,10 @@ const CI_DRAWER = '#theme_boost-drawers-courseindex';
  * Move the drawer's close button and options menu into the brand row.
  *
  * @param {Element} header The plugin's own header block.
+ * @param {Object} strings Localised labels.
  * @returns {void}
  */
-const adoptDrawerControls = (header) => {
+const adoptDrawerControls = (header, strings) => {
     const drawer = document.querySelector(CI_DRAWER);
     const brand = header.querySelector('.aicourse-player-brand');
     if (!drawer || !brand) {
@@ -635,22 +636,39 @@ const adoptDrawerControls = (header) => {
     const slot = document.createElement('div');
     slot.className = 'aicourse-player-drawerctl';
 
-    // Order matters: the menu sits inboard and the close button ends the row, which is where a
-    // close control is looked for in every other panel on the site.
+    // The options menu is MOVED. It is a Bootstrap dropdown with a rendered menu beside its
+    // trigger, and rebuilding that faithfully would mean copying markup that is core's to change.
     const menu = strip.querySelector('.drawerheadercontent');
-    const close = strip.querySelector('.drawertoggle');
     if (menu) {
         slot.appendChild(menu);
     }
-    if (close) {
-        slot.appendChild(close);
-    }
 
-    // Nothing to adopt -- a theme that renders its own strip, or a Moodle version that names these
-    // differently. The strip is left exactly as it was rather than collapsed over its contents.
-    if (!slot.childElementCount) {
-        return;
-    }
+    // ACF-FIX-2.1.156: the close button is REBUILT, not moved.
+    //
+    // 2.1.154 moved core's own `.drawertoggle` here and it did not survive the trip -- the merged
+    // row rendered with the menu and no close control at all, which left the panel with no way to
+    // shut. Core's drawer JS owns that button: it toggles `hidden`, rewrites `tabindex` and
+    // `data-aria-hidden-tab-index` on it as the drawer opens and closes, and it does that by
+    // querying inside the drawer's own header -- which this code had just emptied.
+    //
+    // Fighting that with CSS is fighting core for control of an element core believes it owns.
+    // Making our own button instead ends the argument: Boost's toggle handler is delegated from
+    // `document` and dispatches on the data attributes alone, so a button this plugin creates with
+    // the same three attributes closes the drawer exactly as core's does, and core has no reason to
+    // touch it. The original stays in the collapsed strip, untouched and hidden by its overflow, so
+    // core's own bookkeeping still finds what it expects.
+    const close = document.createElement('button');
+    close.type = 'button';
+    close.className = 'aicourse-player-close';
+    close.setAttribute('data-toggler', 'drawers');
+    close.setAttribute('data-action', 'closedrawer');
+    close.setAttribute('data-target', 'theme_boost-drawers-courseindex');
+    close.setAttribute('aria-label', strings.closeindex);
+    close.setAttribute('title', strings.closeindex);
+    close.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">'
+        + '<line x1="18" y1="6" x2="6" y2="18"></line>'
+        + '<line x1="6" y1="6" x2="18" y2="18"></line></svg>';
+    slot.appendChild(close);
 
     brand.appendChild(slot);
     // The class is what the stylesheet keys the collapsed strip and the shorter top block off, so
@@ -678,7 +696,7 @@ export const init = async(passed) => {
     // class depends on them.
     document.body.classList.add('aicourse-player-on');
 
-    const [home, dashboard, mycourses, navlabel, progress, esttime, done, notdone, requires]
+    const [home, dashboard, mycourses, navlabel, progress, esttime, done, notdone, requires, closeindex]
         = await Promise.all([
         getString('player_home', 'format_aicourse'),
         getString('player_dashboard', 'format_aicourse'),
@@ -689,8 +707,10 @@ export const init = async(passed) => {
         getString('player_done', 'format_aicourse'),
         getString('player_notdone', 'format_aicourse'),
         getString('player_requires', 'format_aicourse'),
+        getString('player_closeindex', 'format_aicourse'),
     ]);
-    const strings = {home, dashboard, mycourses, navlabel, progress, esttime, done, notdone, requires};
+    const strings = {home, dashboard, mycourses, navlabel, progress, esttime, done, notdone, requires,
+        closeindex};
 
     if (!document.getElementById(HEADER_ID)) {
         index.parentNode.insertBefore(buildHeader(config, strings), index);
@@ -698,7 +718,7 @@ export const init = async(passed) => {
 
     const header = document.getElementById(HEADER_ID);
     if (header) {
-        adoptDrawerControls(header);
+        adoptDrawerControls(header, strings);
     }
 
     decorate(config, strings);

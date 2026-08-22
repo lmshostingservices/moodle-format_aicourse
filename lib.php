@@ -482,11 +482,57 @@ class format_aicourse extends format_topics {
                 $page->add_body_class('aicourse-cardview');
             }
 
-            // Course index visibility is a bitmask: bit 0 = course home, bit 1 = section pages.
+            // Course index visibility is a bitmask: bit 0 = course home, bit 1 = section pages,
+            // bit 2 = activity pages.
+            //
+            // ACF-FIX-2.1.155: bit 2 was never read here. page_set_course() runs on EVERY page that
+            // sets a course, activity pages included, and the only branch was "is there a section
+            // parameter" -- so an activity page fell into the course-home arm and was judged on
+            // bit 0, the wrong bit entirely.
+            //
+            // The other half of the decision lives in the footer hook, which reads bit 2 correctly
+            // and pushes the class through bodyclass.js. That module can only ADD a class, never
+            // remove one, so the two halves could not correct each other -- they could only ever
+            // add up:
+            //
+            //   showcourseindex = 4 (activity only):  bit 0 is clear, so THIS code hid the index on
+            //     an activity page. The hook wanted it shown and therefore added nothing. The index
+            //     was hidden on precisely the pages the setting exists to show it on.
+            //   showcourseindex = 1 (home only):      bit 0 is set, so nothing was added here. The
+            //     hook wanted it hidden and added the class AFTER the page had rendered -- the index
+            //     appeared, then vanished, taking the whole content column through a relayout.
+            //
+            // Values 3 and 7 agree by coincidence, which is why this survived: 7 is the default.
+            //
+            // Detecting a module page: $page->cm and the page context are both authoritative when
+            // set, but require_login() reaches set_course() through several routes and neither is
+            // guaranteed to be populated yet at this point. The script path is the backstop. All
+            // three are inside the existing try/catch, so a context that is not yet set costs the
+            // body class rather than the page.
             $courseindexsetting = isset($options['showcourseindex']) ? (int) $options['showcourseindex'] : 7;
-            $showindex = $hassection
-                ? (($courseindexsetting & 2) !== 0)
-                : (($courseindexsetting & 1) !== 0);
+
+            $isactivitypage = false;
+            if (!empty($page->cm)) {
+                $isactivitypage = true;
+            } else {
+                $pagecontext = $page->context;
+                if ($pagecontext instanceof \context_module) {
+                    $isactivitypage = true;
+                } else {
+                    $script = (string) ($_SERVER['SCRIPT_NAME'] ?? '');
+                    $isactivitypage = (strpos($script, '/mod/') !== false
+                        && substr($script, -strlen('/view.php')) === '/view.php');
+                }
+            }
+
+            if ($isactivitypage) {
+                $showindex = (($courseindexsetting & 4) !== 0);
+            } else if ($hassection) {
+                $showindex = (($courseindexsetting & 2) !== 0);
+            } else {
+                $showindex = (($courseindexsetting & 1) !== 0);
+            }
+
             if (!$showindex && !$page->user_is_editing()) {
                 $page->add_body_class('aicourse-hideindex');
             }
