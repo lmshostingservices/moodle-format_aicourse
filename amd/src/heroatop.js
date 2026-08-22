@@ -37,6 +37,9 @@
 
 /** @type {string} Marks the banner once lifted, so the move happens exactly once. */
 const DONEATTR = 'data-aicourse-atop';
+// ACF-FIX-2.1.158: marks a banner the measuring half has already been attached to, so a page that
+// both lifts AND announces placement does not run it twice.
+const ATTACHEDATTR = 'data-aicourse-hero-attached';
 
 /**
  * Move the hero banner to the top of the page container.
@@ -393,6 +396,77 @@ const fitFullWidth = () => {
 };
 
 
+/**
+ * Pull the banner flush to the top of its container on an activity page.
+ *
+ * ACF-FIX-2.1.158. On a course page lift() moves the banner to be a direct child of #page, above
+ * all the page furniture, so nothing sits between the site header and the banner. An activity page
+ * keeps the banner inside #region-main -- and #region-main, #page-content and the theme's own
+ * wrappers each contribute block padding above it. The result is a strip of page background between
+ * the header and the banner that does not exist on any other page of the same course.
+ *
+ * The inline axis already had this treatment (styles.css, "An ACTIVITY page keeps the banner inside
+ * #region-main"): a negative margin equal to the padding the banner sits inside, stated relative to
+ * its own surroundings rather than to a named ancestor, so it works wherever it is nested. This is
+ * the same correction on the block axis, measured rather than assumed because the value is the sum
+ * of several themes' paddings and no constant would survive a theme change.
+ *
+ * Capped, and only ever a pull upward. A measurement that comes back large means the banner is not
+ * where this code thinks it is, and in that case doing nothing is correct.
+ *
+ * @param {Element} hero The banner wrapper.
+ * @returns {void}
+ */
+const fitActivityTop = (hero) => {
+    const region = hero.closest('#region-main, #region-main-box, #page-content');
+    if (!region) {
+        // A lifted banner is already a child of #page; there is nothing above it to cancel.
+        return;
+    }
+
+    // Zeroed before measuring, so a second run measures the true gap rather than the result of the
+    // first one -- otherwise the correction compounds on every resize.
+    hero.style.marginBlockStart = '0px';
+    void hero.offsetWidth;
+
+    const gap = Math.round(hero.getBoundingClientRect().top - region.getBoundingClientRect().top);
+    if (gap > 0 && gap <= 96) {
+        hero.style.marginBlockStart = (-gap) + 'px';
+    }
+};
+
+/**
+ * Run the measuring half of this module against a banner that is already in place.
+ *
+ * ACF-FIX-2.1.158. init() calls lift(), and lift() returns at its first line when the banner is not
+ * in the DOM yet. On an activity page it never is: heroinject places the banner from its <template>
+ * and the hook queues heroinject AFTER heroatop. So lift() returned on a race -- not on a condition
+ * -- and everything it gates went with it: align(), and inside align() the header fit that publishes
+ * --acf-hero-sticky-top, the ResizeObserver on the content column, the drawer MutationObserver and
+ * the re-measure on drawer clicks.
+ *
+ * With --acf-hero-sticky-top never published it falls back to 0, so a banner whose minimum height is
+ * --acf-topblock stuck to the very top of the viewport, over the top-left of the content column
+ * where Boost puts the course-index toggle. That is the "sticky scroll is terrible on activity
+ * pages" report and the "the open button is hidden" report: one cause, two symptoms.
+ *
+ * heroinject now announces placement and this runs then. align() only measures and sets custom
+ * properties -- it does not move anything -- so it is safe to run on a banner that was never lifted.
+ *
+ * @returns {void}
+ */
+export const attach = () => {
+    const hero = document.querySelector('.aicourse-hero-sticky-wrap');
+    if (!hero || hero.hasAttribute(ATTACHEDATTR)) {
+        return;
+    }
+    hero.setAttribute(ATTACHEDATTR, '1');
+    fitActivityTop(hero);
+    align(hero);
+    fitFullWidth();
+    window.addEventListener('resize', () => fitActivityTop(hero));
+};
+
 export const init = () => {
     // ACF-FIX-2.1.127: the pull runs whether or not the banner is lifted.
     //
@@ -403,12 +477,21 @@ export const init = () => {
     // it only shows on a site where the main region is narrower.
     const start = () => {
         lift();
+        // ACF-FIX-2.1.158: if the banner is already on the page -- a course page, or an activity
+        // page whose modules happened to load in the other order -- attach now rather than waiting
+        // for an announcement that has already been made.
+        attach();
         fitFullWidth();
         // Again once the page has settled: a container's width can change after first paint.
         window.setTimeout(fitFullWidth, 300);
         window.setTimeout(fitFullWidth, 1200);
         window.addEventListener('resize', fitFullWidth);
     };
+
+    // ACF-FIX-2.1.158: heroinject announces the banner once it has been moved out of its template.
+    // Not {once: true} -- a page can replace the banner (core re-renders parts of an activity page
+    // through the reactive state manager), and the second placement needs the same treatment.
+    document.addEventListener('format_aicourse:heroplaced', attach);
 
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', start, {once: true});

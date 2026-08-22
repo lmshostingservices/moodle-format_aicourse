@@ -11183,3 +11183,65 @@ body.aicourse-index-merged .aicourse-player-drawerctl .dropdown-menu {
 body.aicourse-index-merged .aicourse-player-logo {
     max-inline-size: 42%;
 }
+
+
+/* --- The activity hero, brought level with the course hero (ACF-FIX-2.1.158) ----
+   Rendered both banners side by side against this stylesheet and diffed every computed box. The
+   banner height, the content grid, the padding and the alignment all matched exactly -- so the
+   height difference reported from the live site is the block gap ABOVE the banner, corrected in
+   heroatop.js, not the banner itself.
+
+   What genuinely differed is the type. Two causes, and the second is the one that shows:
+
+   1. `hero.mustache` emits `aicourse-title-{{titlesize}}`; `activity_hero.mustache` does not. So
+      the course's own "Card title size" tier never reaches an activity page. (Both are then beaten
+      by --acf-hero-title-compact at (0,4,1) in image mode, which is why the measured sizes agree at
+      desktop width -- the tier system is inert there for BOTH heroes. That is a separate defect,
+      noted rather than changed, because fixing it would resize every course banner at once.)
+
+   2. The activity title is the only thing in its slot. A course banner carries a title AND a summary
+      line; an activity banner carries an eyebrow and a title, and the eyebrow is deliberately small.
+      At the same font size the activity title therefore reads smaller -- it has nothing beneath it
+      to give it scale. It is given its own step up, which is what "the heading is too small" is
+      asking for. */
+body.format-aicourse .aicourse-hero-banner .aicourse-hero-title-group .aicourse-hero-title {
+    font-size: clamp(1.375rem, 1rem + 1.6vw, 2rem);   /* 22 -> 32px */
+    line-height: 1.15;
+}
+
+/* The eyebrow keeps its place in the hierarchy: still clearly subordinate, but no longer so faint
+   against a photograph that it reads as an artefact. */
+body.format-aicourse .aicourse-hero-banner .aicourse-hero-section-label {
+    font-size: var(--acf-font-size-2xs);
+    font-weight: var(--acf-weight-semibold);
+    letter-spacing: var(--acf-tracking-wide);
+    opacity: 0.92;
+}
+
+/* The activity progress cluster is a ring plus a text label, and `row-reverse` -- written for the
+   course hero's "bar then ring" -- put the label before the ring, which is neither what the markup
+   says nor what the course hero shows. Stated here rather than unpicking the shared rule, which is
+   correct for the banner it was written for. */
+body.format-aicourse .aicourse-hero-banner .aicourse-hero-progress:has(.aicourse-completion-ring-container) {
+    flex-direction: row;
+}
+
+/* 2.1.150's glass panel was never scoped to image mode, so on a gradient banner the activity tick
+   wore a dark disc that the same release's own note says should not be there. It also hard-coded
+   the three values, so it ignored dark mode, prefers-contrast, prefers-reduced-transparency and
+   print -- all of which the icon group honours. Both fixed by reading the tokens and scoping the
+   rule, exactly as the course ring was in 2.1.152. */
+body.format-aicourse .aicourse-hero-banner:not(.aicourse-hero-has-image) .aicourse-completion-ring-container {
+    border-color: transparent;
+    background: transparent;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    box-shadow: none;
+}
+
+body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-completion-ring-container {
+    border: 1px solid var(--acf-border-media);
+    background: var(--acf-media-scrim-strong);
+    backdrop-filter: blur(var(--acf-blur-md));
+    -webkit-backdrop-filter: blur(var(--acf-blur-md));
+}

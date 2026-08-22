@@ -99,6 +99,23 @@ const placeHero = () => {
     }
 
     source.remove();
+
+    // ACF-FIX-2.1.158: announce it. heroatop's measuring half runs on this rather than on module
+    // load, because on an activity page the banner is still inside its <template> when heroatop
+    // initialises -- the hook queues heroatop early and heroinject last. heroatop's lift() bailed on
+    // that race and took --acf-hero-sticky-top, the header fit and three observers with it, which is
+    // why the sticky banner and the course-index toggle both misbehaved on activity pages only.
+    //
+    // A DOM event rather than a direct call: this module is legacy AMD and heroatop is an ES module,
+    // and an event costs nothing while a cross-format import invites the double-wrapping problem the
+    // build has been bitten by before.
+    try {
+        document.dispatchEvent(new CustomEvent('format_aicourse:heroplaced'));
+    } catch (e) {
+        // CustomEvent is available everywhere this plugin supports; if it somehow is not, the page
+        // keeps the layout it has rather than throwing during page setup.
+        window.console && window.console.debug && window.console.debug(e);
+    }
 };
 
 /**

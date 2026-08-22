@@ -145,7 +145,7 @@ if ($hassiteconfig) {
     $settings->add(new admin_setting_configcolourpicker(
         'format_aicourse/defaultaccentcolour',
         get_string('accentcolour', 'format_aicourse'),
-        get_string('accentcolour_desc', 'format_aicourse'),
+        get_string('defaultaccentcolour_desc', 'format_aicourse'),
         ''
     ));
 
@@ -464,14 +464,14 @@ if ($hassiteconfig) {
         PARAM_TEXT
     ));
 
-    // ACF-FIX-2.1.61: the accent colour, site-wide.
-    $settings->add(new admin_setting_configtext(
-        'format_aicourse/defaultaccentcolour',
-        get_string('accentcolour', 'format_aicourse'),
-        get_string('defaultaccentcolour_desc', 'format_aicourse'),
-        '',
-        PARAM_TEXT
-    ));
+    // ACF-FIX-2.1.158: this block used to re-register 'format_aicourse/defaultaccentcolour' as a
+    // plain text box. admin_settingpage::add() keys by name, so the LATER registration silently
+    // replaced the colour picker declared above at ACF-FIX-2.1.23 -- the picker has been dead code
+    // ever since, and administrators have been typing hex codes into a text field with no swatches
+    // and no validation. One name, one control: the picker above is the one that is kept.
+    //
+    // The description string this block used, 'defaultaccentcolour_desc', is left in the language
+    // file: it is the more specific of the two and is now used by the picker.
 
     $settings->add(new admin_setting_configtext(
         'format_aicourse/forceaccentcolour',
@@ -722,6 +722,24 @@ if ($hassiteconfig) {
 
 
 
+
+    // ACF-FIX-2.1.158: the missing site default.
+    //
+    // lib.php's course_format_options() calls $d('coursenavplace', 0) -- i.e. it reads
+    // 'format_aicourse/defaultcoursenavplace' -- but that setting was never registered here, so the
+    // helper fell through to its hard-coded fallback on every site and the option's own comment
+    // ("every course format option now has a site-level default") was not true. Registered with the
+    // same two choices the course settings form offers, so the two cannot describe it differently.
+    $settings->add(new admin_setting_configselect(
+        'format_aicourse/defaultcoursenavplace',
+        get_string('coursenavplace', 'format_aicourse'),
+        get_string('sitedefault_desc', 'format_aicourse'),
+        0,
+        [
+            0 => get_string('coursenavplace_default', 'format_aicourse'),
+            1 => get_string('coursenavplace_header', 'format_aicourse'),
+        ]
+    ));
 
     $settings->add(new admin_setting_configselect(
         'format_aicourse/defaultshowcourseindex',
