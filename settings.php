@@ -246,7 +246,7 @@ if ($hassiteconfig) {
     // different ways of declaring a setting and was never trusted enough to be used without a
     // hand-kept fallback list beside it.
     $PAGE->requires->js_call_amd('format_aicourse/settingsui', 'init', [[
-        'all' => get_string('settingsui_all', 'format_aicourse'),
+        'about' => get_string('settingsui_about', 'format_aicourse'),
         'search' => get_string('settingsui_search', 'format_aicourse'),
         'nomatches' => get_string('settingsui_nomatches', 'format_aicourse'),
         'settings' => get_string('settingsui_settings', 'format_aicourse'),

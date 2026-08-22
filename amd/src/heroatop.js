@@ -429,8 +429,29 @@ const fitActivityTop = (hero) => {
     hero.style.marginBlockStart = '0px';
     void hero.offsetWidth;
 
-    const gap = Math.round(hero.getBoundingClientRect().top - region.getBoundingClientRect().top);
-    if (gap > 0 && gap <= 96) {
+    // ACF-FIX-2.1.163: measured against #page, not against #region-main.
+    //
+    // 2.1.158 measured the gap between the banner and its nearest content wrapper. That found
+    // nothing, because the space is not INSIDE that wrapper -- it is above it. #page-content, the
+    // theme's own header region and #region-main's margin all sit between the site header and the
+    // banner, and a measurement taken from the bottom of that stack reports zero while a visible
+    // strip of page background sits above it.
+    //
+    // #page is the box the drawer is flush with -- the sidebar starts at its top edge with no gap,
+    // which is exactly the alignment the banner is supposed to share. So that is what it is
+    // measured against, and the same element the inline correction uses, so the two axes cannot
+    // disagree about where the page begins.
+    const page = document.getElementById('page');
+    const anchor = page || region;
+    const astyles = window.getComputedStyle(anchor);
+    const apad = parseFloat(astyles.paddingBlockStart || astyles.paddingTop) || 0;
+    const gap = Math.round(
+        hero.getBoundingClientRect().top - (anchor.getBoundingClientRect().top + apad)
+    );
+
+    // Only ever a pull upward, and only a plausible one: a large number means the banner is not
+    // where this code thinks it is, and doing nothing is then the right answer.
+    if (gap > 0 && gap <= 160) {
         hero.style.marginBlockStart = (-gap) + 'px';
     }
 };
@@ -472,14 +493,31 @@ const fitActivityWidth = (hero) => {
     hero.style.marginInlineEnd = '0px';
     void hero.offsetWidth;
 
-    const p = page.getBoundingClientRect();
-    const ps = window.getComputedStyle(page);
-    const padstart = parseFloat(ps.paddingInlineStart || ps.paddingLeft) || 0;
-    const padend = parseFloat(ps.paddingInlineEnd || ps.paddingRight) || 0;
+    // ACF-FIX-2.1.165: the edges are the WINDOW and the DRAWER, stated directly.
+    //
+    // Measuring against #page was the wrong anchor twice over. On one theme #page is 100% wide and
+    // its right edge sits beyond the viewport, so aligning to it pulled the banner off-screen and
+    // gave the page a horizontal scrollbar. On another #page is itself centred with a max-width, so
+    // aligning to it left the banner inset with the drawer closed -- the "not full width" report.
+    //
+    // "Full width beside the course index" is the actual requirement, so it is what is measured: the
+    // start edge is the drawer's right edge when the drawer is on screen, and zero when it is not;
+    // the end edge is the window. Neither depends on a theme's choice of wrapper.
+    const drawer = document.querySelector('#theme_boost-drawers-courseindex');
+    let left = 0;
+    if (drawer) {
+        const d = drawer.getBoundingClientRect();
+        // Only when it is actually occupying space: a closed drawer is translated off-screen and
+        // its right edge is then at or left of zero.
+        if (d.width > 0 && d.right > 0 && window.getComputedStyle(drawer).display !== 'none') {
+            left = d.right;
+        }
+    }
+    const right = document.documentElement.clientWidth;
     const h = hero.getBoundingClientRect();
 
-    const start = Math.round(h.left - (p.left + padstart));
-    const end = Math.round((p.right - padend) - h.right);
+    const start = Math.round(h.left - left);
+    const end = Math.round(right - h.right);
 
     // Only ever a pull outward, and only a plausible one. A large number means the banner is not
     // where this code thinks it is, and doing nothing is then the correct answer.

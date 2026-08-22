@@ -783,6 +783,7 @@ $string['sectionnotfound'] = 'Section not found.';
 $string['sectionnumber'] = 'Section {$a}';
 $string['sectionprogress'] = 'Section progress';
 $string['selecticon'] = 'Select icon';
+$string['settingsui_about'] = 'About this plugin';
 $string['settingsui_all'] = 'All';
 $string['settingsui_filterby'] = 'Filter:';
 $string['settingsui_new'] = 'Recently added';

@@ -86,20 +86,19 @@ const buildHeader = (config, strings) => {
     }
 
     header.innerHTML =
+        // ACF-FIX-2.1.165: one link, not three.
+        //
+        // Home, Dashboard and My courses were three icons competing for a 310px row, and for the
+        // person this panel is built for they are not three destinations -- they are one. A student
+        // leaving a course is going back to their courses; from My courses every other page on the
+        // site is one click away, including the two that were here. Three icons bought nothing and
+        // cost ~66px, which is the width the logo was missing.
         '<div class="aicourse-player-brand">' + logo +
             '<nav class="aicourse-player-nav" aria-label="' + strings.navlabel + '">' +
-                '<a href="' + config.nav.home + '" title="' + strings.home + '">' +
-                    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-8 9 8"/>' +
-                    '<path d="M5 10v10h14V10"/></svg>' +
-                    '<span class="accesshide">' + strings.home + '</span></a>' +
-                '<a href="' + config.nav.dashboard + '" title="' + strings.dashboard + '">' +
-                    '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/>' +
-                    '<rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>' +
-                    '<rect x="14" y="14" width="7" height="7"/></svg>' +
-                    '<span class="accesshide">' + strings.dashboard + '</span></a>' +
                 '<a href="' + config.nav.mycourses + '" title="' + strings.mycourses + '">' +
-                    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4z"/>' +
-                    '<path d="M8 5v14"/></svg>' +
+                    '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+                    '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>' +
+                    '<path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>' +
                     '<span class="accesshide">' + strings.mycourses + '</span></a>' +
             '</nav>' +
         '</div>' +
@@ -112,7 +111,76 @@ const buildHeader = (config, strings) => {
 
     // Assigned rather than interpolated: a course name can contain anything.
     header.querySelector('.aicourse-player-coursename').textContent = config.coursename;
+
+    // ACF-FIX-2.1.166: the sidebar ring fills and counts up, on the same curve and over the same
+    // 1.8s as the banner's. Two rings showing the same course on the same screen behaving
+    // differently is worse than neither being animated.
+    animateRing(header, pct);
+
     return header;
+};
+
+const RING_DURATION = 1800;
+
+/**
+ * Fill the sidebar's progress ring and count its number up.
+ *
+ * Reduced motion is honoured by setting the end state immediately -- the information is the point,
+ * the movement is not. The accessible name on the ring already carries the final figure, so the
+ * count-up is written to the visible text only and assistive technology is told the answer once.
+ *
+ * @param {Element} header The header block.
+ * @param {Number|null} pct The percentage, or null when nothing is tracked.
+ * @returns {void}
+ */
+const animateRing = (header, pct) => {
+    if (pct === null || pct === undefined) {
+        return;
+    }
+    const fill = header.querySelector('.aicourse-player-ring-fill');
+    const text = header.querySelector('.aicourse-player-ring-text');
+    if (!fill) {
+        return;
+    }
+
+    const target = pct * 1.194;
+    const reduced = window.matchMedia
+        && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (reduced || !window.requestAnimationFrame) {
+        fill.style.strokeDasharray = target + ' 200';
+        if (text) {
+            text.textContent = pct + '%';
+        }
+        return;
+    }
+
+    // Start empty, then fill. The template writes the final dasharray, so without the reset the
+    // transition has nowhere to travel from.
+    fill.style.transition = 'none';
+    fill.style.strokeDasharray = '0 200';
+    void fill.getBoundingClientRect();
+    fill.style.transition = 'stroke-dasharray ' + (RING_DURATION / 1000)
+        + 's cubic-bezier(0.22, 1, 0.36, 1)';
+    fill.style.strokeDasharray = target + ' 200';
+
+    if (!text) {
+        return;
+    }
+    text.textContent = '0%';
+    let startedAt = null;
+    const step = (now) => {
+        if (startedAt === null) {
+            startedAt = now;
+        }
+        const t = Math.min(1, (now - startedAt) / RING_DURATION);
+        const eased = 1 - Math.pow(1 - t, 3);
+        text.textContent = Math.round(pct * eased) + '%';
+        if (t < 1) {
+            window.requestAnimationFrame(step);
+        }
+    };
+    window.requestAnimationFrame(step);
 };
 
 /**
@@ -405,6 +473,26 @@ const bindTip = (mark, data, strings) => {
     mark.addEventListener('focus', open);
     mark.addEventListener('mouseleave', close);
     mark.addEventListener('blur', close);
+
+    // ACF-FIX-2.1.165: touch. A phone has no hover, so on a phone this panel did not exist -- the
+    // completion conditions, the grade and the date were desktop-only features and nothing said so.
+    //
+    // A tap opens it and a tap anywhere else closes it. `pointerdown` rather than `click` so the
+    // panel is up before the browser's ~300ms click delay, and `preventDefault` so the same tap does
+    // not also fire the row's link underneath. Pointer type is checked rather than sniffing the
+    // device: a hybrid laptop with a touchscreen gets hover AND tap, which is correct for both.
+    mark.addEventListener('pointerdown', (e) => {
+        if (e.pointerType === 'mouse') {
+            return;
+        }
+        e.preventDefault();
+        e.stopPropagation();
+        if (tipOwner === mark && tipEl && !tipEl.hidden) {
+            hideTip();
+        } else {
+            open();
+        }
+    });
     mark.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
             hideTip();
@@ -732,15 +820,47 @@ export const init = async(passed) => {
     // missing in 2.1.154 and there was no way to tell from the page whether the code had run, run
     // and failed, or not been loaded at all -- which cost a round trip to find out. It is a single
     // console line on a course page, not a logging framework.
+    // ACF-FIX-2.1.163: the diagnostic now reports the row's GEOMETRY, not just whether the parts
+    // exist. Three rounds were spent guessing why the logo looked small and the icons looked far
+    // apart, against a local harness whose numbers turned out not to match the real panel. The
+    // measurements the fix depends on are printed by the page itself, once, so the next change is
+    // made from this site's numbers rather than a reconstruction of them.
     if (window.console && window.console.info) {
+        const box = (sel) => {
+            const e = document.querySelector(sel);
+            if (!e) {
+                return null;
+            }
+            const r = e.getBoundingClientRect();
+            return {w: Math.round(r.width), h: Math.round(r.height),
+                l: Math.round(r.left), r: Math.round(r.right)};
+        };
+        const brand = document.querySelector('.aicourse-player-brand');
+        const logo = document.querySelector('.aicourse-player-logo');
+        const nav = document.querySelector('.aicourse-player-nav');
         const ctl = document.querySelector('.aicourse-player-drawerctl');
-        window.console.info('[format_aicourse] index merge:', JSON.stringify({
-            build: '2.1.157',
+        const hero = document.querySelector('.aicourse-hero-sticky-wrap');
+        const page = document.getElementById('page');
+        window.console.info('[format_aicourse] merge:', JSON.stringify({
+            build: '2.1.163',
             merged: document.body.classList.contains('aicourse-index-merged'),
-            ctl: !!ctl,
             close: !!document.querySelector('.aicourse-player-close'),
-            menu: !!document.querySelector('.aicourse-player-drawerctl .drawerheadercontent'),
-            strip: !!document.querySelector('#theme_boost-drawers-courseindex .drawerheader')
+            brand: box('.aicourse-player-brand'),
+            logo: box('.aicourse-player-logo'),
+            logoNatural: logo ? logo.naturalWidth + 'x' + logo.naturalHeight : null,
+            nav: box('.aicourse-player-nav'),
+            ctl: box('.aicourse-player-drawerctl'),
+            gapLogoNav: (logo && nav)
+                ? Math.round(nav.getBoundingClientRect().left - logo.getBoundingClientRect().right)
+                : null,
+            gapNavCtl: (nav && ctl)
+                ? Math.round(ctl.getBoundingClientRect().left - nav.getBoundingClientRect().right)
+                : null,
+            brandOverflow: brand ? brand.scrollWidth - brand.clientWidth : null,
+            justify: brand ? window.getComputedStyle(brand).justifyContent : null,
+            heroTop: hero ? Math.round(hero.getBoundingClientRect().top) : null,
+            pageTop: page ? Math.round(page.getBoundingClientRect().top) : null,
+            heroMarginTop: hero ? window.getComputedStyle(hero).marginBlockStart : null
         }));
     }
 
@@ -758,6 +878,13 @@ export const init = async(passed) => {
     // The tooltip is anchored to a fixed position, so anything that moves its tick underneath it
     // has to close it rather than leave it pointing at empty space. Passive listeners: neither
     // handler can cancel the scroll it is reacting to.
+    // Any tap outside a tick dismisses the panel — the touch equivalent of the pointer leaving.
+    document.addEventListener('pointerdown', (e) => {
+        if (e.pointerType !== 'mouse' && !(e.target.closest && e.target.closest('.aicourse-player-tick'))) {
+            hideTip();
+        }
+    }, true);
+
     window.addEventListener('scroll', hideTip, {passive: true, capture: true});
     window.addEventListener('resize', hideTip, {passive: true});
     document.addEventListener('keydown', (e) => {

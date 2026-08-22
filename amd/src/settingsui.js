@@ -103,22 +103,6 @@ const CATEGORIES = [
 ];
 
 /**
- * The setting's own name, as Moodle prints it under each label.
- *
- * @param {Element} item A rendered .form-item.
- * @returns {String} The bare name, or '' for a heading or description block.
- */
-const nameOf = (item) => {
-    const shortname = item.querySelector('.form-shortname');
-    if (shortname) {
-        return shortname.textContent.replace(/.*\|\s*/, '').trim();
-    }
-    // Fallback for themes that do not print the short name: Moodle's own row id.
-    const id = item.getAttribute('id') || '';
-    return id.indexOf('admin-') === 0 ? id.slice('admin-'.length) : '';
-};
-
-/**
  * Which category a row belongs to.
  *
  * @param {String} name The setting's own name.
@@ -295,7 +279,9 @@ const buildPanel = (cat, count, t) => {
         + '<span class="acfs-sub"></span>'
         + '</span>'
         + '<span class="acfs-count"></span>'
-        + svg('<path d="m6 9 6 6 6-6"/>', 'acfs-chev');
+        + '<span class="acfs-toggleword" data-open="' + t.hide + '">' + t.show + '</span>'
+        + '<span class="acfs-chevwrap" aria-hidden="true">'
+        + svg('<path d="m6 9 6 6 6-6"/>', 'acfs-chev') + '</span>';
     head.querySelector('.acfs-title').textContent = cat.label;
     head.querySelector('.acfs-sub').textContent = cat.desc;
     head.querySelector('.acfs-count').textContent =
@@ -356,7 +342,10 @@ export const init = (strings) => {
         nomatches: 'No settings match that search.',
         settings: 'settings',
         setting: 'setting',
-        hint: 'Choose an area to open it. Opening one closes the others.'
+        hint: 'Choose an area to open it. Opening one closes the others.',
+        about: 'About this plugin',
+        show: 'Show',
+        hide: 'Hide'
     }, strings || {});
 
     const root = document.getElementById('adminsettings');
@@ -364,25 +353,47 @@ export const init = (strings) => {
         return;
     }
 
+    // ACF-FIX-2.1.164: a setting is a row that PRINTS ITS OWN NAME. Everything else is prose.
+    //
+    // The previous test was "a .form-item with no name is a heading", with the row's `id` as a
+    // fallback when `.form-shortname` was absent. Both halves were wrong. Moodle gives headings an
+    // `id="admin-<name>"` too, so the fallback classified every heading as a setting; and some of
+    // this plugin's introductory blocks are not `.form-item` at all -- they render as a bare <h3>
+    // and a <div class="form-description">, which the `.form-item` query never saw, so they were
+    // left exactly where they were: above the search box, above the save button, unlabelled.
+    //
+    // `.form-shortname` is the honest test. It is printed for every real setting and for nothing
+    // else, because it exists to show the config name you would put in a config.php override.
     const items = Array.from(root.querySelectorAll('.form-item'));
-    if (items.length < 4) {
-        return;
-    }
-    root.dataset.acfsDone = '1';
-
-    // A heading has no setting name. It is a divider, not a setting, and counting it as one is why
-    // the old page's totals never matched what a reader could actually change.
     const settings = [];
-    const notes = [];
     items.forEach((item) => {
-        const name = nameOf(item);
+        const shortname = item.querySelector('.form-shortname');
+        if (!shortname) {
+            return;
+        }
+        const name = shortname.textContent.replace(/.*\|\s*/, '').trim();
         if (name === '') {
-            notes.push(item);
             return;
         }
         settings.push({item, name, cat: categoryOf(name),
             text: (name + ' ' + item.textContent).toLowerCase()});
     });
+
+    if (settings.length < 4) {
+        // Not this plugin's settings page, or a page that failed to render. Leave it alone.
+        return;
+    }
+    root.dataset.acfsDone = '1';
+
+    // Everything else the form already contained: headings, descriptions, and any block a future
+    // release adds. Captured by exclusion rather than by a list of class names, so a markup change
+    // in core cannot leave one of them stranded at the top of the page again. The submit button is
+    // excluded here and repositioned separately below.
+    const notes = Array.from(root.children).filter((el) =>
+        !settings.some((s) => s.item === el || s.item.contains(el) || el.contains(s.item))
+        && !el.querySelector('input[type="submit"], button[type="submit"]')
+        && !el.matches('input[type="submit"], button[type="submit"], script, style')
+        && el.textContent.trim() !== '');
 
     // Matching order and reading order are different problems. `match` must test Timing before Cards
     // or `hidetimesectioncards` files itself wrongly; `order` is what the reader sees.
@@ -419,6 +430,10 @@ export const init = (strings) => {
             const on = rec === which;
             rec.panel.classList.toggle('is-open', on);
             rec.head.setAttribute('aria-expanded', on ? 'true' : 'false');
+            const word = rec.head.querySelector('.acfs-toggleword');
+            if (word) {
+                word.textContent = on ? word.dataset.open : t.show;
+            }
         });
         if (which && scroll) {
             // Deferred a frame: the panel has to be open before its position is worth measuring.
@@ -480,17 +495,52 @@ export const init = (strings) => {
 
     const controls = buildControls(apply, t);
 
-    const notesWrap = document.createDocumentFragment();
-    notes.forEach((n) => {
-        n.classList.add('acfs-note');
-        notesWrap.appendChild(n);
-    });
+    // ACF-FIX-2.1.164: the notes get a home and a name.
+    //
+    // Moodle renders admin_setting_heading and admin_setting_description as .form-item rows with no
+    // control in them. Left loose at the top of the page they read as an unlabelled preamble --
+    // three headings and four paragraphs with nothing saying what they are or why they come first.
+    // They are collected into one titled block instead, so the page opens with "About this plugin"
+    // and then the areas, rather than with prose the reader has to classify for themselves.
+    let intro = null;
+    if (notes.length) {
+        intro = document.createElement('section');
+        intro.className = 'acfs-intro';
+
+        const ihead = document.createElement('h2');
+        ihead.className = 'acfs-introtitle';
+        ihead.textContent = t.about;
+        intro.appendChild(ihead);
+
+        notes.forEach((n) => {
+            n.classList.add('acfs-note');
+            intro.appendChild(n);
+        });
+    }
 
     root.appendChild(controls);
-    root.appendChild(notesWrap);
+    if (intro) {
+        root.appendChild(intro);
+    }
     root.appendChild(hint);
     root.appendChild(empty);
     root.appendChild(list);
+
+    // ACF-FIX-2.1.164: Save goes to the bottom, where it belongs.
+    //
+    // #adminsettings IS the form, and Moodle's submit button is one of its children. Everything this
+    // module builds is APPENDED to that form -- so the button, which was already in the DOM, ended
+    // up above all of it: directly under the introduction and above every setting it saves. A save
+    // control positioned before the things it saves is worse than no styling at all.
+    //
+    // Moved last and made sticky. Sixty-five settings is a long page, and a button that scrolls away
+    // means scrolling back to the bottom to commit a change made at the top.
+    const submit = root.querySelector('input[type="submit"], button[type="submit"]');
+    if (submit) {
+        const holder = submit.closest('.form-buttons, .felement, div') || submit;
+        holder.classList.add('acfs-save');
+        root.appendChild(holder);
+    }
 
     /**
      * Follow a #admin-<name> link: open the panel that holds it, then flash the row.

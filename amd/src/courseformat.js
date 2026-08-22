@@ -897,6 +897,17 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function($, Str
                     'aria-valuetext': targetPercentage + '%'
                 });
 
+                // ACF-FIX-2.1.166: start empty. The template renders the arc at its final offset,
+                // so without this the "animation" was a transition from the answer to the answer.
+                var $fill = $container.find('.aicourse-progress-ring-fill');
+                if ($fill.length) {
+                    var r0 = $container.data('radius') || 90;
+                    $fill[0].style.transition = 'none';
+                    $fill[0].style.strokeDashoffset = (2 * Math.PI * r0) + 'px';
+                    // Force the reset to apply before the animated value is written over it.
+                    void $fill[0].getBoundingClientRect();
+                }
+
                 // Animate to initial value.
                 self.animateRing($container, targetPercentage, false);
 
@@ -918,7 +929,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function($, Str
 
                     schedule(function() {
                         progressBar.css({
-                            'transition': 'width 1s ease-out',
+                            'transition': 'width 1.8s cubic-bezier(0.22, 1, 0.36, 1)',
                             'width': targetWidth
                         });
                     }, 100);
@@ -946,11 +957,53 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function($, Str
             // Detect increase for pulse effect.
             var increased = triggerPulse && self.lastPercentage !== null && newPercentage > self.lastPercentage;
 
-            // Animate SVG stroke - use inline style to override HTML attribute.
-            $circle[0].style.transition = 'stroke-dashoffset 0.8s ease-out';
+            // ACF-FIX-2.1.166: the ring fills slowly and the number counts up with it.
+            //
+            // The stroke already animated, over 0.8s, which is quick enough to be over before the eye
+            // has found it -- and the percentage was written straight to its final value, so the two
+            // halves of the same indicator behaved differently. 1.8s is slow enough to read as the
+            // ring FILLING rather than as a state change, and the number is stepped over the same
+            // duration so they arrive together.
+            var DURATION = 1800;
+            var reduced = window.matchMedia
+                && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+            $circle[0].style.transition = reduced
+                ? 'none'
+                : 'stroke-dashoffset ' + (DURATION / 1000) + 's cubic-bezier(0.22, 1, 0.36, 1)';
             $circle[0].style.strokeDashoffset = targetOffset + 'px';
 
             $container.attr('aria-valuenow', newPercentage).attr('aria-valuetext', newPercentage + '%');
+
+            // The count-up. Written only into the visible text node: aria-valuetext above already
+            // carries the final figure, so a screen reader is told the answer once instead of being
+            // read a hundred intermediate numbers.
+            if ($text.length && newPercentage < 100) {
+                var from = (self.lastPercentage === null) ? 0 : self.lastPercentage;
+                if (reduced || from === newPercentage) {
+                    $text.text(newPercentage + '%');
+                } else {
+                    var startedAt = null;
+                    var step = function(now) {
+                        if (startedAt === null) {
+                            startedAt = now;
+                        }
+                        var t = Math.min(1, (now - startedAt) / DURATION);
+                        // Same easing curve as the stroke, so the number and the arc stay together
+                        // rather than one racing ahead of the other.
+                        var eased = 1 - Math.pow(1 - t, 3);
+                        $text.text(Math.round(from + (newPercentage - from) * eased) + '%');
+                        if (t < 1 && window.requestAnimationFrame) {
+                            window.requestAnimationFrame(step);
+                        }
+                    };
+                    if (window.requestAnimationFrame) {
+                        window.requestAnimationFrame(step);
+                    } else {
+                        $text.text(newPercentage + '%');
+                    }
+                }
+            }
 
             // Glow + pulse on increase.
             if (increased) {

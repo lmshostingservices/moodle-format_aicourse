@@ -2,6 +2,103 @@
 
 All notable changes to this plugin will be documented in this file.
 
+## [2.1.166] - 2026-08-22
+
+Sixteen releases in one session. The entries below are grouped by what was wrong rather than by
+release, because several of these were fixed more than once before the real cause was found — and
+the wrong attempts are worth recording.
+
+### The recurring cause
+
+**Five of the hard bugs were the same shape: two rules setting the same property on the same
+selector, and the fix going on the losing one.** A static check now exists for it and reports
+**156 such pairs** still in the sheet. Run it before changing any layout value:
+
+- the card slab (2.1.151) — `position` set twice
+- the card header z-index — `auto` at one line, `var(--acf-z-content)` ten lines later
+- the hero title-size tiers — inert for four releases behind `--acf-hero-title-compact` at (0,4,1)
+- the ring percentage at 10px — three rules, the floor added to the wrong two
+- the sidebar logo — height capped in three places, so an explicit request was discarded
+
+### Fixed — section cards
+
+- **A grey slab across the top of every card.** `ACF-FIX-2.1.145` set `position: static` on
+  `.aicourse-card-time`, which re-parented its `::before` pill to `.aicourse-card-header` and
+  stretched it across the card. **z-index is the lever for click-through, not position.**
+- **The icon corner and footer were dead.** Hit-testing nine points on a card found two that
+  reached no link. The header and footer sat above the link overlay. **0 dead zones now.**
+- **Not-started cards took `--acf-neutral-300`** — a pale blue-grey — instead of the course accent.
+
+### Fixed — the banners
+
+- **The activity title overflowed the screen on a phone**: 482px inside 390px. In image mode the
+  content is a column, and a column's cross axis is the inline one, so `align-items: flex-start`
+  told the title block to shrink-wrap instead of fill.
+- **A gap above the activity banner, and sticky scroll that jammed at the top.** `heroatop.js`
+  bailed on a *race*, not a condition — `heroinject` places the banner after `heroatop` runs — so
+  `--acf-hero-sticky-top` was never published and everything `lift()` gates was lost. `heroinject`
+  now announces placement.
+- **The banner would not span the page with the index closed.** Fixed by anchoring to the drawer's
+  edge and the window rather than to `#page`, which is centred on some themes and wider than the
+  viewport on others.
+- **The right-hand cluster had no glass panel** while the left did, on all three variants. Now
+  identical, read from the same tokens, with the same `acf-shine` sweep.
+- Progress and completion rings were 56px and 54px. One token now.
+
+### Fixed — the course index sidebar
+
+- **Merged into two rows.** Core's close button and options menu move into the brand row; the
+  emptied strip collapses. `--acf-topblock` 164px → 120px, and the banner follows.
+- **The close button was invisible for three releases.** It existed and measured 32px — the brand
+  row overflowed by 39px and pushed it outside the drawer, which clips. Not hidden: **evicted.**
+- **The logo rendered at 0px wide.** Its SVG has a viewBox and no width/height, so it has no
+  intrinsic size and `inline-size: auto` computed to zero. An explicit width fixes it.
+- **`.drawer-left` matched two stacked drawers.** Eleven selectors were also reaching the site's
+  primary navigation drawer — including a `display: none` — so hiding the course index could take
+  the site's own nav with it. All scoped to the id.
+- **The 8px gap between collapsed section bands**, open for four attempts: `margin-block-start: 8px`
+  on the heading, collapsing through its parent. Explains every earlier measurement. Now 2px.
+- Section bands are a quarter shorter; the height came from the chevron, not the padding.
+- Module icons rendered brown because an `<img>` paints its own bitmap over the masked tint.
+
+### Fixed — settings page
+
+Rebuilt twice: first as a card grid, then, on the reasonable objection that it was overwhelming, as
+a **single-column accordion** — ten rows, one open at a time, each with a wireframe of the part of
+the course page it governs.
+
+- **Bootstrap's `!important` utilities were beating every rule.** `text-sm-right` right-aligned every
+  label; `d-block` stretched a 200px code-name pill into a 962px grey bar. Invisible in testing
+  because the local harness had no Bootstrap in it. It does now.
+- Type scale raised one step throughout: 13px descriptions were fine print on a page for reading.
+- `defaultaccentcolour` was registered **twice** — the colour picker added in 2.1.23 had been dead
+  code behind a plain text box ever since.
+- `defaultcoursenavplace` was read by `lib.php` and never registered.
+
+### Fixed — `showcourseindex`
+
+`lib.php` never read bit 2, so activity pages were judged on the course-home bit, while the footer
+hook read bit 2 correctly and pushed a contradicting class through a module that can only ever ADD
+one. `= 4` hid the index on exactly the pages it was meant to show it on; `= 1` showed it and then
+took it away mid-load. Values 3 and 7 agreed by coincidence, which is why it survived — 7 is the
+default.
+
+### Added
+
+- **Completion tooltip** on the course index ticks: per-condition state, the grade achieved and the
+  date completed. Grades cost two queries for the whole course, not one call per activity. Hidden
+  grades are dropped for anyone without `moodle/grade:viewhidden`. `COMPLETION_COMPLETE_FAIL` shows
+  as failed, not met.
+- **Animated count-up**: ring and number rise together over 1.8s on every banner and in the sidebar.
+  The arc previously animated from its final value to its final value.
+- **Mobile pass at 320/360/390/414px.** Reflow (WCAG 1.4.10) at 320px, 200% text zoom, touch targets,
+  tap-to-open for the tooltip — there is no hover on a phone, so the feature did not exist there.
+
+### Removed
+
+- `classes/local/settingsmeta.php`. It parsed one of the three ways this plugin declares a setting
+  and was never trusted enough to be used without a hand-kept list beside it.
+
 ## [2.1.150] - 2026-08-20
 
 ### Fixed
