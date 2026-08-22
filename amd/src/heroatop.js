@@ -436,6 +436,62 @@ const fitActivityTop = (hero) => {
 };
 
 /**
+ * Pull the banner out to the full width of the page column on an activity page.
+ *
+ * ACF-FIX-2.1.161. On a course page the banner is lifted to be a direct child of #page, so it spans
+ * whatever #page spans -- the full window with the drawer closed, the area beside it when open. An
+ * activity page keeps the banner inside #region-main, and #region-main is centred with a max-width
+ * by the theme. So closing the course index widened the page and the banner stayed where it was,
+ * marooned in the middle with a margin either side that nothing else on the page had.
+ *
+ * The correction is measured against #page rather than the window, and that choice is the whole
+ * trick: #page already carries the drawer's offset as a margin, so aligning to its content box
+ * gives the right answer in BOTH states without either being special-cased. Drawer open, the banner
+ * starts where the drawer ends. Drawer closed, it spans the window.
+ *
+ * Re-measured on resize and whenever the drawer's state changes, because both move the edge this is
+ * measured against.
+ *
+ * @param {Element} hero The banner wrapper.
+ * @returns {void}
+ */
+const fitActivityWidth = (hero) => {
+    const region = hero.closest('#region-main, #region-main-box, #page-content');
+    if (!region) {
+        // Already lifted; #page IS its parent and there is nothing to pull against.
+        return;
+    }
+    const page = document.getElementById('page');
+    if (!page) {
+        return;
+    }
+
+    // Zeroed before measuring so a second run measures the true offset rather than compounding on
+    // the result of the first -- the same reset align() takes for the same reason.
+    hero.style.marginInlineStart = '0px';
+    hero.style.marginInlineEnd = '0px';
+    void hero.offsetWidth;
+
+    const p = page.getBoundingClientRect();
+    const ps = window.getComputedStyle(page);
+    const padstart = parseFloat(ps.paddingInlineStart || ps.paddingLeft) || 0;
+    const padend = parseFloat(ps.paddingInlineEnd || ps.paddingRight) || 0;
+    const h = hero.getBoundingClientRect();
+
+    const start = Math.round(h.left - (p.left + padstart));
+    const end = Math.round((p.right - padend) - h.right);
+
+    // Only ever a pull outward, and only a plausible one. A large number means the banner is not
+    // where this code thinks it is, and doing nothing is then the correct answer.
+    if (start > 0 && start <= 600) {
+        hero.style.marginInlineStart = (-start) + 'px';
+    }
+    if (end > 0 && end <= 600) {
+        hero.style.marginInlineEnd = (-end) + 'px';
+    }
+};
+
+/**
  * Run the measuring half of this module against a banner that is already in place.
  *
  * ACF-FIX-2.1.158. init() calls lift(), and lift() returns at its first line when the banner is not
@@ -461,10 +517,40 @@ export const attach = () => {
         return;
     }
     hero.setAttribute(ATTACHEDATTR, '1');
-    fitActivityTop(hero);
+
+    const refit = () => {
+        fitActivityTop(hero);
+        fitActivityWidth(hero);
+    };
+
+    refit();
     align(hero);
     fitFullWidth();
-    window.addEventListener('resize', () => fitActivityTop(hero));
+
+    window.addEventListener('resize', refit);
+
+    // The drawer's open state is the other thing that moves #page's edge. Core toggles classes on
+    // #page and on <body> when it opens and closes, and the transition takes ~250ms -- so the
+    // measurement is taken again after it has finished, not while the edge is still moving.
+    const settle = () => {
+        refit();
+        window.setTimeout(refit, 320);
+    };
+    if (typeof window.MutationObserver === 'function') {
+        const page = document.getElementById('page');
+        if (page) {
+            new window.MutationObserver(settle)
+                .observe(page, {attributes: true, attributeFilter: ['class']});
+        }
+        new window.MutationObserver(settle)
+            .observe(document.body, {attributes: true, attributeFilter: ['class']});
+    }
+    // A click on any drawer toggle, in case a theme moves the state somewhere unobserved.
+    document.addEventListener('click', (e) => {
+        if (e.target && e.target.closest && e.target.closest('[data-toggler="drawers"]')) {
+            settle();
+        }
+    }, true);
 };
 
 export const init = () => {

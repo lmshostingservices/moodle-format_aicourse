@@ -2416,9 +2416,13 @@ body.format-aicourse .aicourse-completion-ring-container {
     flex-shrink: 0;
 }
 
+/* ACF-FIX-2.1.161: the same token the course ring reads, so the two cannot drift again. They were
+   56x56 and 54x54 -- two pixels, invisible on either page alone and obvious the moment a learner
+   moves between them, because the banner is otherwise identical. A hard-coded 3.375rem was always
+   going to disagree with a clamp() the day the clamp changed. */
 body.format-aicourse .aicourse-hero-has-image .aicourse-completion-ring-container {
-    inline-size: 3.375rem;
-    block-size: 3.375rem;
+    inline-size: var(--acf-hero-ring-image);
+    block-size: var(--acf-hero-ring-image);
 }
 
 body.format-aicourse .aicourse-completion-ring {
@@ -7449,8 +7453,22 @@ body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-her
     /* One line, not two: the second line is what forced the extra 34px of
        banner. Long names ellipsise, and the full name is still the region's
        aria-label and the browser tab title. */
-    body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-title {
+    /* ACF-FIX-2.1.161: the compact size is now a FALLBACK, not an override.
+       This rule is (0,4,1); the tier classes `aicourse-title-xs` … `-xl` that hero.mustache emits
+       from the course's own "Card title size" setting are (0,3,1). So this won every time and the
+       setting did nothing to the banner at any width above the breakpoint -- on every course, not
+       just the ones anyone noticed. Measured: a course set to xl and a course set to xs rendered
+       the same 26px.
+
+       `:not([class*="aicourse-title-"])` steps aside the moment a tier class is present, so the
+       compact size still governs the activity banner (which emits no tier) and a course that has
+       chosen a size finally gets it. */
+    body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image
+    .aicourse-hero-title:not([class*="aicourse-title-"]) {
         font-size: var(--acf-hero-title-compact);
+    }
+
+    body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-title {
         line-height: 1.15;
         -webkit-line-clamp: 1;
         line-clamp: 1;
@@ -7509,8 +7527,13 @@ body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-her
         display: none;
     }
 
-    body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-title {
+    /* Same split as above: a course that has chosen a title size keeps it. */
+    body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image
+    .aicourse-hero-title:not([class*="aicourse-title-"]) {
         font-size: var(--acf-hero-title-compact);
+    }
+
+    body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-title {
         line-height: 1.15;
     }
 }
@@ -10151,9 +10174,14 @@ body.aicourse-player-on .courseindex-section:first-child .courseindex-item.cours
     padding-block-start: 0;
 }
 
+/* ACF-FIX-2.1.160: the colour declaration that was here is gone. It set the band's TEXT to
+   --acf-brand while the band's own FILL is `var(--acf-index-heading-bg, var(--acf-brand))` -- so on
+   any site that has not chosen a heading colour, which is the default, it asked for brand text on a
+   brand background. It never showed because the rule ~90 lines above sets `#fff !important` and
+   wins, but two rules disagreeing about the same property is how the last four regressions in this
+   sheet happened. One rule owns this colour now. */
 body.aicourse-player-on .courseindex-item.courseindex-section-title .courseindex-link,
 body.aicourse-player-on .courseindex-item.courseindex-section-title .courseindex-chevron {
-    color: var(--acf-brand);
     font-weight: var(--acf-weight-semibold);
     letter-spacing: var(--acf-tracking-tight);
 }
@@ -10262,187 +10290,6 @@ body.aicourse-player-on .courseindex-item.aicourse-player-row .completioninfo {
 
    Never in edit mode: a teacher needs the full page furniture while arranging a course.
    ========================================================================== */
-
-/* ==========================================================================
-   SETTINGS PAGES (ACF-FIX-2.1.92)
-   The site settings page and the Course format section of a course's settings.
-
-   Moodle renders both as a flat run of label-and-field rows with the help text in small grey
-   type, and at forty settings that is a wall. The changes here are structural rather than
-   decorative: give each setting a card of its own so the eye can find where one ends and the next
-   begins, make the description readable rather than fine print, and let the code names that
-   identify a setting recede instead of competing with its title.
-
-   Scoped by page id and by the course format fieldset, so nothing here touches any other admin
-   page or any other part of a course's settings form.
-   ========================================================================== */
-
-/* The design tokens are declared on `body.format-aicourse`, which an admin page does not have --
-   so every var() below resolved to nothing and the cards rendered with no background, border or
-   radius at all. Measured: transparent background, 0px border, 0px radius, with the selectors
-   matching all 43 settings correctly. The tokens are therefore declared here as well, on the
-   settings page itself, rather than relying on a scope that page never enters. */
-body#page-admin-setting-formatsettingaicourse,
-body.path-course-edit {
-    --acf-surface-raised: #fff;
-    --acf-surface-sunken: #f8fafc;
-    --acf-border-subtle: rgba(15, 23, 42, 0.10);
-    --acf-border-strong: #cbd5e1;
-    --acf-border-brand: var(--bs-primary, #194866);
-    --acf-text-primary: #1e293b;
-    --acf-text-secondary: #475569;
-    --acf-text-tertiary: #64748b;
-    --acf-text-brand: var(--bs-primary, #194866);
-    --acf-brand: var(--bs-primary, #194866);
-    --acf-space-1: 0.25rem;
-    --acf-space-2: 0.5rem;
-    --acf-space-3: 0.75rem;
-    --acf-space-4: 1rem;
-    --acf-space-5: 1.25rem;
-    --acf-space-6: 1.5rem;
-    --acf-radius-sm: 0.25rem;
-    --acf-radius-md: 0.5rem;
-    --acf-radius-lg: 0.75rem;
-    --acf-radius-pill: 999px;
-    --acf-font-size-2xs: 0.75rem;
-    --acf-font-size-sm: 0.875rem;
-    --acf-font-size-md: 1rem;
-    --acf-font-size-lg: 1.125rem;
-    --acf-weight-medium: 500;
-    --acf-weight-semibold: 600;
-    --acf-weight-bold: 700;
-    --acf-leading-snug: 1.35;
-    --acf-leading-relaxed: 1.6;
-    /* ACF-FIX-2.1.140: the deeper steps were missing here, so the card shadow resolved to nothing
-       -- measured `box-shadow: none` with the rule present and matching. The admin page declares
-       its own tokens because it is outside `body.format-aicourse`, and only elevation-1 had been
-       carried across. */
-    --acf-elevation-1: 0 1px 2px rgba(15, 23, 42, 0.05);
-    --acf-elevation-2: 0 1px 3px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04);
-    --acf-elevation-4: 0 10px 20px rgba(15, 23, 42, 0.10), 0 3px 6px rgba(15, 23, 42, 0.06);
-    --acf-brand-tint-strong: rgba(25, 72, 102, 0.18);
-    --acf-focus-ring: 0 0 0 2px #fff, 0 0 0 4px var(--bs-primary, #194866);
-}
-
-body#page-admin-setting-formatsettingaicourse #adminsettings .form-item,
-body.path-course-edit #id_courseformathdr .fitem {
-    /* ACF-FIX-2.1.99: flow-root, so the card contains its own contents.
-       Moodle floats the label and the setting inside each row. A float does not add to its
-       parent's height, so the card was being sized as though it were empty and any description
-       longer than a line or two ran out through the bottom border -- worse the more there was to
-       say, which is exactly backwards. flow-root establishes a block formatting context, which
-       contains the floats without the side effects of overflow: hidden. */
-    display: flow-root;
-    padding: var(--acf-space-4) var(--acf-space-5);
-    margin-block-end: var(--acf-space-3);
-    background: var(--acf-surface-raised);
-    border: 1px solid var(--acf-border-subtle);
-    border-radius: var(--acf-radius-lg);
-    box-shadow: var(--acf-elevation-1);
-}
-
-body#page-admin-setting-formatsettingaicourse #adminsettings .form-item:hover,
-body.path-course-edit #id_courseformathdr .fitem:hover {
-    border-color: var(--acf-border-brand);
-}
-
-/* The setting's name. Moodle sizes this as a form label; it is really a heading. */
-body#page-admin-setting-formatsettingaicourse #adminsettings .form-label label,
-body#page-admin-setting-formatsettingaicourse #adminsettings .form-label > .float-left,
-body.path-course-edit #id_courseformathdr .fitem .col-form-label label {
-    font-size: var(--acf-font-size-md);
-    font-weight: var(--acf-weight-semibold);
-    line-height: var(--acf-leading-snug);
-    color: var(--acf-text-primary);
-}
-
-/* The `format_aicourse | settingname` line under each label. Useful when reading documentation
-   or writing an upgrade script, noise the rest of the time. */
-body#page-admin-setting-formatsettingaicourse #adminsettings .form-label .form-shortname {
-    display: inline-block;
-    margin-block-start: 4px;
-    padding: 1px var(--acf-space-2);
-    background: var(--acf-surface-sunken);
-    border-radius: var(--acf-radius-pill);
-    font-family: var(--acf-font-mono, monospace);
-    font-size: var(--acf-font-size-2xs);
-    color: var(--acf-text-tertiary);
-    opacity: 0.75;
-}
-
-/* The description. This is where the explanation actually lives, so it gets read as prose. */
-body#page-admin-setting-formatsettingaicourse #adminsettings .form-description,
-body#page-admin-setting-formatsettingaicourse #adminsettings .form-defaultinfo {
-    max-inline-size: 68ch;
-    margin-block-start: var(--acf-space-2);
-    font-size: var(--acf-font-size-sm);
-    line-height: var(--acf-leading-relaxed);
-    color: var(--acf-text-secondary);
-}
-
-body#page-admin-setting-formatsettingaicourse #adminsettings .form-description strong {
-    color: var(--acf-text-primary);
-    font-weight: var(--acf-weight-semibold);
-}
-
-body#page-admin-setting-formatsettingaicourse #adminsettings .form-description em {
-    color: var(--acf-text-tertiary);
-}
-
-/* Inline code in a description -- module names, hex colours, the modulename=minutes lines. */
-body#page-admin-setting-formatsettingaicourse #adminsettings .form-description code {
-    padding: 1px 5px;
-    background: var(--acf-surface-sunken);
-    border: 1px solid var(--acf-border-subtle);
-    border-radius: var(--acf-radius-sm);
-    font-size: 0.9em;
-    color: var(--acf-text-brand);
-}
-
-/* "Default: Hide from students" -- a fact about the setting, not part of its explanation. */
-body#page-admin-setting-formatsettingaicourse #adminsettings .form-defaultinfo {
-    display: inline-block;
-    margin-inline-start: var(--acf-space-2);
-    padding: 1px var(--acf-space-2);
-    background: var(--acf-surface-sunken);
-    border-radius: var(--acf-radius-pill);
-    font-size: var(--acf-font-size-2xs);
-    color: var(--acf-text-tertiary);
-}
-
-/* Section headings within the settings page. */
-body#page-admin-setting-formatsettingaicourse #adminsettings .form-item h3,
-body#page-admin-setting-formatsettingaicourse #adminsettings > h3 {
-    margin-block: var(--acf-space-6) var(--acf-space-3);
-    padding-block-end: var(--acf-space-2);
-    border-block-end: 2px solid var(--acf-brand);
-    font-size: var(--acf-font-size-lg);
-    font-weight: var(--acf-weight-bold);
-    color: var(--acf-text-brand);
-}
-
-/* Inputs, so a select or a text field does not look like an afterthought beside all this. */
-body#page-admin-setting-formatsettingaicourse #adminsettings select,
-body#page-admin-setting-formatsettingaicourse #adminsettings input[type="text"],
-body.path-course-edit #id_courseformathdr select,
-body.path-course-edit #id_courseformathdr input[type="text"] {
-    padding: var(--acf-space-2) var(--acf-space-3);
-    border: 1px solid var(--acf-border-strong);
-    border-radius: var(--acf-radius-md);
-    background: var(--acf-surface-raised);
-    font-size: var(--acf-font-size-sm);
-}
-
-body#page-admin-setting-formatsettingaicourse #adminsettings select:focus-visible,
-body#page-admin-setting-formatsettingaicourse #adminsettings input[type="text"]:focus-visible,
-body.path-course-edit #id_courseformathdr select:focus-visible,
-body.path-course-edit #id_courseformathdr input[type="text"]:focus-visible {
-    border-color: var(--acf-brand);
-    box-shadow: var(--acf-focus-ring);
-    outline: none;
-}
-
-
 /* --- The line between collapsed sections (ACF-FIX-2.1.136) -----------------
    With sections collapsed the headings stack, and a 16px gap between two coloured bands read as
    space rather than as a division. 5px is enough to draw a clean white line between them without
@@ -10497,237 +10344,6 @@ body.format-aicourse.aicourse-notime-activitycards
 
 body.format-aicourse.aicourse-notime-total .aicourse-player-meta {
     display: none;
-}
-
-
-/* --- Settings page: categories and search (ACF-FIX-2.1.134) ----------------
-   The controls sit above the settings and are styled to belong to this plugin rather than to
-   Moodle's admin chrome, because they are the first thing the reader interacts with. */
-body#page-admin-setting-formatsettingaicourse .aicourse-settings-controls {
-    position: sticky;
-    top: 0;
-    z-index: 5;
-    margin-block-end: var(--acf-space-5);
-    padding-block: var(--acf-space-3);
-    background: var(--acf-surface-raised, #fff);
-}
-
-body#page-admin-setting-formatsettingaicourse .aicourse-settings-search {
-    margin-block-end: var(--acf-space-3);
-}
-
-body#page-admin-setting-formatsettingaicourse .aicourse-settings-search-input {
-    inline-size: 100%;
-    max-inline-size: 32rem;
-    padding: var(--acf-space-3) var(--acf-space-4);
-    border: 1px solid var(--acf-border-strong, #cbd5e1);
-    border-radius: var(--acf-radius-md, 0);
-    font-size: var(--acf-font-size-md, 1rem);
-    background: var(--acf-surface-raised, #fff);
-}
-
-body#page-admin-setting-formatsettingaicourse .aicourse-settings-search-input:focus-visible {
-    border-color: var(--acf-brand, #194866);
-    box-shadow: var(--acf-focus-ring);
-    outline: none;
-}
-
-body#page-admin-setting-formatsettingaicourse .aicourse-settings-tabs {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--acf-space-2);
-}
-
-body#page-admin-setting-formatsettingaicourse .aicourse-settings-tab {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--acf-space-2);
-    padding: var(--acf-space-2) var(--acf-space-3);
-    border: 1px solid var(--acf-border-subtle, rgba(15, 23, 42, 0.1));
-    border-radius: var(--acf-radius-md, 0);
-    background: var(--acf-surface-raised, #fff);
-    color: var(--acf-text-secondary, #475569);
-    font-size: var(--acf-font-size-sm, 0.875rem);
-    cursor: pointer;
-    transition: border-color 150ms ease, color 150ms ease;
-}
-
-body#page-admin-setting-formatsettingaicourse .aicourse-settings-tab:hover {
-    border-color: var(--acf-brand, #194866);
-}
-
-/* The selected category is marked by weight and a filled count, not by colour alone -- the tab
-   bar has to be readable to someone who cannot distinguish the accent from the border. */
-body#page-admin-setting-formatsettingaicourse .aicourse-settings-tab.is-active {
-    border-color: var(--acf-brand, #194866);
-    color: var(--acf-brand, #194866);
-    font-weight: var(--acf-weight-semibold, 600);
-}
-
-body#page-admin-setting-formatsettingaicourse .aicourse-settings-tab-count {
-    padding: 0 var(--acf-space-2);
-    border-radius: var(--acf-radius-pill, 999px);
-    background: var(--acf-surface-sunken, #f8fafc);
-    font-size: var(--acf-font-size-2xs, 0.75rem);
-    font-variant-numeric: tabular-nums;
-}
-
-body#page-admin-setting-formatsettingaicourse .aicourse-settings-tab.is-active
-.aicourse-settings-tab-count {
-    background: var(--acf-brand, #194866);
-    color: #fff;
-}
-
-body#page-admin-setting-formatsettingaicourse .aicourse-settings-tab-icon {
-    font-size: 1rem;
-    line-height: 1;
-}
-
-body#page-admin-setting-formatsettingaicourse .aicourse-settings-empty {
-    padding: var(--acf-space-6);
-    border: 1px dashed var(--acf-border-subtle, rgba(15, 23, 42, 0.1));
-    border-radius: var(--acf-radius-lg, 0);
-    color: var(--acf-text-secondary, #475569);
-    text-align: center;
-}
-
-
-/* The second filter row (ACF-FIX-2.1.135). Visually quieter than the category tabs, because it
-   narrows a choice already made rather than being the primary navigation. */
-body#page-admin-setting-formatsettingaicourse .aicourse-settings-kinds {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: var(--acf-space-2);
-    margin-block-start: var(--acf-space-3);
-}
-
-body#page-admin-setting-formatsettingaicourse .aicourse-settings-kinds-label {
-    font-size: var(--acf-font-size-2xs, 0.75rem);
-    color: var(--acf-text-tertiary, #64748b);
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-}
-
-body#page-admin-setting-formatsettingaicourse .aicourse-settings-chip {
-    padding: 2px var(--acf-space-3);
-    border: 1px dashed var(--acf-border-subtle, rgba(15, 23, 42, 0.1));
-    border-radius: var(--acf-radius-pill, 999px);
-    background: transparent;
-    color: var(--acf-text-secondary, #475569);
-    font-size: var(--acf-font-size-2xs, 0.75rem);
-    cursor: pointer;
-}
-
-body#page-admin-setting-formatsettingaicourse .aicourse-settings-chip:hover {
-    border-color: var(--acf-brand, #194866);
-}
-
-/* Pressed state: solid border and a filled background, so it is distinguishable from the unpressed
-   chips by shape as well as colour. */
-body#page-admin-setting-formatsettingaicourse .aicourse-settings-chip.is-active {
-    border-style: solid;
-    border-color: var(--acf-brand, #194866);
-    background: var(--acf-brand, #194866);
-    color: #fff;
-}
-
-
-/* --- Settings page: three across (ACF-FIX-2.1.140) -------------------------
-   One column of sixty-five cards on a wide screen leaves two thirds of the page empty and turns
-   every lookup into a scroll. A grid puts three across where there is room and folds to one where
-   there is not.
-
-   auto-fill with a minimum rather than a fixed `repeat(3, 1fr)`: at 340px a card still holds a
-   label, a control and a readable description, and below three columns' worth the grid drops to
-   two and then one on its own. Stating three explicitly would have produced 340px-wide cards on a
-   tablet and unreadable ones on a phone.
-
-   `align-items: start` so a card with two lines of description does not stretch to match a
-   neighbour with ten -- without it every row is as tall as its longest card. */
-/* The grid goes on the fieldset, not on #adminsettings. The settings are not direct children of
-   the form -- Moodle wraps them in a fieldset -- so a grid on the form laid out one child, the
-   fieldset, and the cards inside it stayed in a single column. Confirmed by walking up from a card:
-   form > div.settingsform > fieldset > 74 form-items. */
-body#page-admin-setting-formatsettingaicourse #adminsettings fieldset {
-    display: grid;
-    /* min() rather than a bare 340px: on a 390px phone the track stayed 340px wide while the card
-       gained padding and a border on top of it, which pushed the document 7px past the viewport.
-       Capping the minimum at 100% lets the track shrink to whatever is actually available. */
-    grid-template-columns: repeat(auto-fill, minmax(min(340px, 100%), 1fr));
-    gap: var(--acf-space-5);
-    align-items: start;
-}
-
-/* Section headings introduce everything below them, so they span the full width rather than
-   sitting in a column as though they were a card. */
-body#page-admin-setting-formatsettingaicourse #adminsettings fieldset > h3,
-body#page-admin-setting-formatsettingaicourse #adminsettings fieldset > legend,
-body#page-admin-setting-formatsettingaicourse #adminsettings fieldset > .form-description,
-body#page-admin-setting-formatsettingaicourse #adminsettings fieldset > p {
-    grid-column: 1 / -1;
-    margin-block: var(--acf-space-4) 0;
-}
-
-body#page-admin-setting-formatsettingaicourse #adminsettings .form-item {
-    /* The grid's gap sets the spacing now; a margin as well would double it between rows and leave
-       none between columns. */
-    margin: 0;
-    block-size: 100%;
-    box-shadow: var(--acf-elevation-2);
-    transition: box-shadow 160ms ease, transform 160ms ease, border-color 160ms ease;
-}
-
-body#page-admin-setting-formatsettingaicourse #adminsettings .form-item:hover {
-    box-shadow: var(--acf-elevation-4);
-    border-color: var(--acf-brand-tint-strong, rgba(25, 72, 102, 0.18));
-    transform: translateY(-2px);
-}
-
-/* A description sized for a full-width row is far too wide for a third of one. Let it fill the
-   card instead. */
-body#page-admin-setting-formatsettingaicourse #adminsettings .form-description {
-    max-inline-size: none;
-}
-
-/* The label sat centred and to the right when each setting was a wide row. In a column it reads as
-   a card title, so it goes to the top and to the left. */
-/* Moodle right-aligns the label because in its own layout the label is a left column facing a
-   right column of controls. In a card it is the title, so it goes top-left. The selector carries
-   the fieldset to outrank core's, which sets `text-align: right` on the same element. */
-body#page-admin-setting-formatsettingaicourse #adminsettings fieldset .form-item .form-label,
-body#page-admin-setting-formatsettingaicourse #adminsettings fieldset .form-item .form-label label,
-body#page-admin-setting-formatsettingaicourse #adminsettings fieldset .form-item
-.form-label > .float-left {
-    display: block;
-    inline-size: 100%;
-    max-inline-size: none;
-    margin-block-end: var(--acf-space-2);
-    text-align: start;
-    float: none;
-}
-
-/* A section's introductory paragraph explains everything under it, so it spans rather than taking
-   a card's slot and leaving the row short. */
-body#page-admin-setting-formatsettingaicourse #adminsettings fieldset > div:not(.form-item),
-body#page-admin-setting-formatsettingaicourse #adminsettings fieldset > .form-description {
-    grid-column: 1 / -1;
-}
-
-body#page-admin-setting-formatsettingaicourse #adminsettings .form-setting {
-    display: block;
-    inline-size: 100%;
-    max-inline-size: none;
-    margin: 0;
-    float: none;
-}
-
-@media (prefers-reduced-motion: reduce) {
-    body#page-admin-setting-formatsettingaicourse #adminsettings .form-item,
-    body#page-admin-setting-formatsettingaicourse #adminsettings .form-item:hover {
-        transition: none;
-        transform: none;
-    }
 }
 
 
@@ -11101,13 +10717,91 @@ body.aicourse-index-merged {
 /* The adopted controls, at the end of the icon row. A hairline separates them from the site nav
    beside them -- "go somewhere else" and "act on this panel" are different kinds of button, and
    without the rule they read as one undifferentiated run of five icons. */
+/* ACF-FIX-2.1.160: THIS is why the close button was invisible.
+   The console diagnostic reported `close: true` -- the element existed -- and measuring the row
+   reproduced it exactly: the brand row's scrollWidth was 349px inside a 310px content box. Every
+   child was `flex: 0 1 auto` with the default `min-width: auto`, which means "shrink, but never
+   below my own content" -- so nothing shrank, the row overflowed by 39px, and the LAST item was
+   pushed past the drawer's edge. The drawer sets `overflow-x: hidden !important`, so it was
+   clipped: present, measurable, and off-screen.
+
+   Three rules fix it and they have to be stated together.
+
+   1. The controls never shrink. A close button is not decoration; it is the only way to shut the
+      panel, and it is the last item in the row -- exactly the position an overflow sacrifices.
+   2. The nav never shrinks either, for the same reason: those are the sidebar's only links out.
+   3. The LOGO shrinks instead. It carries `min-inline-size: 0` so flex is actually allowed to take
+      space from it, and `object-fit: contain` means a narrower box scales the image rather than
+      cropping it. If anything on this row has to give, it should be the picture. */
 .aicourse-player-drawerctl {
     display: flex;
     align-items: center;
+    flex: none;
     gap: 2px;
     margin-inline-start: var(--acf-space-2);
     padding-inline-start: var(--acf-space-2);
     border-inline-start: 1px solid var(--acf-player-line);
+}
+
+.aicourse-player-drawerctl > * {
+    flex: none;
+}
+
+body.aicourse-index-merged .aicourse-player-brand {
+    flex-wrap: nowrap;
+    min-inline-size: 0;
+}
+
+body.aicourse-index-merged .aicourse-player-nav {
+    flex: none;
+}
+
+/* ACF-FIX-2.1.161: the logo takes the leftover, and the leftover is made worth taking.
+   2.1.160 stopped the close button being pushed out of the drawer, but it paid for that entirely
+   out of the logo -- which ended up around 80px wide and 14px tall, while a 28px gap sat between the
+   nav icons and the controls doing nothing.
+
+   The row is 310px of content box. Budgeting it explicitly:
+
+     nav       3 x 30px                      90px
+     controls  32 + 2 + 32, +6 margin, +6 pad, +1 border   79px
+     gaps      2 x 8px                       16px
+     ------------------------------------------------
+     logo                                   125px  (was ~80)
+
+   `flex: 1 1 auto` rather than a percentage ceiling: the logo now GROWS into whatever the row does
+   not need, so it is as large as it can be at any panel width instead of as large as one hard-coded
+   fraction allows. `object-fit: contain` means a wider box scales the image rather than cropping
+   it, and the block cap is what actually stops it -- raised to 34px, because 30px was leaving
+   headroom in a 36px row. */
+body.aicourse-index-merged .aicourse-player-brand {
+    gap: var(--acf-space-2);
+}
+
+body.aicourse-index-merged .aicourse-player-logo {
+    flex: 1 1 auto;
+    min-inline-size: 0;
+    max-inline-size: none;
+    max-block-size: 34px;
+    /* Left-aligned inside its box, so growing the box never floats the logo away from the panel
+       edge it should sit against. */
+    object-position: left center;
+}
+
+body.aicourse-index-merged .aicourse-player-drawerctl {
+    margin-inline-start: 6px;
+    padding-inline-start: 6px;
+}
+
+/* Five controls in a 310px row is tight, so they come down a step in merged mode. 30px still clears
+   the WCAG 2.2 AA target minimum of 24px. */
+body.aicourse-index-merged .aicourse-player-nav {
+    gap: 0;
+}
+
+body.aicourse-index-merged .aicourse-player-nav a {
+    inline-size: 30px;
+    block-size: 30px;
 }
 
 /* Both controls take the nav icon's box exactly, so the row is one rhythm rather than core's
@@ -11244,4 +10938,590 @@ body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-com
     background: var(--acf-media-scrim-strong);
     backdrop-filter: blur(var(--acf-blur-md));
     -webkit-backdrop-filter: blur(var(--acf-blur-md));
+}
+
+
+/* ==========================================================================
+   SETTINGS PAGE — one feature at a time (ACF-FIX-2.1.161)
+   --------------------------------------------------------------------------
+   2.1.159 put ten cards in a three-across grid. It was measured, it did not
+   overflow, and it was still the wrong design: ten cards, thirty jump links and
+   a preview each, all competing at once. "Comprehensive" and "overwhelming" are
+   the same layout seen from two distances.
+
+   This is the opposite bet. One column, one measure, one thing open at a time.
+
+     * A single 46rem column, centred. That is roughly 75 characters of body
+       text — the measure typography has settled on for prose, and a setting's
+       description IS prose. A 1400px-wide row of small grey text is not
+       something anyone reads; it is something they skim and give up on.
+     * Every category is a collapsed row. The whole page is ten rows and a
+       search box on first paint: the reader sees the SHAPE of the plugin before
+       any of its detail, and chooses where to go.
+     * Opening one closes the others. Not a preference — the point. There is no
+       arrangement of sixty-five settings that is calm if they are all on screen.
+     * The wireframe preview moves INSIDE the open panel, where it explains the
+       settings you are actually looking at, instead of being one of ten
+       thumbnails competing for attention.
+
+   Scoped by page id; nothing here reaches another admin page.
+   ========================================================================== */
+
+body#page-admin-setting-formatsettingaicourse,
+body.path-course-edit {
+    --acfs-bg: #f6f8fb;
+    --acfs-card: #fff;
+    --acfs-sunken: #f2f5f9;
+    --acfs-line: rgba(15, 23, 42, 0.09);
+    --acfs-line-strong: rgba(15, 23, 42, 0.16);
+    --acfs-ink: #0f172a;
+    --acfs-ink-2: #475569;
+    --acfs-ink-3: #64748b;
+    --acfs-brand: var(--bs-primary, #194866);
+
+    --acfs-r-sm: 8px;
+    --acfs-r: 12px;
+    --acfs-r-lg: 16px;
+
+    --acfs-sh-1: 0 1px 2px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.06);
+    --acfs-sh-2: 0 4px 12px rgba(15, 23, 42, 0.07), 0 2px 4px rgba(15, 23, 42, 0.04);
+    --acfs-ring: 0 0 0 2px #fff, 0 0 0 4px var(--acfs-brand);
+    --acfs-ease: cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* The measure. One number governs the width of everything on this page. */
+    --acfs-measure: 46rem;
+
+    --acfs-c-tutor: 139 92 246;
+    --acfs-c-index: 16 148 136;
+    --acfs-c-banner: 217 119 6;
+    --acfs-c-cards: 37 99 235;
+    --acfs-c-activity: 5 150 105;
+    --acfs-c-nav: 219 39 119;
+    --acfs-c-colour: 147 51 234;
+    --acfs-c-time: 2 132 199;
+    --acfs-c-tour: 100 116 139;
+    --acfs-c-other: 71 85 105;
+}
+
+@media (prefers-color-scheme: dark) {
+    body#page-admin-setting-formatsettingaicourse:not([data-acfs-theme="light"]) {
+        --acfs-bg: #0b1220;
+        --acfs-card: #131c2b;
+        --acfs-sunken: #0e1626;
+        --acfs-line: rgba(255, 255, 255, 0.10);
+        --acfs-line-strong: rgba(255, 255, 255, 0.18);
+        --acfs-ink: #e8eef7;
+        --acfs-ink-2: #b3c0d1;
+        --acfs-ink-3: #8b9ab0;
+        --acfs-ring: 0 0 0 2px #131c2b, 0 0 0 4px var(--acfs-brand);
+    }
+}
+
+/* --- The column ----------------------------------------------------------- */
+/* Applied to the JS-built wrapper AND to anything Moodle leaves outside it, so
+   the page has one edge rather than two. */
+body#page-admin-setting-formatsettingaicourse #adminsettings {
+    max-inline-size: var(--acfs-measure);
+    margin-inline: auto;
+    color: var(--acfs-ink);
+}
+
+/* --- Search --------------------------------------------------------------- */
+.acfs-controls {
+    position: sticky;
+    inset-block-start: 0;
+    z-index: 5;
+    margin-block: 0.5rem 1rem;
+    padding: 0.6rem;
+    border: 1px solid var(--acfs-line);
+    border-radius: var(--acfs-r);
+    background: color-mix(in srgb, var(--acfs-card) 90%, transparent);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: var(--acfs-sh-1);
+}
+
+.acfs-search {
+    position: relative;
+    min-inline-size: 0;
+}
+
+.acfs-search > svg {
+    position: absolute;
+    inset-block-start: 50%;
+    inset-inline-start: 0.7rem;
+    inline-size: 15px;
+    block-size: 15px;
+    transform: translateY(-50%);
+    fill: none;
+    stroke: var(--acfs-ink-3);
+    stroke-width: 2;
+    pointer-events: none;
+}
+
+.acfs-searchinput {
+    inline-size: 100%;
+    min-inline-size: 0;
+    box-sizing: border-box;
+    padding: 0.55rem 0.75rem 0.55rem 2.1rem;
+    border: 1px solid var(--acfs-line-strong);
+    border-radius: 9px;
+    background: var(--acfs-card);
+    color: var(--acfs-ink);
+    font-size: 0.875rem;
+    line-height: 1.4;
+}
+
+.acfs-searchinput:focus-visible {
+    outline: none;
+    border-color: var(--acfs-brand);
+    box-shadow: var(--acfs-ring);
+}
+
+.acfs-hint {
+    margin: 0.5rem 0.15rem 0;
+    color: var(--acfs-ink-3);
+    font-size: 0.75rem;
+}
+
+/* --- The ten rows --------------------------------------------------------- */
+.acfs-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-block-end: 2rem;
+}
+
+.acfs-panel {
+    --c: var(--acfs-c-other);
+    min-inline-size: 0;
+    border: 1px solid var(--acfs-line);
+    border-radius: var(--acfs-r-lg);
+    background: var(--acfs-card);
+    box-shadow: var(--acfs-sh-1);
+    /* The colour lives on the leading edge, where it labels the row without
+       tinting a whole card the reader has to look past. */
+    border-inline-start: 3px solid rgb(var(--c) / 0.45);
+    overflow: hidden;
+    scroll-margin-block-start: 5rem;
+    transition: box-shadow 200ms var(--acfs-ease), border-color 200ms var(--acfs-ease);
+}
+
+.acfs-panel:hover {
+    border-color: var(--acfs-line-strong);
+    border-inline-start-color: rgb(var(--c) / 0.8);
+}
+
+.acfs-panel.is-open {
+    border-inline-start-color: rgb(var(--c) / 1);
+    box-shadow: var(--acfs-sh-2);
+}
+
+/* The header is the whole row and it is a real button, so it is reachable by
+   keyboard and announces its own expanded state. */
+.acfs-head {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    inline-size: 100%;
+    min-inline-size: 0;
+    box-sizing: border-box;
+    padding: 0.9rem 1rem;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    text-align: start;
+    cursor: pointer;
+    transition: background 160ms var(--acfs-ease);
+}
+
+.acfs-head:hover {
+    background: rgb(var(--c) / 0.05);
+}
+
+.acfs-head:focus-visible {
+    outline: none;
+    box-shadow: var(--acfs-ring);
+}
+
+.acfs-icon {
+    flex: none;
+    display: grid;
+    place-items: center;
+    inline-size: 2.1rem;
+    block-size: 2.1rem;
+    border-radius: 9px;
+    background: rgb(var(--c) / 0.13);
+    color: rgb(var(--c) / 1);
+    font-size: 1rem;
+    line-height: 1;
+}
+
+.acfs-headtext {
+    flex: 1 1 auto;
+    min-inline-size: 0;
+}
+
+.acfs-title {
+    margin: 0;
+    font-size: 0.9375rem;
+    font-weight: 700;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+    color: var(--acfs-ink);
+    overflow-wrap: anywhere;
+}
+
+.acfs-sub {
+    display: block;
+    margin-block-start: 1px;
+    font-size: 0.8125rem;
+    line-height: 1.4;
+    color: var(--acfs-ink-3);
+    overflow-wrap: anywhere;
+}
+
+.acfs-count {
+    flex: none;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    background: rgb(var(--c) / 0.13);
+    color: rgb(var(--c) / 1);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.acfs-chev {
+    flex: none;
+    inline-size: 16px;
+    block-size: 16px;
+    fill: none;
+    stroke: var(--acfs-ink-3);
+    stroke-width: 2.2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: transform 220ms var(--acfs-ease);
+}
+
+.acfs-panel.is-open .acfs-chev {
+    transform: rotate(180deg);
+    stroke: rgb(var(--c) / 1);
+}
+
+/* --- The open panel ------------------------------------------------------- */
+.acfs-body {
+    padding: 0 1rem 1rem;
+    border-block-start: 1px solid rgb(var(--c) / 0.16);
+    margin-block-start: -1px;
+}
+
+.acfs-panel:not(.is-open) .acfs-body {
+    display: none;
+}
+
+/* The wireframe, inside the panel it explains. Capped so it stays an
+   illustration rather than becoming the content. */
+.acfs-preview {
+    max-inline-size: 22rem;
+    margin: 1rem 0 1.1rem;
+    border: 1px solid rgb(var(--c) / 0.18);
+    border-radius: 10px;
+    background: var(--acfs-sunken);
+    overflow: hidden;
+}
+
+.acfs-preview svg {
+    display: block;
+    inline-size: 100%;
+    block-size: auto;
+    aspect-ratio: 200 / 112;
+    color: var(--acfs-ink-3);
+}
+
+/* --- The settings, one per row -------------------------------------------- */
+body#page-admin-setting-formatsettingaicourse #adminsettings .form-item {
+    display: block;
+    min-inline-size: 0;
+    /* No block-size, no max-block-size, anywhere on this page. */
+    margin: 0;
+    padding: 1rem 0;
+    border: 0;
+    border-block-start: 1px solid var(--acfs-line);
+    background: transparent;
+    box-shadow: none;
+}
+
+body#page-admin-setting-formatsettingaicourse #adminsettings .acfs-body
+.form-item:first-of-type {
+    border-block-start: 0;
+    padding-block-start: 0;
+}
+
+/* Moodle floats the label and the setting; a float adds nothing to its parent's
+   height, which is how a long description used to run out through the bottom of
+   its box. flow-root contains them. */
+body#page-admin-setting-formatsettingaicourse #adminsettings .form-item > * {
+    display: flow-root;
+    min-inline-size: 0;
+    float: none;
+    inline-size: auto;
+    max-inline-size: 100%;
+    padding: 0;
+    text-align: start;
+}
+
+body#page-admin-setting-formatsettingaicourse #adminsettings .form-label {
+    margin-block-end: 0.45rem;
+}
+
+body#page-admin-setting-formatsettingaicourse #adminsettings .form-label label {
+    display: block;
+    margin: 0;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    line-height: 1.35;
+    color: var(--acfs-ink);
+    overflow-wrap: anywhere;
+}
+
+body#page-admin-setting-formatsettingaicourse #adminsettings .form-shortname {
+    display: inline-block;
+    margin-block-start: 3px;
+    padding: 1px 5px;
+    border-radius: 4px;
+    background: var(--acfs-sunken);
+    color: var(--acfs-ink-3);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.6875rem;
+    font-weight: 400;
+    line-height: 1.4;
+    letter-spacing: 0;
+    overflow-wrap: anywhere;
+}
+
+body#page-admin-setting-formatsettingaicourse #adminsettings .form-description {
+    margin-block-start: 0.5rem;
+    /* Narrower than the control above it. A description is prose and wants its
+       own measure; a select wants the column. */
+    max-inline-size: 36rem;
+    font-size: 0.8125rem;
+    line-height: 1.6;
+    color: var(--acfs-ink-2);
+    overflow-wrap: anywhere;
+}
+
+body#page-admin-setting-formatsettingaicourse #adminsettings .form-description p {
+    margin: 0 0 0.45rem;
+}
+
+body#page-admin-setting-formatsettingaicourse #adminsettings .form-description p:last-child {
+    margin-block-end: 0;
+}
+
+body#page-admin-setting-formatsettingaicourse #adminsettings .form-description code,
+body#page-admin-setting-formatsettingaicourse #adminsettings .form-defaultinfo code {
+    padding: 1px 4px;
+    border-radius: 4px;
+    background: var(--acfs-sunken);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.9em;
+    overflow-wrap: anywhere;
+}
+
+body#page-admin-setting-formatsettingaicourse #adminsettings .form-defaultinfo {
+    display: inline-block;
+    margin-block-start: 0.35rem;
+    color: var(--acfs-ink-3);
+    font-size: 0.75rem;
+    overflow-wrap: anywhere;
+}
+
+/* Controls stop at a comfortable width rather than stretching the full measure:
+   a select 736px wide with four words in it looks broken. */
+body#page-admin-setting-formatsettingaicourse #adminsettings
+:is(select, input[type="text"], input[type="password"], input[type="url"], textarea) {
+    inline-size: 100%;
+    max-inline-size: 30rem;
+    min-inline-size: 0;
+    box-sizing: border-box;
+    padding: 0.5rem 0.65rem;
+    border: 1px solid var(--acfs-line-strong);
+    border-radius: 9px;
+    background: var(--acfs-card);
+    color: var(--acfs-ink);
+    font-size: 0.875rem;
+    line-height: 1.4;
+}
+
+body#page-admin-setting-formatsettingaicourse #adminsettings
+:is(select, input[type="text"], input[type="password"], input[type="url"], textarea):focus-visible {
+    outline: none;
+    border-color: var(--acfs-brand);
+    box-shadow: var(--acfs-ring);
+}
+
+body#page-admin-setting-formatsettingaicourse #adminsettings textarea {
+    max-inline-size: 100%;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+body#page-admin-setting-formatsettingaicourse #adminsettings input[type="checkbox"] {
+    inline-size: 1.1rem;
+    block-size: 1.1rem;
+    margin-inline-end: 0.4rem;
+    accent-color: var(--acfs-brand);
+}
+
+/* --- Headings Moodle renders as settings ---------------------------------- */
+.acfs-note {
+    min-inline-size: 0;
+    margin-block: 0.5rem 1rem;
+    padding: 0.9rem 1rem;
+    border: 1px solid var(--acfs-line);
+    border-inline-start: 3px solid rgb(var(--acfs-c-other) / 0.5);
+    border-radius: var(--acfs-r);
+    background: var(--acfs-card);
+    overflow-wrap: anywhere;
+}
+
+.acfs-note h3 {
+    margin: 0 0 0.3rem;
+    font-size: 0.9375rem;
+    font-weight: 700;
+    color: var(--acfs-ink);
+}
+
+/* --- Empty state and jump flash ------------------------------------------- */
+.acfs-empty {
+    margin: 1.5rem 0;
+    padding: 2rem 1rem;
+    border: 1px dashed var(--acfs-line-strong);
+    border-radius: var(--acfs-r);
+    color: var(--acfs-ink-3);
+    font-size: 0.875rem;
+    text-align: center;
+}
+
+body#page-admin-setting-formatsettingaicourse #adminsettings .form-item.acfs-flash {
+    animation: acfs-flash 1.6s var(--acfs-ease);
+}
+
+@keyframes acfs-flash {
+    0%, 12% { background: rgb(var(--c) / 0.16); }
+    100%    { background: transparent; }
+}
+
+/* An SVG with a viewBox and no width/height attribute falls back to 300x150.
+   That inflated a hub card to 1576px in 2.1.159; the backstop stays. */
+body#page-admin-setting-formatsettingaicourse
+:not(.acfs-preview) > svg:not([width]):not([height]) {
+    inline-size: 1em;
+    block-size: 1em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .acfs-panel,
+    .acfs-head,
+    .acfs-chev {
+        transition: none;
+    }
+
+    body#page-admin-setting-formatsettingaicourse #adminsettings .form-item.acfs-flash {
+        animation: none;
+    }
+}
+
+@media (max-width: 720px) {
+    .acfs-controls {
+        position: static;
+    }
+}
+
+
+/* --- The right-hand cluster gets the left-hand cluster's panel (ACF-FIX-2.1.161) ----
+   The nav icons sit in a dark, blurred, rounded panel. The controls at the other end of the same
+   banner -- the chevrons, the progress ring or completion tick, and the label beside it -- sat bare
+   on the photograph. One end of the banner had been designed and the other had not, and on a light
+   patch of image the right-hand controls lost their edges entirely.
+
+   The same treatment, read from the SAME tokens rather than approximated, so the two panels cannot
+   drift apart the way the two rings did. Applied to `.aicourse-hero-nav-progress`, which is the
+   cluster on every variant -- course, section and activity -- so this is one rule for all three
+   rather than three that have to be kept in step.
+
+   Image mode only: on a gradient banner the surface is already flat and a scrim over it reads as a
+   smudge, which is the mistake 2.1.150 made with the completion ring. */
+body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-nav-progress {
+    padding: var(--acf-space-1);
+    border: 1px solid var(--acf-border-media);
+    border-radius: var(--acf-radius-lg);
+    background: var(--acf-media-scrim-strong);
+    backdrop-filter: blur(var(--acf-blur-md));
+    -webkit-backdrop-filter: blur(var(--acf-blur-md));
+    box-shadow: var(--acf-elevation-2);
+    transition:
+        background var(--acf-duration-fast) var(--acf-ease-standard),
+        border-color var(--acf-duration-fast) var(--acf-ease-standard);
+}
+
+/* The same lift on hover the icon group has, so the two ends of the banner behave identically as
+   well as looking identical. */
+body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image
+.aicourse-hero-nav-progress:hover {
+    background: var(--acf-media-scrim-stronger, rgba(2, 6, 23, 0.72));
+    border-color: rgba(255, 255, 255, 0.38);
+}
+
+/* A panel inside a panel is one panel too many. The ring and the tick were each given their own
+   glass in 2.1.150 and 2.1.152, at a time when nothing surrounded them; now that the cluster
+   carries it, theirs is removed rather than nested. The ring keeps its shape, its colour and its
+   size -- only the disc behind it goes. */
+body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image
+:is(.aicourse-progress-ring-container, .aicourse-completion-ring-container) {
+    border-color: transparent;
+    background: transparent;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    box-shadow: none;
+}
+
+/* The chevrons join the panel too: they were the one control in the cluster with no surface of its
+   own, so against a busy photo they read as artefacts rather than buttons. */
+body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-nav {
+    border-radius: var(--acf-radius-md);
+    background: rgba(255, 255, 255, 0.10);
+    color: var(--acf-text-on-media);
+    transition: background var(--acf-duration-fast) var(--acf-ease-standard);
+}
+
+body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-nav:hover {
+    background: rgba(255, 255, 255, 0.20);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image
+    :is(.aicourse-hero-nav-progress, .aicourse-hero-nav) {
+        transition: none;
+    }
+}
+
+/* prefers-contrast and reduced-transparency: the icon group already drops its blur under both;
+   the cluster now does the same, from the same media queries' tokens. */
+@media (prefers-reduced-transparency: reduce) {
+    body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-nav-progress {
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+        background: rgba(2, 6, 23, 0.88);
+    }
+}
+
+@media print {
+    body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-nav-progress {
+        border-color: #000;
+        background: transparent;
+        box-shadow: none;
+    }
 }

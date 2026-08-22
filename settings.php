@@ -234,45 +234,23 @@ if ($hassiteconfig) {
 
     global $PAGE;
 
-    // ACF-FIX-2.1.134: category tabs and search for this page.
+    // ACF-FIX-2.1.159: the settings page UI.
     //
-    // Fifty-nine settings in one column is a scroll rather than a page. The module groups them by
-    // what each setting is called, so a new setting files itself without anyone maintaining a list.
-    // Queued here rather than from a hook, because this is the only page it applies to.
+    // Sixty-five settings in one column is a scroll, not a page. The module puts a hub of feature
+    // cards above them -- each with a wireframe of the part of the course page it governs, and
+    // direct links into the settings people actually arrive looking for -- then groups the rest by
+    // category and colour-codes them.
+    //
+    // Only the four labels it cannot derive are passed. The "recently added" filter is gone with
+    // the rest of the old UI: it depended on settingsmeta, which does not parse this file's three
+    // different ways of declaring a setting and was never trusted enough to be used without a
+    // hand-kept fallback list beside it.
     $PAGE->requires->js_call_amd('format_aicourse/settingsui', 'init', [[
         'all' => get_string('settingsui_all', 'format_aicourse'),
-        'other' => get_string('settingsui_other', 'format_aicourse'),
-        'searchplaceholder' => get_string('settingsui_search', 'format_aicourse'),
+        'search' => get_string('settingsui_search', 'format_aicourse'),
         'nomatches' => get_string('settingsui_nomatches', 'format_aicourse'),
-        'filterby' => get_string('settingsui_filterby', 'format_aicourse'),
-        'newlabel' => get_string('settingsui_new', 'format_aicourse'),
-        // ACF-FIX-2.1.137: derived from the version markers where that works, with the list as a
-        // fallback.
-        //
-        // Every settings block carries an ACF-FIX-2.1.NNN comment written when the setting was
-        // added, so the release each one arrived in is already recorded beside it -- a far better
-        // source than a list somebody has to prune. settingsmeta reads those markers.
-        //
-        // It is not reliable yet: settings are written three ways in this file (a literal name, a
-        // name built in a loop, and the suffix lists those loops read), and the parser does not
-        // handle all three correctly. Rather than ship a filter that silently shows the wrong
-        // settings, the list is kept and used whenever the derivation returns fewer results than
-        // it -- so the page is always right, and the derivation can be finished without touching
-        // this line again.
-        'recent' => (function () {
-            $derived = \format_aicourse\local\settingsmeta::get_recent();
-            $known = [
-                'defaultcardcolour', 'defaultcardopacity', 'forcecardcolour', 'forcecardopacity',
-                'defaultindexcolour', 'defaultindexopacity', 'forceindexcolour',
-                'forceindexopacity', 'defaultindexheadingcolour', 'forceindexheadingcolour',
-                'defaultindexiconcolour', 'forceindexiconcolour', 'defaulthidetimeindex',
-                'forcehidetimeindex', 'defaulthidetimesectioncards',
-                'forcehidetimesectioncards', 'defaulthidetimeactivitycards',
-                'forcehidetimeactivitycards', 'defaulthidetimetotal', 'forcehidetimetotal',
-                'defaulthidegeneral', 'forcehidegeneral',
-            ];
-            return count($derived) >= count($known) ? $derived : $known;
-        })(),
+        'settings' => get_string('settingsui_settings', 'format_aicourse'),
+        'setting' => get_string('settingsui_setting', 'format_aicourse'),
     ]]);
 
     // ACF-FIX-2.1.120: say plainly which themes this is built against.

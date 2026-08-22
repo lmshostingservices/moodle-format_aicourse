@@ -14,7 +14,20 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Category tabs and search for the plugin's settings page.
+ * The plugin's settings page: a feature hub, colour-coded categories, and search.
+ *
+ * ACF-FIX-2.1.159. Rebuilt. The previous version filtered a flat list in place; this one restructures
+ * the page into sections and puts a hub of jump links above them.
+ *
+ * The design problem is that sixty-five settings in one column is not a page, it is a scroll — and
+ * the thing an administrator arrives wanting is almost never "read all the settings". It is "turn off
+ * the course index on activity pages", and the fastest possible route to that is a link that says so.
+ * The hub is that: every area of the plugin as a card, each listing the settings people actually come
+ * for, each one an anchor straight to the control.
+ *
+ * Moodle already gives every settings row `id="admin-<name>"`, so those anchors are ordinary links.
+ * They work with JavaScript disabled, they survive filtering, and they can be bookmarked and shared —
+ * which is worth more than any scripted scroll.
  *
  * @module     format_aicourse/settingsui
  * @copyright  2026 LMS-Labs
@@ -22,347 +35,494 @@
  */
 
 /**
- * Which category each setting belongs to.
+ * The categories, in the order they appear on the page.
  *
- * ACF-FIX-2.1.134. Fifty-nine settings in one column is a scroll, not a page: finding the card
- * colour means either knowing roughly where it sits or reading past forty things that are not it.
+ * `match` is a list of patterns tested against the setting's own NAME, never its text: a setting must
+ * not be filed under Cards because its description happens to mention a card. First match wins, so
+ * the order below is part of the design — Timing comes first because `hidetimesectioncards` and
+ * `hidetimeindex` would otherwise be claimed by Cards and Course index, and both are timing settings.
  *
- * Matching is by the setting's own name rather than a hand-kept list of every setting, so a new
- * one lands in the right place on the strength of what it is called -- `defaultcardpadding` would
- * file itself under Cards without anyone editing this. Order matters: the first pattern that
- * matches wins, so the specific ones come before the general.
- *
- * Anything unmatched goes to "Other" rather than disappearing, because a setting the reader cannot
- * reach is worse than one in the wrong group.
+ * `jump` names the settings that get a link on the hub card. They are the ones people arrive looking
+ * for, not simply the first few in the category — a jump list that is just "the first four" teaches
+ * the reader nothing.
  */
 const CATEGORIES = [
-    // ACF-FIX-2.1.147: order is the whole design here, because the first match wins.
-    //
-    // Timing comes first. `hidetimesectioncards` was landing in Cards and `hidetimeindex` in Course
-    // index -- both match those patterns before reaching Timing, and both are timing settings. That
-    // is why Timing showed 3 when it holds far more.
-    {id: 'time', label: 'Timing', icon: '\u25F7',
-        match: [/minutes/, /timing/, /hidetime/]},
-    // The tutor next: its settings name themselves clearly and nothing else should claim them.
-    {id: 'tutor', label: 'AI Tutor', icon: '\u2728',
+    {
+        id: 'time', order: 7, label: 'Estimated time', icon: '◷', hue: 'time',
+        desc: 'How long each activity is estimated to take, and which of the four places show it.',
+        match: [/minutes/, /timing/, /hidetime/],
+    },
+    {
+        id: 'tutor', order: 8, label: 'AI Tutor', icon: '✦', hue: 'tutor',
+        desc: 'The external AI service, its credentials, and what course content is sent to it.',
         match: [/tutor/, /apikey/, /siteid/, /assessmentanswers/, /aiassistant/, /externalservice/,
-            /adminreportlink/]},
-    {id: 'tour', label: 'Guided tour', icon: '\u25CE',
-        match: [/tour/]},
-    // Colour before the areas it applies to, so every colour is in one place -- someone theming a
-    // site wants them together rather than scattered across four tabs.
-    {id: 'colour', label: 'Colour', icon: '\u25D0',
-        match: [/colour/, /opacity/, /scrim/, /fade/, /overlay/]},
-    {id: 'index', label: 'Course index', icon: '\u2630',
-        match: [/playerindex/, /indexstate/, /playerlogo/, /playerheader/, /showcourseindex/,
-            /^index/, /forceindex/, /defaultindex/]},
-    {id: 'banner', label: 'Banner', icon: '\u25AD',
-        match: [/herobanner/, /heroattop/, /heroimage/, /herosticky/, /showherobanner/, /hero/]},
-    {id: 'cards', label: 'Cards', icon: '\u25A6',
-        match: [/card/, /displayascards/, /activitydisplaymode/, /showactivities/]},
-    {id: 'nav', label: 'Navigation', icon: '\u21F1',
-        match: [/secondarynav/, /coursenavplace/, /immersive/, /hidefooter/, /hidebreadcrumb/,
-            /hidegeneral/, /navchevrons/]},
+            /adminreportlink/],
+    },
+    {
+        id: 'tour', order: 9, label: 'Guided tour', icon: '◎', hue: 'tour',
+        desc: 'The first-run tour and its spoken narration.',
+        match: [/tour/],
+    },
+    {
+        id: 'colour', order: 6, label: 'Colours & branding', icon: '◐', hue: 'colour',
+        desc: 'Every colour the format publishes, plus the sidebar logo and light/dark mode.',
+        match: [/colour/, /opacity/, /scrim/, /fade/, /overlay/, /playerlogo/, /colourmode/],
+    },
+    {
+        id: 'index', order: 1, label: 'Course index', icon: '☰', hue: 'index',
+        desc: 'Where the course index appears, how it opens, and the player sidebar.',
+        match: [/playerindex/, /indexstate/, /playerheader/, /showcourseindex/, /^index/,
+            /forceindex/, /defaultindex/, /hidegeneral/],
+    },
+    {
+        id: 'banner', order: 2, label: 'Hero banner', icon: '▭', hue: 'banner',
+        desc: 'The banner at the top of a course: whether it shows, where it sits, how it scrolls.',
+        match: [/herobanner/, /heroattop/, /heroimage/, /herosticky/, /showherobanner/, /hero/],
+    },
+    {
+        id: 'cards', order: 3, label: 'Section cards', icon: '▦', hue: 'cards',
+        desc: 'How sections render on the course home page.',
+        match: [/displayascards/, /cardlayout/, /cardtitlesize/, /cardactivitylimit/,
+            /showactivities/, /card/],
+    },
+    {
+        id: 'activity', order: 4, label: 'Activity display', icon: '▤', hue: 'activity',
+        desc: 'How activities render inside a section, and next/previous navigation.',
+        match: [/activitydisplaymode/, /navchevrons/],
+    },
+    {
+        id: 'nav', order: 5, label: 'Navigation & chrome', icon: '⇱', hue: 'nav',
+        desc: "Moodle's own tabs, breadcrumb, footer and logo band on course pages.",
+        match: [/secondarynav/, /coursenavplace/, /immersive/, /hidefooter/, /hidebreadcrumb/],
+    },
+    {
+        id: 'other', order: 10, label: 'Other', icon: '⚙', hue: 'other',
+        desc: 'Anything not claimed by a category above.',
+        match: [],
+    }
 ];
 
 /**
- * The second filter axis: what kind of setting this is.
+ * The setting's own name, as Moodle prints it under each label.
  *
- * ACF-FIX-2.1.135. Categories answer "where does this apply"; these answer "what does it do to my
- * site", which is a different question an administrator asks constantly:
- *
- * - **Overrides** is the one that earns its place. Every `force…` setting changes courses that
- *   already exist, and every `default…` only seeds new ones. That distinction has caused more
- *   confusion than anything else in this plugin, and being able to list exactly the settings that
- *   reach existing courses answers it directly.
- * - **New** marks what arrived recently, so someone returning to the page can see what changed
- *   without reading the changelog.
- *
- * The first two are derived from the setting's name and cannot drift. `New` is the exception -- it
- * is a list, and a list goes stale. It is passed in from PHP rather than hard-coded here so it sits
- * beside the settings it describes, and it is deliberately short: a permanent "new" badge on
- * everything would mean nothing.
- */
-const KINDS = [
-    {id: 'override', label: 'Affects existing courses', icon: '⚠',
-        test: (name) => /^force/.test(name)},
-    {id: 'default', label: 'New courses only', icon: '＋',
-        test: (name) => /^default/.test(name)},
-];
-
-/**
- * The setting's own name, as the plugin prints it under each label.
- *
- * @param {Element} item The rendered setting.
- * @returns {string}
+ * @param {Element} item A rendered .form-item.
+ * @returns {String} The bare name, or '' for a heading or description block.
  */
 const nameOf = (item) => {
     const shortname = item.querySelector('.form-shortname');
-    return shortname ? shortname.textContent.replace(/.*\|\s*/, '').trim() : '';
+    if (shortname) {
+        return shortname.textContent.replace(/.*\|\s*/, '').trim();
+    }
+    // Fallback for themes that do not print the short name: Moodle's own row id.
+    const id = item.getAttribute('id') || '';
+    return id.indexOf('admin-') === 0 ? id.slice('admin-'.length) : '';
 };
 
 /**
- * Work out which category a settings row belongs to.
+ * Which category a row belongs to.
  *
- * @param {Element} item The rendered setting.
- * @returns {string} A category id, or 'other'.
+ * @param {String} name The setting's own name.
+ * @returns {Object} A category from CATEGORIES; never null.
  */
-const categoryOf = (item) => {
-    // ACF-FIX-2.1.147: only real settings are categorised, and only on their own name.
-    //
-    // A section heading renders as a `.form-item` with no setting name. Those were being matched
-    // against their whole text, so a heading landed in whichever category its prose happened to
-    // mention -- and they were counted as settings, which is why the totals never matched the
-    // number of things a reader can actually change.
-    //
-    // Matching on the name alone also stops a setting being filed by a word in its description:
-    // "the accent colour is used for card headings" should not put an accent setting under Cards.
-    const name = nameOf(item);
-    if (name === '') {
-        return null;
-    }
+const categoryOf = (name) => {
     for (const cat of CATEGORIES) {
         for (const pattern of cat.match) {
             if (pattern.test(name)) {
-                return cat.id;
+                return cat;
             }
         }
     }
-    return 'other';
+    return CATEGORIES[CATEGORIES.length - 1];
 };
 
 /**
- * Build the tab bar and the search box.
+ * A small inline SVG, so nothing depends on an icon font being present.
  *
- * @param {Object} strings Localised labels.
- * @param {Element[]} items Every settings row on the page.
- * @param {Object} counts How many settings each category holds.
+ * @param {String} d The path data.
+ * @param {String} cls A class for the element.
+ * @returns {String} Markup.
+ */
+const svg = (d, cls) =>
+    '<svg class="' + cls + '" viewBox="0 0 24 24" aria-hidden="true" focusable="false" '
+    + 'fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" '
+    + 'stroke-linejoin="round">' + d + '</svg>';
+
+/* --------------------------------------------------------------------------
+   The previews (ACF-FIX-2.1.159)
+
+   A settings page for a course format has a hard problem: the names are abstract. "Activity display
+   mode", "Banner at top of page", "Course index on first entry" — a reader who has not already seen
+   the difference cannot tell what any of them will do, and the description underneath is a sentence
+   trying to describe a layout.
+
+   So each card shows the layout. These are schematic wireframes of the course page with the part
+   this category governs picked out in the category's own colour and everything else greyed back:
+   the sidebar for Course index, the band across the top for Hero banner, the grid of tiles for
+   Section cards. Not screenshots — a screenshot would be stale the moment the format changed, would
+   need hosting, and would carry one site's colours. These are drawn from the same tokens the cards
+   use, weigh a few hundred bytes each, stay sharp at any zoom, and follow light and dark.
+
+   Everything is `aria-hidden`: the card's title and description already say what it is, and a
+   screen reader gaining "rectangle rectangle rectangle" is a loss, not a gain.
+   -------------------------------------------------------------------------- */
+
+const PREVIEW_BASE = 'rgb(var(--c) / 0.16)';
+
+/**
+ * One wireframe, as inline SVG markup.
+ *
+ * The viewBox is a 200x112 page. `fill="currentColor"` picks up the muted page furniture; anything
+ * the category actually controls is filled with the hue instead, so the eye lands on it first.
+ *
+ * @param {String} id A category id.
+ * @returns {String} SVG markup.
+ */
+const preview = (id) => {
+    const hue = 'rgb(var(--c) / 0.85)';
+    const soft = 'rgb(var(--c) / 0.32)';
+    const mute = PREVIEW_BASE;
+    const r = (x, y, w, h, f, rd) => '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="'
+        + h + '" rx="' + (rd === undefined ? 2 : rd) + '" fill="' + f + '"/>';
+
+    // Shared furniture: the page plate and a header strip.
+    const plate = r(0, 0, 200, 112, 'rgb(var(--c) / 0.05)', 6);
+    const grid = (f1, f2) => r(58, 34, 64, 34, f1) + r(128, 34, 64, 34, f1)
+        + r(58, 74, 64, 30, f2) + r(128, 74, 64, 30, f2);
+
+    switch (id) {
+        case 'index':
+            // The sidebar, picked out; the content beside it greyed.
+            return plate + r(0, 0, 50, 112, hue, 6) + r(8, 10, 34, 6, 'rgb(255 255 255 / 0.75)')
+                + r(8, 24, 26, 4, 'rgb(255 255 255 / 0.5)') + r(8, 34, 34, 4, 'rgb(255 255 255 / 0.5)')
+                + r(8, 44, 30, 4, 'rgb(255 255 255 / 0.5)') + r(8, 54, 34, 4, 'rgb(255 255 255 / 0.5)')
+                + r(8, 64, 24, 4, 'rgb(255 255 255 / 0.5)')
+                + r(58, 8, 134, 18, mute) + grid(mute, mute);
+        case 'banner':
+            // The band across the top, picked out.
+            return plate + r(0, 0, 50, 112, mute, 6) + r(58, 6, 134, 24, hue)
+                + r(66, 13, 60, 5, 'rgb(255 255 255 / 0.8)')
+                + r(66, 22, 38, 3, 'rgb(255 255 255 / 0.55)')
+                + grid(mute, mute);
+        case 'cards':
+            // The grid of section tiles.
+            return plate + r(0, 0, 50, 112, mute, 6) + r(58, 8, 134, 16, mute)
+                + r(58, 32, 64, 34, hue) + r(128, 32, 64, 34, hue)
+                + r(58, 72, 64, 32, soft) + r(128, 72, 64, 32, soft);
+        case 'activity':
+            // Rows inside a section, with a next/previous chevron pair.
+            return plate + r(0, 0, 50, 112, mute, 6) + r(58, 8, 134, 16, mute)
+                + r(58, 32, 134, 14, hue) + r(58, 50, 134, 14, soft)
+                + r(58, 68, 134, 14, soft) + r(58, 90, 30, 12, hue) + r(162, 90, 30, 12, hue);
+        case 'nav':
+            // The chrome: header band, tab strip, breadcrumb, footer.
+            return plate + r(0, 0, 200, 12, hue, 0) + r(0, 16, 200, 8, soft, 0)
+                + r(6, 28, 60, 4, soft) + r(0, 0, 50, 112, mute, 6)
+                + r(58, 38, 134, 44, mute) + r(0, 102, 200, 10, hue, 0);
+        case 'colour':
+            // Swatches over a plate: the one category whose subject is colour itself.
+            return plate + r(0, 0, 50, 112, hue, 6)
+                + r(58, 8, 134, 18, soft) + r(58, 34, 40, 34, hue) + r(104, 34, 40, 34, soft)
+                + r(150, 34, 42, 34, mute) + r(58, 74, 134, 30, soft);
+        case 'time':
+            // The four places a duration pill can appear, as pills.
+            return plate + r(0, 0, 50, 112, mute, 6) + r(8, 24, 22, 7, hue, 3.5)
+                + r(8, 40, 22, 7, hue, 3.5) + r(58, 8, 134, 16, mute)
+                + r(58, 32, 64, 34, mute) + r(128, 32, 64, 34, mute)
+                + r(96, 38, 22, 7, hue, 3.5) + r(166, 38, 22, 7, hue, 3.5)
+                + r(58, 74, 134, 30, mute);
+        case 'tutor':
+            // A conversation: the tutor is the only category that is not a layout.
+            return plate + r(0, 0, 50, 112, mute, 6) + r(58, 8, 134, 16, mute)
+                + r(58, 32, 78, 16, mute, 8) + r(96, 56, 96, 18, hue, 9)
+                + r(58, 82, 62, 14, mute, 7)
+                + '<circle cx="176" cy="98" r="10" fill="' + hue + '"/>';
+        case 'tour':
+            // A spotlight moving across the page.
+            return plate + r(0, 0, 50, 112, mute, 6) + r(58, 8, 134, 16, mute)
+                + grid(mute, mute)
+                + '<circle cx="90" cy="51" r="22" fill="' + soft + '"/>'
+                + '<circle cx="90" cy="51" r="11" fill="' + hue + '"/>';
+        default:
+            return plate + r(0, 0, 50, 112, mute, 6) + r(58, 8, 134, 16, mute) + grid(soft, mute);
+    }
+};
+
+/**
+ * The preview element for a card.
+ *
+ * @param {String} id A category id.
  * @returns {Element}
  */
-const buildControls = (strings, items, counts) => {
+const buildPreview = (id) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'acfs-preview';
+    wrap.setAttribute('aria-hidden', 'true');
+    wrap.innerHTML = '<svg viewBox="0 0 200 112" preserveAspectRatio="xMidYMid meet" '
+        + 'focusable="false">' + preview(id) + '</svg>';
+    return wrap;
+};
+
+
+/**
+ * Build one collapsed category row.
+ *
+ * The header is a real <button> with aria-expanded and aria-controls, so the panel is operable and
+ * announced correctly from the keyboard. A div with a click handler would look identical and be
+ * unusable without a mouse.
+ *
+ * @param {Object} cat The category.
+ * @param {Number} count How many settings it holds.
+ * @param {Object} t Localised labels.
+ * @returns {Object} {panel, head, body}
+ */
+const buildPanel = (cat, count, t) => {
+    const panel = document.createElement('section');
+    panel.className = 'acfs-panel';
+    panel.id = 'acfs-' + cat.id;
+    panel.style.setProperty('--c', 'var(--acfs-c-' + cat.hue + ')');
+
+    const bodyid = 'acfs-body-' + cat.id;
+
+    const head = document.createElement('button');
+    head.type = 'button';
+    head.className = 'acfs-head';
+    head.setAttribute('aria-expanded', 'false');
+    head.setAttribute('aria-controls', bodyid);
+    head.innerHTML =
+        '<span class="acfs-icon" aria-hidden="true">' + cat.icon + '</span>'
+        + '<span class="acfs-headtext">'
+        + '<span class="acfs-title"></span>'
+        + '<span class="acfs-sub"></span>'
+        + '</span>'
+        + '<span class="acfs-count"></span>'
+        + svg('<path d="m6 9 6 6 6-6"/>', 'acfs-chev');
+    head.querySelector('.acfs-title').textContent = cat.label;
+    head.querySelector('.acfs-sub').textContent = cat.desc;
+    head.querySelector('.acfs-count').textContent =
+        count + ' ' + (count === 1 ? t.setting : t.settings);
+    panel.appendChild(head);
+
+    const body = document.createElement('div');
+    body.className = 'acfs-body';
+    body.id = bodyid;
+    body.appendChild(buildPreview(cat.id));
+    panel.appendChild(body);
+
+    return {panel, head, body};
+};
+
+/**
+ * Build the search box.
+ *
+ * @param {Function} onchange Called with the lower-cased query.
+ * @param {Object} t Localised labels.
+ * @returns {Element}
+ */
+const buildControls = (onchange, t) => {
     const bar = document.createElement('div');
-    bar.className = 'aicourse-settings-controls';
+    bar.className = 'acfs-controls';
 
     const search = document.createElement('div');
-    search.className = 'aicourse-settings-search';
+    search.className = 'acfs-search';
+    search.innerHTML = svg('<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>', '');
     const input = document.createElement('input');
     input.type = 'search';
-    input.className = 'aicourse-settings-search-input';
-    input.setAttribute('placeholder', strings.searchplaceholder);
-    input.setAttribute('aria-label', strings.searchplaceholder);
+    input.className = 'acfs-searchinput';
+    input.placeholder = t.search;
+    input.setAttribute('aria-label', t.search);
     search.appendChild(input);
-
-    const tabs = document.createElement('div');
-    tabs.className = 'aicourse-settings-tabs';
-    tabs.setAttribute('role', 'tablist');
-
-    const makeTab = (id, label, icon, count) => {
-        const b = document.createElement('button');
-        b.type = 'button';
-        b.className = 'aicourse-settings-tab';
-        b.dataset.category = id;
-        b.setAttribute('role', 'tab');
-        b.setAttribute('aria-selected', id === 'all' ? 'true' : 'false');
-        b.innerHTML = '';
-        const ic = document.createElement('span');
-        ic.className = 'aicourse-settings-tab-icon';
-        ic.setAttribute('aria-hidden', 'true');
-        ic.textContent = icon;
-        const tx = document.createElement('span');
-        tx.textContent = label;
-        const ct = document.createElement('span');
-        ct.className = 'aicourse-settings-tab-count';
-        ct.textContent = String(count);
-        b.appendChild(ic);
-        b.appendChild(tx);
-        b.appendChild(ct);
-        if (id === 'all') {
-            b.classList.add('is-active');
-        }
-        return b;
-    };
-
-    tabs.appendChild(makeTab('all', strings.all, '◈', items.length));
-    CATEGORIES.forEach((c) => {
-        if (counts[c.id]) {
-            tabs.appendChild(makeTab(c.id, c.label, c.icon, counts[c.id]));
-        }
-    });
-    if (counts.other) {
-        tabs.appendChild(makeTab('other', strings.other, '·', counts.other));
-    }
-
-    // The second row. Separated from the categories by a label, because two rows of chips with no
-    // explanation reads as one long list of unrelated filters.
-    const kinds = document.createElement('div');
-    kinds.className = 'aicourse-settings-kinds';
-    const kindLabel = document.createElement('span');
-    kindLabel.className = 'aicourse-settings-kinds-label';
-    kindLabel.textContent = strings.filterby;
-    kinds.appendChild(kindLabel);
-
-    const makeChip = (id, label, icon, count) => {
-        const c = document.createElement('button');
-        c.type = 'button';
-        c.className = 'aicourse-settings-chip';
-        c.dataset.kind = id;
-        c.setAttribute('aria-pressed', 'false');
-        const ic = document.createElement('span');
-        ic.setAttribute('aria-hidden', 'true');
-        ic.textContent = icon + ' ';
-        const tx = document.createElement('span');
-        tx.textContent = label + ' (' + count + ')';
-        c.appendChild(ic);
-        c.appendChild(tx);
-        return c;
-    };
-
-    KINDS.forEach((k) => {
-        const count = items.filter((i) => k.test(nameOf(i))).length;
-        if (count) {
-            kinds.appendChild(makeChip(k.id, k.label, k.icon, count));
-        }
-    });
-    const newCount = items.filter((i) => (strings.recent || []).indexOf(nameOf(i)) !== -1).length;
-    if (newCount) {
-        kinds.appendChild(makeChip('new', strings.newlabel, '●', newCount));
-    }
-
     bar.appendChild(search);
-    bar.appendChild(tabs);
-    if (kinds.children.length > 1) {
-        bar.appendChild(kinds);
-    }
+
+    let debounce = null;
+    input.addEventListener('input', () => {
+        window.clearTimeout(debounce);
+        debounce = window.setTimeout(() => onchange(input.value.trim().toLowerCase()), 120);
+    });
+
     return bar;
 };
 
 /**
- * Apply the current category and search term.
+ * Build the page.
  *
- * @param {Element[]} items Every settings row.
- * @param {string} category The selected category id.
- * @param {string} term The search term, lower case.
- * @param {Element} empty The "nothing matched" message.
- * @param {string} kind The selected kind chip, or '' for none.
- * @param {string[]} recent Setting names counted as recently added.
- * @returns {void}
- */
-const applyFilter = (items, category, term, empty, kind, recent) => {
-    let shown = 0;
-    items.forEach((item) => {
-        const inCategory = category === 'all' || item.dataset.aicourseCat === category;
-        // The kind chips are a toggle, not a second tab bar: with none pressed everything passes.
-        let inKind = true;
-        if (kind === 'override') {
-            inKind = /^force/.test(item.dataset.aicourseName || '');
-        } else if (kind === 'default') {
-            inKind = /^default/.test(item.dataset.aicourseName || '');
-        } else if (kind === 'new') {
-            inKind = (recent || []).indexOf(item.dataset.aicourseName || '') !== -1;
-        }
-        // Searching the whole row rather than only the label, so a term that appears in a
-        // description finds its setting -- someone looking for "answer key" should reach the
-        // sharing ceiling even though those words are not in its name.
-        const matches = term === '' || (item.textContent || '').toLowerCase().indexOf(term) !== -1;
-        const show = inCategory && inKind && matches;
-        item.style.display = show ? '' : 'none';
-        if (show) {
-            shown++;
-        }
-    });
-    empty.style.display = shown === 0 ? '' : 'none';
-
-    // Section headings only make sense above settings that are visible.
-    document.querySelectorAll('#adminsettings h3').forEach((h) => {
-        let next = h.nextElementSibling;
-        let any = false;
-        while (next && next.tagName !== 'H3') {
-            if (next.classList && next.classList.contains('form-item') && next.style.display !== 'none') {
-                any = true;
-                break;
-            }
-            next = next.nextElementSibling;
-        }
-        h.style.display = any ? '' : 'none';
-    });
-};
-
-/**
- * Start.
- *
- * @param {Object} strings Localised labels.
+ * @param {Object} strings Localised labels from PHP.
  * @returns {void}
  */
 export const init = (strings) => {
-    const root = document.querySelector('#adminsettings');
-    if (!root) {
-        return;
-    }
-    const items = Array.from(root.querySelectorAll('.form-item'));
-    if (items.length < 8) {
-        // Too few to be worth filtering; the controls would cost more than they save.
+    // Defaults are English so a stale language cache costs a word rather than the page — the lesson
+    // the sidebar's close button taught in 2.1.157.
+    const t = Object.assign({
+        search: 'Search settings…',
+        nomatches: 'No settings match that search.',
+        settings: 'settings',
+        setting: 'setting',
+        hint: 'Choose an area to open it. Opening one closes the others.'
+    }, strings || {});
+
+    const root = document.getElementById('adminsettings');
+    if (!root || root.dataset.acfsDone === '1') {
         return;
     }
 
-    const counts = {};
+    const items = Array.from(root.querySelectorAll('.form-item'));
+    if (items.length < 4) {
+        return;
+    }
+    root.dataset.acfsDone = '1';
+
+    // A heading has no setting name. It is a divider, not a setting, and counting it as one is why
+    // the old page's totals never matched what a reader could actually change.
     const settings = [];
+    const notes = [];
     items.forEach((item) => {
-        const cat = categoryOf(item);
-        if (cat === null) {
-            // A heading, not a setting. Left visible under "All settings" but never counted and
-            // never filtered into a category.
-            item.dataset.aicourseHeading = '1';
+        const name = nameOf(item);
+        if (name === '') {
+            notes.push(item);
             return;
         }
-        item.dataset.aicourseCat = cat;
-        item.dataset.aicourseName = nameOf(item);
-        counts[cat] = (counts[cat] || 0) + 1;
-        settings.push(item);
+        settings.push({item, name, cat: categoryOf(name),
+            text: (name + ' ' + item.textContent).toLowerCase()});
     });
 
-    const controls = buildControls(strings, settings, counts);
-    root.parentNode.insertBefore(controls, root);
+    // Matching order and reading order are different problems. `match` must test Timing before Cards
+    // or `hidetimesectioncards` files itself wrongly; `order` is what the reader sees.
+    const display = CATEGORIES.slice().sort((a, b) => a.order - b.order);
+
+    const list = document.createElement('div');
+    list.className = 'acfs-list';
+    const panels = [];
+
+    display.forEach((cat) => {
+        const mine = settings.filter((s) => s.cat.id === cat.id);
+        if (!mine.length) {
+            return;
+        }
+        const rec = buildPanel(cat, mine.length, t);
+        mine.forEach((s) => rec.body.appendChild(s.item));
+        rec.rows = mine;
+        panels.push(rec);
+        list.appendChild(rec.panel);
+    });
+
+    /**
+     * Open one panel and close the rest.
+     *
+     * The exclusivity is the design, not a preference: there is no arrangement of sixty-five
+     * settings that is calm with all of them on screen.
+     *
+     * @param {Object|null} which The panel record to open, or null to close everything.
+     * @param {Boolean} scroll Whether to bring it into view.
+     * @returns {void}
+     */
+    const open = (which, scroll) => {
+        panels.forEach((rec) => {
+            const on = rec === which;
+            rec.panel.classList.toggle('is-open', on);
+            rec.head.setAttribute('aria-expanded', on ? 'true' : 'false');
+        });
+        if (which && scroll) {
+            // Deferred a frame: the panel has to be open before its position is worth measuring.
+            window.requestAnimationFrame(() =>
+                which.panel.scrollIntoView({block: 'start', behavior: 'smooth'}));
+        }
+    };
+
+    panels.forEach((rec) => {
+        rec.head.addEventListener('click', () => {
+            const wasopen = rec.panel.classList.contains('is-open');
+            open(wasopen ? null : rec, !wasopen);
+        });
+    });
 
     const empty = document.createElement('p');
-    empty.className = 'aicourse-settings-empty';
-    empty.textContent = strings.nomatches;
-    empty.style.display = 'none';
-    root.parentNode.insertBefore(empty, root);
+    empty.className = 'acfs-empty';
+    empty.textContent = t.nomatches;
+    empty.hidden = true;
 
-    let category = 'all';
-    let term = '';
-    let kind = '';
+    const hint = document.createElement('p');
+    hint.className = 'acfs-hint';
+    hint.textContent = t.hint;
 
-    controls.querySelector('.aicourse-settings-search-input').addEventListener('input', (e) => {
-        term = e.target.value.trim().toLowerCase();
-        applyFilter(items, category, term, empty, kind, strings.recent);
-    });
-
-    controls.querySelectorAll('.aicourse-settings-chip').forEach((chip) => {
-        chip.addEventListener('click', () => {
-            // Pressing the active chip clears it, so the filter can always be undone without
-            // hunting for an "all" option that does not exist on this row.
-            kind = kind === chip.dataset.kind ? '' : chip.dataset.kind;
-            controls.querySelectorAll('.aicourse-settings-chip').forEach((c) => {
-                const on = c.dataset.kind === kind;
-                c.classList.toggle('is-active', on);
-                c.setAttribute('aria-pressed', on ? 'true' : 'false');
+    /**
+     * Filter by the search query.
+     *
+     * Searching suspends the one-at-a-time rule: someone who has typed a word is looking for a
+     * specific setting and does not know which area it is in, so every panel with a match opens.
+     * Clearing the box collapses everything back to the ten rows.
+     *
+     * @param {String} query Lower-cased search text.
+     * @returns {void}
+     */
+    const apply = (query) => {
+        let shown = 0;
+        panels.forEach((rec) => {
+            let hits = 0;
+            rec.rows.forEach((s) => {
+                const on = !query || s.text.indexOf(query) !== -1;
+                s.item.hidden = !on;
+                if (on) {
+                    hits++;
+                }
             });
-            applyFilter(items, category, term, empty, kind, strings.recent);
+            shown += hits;
+            rec.panel.hidden = Boolean(query) && hits === 0;
+            if (query) {
+                rec.panel.classList.toggle('is-open', hits > 0);
+                rec.head.setAttribute('aria-expanded', hits > 0 ? 'true' : 'false');
+            }
         });
+        if (!query) {
+            open(null, false);
+        }
+        empty.hidden = shown !== 0 || !query;
+        hint.hidden = Boolean(query);
+    };
+
+    const controls = buildControls(apply, t);
+
+    const notesWrap = document.createDocumentFragment();
+    notes.forEach((n) => {
+        n.classList.add('acfs-note');
+        notesWrap.appendChild(n);
     });
 
-    controls.querySelectorAll('.aicourse-settings-tab').forEach((tab) => {
-        tab.addEventListener('click', () => {
-            category = tab.dataset.category;
-            controls.querySelectorAll('.aicourse-settings-tab').forEach((t) => {
-                t.classList.toggle('is-active', t === tab);
-                t.setAttribute('aria-selected', t === tab ? 'true' : 'false');
-            });
-            applyFilter(items, category, term, empty, kind, strings.recent);
-            // Back to the top of the list, or switching to a short category leaves the reader
-            // looking at blank space where the previous one used to be.
-            controls.scrollIntoView({block: 'start', behavior: 'smooth'});
-        });
-    });
+    root.appendChild(controls);
+    root.appendChild(notesWrap);
+    root.appendChild(hint);
+    root.appendChild(empty);
+    root.appendChild(list);
+
+    /**
+     * Follow a #admin-<name> link: open the panel that holds it, then flash the row.
+     *
+     * Scrolling someone to a setting and leaving them to work out which one it was is half a
+     * feature — and with the panels collapsed, the target is not even on screen until its own panel
+     * is opened first.
+     *
+     * @returns {void}
+     */
+    const jump = () => {
+        const hash = window.location.hash;
+        if (!hash || hash.indexOf('#admin-') !== 0) {
+            return;
+        }
+        const name = hash.slice('#admin-'.length);
+        const rec = panels.find((r) => r.rows.some((s) => s.name === name));
+        if (!rec) {
+            return;
+        }
+        const row = rec.rows.find((s) => s.name === name);
+        open(rec, false);
+        row.item.hidden = false;
+        row.item.classList.remove('acfs-flash');
+        void row.item.offsetWidth;
+        row.item.classList.add('acfs-flash');
+        window.requestAnimationFrame(() =>
+            row.item.scrollIntoView({block: 'center', behavior: 'smooth'}));
+    };
+
+    window.addEventListener('hashchange', jump);
+    if (window.location.hash) {
+        window.setTimeout(jump, 60);
+    }
 };
