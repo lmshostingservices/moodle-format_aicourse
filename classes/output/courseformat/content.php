@@ -601,15 +601,17 @@ class content extends topics_content implements named_templatable, renderable {
                 'timetext' => progress::format_estimated_time($minutes),
                 'iscomplete' => ($status === 'completed'),
                 'istracked' => ($status !== null && $status !== 'none'),
-                // Hovering the NAME answers "what is this?" -- which is a different question from
-                // the one the tick answers ("am I done, and what would done mean?"). Built here
-                // rather than in JavaScript so it works on a page where the player sidebar is
-                // switched off, and so it is present before any script has run.
-                'nametitle' => implode(get_string('labelseparator', 'format_aicourse'), array_filter([
-                    activityinfo::get_activity_type_name($cm),
-                    $minutes > 0 ? progress::format_estimated_time($minutes) : null,
-                    $status !== null ? activityinfo::get_status_label($status) : null,
-                ])),
+                // ACF-FIX-2.1.181: no `nametitle` any more, and no `title` on the row.
+                //
+                // 2.1.178 put a summary here -- type, time, status -- as a no-JavaScript fallback.
+                // It kept surfacing as the browser's own tooltip and reading as a SECOND, smaller
+                // hover behaviour competing with the course index's panel, which is the one thing
+                // the card rows were asked to match. A fallback that contradicts the real feature
+                // is worse than no fallback: the row's aria-label already carries the name, the
+                // section and the completion status, so nothing accessible is lost by dropping it.
+                //
+                // The type and time are not lost either -- both are now visible IN the row (the
+                // module icon and the time pill), which is where they belong.
             ];
         }
 

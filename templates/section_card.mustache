@@ -135,7 +135,6 @@
                 "iconurl": "https://example.org/theme/image.php/boost/page/1/monologo",
                 "modname": "page",
                 "typename": "Page",
-                "nametitle": "Page, 5 min, Completed",
                 "hastime": true,
                 "timetext": "5 min",
                 "iscomplete": true,
@@ -150,7 +149,6 @@
                 "iconurl": "https://example.org/theme/image.php/boost/quiz/1/monologo",
                 "modname": "quiz",
                 "typename": "Quiz",
-                "nametitle": "Quiz, 15 min, Not started",
                 "hastime": true,
                 "timetext": "15 min",
                 "iscomplete": false,
@@ -219,7 +217,7 @@
 {{#hasactivities}}
 <ul class="aicourse-card-activities">
 {{#activities}}
-<li class="aicourse-card-activity" data-cmid="{{cmid}}" data-modname="{{modname}}"><a href="{{{url}}}" class="aicourse-card-activity-link" aria-label="{{label}}" title="{{nametitle}}">{{!
+<li class="aicourse-card-activity" data-cmid="{{cmid}}" data-modname="{{modname}}"><a href="{{{url}}}" class="aicourse-card-activity-link" aria-label="{{label}}">{{!
 }}<img class="aicourse-card-activity-icon" src="{{iconurl}}" alt="" aria-hidden="true" loading="lazy">{{!
 }}<span class="aicourse-card-activity-name">{{{name}}}</span>{{!
 }}{{#hastime}}<span class="aicourse-card-activity-time" aria-hidden="true">{{timetext}}</span>{{/hastime}}{{!
