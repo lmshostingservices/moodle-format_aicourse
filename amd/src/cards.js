@@ -226,6 +226,30 @@ export const init = () => {
                 // A missing language string must not take the rings down with it.
             });
         }
+
+        // ACF-FIX-2.1.182: one line, once, saying what this module actually found.
+        //
+        // "Does the card progress count up?" has now been asked twice and answered twice from a
+        // local harness, which is not the same as answering it from the page in front of the
+        // person asking. The three things that decide it are all reported here: whether the module
+        // ran at all, how many rings it found (zero means the markup is stale -- an upgrade that
+        // did not purge caches, or completion tracking off so `hasprogress` is false), and whether
+        // motion is suppressed (a ring with reduced-motion set is CORRECT to sit still).
+        // Same diagnostic pattern as player.js, which settled the logo and the close button in one
+        // round each instead of three.
+        if (window.console && window.console.info) {
+            const first = document.querySelector('.aicourse-card-progress[data-acf-ring]');
+            window.console.info('[format_aicourse] cards:', JSON.stringify({
+                build: '2.1.182',
+                rings: document.querySelectorAll('.aicourse-card-progress[data-acf-ring]').length,
+                rows: document.querySelectorAll('.aicourse-card-activity[data-cmid]').length,
+                animated: wraps.length,
+                pct: first ? first.dataset.acfRing : null,
+                reducedMotion: reducedMotion(),
+                io: typeof window.IntersectionObserver === 'function',
+                playerConfig: Boolean(config && config.activities),
+            }));
+        }
     };
 
     if (document.readyState === 'loading') {

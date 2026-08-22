@@ -302,7 +302,22 @@ const buildCondition = (condition) => {
 const fillTip = (tip, data, strings) => {
     const conditions = data.conditions || [];
     const hasfacts = Boolean(data.grade) || Boolean(data.completedon);
-    if (!conditions.length && !hasfacts) {
+
+    // ACF-FIX-2.1.182: the gate is "is completion tracked", not "is there detail to show".
+    //
+    // It used to bail whenever an activity had no conditions AND no grade or completion date --
+    // which is an ordinary state, not an error: manual completion, not yet done, has none of the
+    // three. showTip() then returned without opening anything, so hovering that row produced
+    // NOTHING. On the course index that went unnoticed because the browser's own title attribute
+    // was still there to fill the silence. On the section cards, where 2.1.181 removed that title
+    // precisely so the panel would be the only hover behaviour, the silence was all that was left
+    // and the hover appeared to have been deleted.
+    //
+    // The status line alone is worth showing: "Not done" against a completion-tracked activity is
+    // the answer to the question the learner is hovering to ask. Conditions and facts are added
+    // when they exist. Untracked activities are still refused -- bindTip() will not even bind one,
+    // so there is nothing to say about them.
+    if (!data.tracked) {
         return false;
     }
 

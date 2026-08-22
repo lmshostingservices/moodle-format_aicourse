@@ -691,6 +691,83 @@ export const attach = () => {
     }
 };
 
+/**
+ * Draw the activity banner's completion ring, rather than having it simply be there.
+ *
+ * ACF-FIX-2.1.182. "Check the progress ring animates on each hero banner" -- on the activity banner
+ * it did not, and could not: that banner has no percentage ring. hero.mustache draws
+ * `.aicourse-progress-ring-*`, a real 0-100 arc that courseformat.js counts up; activity_hero.mustache
+ * draws `.aicourse-completion-ring`, which is a binary state -- a full circle with a check, or an
+ * empty circle. There is no number to count, so nothing was wired, and nothing moved.
+ *
+ * The equivalent motion for a binary state is the ring DRAWING ITSELF: the circle sweeps from empty
+ * to closed over the same duration and the same easing the hero ring uses, and the check strokes in
+ * behind it. The learner sees the same gesture on both banners, which is what was being asked for --
+ * not the same arithmetic, which does not exist here.
+ *
+ * Everything is measured from the element rather than assumed: the circle's own `r` gives the
+ * circumference, and the check's own `getTotalLength()` gives its dash length, so a future change to
+ * the template's geometry cannot silently leave a half-drawn ring behind.
+ *
+ * @returns {void}
+ */
+const drawCompletionRing = () => {
+    const rings = document.querySelectorAll('.aicourse-completion-ring:not([data-acf-drawn])');
+    if (!rings.length) {
+        return;
+    }
+    const reduced = window.matchMedia
+        && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    rings.forEach((svg) => {
+        svg.setAttribute('data-acf-drawn', '1');
+        // The template renders the finished state, which is correct with no JavaScript at all --
+        // so reduced motion needs no work here, only restraint.
+        if (reduced || !window.requestAnimationFrame) {
+            return;
+        }
+
+        const circle = svg.querySelector('circle');
+        const check = svg.querySelector('path');
+        const DUR = 1800;
+
+        if (circle) {
+            const r = parseFloat(circle.getAttribute('r')) || 20;
+            const c = 2 * Math.PI * r;
+            circle.style.transition = 'none';
+            circle.style.strokeDasharray = c + ' ' + c;
+            circle.style.strokeDashoffset = c + 'px';
+            // 12 o'clock, clockwise -- the same orientation as every other ring in this plugin.
+            circle.style.transformOrigin = '50% 50%';
+            circle.style.transform = 'rotate(-90deg)';
+        }
+        if (check) {
+            const len = typeof check.getTotalLength === 'function' ? check.getTotalLength() : 30;
+            check.style.transition = 'none';
+            check.style.strokeDasharray = len + ' ' + len;
+            check.style.strokeDashoffset = len + 'px';
+        }
+
+        // One forced layout for both, before either transition is put back: setting and clearing in
+        // the same frame without this is coalesced by the browser and nothing moves.
+        void svg.getBoundingClientRect();
+
+        window.requestAnimationFrame(() => {
+            if (circle) {
+                circle.style.transition = 'stroke-dashoffset ' + (DUR / 1000)
+                    + 's cubic-bezier(0.22, 1, 0.36, 1)';
+                circle.style.strokeDashoffset = '0px';
+            }
+            if (check) {
+                // Held back until the ring is most of the way round, so the check reads as the
+                // conclusion of the sweep rather than as a second thing happening at the same time.
+                check.style.transition = 'stroke-dashoffset 0.45s ease-out ' + (DUR * 0.6 / 1000) + 's';
+                check.style.strokeDashoffset = '0px';
+            }
+        });
+    });
+};
+
 export const init = () => {
     // ACF-FIX-2.1.127: the pull runs whether or not the banner is lifted.
     //
@@ -701,6 +778,7 @@ export const init = () => {
     // it only shows on a site where the main region is narrower.
     const start = () => {
         lift();
+        drawCompletionRing();
         // ACF-FIX-2.1.158: if the banner is already on the page -- a course page, or an activity
         // page whose modules happened to load in the other order -- attach now rather than waiting
         // for an announcement that has already been made.
@@ -748,6 +826,7 @@ export const init = () => {
     document.addEventListener('format_aicourse:heroplaced', () => {
         lift();
         attach();
+        drawCompletionRing();
     });
 
     if (document.readyState === 'loading') {
