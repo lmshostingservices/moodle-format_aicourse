@@ -185,8 +185,15 @@ if ($hassiteconfig) {
     $settings->add(new admin_setting_configselect(
         'format_aicourse/defaulthidesecondarynav',
         get_string('hidesecondarynav', 'format_aicourse'),
-        get_string('sitedefault_desc', 'format_aicourse'),
-        2,
+        get_string('hidesecondarynav_desc', 'format_aicourse'),
+        // ACF-FIX-2.1.167: ships as "Hide from students", not "Hide from everyone".
+        //
+        // Hiding the tabs from everybody also took them from teachers, and with edit mode OFF a
+        // teacher then had no route to Site administration, the Dashboard or their other courses
+        // from inside a course -- reported from a live site. The tabs are clutter for a learner and
+        // a tool for staff, so the shipped default now draws that line instead of removing them for
+        // both. An administrator who wants them gone entirely can still choose it.
+        1,
         [
             0 => get_string('hidesecondarynav_show', 'format_aicourse'),
             1 => get_string('hidesecondarynav_students', 'format_aicourse'),
@@ -210,7 +217,10 @@ if ($hassiteconfig) {
         'format_aicourse/forcehidesecondarynav',
         get_string('forcehidesecondarynav', 'format_aicourse'),
         get_string('forcehidesecondarynav_desc', 'format_aicourse'),
-        2,
+        // ACF-FIX-2.1.167: 1, not 2 — see the note on the default above. This is the control that
+        // actually reaches existing courses, so shipping it as "hide from everyone" is what took
+        // the navigation away from teachers on every course at once.
+        1,
         [
             -1 => get_string('forcehidesecondarynav_follow', 'format_aicourse'),
             0 => get_string('hidesecondarynav_show', 'format_aicourse'),
@@ -247,6 +257,10 @@ if ($hassiteconfig) {
     // hand-kept fallback list beside it.
     $PAGE->requires->js_call_amd('format_aicourse/settingsui', 'init', [[
         'about' => get_string('settingsui_about', 'format_aicourse'),
+        'show' => get_string('settingsui_show', 'format_aicourse'),
+        'hide' => get_string('settingsui_hide', 'format_aicourse'),
+        'course' => get_string('settingsui_course', 'format_aicourse'),
+        'appliestoall' => get_string('settingsui_appliestoall', 'format_aicourse'),
         'search' => get_string('settingsui_search', 'format_aicourse'),
         'nomatches' => get_string('settingsui_nomatches', 'format_aicourse'),
         'settings' => get_string('settingsui_settings', 'format_aicourse'),
@@ -539,7 +553,7 @@ if ($hassiteconfig) {
     $settings->add(new admin_setting_configselect(
         'format_aicourse/defaulthidefooter',
         get_string('hidefooter', 'format_aicourse'),
-        get_string('sitedefault_desc', 'format_aicourse'),
+        get_string('hidefooter_desc', 'format_aicourse'),
         0,
         [
             0 => get_string('hidesecondarynav_show', 'format_aicourse'),
@@ -567,7 +581,7 @@ if ($hassiteconfig) {
     $settings->add(new admin_setting_configselect(
         'format_aicourse/defaulthidebreadcrumb',
         get_string('hidebreadcrumb', 'format_aicourse'),
-        get_string('sitedefault_desc', 'format_aicourse'),
+        get_string('hidebreadcrumb_desc', 'format_aicourse'),
         0,
         [
             0 => get_string('hidesecondarynav_show', 'format_aicourse'),
@@ -642,14 +656,14 @@ if ($hassiteconfig) {
     $settings->add(new admin_setting_configcheckbox(
         'format_aicourse/defaultheroattop',
         get_string('heroattop', 'format_aicourse'),
-        get_string('sitedefault_desc', 'format_aicourse'),
+        get_string('heroattop_desc', 'format_aicourse'),
         1
     ));
 
     $settings->add(new admin_setting_configselect(
         'format_aicourse/defaultcardlayout',
         get_string('cardlayout', 'format_aicourse'),
-        get_string('sitedefault_desc', 'format_aicourse'),
+        get_string('cardlayout_desc', 'format_aicourse'),
         0,
         [
             0 => get_string('cardlayout_grid', 'format_aicourse'),
@@ -660,7 +674,7 @@ if ($hassiteconfig) {
     $settings->add(new admin_setting_configselect(
         'format_aicourse/defaultactivitydisplaymode',
         get_string('activitydisplaymode', 'format_aicourse'),
-        get_string('sitedefault_desc', 'format_aicourse'),
+        get_string('activitydisplaymode_desc', 'format_aicourse'),
         1,
         [
             0 => get_string('activitydisplaystandard', 'format_aicourse'),
@@ -671,14 +685,14 @@ if ($hassiteconfig) {
     $settings->add(new admin_setting_configcheckbox(
         'format_aicourse/defaultshowactivitiesoncards',
         get_string('showactivitiesoncards', 'format_aicourse'),
-        get_string('sitedefault_desc', 'format_aicourse'),
+        get_string('showactivitiesoncards_desc', 'format_aicourse'),
         0
     ));
 
     $settings->add(new admin_setting_configcheckbox(
         'format_aicourse/defaultshownavchevrons',
         get_string('shownavchevrons', 'format_aicourse'),
-        get_string('sitedefault_desc', 'format_aicourse'),
+        get_string('shownavchevrons_desc', 'format_aicourse'),
         1
     ));
 
@@ -693,7 +707,7 @@ if ($hassiteconfig) {
     $settings->add(new admin_setting_configtext(
         'format_aicourse/defaultcardtitlesize',
         get_string('cardtitlesize', 'format_aicourse'),
-        get_string('sitedefault_desc', 'format_aicourse'),
+        get_string('cardtitlesize_desc', 'format_aicourse'),
         14,
         PARAM_INT
     ));
@@ -722,7 +736,7 @@ if ($hassiteconfig) {
     $settings->add(new admin_setting_configselect(
         'format_aicourse/defaultshowcourseindex',
         get_string('showcourseindex', 'format_aicourse'),
-        get_string('sitedefault_desc', 'format_aicourse'),
+        get_string('showcourseindex_desc', 'format_aicourse'),
         7,
         [
             0 => get_string('courseindex_none', 'format_aicourse'),

@@ -527,6 +527,24 @@ const fitActivityWidth = (hero) => {
     if (end > 0 && end <= 600) {
         hero.style.marginInlineEnd = (-end) + 'px';
     }
+
+    // ACF-FIX-2.1.168: verify, and back off if the result is wrong.
+    //
+    // Everything above is measured, and a measurement taken while the drawer is still sliding is a
+    // measurement of a moving edge. Opening the course index in teacher view produced exactly that:
+    // the banner was pulled against a drawer that was only half way out, ended up wider than the
+    // window, and gave the page a horizontal scrollbar it never recovered from.
+    //
+    // Rather than trust the arithmetic, the outcome is checked. If the banner now sticks out past
+    // either edge, the offending margin is removed — a banner that is merely inset is a cosmetic
+    // problem; a page that scrolls sideways is a broken one.
+    const after = hero.getBoundingClientRect();
+    if (after.left < left - 1) {
+        hero.style.marginInlineStart = '0px';
+    }
+    if (after.right > right + 1) {
+        hero.style.marginInlineEnd = '0px';
+    }
 };
 
 /**
@@ -568,11 +586,17 @@ export const attach = () => {
     window.addEventListener('resize', refit);
 
     // The drawer's open state is the other thing that moves #page's edge. Core toggles classes on
-    // #page and on <body> when it opens and closes, and the transition takes ~250ms -- so the
-    // measurement is taken again after it has finished, not while the edge is still moving.
+    // #page and on <body> when it opens and closes and then animates the width over ~250ms.
+    //
+    // ACF-FIX-2.1.168: the immediate re-measure is gone. It ran while the drawer was still sliding,
+    // against an edge that was moving, and wrote a wrong correction which the later pass then had to
+    // undo -- visible as the banner jumping and, in teacher view, staying wrong. The measurement now
+    // waits for the drawer to stop: `transitionend` when the browser reports one, and a timer as the
+    // backstop for a theme that animates with something other than a CSS transition.
+    let settleTimer = null;
     const settle = () => {
-        refit();
-        window.setTimeout(refit, 320);
+        window.clearTimeout(settleTimer);
+        settleTimer = window.setTimeout(refit, 360);
     };
     if (typeof window.MutationObserver === 'function') {
         const page = document.getElementById('page');
@@ -589,6 +613,17 @@ export const attach = () => {
             settle();
         }
     }, true);
+
+    // The authoritative signal: the drawer itself telling us it has finished moving.
+    const drawernode = document.querySelector('#theme_boost-drawers-courseindex');
+    if (drawernode) {
+        drawernode.addEventListener('transitionend', (e) => {
+            if (e.propertyName === 'transform' || e.propertyName === 'width'
+                || e.propertyName === 'left' || e.propertyName === 'margin-left') {
+                refit();
+            }
+        });
+    }
 };
 
 export const init = () => {

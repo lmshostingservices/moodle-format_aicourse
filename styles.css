@@ -10809,6 +10809,12 @@ body.aicourse-index-merged .aicourse-player-brand {
     gap: 6px;
 }
 
+/* The band's own side padding comes in from 16 to 12, which is 8px more for the logo and puts the
+   controls closer to the panel edge where they belong. */
+body.aicourse-index-merged .aicourse-player-header {
+    padding-inline: var(--acf-space-3);
+}
+
 /* The logo is sized by HEIGHT, which is how a logo should be sized, and the width follows from its
    own aspect ratio. `max-block-size` alone could never make it bigger -- it is a ceiling, and the
    binding constraint was always the width of the box flex left it. `block-size` is a floor and a
@@ -10828,14 +10834,30 @@ body.aicourse-index-merged .aicourse-player-brand {
    percentage cap keeps it from crowding the controls on a narrow panel, and flex may still shrink
    it -- but never below something visible. */
 body.aicourse-index-merged .aicourse-player-logo {
-    flex: 0 1 auto;
-    min-inline-size: 0;
-    inline-size: 150px;
-    max-inline-size: 70%;
+    /* ACF-FIX-2.1.168: `flex: 0 0 auto` — it does not shrink any more.
+       Every previous attempt left it shrinkable so the close button could never be evicted again,
+       and flex duly took the space out of the logo: 80px, then 122px, never the size asked for. The
+       row is budgeted so nothing has to give (logo 170 + gap 6 + nav 30 + controls 82 = 288 in a
+       ~300px row), so the logo is now simply the size it is stated to be. */
+    flex: 0 0 auto;
+    /* ACF-FIX-2.1.168b: 195px — half again as big as the 130px it was rendering at.
+       The budget, stated so the next person can check it rather than re-derive it:
+         panel 342 − header padding 2x12 = 318 usable
+         controls  32 + 2 + 32, +8 margin ...... 74
+         nav icon  30, +6 gap ................... 36
+         ---------------------------------------------
+         logo ................................. 208 available, 195 taken
+       No percentage cap: a percentage of a box whose width depends on this element is how the
+       previous three attempts each ended up smaller than the number they asked for. */
+    inline-size: 187px;
+    max-inline-size: none;
     /* block-size is explicit, so a max-block-size beside it can only ever contradict it -- and did:
        the base rule's 30px cap, then a 32px cap here, both silently winning over a 34px request.
        One declaration owns the height. */
-    block-size: 34px;
+    /* 40px tall. The band is 120px and this is its top row; a 34px logo in it was reading as a
+       caption. The width above is what the image is drawn INTO -- `contain` keeps its aspect, so a
+       wide logo letterboxes vertically rather than stretching. */
+    block-size: 46px;
     max-block-size: none;
     object-fit: contain;
     object-position: left center;
@@ -10843,6 +10865,10 @@ body.aicourse-index-merged .aicourse-player-logo {
 
 body.aicourse-index-merged .aicourse-player-drawerctl {
     margin-inline-start: 8px;
+    /* ACF-FIX-2.1.168: pulled out into the header's own right-hand padding so the controls sit
+       against the panel edge rather than floating 16px inside it. With one nav icon instead of
+       three there is no longer a cluster here that needs framing. */
+    margin-inline-end: calc(var(--acf-space-3) * -1 + 4px);
 }
 
 /* Five controls in a 310px row is tight, so they come down a step in merged mode. 30px still clears
@@ -10925,10 +10951,10 @@ body.aicourse-index-merged .aicourse-player-drawerctl .dropdown-menu {
     z-index: 1041;
 }
 
-/* The logo shares the row with five icons now rather than three, so it takes less of it. */
-body.aicourse-index-merged .aicourse-player-logo {
-    max-inline-size: 42%;
-}
+/* ACF-FIX-2.1.168b: the 42% cap that was here is gone. It was written when the row held five icons
+   and it outlived them — with one nav icon there is room for a proper logo, and this rule was
+   quietly clamping every later attempt to widen it to 133px. Sixth instance in this sheet of a
+   stale duplicate declaration beating the rule that was actually being edited. */
 
 
 /* --- The activity hero, brought level with the course hero (ACF-FIX-2.1.158) ----
@@ -11141,8 +11167,11 @@ body#page-admin-setting-formatsettingaicourse #adminsettings {
 
 /* ACF-FIX-2.1.166: --acf-ink-3 measured 4.47:1 against the page here -- three hundredths under the
    4.5:1 AA floor for text this size. Stepped up to ink-2. */
+/* ACF-FIX-2.1.169: the hint had 0.5rem above it and NOTHING below — it finished 3px from the top
+   of the first panel, so it read as part of that panel rather than as a caption over the list. A
+   line of guidance needs air under it more than over it. */
 .acfs-hint {
-    margin: 0.5rem 0.15rem 0;
+    margin: 1.25rem 0.15rem 0.85rem;
     color: var(--acfs-ink-2);
     font-size: 0.75rem;
 }
@@ -11295,7 +11324,7 @@ body#page-admin-setting-formatsettingaicourse #adminsettings {
     overflow: hidden;
 }
 
-.acfs-preview svg {
+body#page-admin-setting-formatsettingaicourse .acfs-preview svg {
     display: block;
     inline-size: 100%;
     block-size: auto;
@@ -11325,7 +11354,12 @@ body#page-admin-setting-formatsettingaicourse #adminsettings .acfs-body
 /* Moodle floats the label and the setting; a float adds nothing to its parent's
    height, which is how a long description used to run out through the bottom of
    its box. flow-root contains them. */
-body#page-admin-setting-formatsettingaicourse #adminsettings .form-item > * {
+/* ACF-FIX-2.1.167: the illustration is excluded. This blanket rule exists to contain Moodle's
+   floated label and setting columns, and `display: flow-root` is right for both of them — but it
+   also caught the wireframe wrapper this plugin adds, overrode its `display: grid`, and stacked the
+   three little courses vertically instead of placing them in a row. A rule aimed at "whatever core
+   put here" has to say so, or it silently governs everything added afterwards too. */
+body#page-admin-setting-formatsettingaicourse #adminsettings .form-item > *:not(.acfs-sfig) {
     display: flow-root;
     min-inline-size: 0;
     float: none;
@@ -11403,19 +11437,19 @@ body#page-admin-setting-formatsettingaicourse #adminsettings .form-defaultinfo {
 
 /* Controls stop at a comfortable width rather than stretching the full measure:
    a select 736px wide with four words in it looks broken. */
+/* ACF-FIX-2.1.167: the `background:` SHORTHAND that was here is gone, and with it the last thing
+   competing for this property. A shorthand resets background-image, and because this selector uses
+   :is() containing attribute selectors it scores (2,1,2) -- higher than a plain `select` rule at
+   (2,0,2) -- so it beat the chevron regardless of which came first in the file. That is why a
+   dropdown did not look like a dropdown, and why moving the fix further down the sheet never
+   helped. Sizing and colour now live in the 2.1.167 block below; this one keeps only what nothing
+   else claims. */
 body#page-admin-setting-formatsettingaicourse #adminsettings
 :is(select, input[type="text"], input[type="password"], input[type="url"], textarea) {
     inline-size: 100%;
-    max-inline-size: 30rem;
     min-inline-size: 0;
     box-sizing: border-box;
-    padding: 0.5rem 0.65rem;
-    border: 1px solid var(--acfs-line-strong);
-    border-radius: 9px;
-    background: var(--acfs-card);
     color: var(--acfs-ink);
-    font-size: 0.875rem;
-    line-height: 1.4;
 }
 
 body#page-admin-setting-formatsettingaicourse #adminsettings
@@ -11479,8 +11513,15 @@ body#page-admin-setting-formatsettingaicourse #adminsettings .form-item.acfs-fla
 
 /* An SVG with a viewBox and no width/height attribute falls back to 300x150.
    That inflated a hub card to 1576px in 2.1.159; the backstop stays. */
+/* ACF-FIX-2.1.167: the backstop is scoped to ICONS, which is the only place the fault it guards
+   against occurs.
+   As written in 2.1.159 it was `:not(.acfs-preview) > svg` — an exclusion list of one, at (1,3,2),
+   which then beat every rule that sizes an illustration and crushed the per-setting wireframes to
+   18px. A guard that has to be excluded from by name will always be one name behind. Naming the
+   places an unsized icon actually appears is both narrower and self-maintaining. */
 body#page-admin-setting-formatsettingaicourse
-:not(.acfs-preview) > svg:not([width]):not([height]) {
+:is(.acfs-head, .acfs-search, .acfs-chevwrap, .acfs-jump, button, a, label) >
+svg:not([width]):not([height]) {
     inline-size: 1em;
     block-size: 1em;
 }
@@ -12006,7 +12047,6 @@ body#page-admin-setting-formatsettingaicourse #adminsettings
     /* 16px is also what stops iOS zooming the page when a field takes focus —
        any smaller and Safari scales the whole layout up on tap. */
     font-size: 1rem;
-    padding: 0.6rem 0.75rem;
 }
 
 .acfs-title {
@@ -12028,6 +12068,7 @@ body#page-admin-setting-formatsettingaicourse #adminsettings
 
 .acfs-hint {
     font-size: 0.875rem;
+    line-height: 1.5;
 }
 
 .acfs-introtitle {
@@ -12109,4 +12150,559 @@ body#page-admin-setting-formatsettingaicourse #adminsettings .acfs-intro h3 {
     body.aicourse-index-merged .aicourse-player-logo {
         max-inline-size: 60%;
     }
+}
+
+
+/* ==========================================================================
+   SETTINGS PAGE — controls and rhythm (ACF-FIX-2.1.167)
+   --------------------------------------------------------------------------
+   Three faults, all measured on a harness that now carries Bootstrap's REAL
+   `.custom-select` rule rather than a simplified stand-in:
+
+     backgroundImage : none        <- the dropdown arrow was gone
+     appearance      : none        <- and the browser's native arrow with it
+     height          : 38px fixed  <- against 41.6px of content: text clipped
+     gap between settings : 0px    <- rows flush against each other
+
+   1. A `background:` SHORTHAND resets `background-image`. Bootstrap draws the
+      select's chevron with a background-image and sets `appearance: none` so the
+      browser draws nothing itself. The plugin's `background: var(--acfs-card)`
+      therefore removed the only arrow on the control, which is why a dropdown
+      did not look like a dropdown. The arrow is now this plugin's own, so it
+      cannot be taken away by a theme that styles selects differently either.
+
+   2. Bootstrap gives the select `height: calc(1.5em + .75rem + 2px)` — a FIXED
+      38px. With 9.6px of padding top and bottom and a 22.4px line box that is
+      41.6px of content in a 38px box, so the bottom of every value was shaved
+      off. Fixed heights on a text control are the same mistake as fixed heights
+      on a card; there are no more of them on this page.
+
+   3. Settings were separated by a 1px rule and nothing else. Reading a form is
+      not the same as reading a table.
+   ========================================================================== */
+
+body#page-admin-setting-formatsettingaicourse {
+    /* The chevron, drawn here so no theme can remove it. Two colours, because a
+       dark #343a40 arrow is invisible on a dark control. */
+    --acfs-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5l5-5' fill='none' stroke='%23475569' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+@media (prefers-color-scheme: dark) {
+    body#page-admin-setting-formatsettingaicourse:not([data-acfs-theme="light"]) {
+        --acfs-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5l5-5' fill='none' stroke='%23b3c0d1' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    }
+}
+
+/* Every control: no fixed height, a real minimum, and room for the arrow. */
+body#page-admin-setting-formatsettingaicourse #adminsettings
+:is(select, input[type="text"], input[type="password"], input[type="url"], input[type="number"],
+textarea) {
+    /* stylelint-disable-next-line declaration-no-important -- beats Bootstrap's fixed height. */
+    height: auto !important;
+    /* 44px: no clipping, and a comfortable touch target on a phone. */
+    min-block-size: 44px;
+    max-block-size: none;
+    padding: 0.65rem 0.85rem;
+    line-height: 1.45;
+    /* ACF-FIX-2.1.167: background-COLOR only, and no background-image here at all.
+       This selector uses :is(), and :is() takes the specificity of its most specific argument —
+       `input[type="text"]` is an attribute selector, so the whole thing scores (2,1,2) while a plain
+       `select` rule scores (2,0,2). A `background-image: none` in this block therefore beat the rule
+       that draws the chevron, no matter how far below it sat. That is the same specificity trap that
+       made the hero title tiers inert for four releases; it is avoided here by not competing. */
+    background-color: var(--acfs-card);
+    border: 1px solid var(--acfs-line-strong);
+    border-radius: 10px;
+}
+
+body#page-admin-setting-formatsettingaicourse #adminsettings select {
+    /* The arrow, and the room for it. */
+    background-image: var(--acfs-chevron);
+    background-repeat: no-repeat;
+    background-position: right 0.85rem center;
+    background-size: 12px 8px;
+    padding-inline-end: 2.5rem;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    cursor: pointer;
+}
+
+[dir="rtl"] body#page-admin-setting-formatsettingaicourse #adminsettings select {
+    background-position: left 0.85rem center;
+}
+
+body#page-admin-setting-formatsettingaicourse #adminsettings select:hover {
+    border-color: var(--acfs-brand);
+}
+
+body#page-admin-setting-formatsettingaicourse #adminsettings textarea {
+    min-block-size: 8rem;
+}
+
+/* --- Rhythm ---------------------------------------------------------------
+   Each setting is its own block of air with a rule between, rather than rows
+   packed against a divider. The label group, the control and the description
+   are three steps apart, which is what lets the eye find the control without
+   reading the prose first. */
+body#page-admin-setting-formatsettingaicourse #adminsettings .acfs-body .form-item {
+    padding-block: 1.6rem;
+}
+
+body#page-admin-setting-formatsettingaicourse #adminsettings .acfs-body
+.form-item:first-of-type {
+    padding-block-start: 0.5rem;
+}
+
+body#page-admin-setting-formatsettingaicourse #adminsettings .form-label {
+    margin-block-end: 0.75rem;
+}
+
+body#page-admin-setting-formatsettingaicourse #adminsettings .form-description {
+    margin-block-start: 0.85rem;
+}
+
+/* "Default: …" moves under the control instead of sitting beside it, where it
+   collided with the select on any label long enough to matter. */
+body#page-admin-setting-formatsettingaicourse #adminsettings .form-defaultinfo {
+    display: block;
+    margin-block-start: 0.5rem;
+    padding-inline-start: 0.1rem;
+}
+
+/* The control gets its own breathing room from the label above it. */
+body#page-admin-setting-formatsettingaicourse #adminsettings .form-text,
+body#page-admin-setting-formatsettingaicourse #adminsettings .defaultsnext {
+    display: block;
+    margin-block-start: 0.1rem;
+}
+
+/* More air inside the open panel, and above the first setting under the
+   preview, so the wireframe is not touching the form. */
+.acfs-body {
+    padding: 0 1.5rem 1.5rem;
+}
+
+.acfs-preview {
+    margin-block: 1.25rem 1.5rem;
+}
+
+@media (max-width: 599px) {
+    .acfs-body {
+        padding-inline: 1rem;
+    }
+
+    body#page-admin-setting-formatsettingaicourse #adminsettings .acfs-body .form-item {
+        padding-block: 1.35rem;
+    }
+}
+
+
+/* ==========================================================================
+   SETTINGS PAGE — the two-column setting (ACF-FIX-2.1.167)
+   --------------------------------------------------------------------------
+   The page was given the full width and then used the left half of it: text
+   capped at 72ch, controls at 30rem, and an empty column running the whole
+   height of the panel. Widening the prose is not the answer — a 1600px line of
+   body copy is unreadable — so the empty half gets a job instead.
+
+   Left column: number, label, code name, control, default, description.
+   Right column: a wireframe of what this setting does to the course page.
+
+   The illustration is the point. Nearly every setting here is a layout choice,
+   and a picture of the layout answers in a glance what a paragraph answers in
+   fifteen seconds. It is inline SVG drawn from the same tokens: a few hundred
+   bytes, sharp at any zoom, correct in dark mode, and impossible to leave stale
+   the way a screenshot would be.
+
+   `force…` settings show the SAME diagram three times, captioned Course 1, 2, 3.
+   The default/override distinction is the single most misunderstood thing about
+   this plugin; three little courses say "all of them" better than the sentence
+   underneath ever has.
+   ========================================================================== */
+
+/* One column by default — phones first. The figure sits under the control and
+   above the prose, where it introduces the description rather than trailing it. */
+body#page-admin-setting-formatsettingaicourse #adminsettings .acfs-body .form-item {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0 2.5rem;
+    align-items: start;
+}
+
+body#page-admin-setting-formatsettingaicourse #adminsettings .acfs-body .form-label {
+    grid-column: 1;
+}
+
+body#page-admin-setting-formatsettingaicourse #adminsettings .acfs-body .form-setting {
+    grid-column: 1;
+}
+
+body#page-admin-setting-formatsettingaicourse .acfs-sfig {
+    grid-column: 1;
+    min-inline-size: 0;
+    margin-block-start: 1rem;
+}
+
+/* Two columns once there is genuinely room for both. 1080px, not a breakpoint
+   borrowed from somewhere else: below it the illustration column would be
+   narrower than the diagram is legible at. */
+@media (min-width: 1080px) {
+    body#page-admin-setting-formatsettingaicourse #adminsettings .acfs-body .form-item {
+        grid-template-columns: minmax(0, 1fr) minmax(15rem, 20rem);
+    }
+
+    body#page-admin-setting-formatsettingaicourse .acfs-sfig {
+        grid-column: 2;
+        grid-row: 1 / span 2;
+        margin-block-start: 0.35rem;
+    }
+
+    /* The prose keeps its own measure inside the wider left column. */
+    body#page-admin-setting-formatsettingaicourse #adminsettings .acfs-body .form-description {
+        max-inline-size: 62ch;
+    }
+}
+
+/* --- The figure ----------------------------------------------------------- */
+.acfs-sfigone {
+    margin: 0;
+    min-inline-size: 0;
+}
+
+body#page-admin-setting-formatsettingaicourse .acfs-sfigone svg {
+    display: block;
+    inline-size: 100%;
+    block-size: auto;
+    aspect-ratio: 200 / 112;
+    border: 1px solid rgb(var(--c) / 0.18);
+    border-radius: 10px;
+    background: var(--acfs-sunken);
+}
+
+/* ACF-FIX-2.1.167: 13px, not 11. These are the smallest labels on the page and the page has
+   already been reported once as hard to read; a caption nobody can read is decoration. */
+.acfs-sfigone figcaption {
+    margin-block-start: 0.35rem;
+    color: var(--acfs-ink-2);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-align: center;
+}
+
+/* Three courses, side by side. They stay side by side on a phone — the row of
+   three IS the message, and stacking them would say "three settings" instead of
+   "every course". They simply get smaller. */
+body#page-admin-setting-formatsettingaicourse .acfs-sfig-all {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.5rem;
+}
+
+.acfs-sfignote {
+    grid-column: 1 / -1;
+    margin: 0.3rem 0 0;
+    color: rgb(var(--c) / 1);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    line-height: 1.35;
+    text-align: center;
+}
+
+/* On a phone the single diagram is capped so it stays an illustration rather
+   than becoming a full-width picture the reader has to scroll past — but it is
+   never hidden. A setting whose meaning is a layout should show the layout on
+   the device most people are using. */
+@media (max-width: 1079px) {
+    body#page-admin-setting-formatsettingaicourse .acfs-sfig:not(.acfs-sfig-all) {
+        max-inline-size: 13rem;
+    }
+
+    body#page-admin-setting-formatsettingaicourse .acfs-sfig-all {
+        max-inline-size: 24rem;
+        gap: 0.4rem;
+    }
+}
+
+/* --- The number ----------------------------------------------------------
+   The panel header promises "7 settings"; this says which of the seven you are
+   looking at. Tabular figures so the column does not jitter between 1/7 and
+   10/22, and aria-hidden because the count is decoration for a reader who can
+   see the list, not information a screen reader needs repeated on every row. */
+.acfs-num {
+    display: inline-block;
+    margin-inline-end: 0.55rem;
+    padding: 0.1rem 0.45rem;
+    border: 1px solid var(--acfs-line);
+    border-radius: 999px;
+    background: var(--acfs-sunken);
+    color: var(--acfs-ink-2);
+    font-size: 0.8125rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    vertical-align: 2px;
+}
+
+/* --- The control keeps its chevron at any specificity ---------------------
+   `:not([multiple])` is not decoration: it raises this rule to (2,1,2), which is
+   what the :is() rules above score, and it is honest — a multi-select is not a
+   dropdown and should not be given a dropdown's arrow. */
+body#page-admin-setting-formatsettingaicourse #adminsettings select:not([multiple]) {
+    padding-inline-end: 2.75rem;
+    background-image: var(--acfs-chevron);
+    background-repeat: no-repeat;
+    background-position: right 0.9rem center;
+    background-size: 12px 8px;
+    appearance: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+}
+
+[dir="rtl"] body#page-admin-setting-formatsettingaicourse #adminsettings
+select:not([multiple]) {
+    background-position: left 0.9rem center;
+    padding-inline-end: 0.85rem;
+    padding-inline-start: 2.75rem;
+}
+
+
+/* --- The course-index open button stays reachable (ACF-FIX-2.1.167) --------
+   Making the banner span the full width when the course index is closed put it
+   over the top-left corner of the page — which is exactly where Boost puts the
+   button that opens the index again. The banner is `position: sticky` at
+   `--acf-z-sticky` (20), so it won not because it was later but because it was
+   higher, and the only way back into the course index disappeared underneath it.
+
+   The toggle is lifted above the banner rather than the banner being inset
+   around it: a banner that stops short of the corner is not full width, and
+   full width is the thing that was asked for. The button carries its own
+   background, so it reads perfectly well sitting on top of the image.
+
+   Every selector core and Boost use for this control is listed, because the
+   markup has moved between Moodle versions and a control that vanishes is far
+   worse than a redundant selector. */
+body.format-aicourse :is(
+.drawer-toggles,
+.drawer-toggler,
+.drawer-toggler .btn,
+[data-toggler="drawers"][data-action="toggle"],
+[data-region="drawer-toggle"]) {
+    position: relative;
+    /* One step above --acf-z-sticky (20). Not --acf-z-modal, which a dialogue
+       needs to sit above this. */
+    z-index: 25;
+}
+
+/* And it must not be clipped by anything the format sets to hide overflow. */
+body.format-aicourse :is(.drawer-toggles, [data-region="drawer-toggle"]) {
+    overflow: visible;
+}
+
+
+/* --- The activity banner's cluster matches the section banner's (ACF-FIX-2.1.167) ----
+   Reported: the controls at the right of an activity banner look bigger than the
+   same corner of a section banner, which was called correct.
+
+   Measured against a rendered copy of both, the chevrons ARE identical (46x46)
+   and the two ring CONTAINERS are identical (58x58, one token since 2.1.161).
+   What differs is what sits inside them:
+
+     section  : chevron + four 36px numbered circles + the percentage ring
+     activity : chevron + one completion ring + a 16px text label
+
+   So the activity cluster reads heavier not because anything is out of spec but
+   because a single large ring and a line of body-sized text carry more weight
+   than four small circles. Matching the SPEC was never going to fix it; matching
+   the visual weight is what was actually being asked for.
+
+   The completion ring is brought to 36px — the same as the numbered circles that
+   were called perfect — and its label down one step to the size the section
+   banner's own meta line uses. The ring's stroke scales with its viewBox, so it
+   stays proportionate rather than becoming a thick blob at the smaller size. */
+body.format-aicourse .aicourse-hero-banner .aicourse-completion-ring-container {
+    inline-size: 2.25rem;   /* 36px, matching .aicourse-activity-number */
+    block-size: 2.25rem;
+    flex: none;
+}
+
+body.format-aicourse .aicourse-hero-banner .aicourse-completion-ring {
+    inline-size: 100%;
+    block-size: 100%;
+}
+
+body.format-aicourse .aicourse-hero-banner .aicourse-completion-label {
+    font-size: var(--acf-font-size-sm);
+    font-weight: var(--acf-weight-medium);
+    line-height: var(--acf-leading-snug);
+}
+
+/* The grade chip that can replace the tick keeps the same box, so the cluster does
+   not change height depending on whether an activity is graded. */
+body.format-aicourse .aicourse-hero-banner .aicourse-grade-display {
+    min-inline-size: 2.25rem;
+    min-block-size: 2.25rem;
+    font-size: var(--acf-font-size-xs);
+}
+
+/* Both clusters end up the same height whatever is inside them. The section
+   banner's is sized by its percentage ring; the activity banner's by a smaller
+   ring and a line of text, which came out 12px shorter. A floor derived from the
+   same ring token keeps the two banners' right-hand corners level — which is the
+   thing the eye actually compares when moving between the two pages. */
+body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-nav-progress {
+    min-block-size: calc(var(--acf-hero-ring-image) + var(--acf-space-2) + 2px);
+    box-sizing: border-box;
+}
+
+
+/* ==========================================================================
+   THE BANNER ON A PHONE (ACF-FIX-2.1.169)
+   --------------------------------------------------------------------------
+   Rendered at 390px and looked at, rather than only checked for overflow. It
+   passed every automated test and was still wrong: in image mode the content
+   becomes a column, so the title, the progress cluster and the icon group each
+   took their own line, each shrink-wrapped to its own contents and left-aligned.
+   The result was a tall dark panel with three floating boxes down the left and a
+   third of the width empty — nothing overflowed, nothing clipped, and it looked
+   unfinished.
+
+   An overflow check cannot see that. This is the fix for what it looked like.
+
+   Two rows, which is what a banner is:
+     row 1 — the eyebrow and the title, across the full width
+     row 2 — one control strip: the icon group at the start, the progress cluster
+             at the end, both on the same line and both reaching the edges
+
+   The banner also comes down in height. --acf-topblock is 120px because that is
+   what the sidebar's header measures beside it — but on a phone the sidebar is
+   not beside anything, so matching it costs a fifth of a small screen for no
+   reason at all.
+   ========================================================================== */
+
+@media (max-width: 599px) {
+    /* A row that wraps, not a column. The title takes a full line of its own and
+       the two clusters share the next one. */
+    body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-content,
+    body.format-aicourse .aicourse-hero-banner:not(.aicourse-hero-has-image) .aicourse-hero-content {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: flex-start;
+        gap: var(--acf-space-3);
+        padding: var(--acf-space-4) var(--acf-gutter);
+    }
+
+    body.format-aicourse .aicourse-hero-banner
+    :is(.aicourse-hero-title-group, .aicourse-hero-lede) {
+        flex: 1 1 100%;
+        inline-size: 100%;
+        min-inline-size: 0;
+    }
+
+    /* Icon group first, at the start of the control row. It is absolutely
+       positioned on a desktop banner; here it rejoins the flow. */
+    body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-icons {
+        position: static;
+        flex: 0 0 auto;
+        order: 2;
+        margin: 0;
+        max-inline-size: none;
+    }
+
+    /* Progress cluster at the end of the same row. `margin-inline-start: auto`
+       pushes it right; `flex-shrink` lets it give way first if a long completion
+       label would otherwise force a third row. */
+    body.format-aicourse .aicourse-hero-banner .aicourse-hero-nav-progress {
+        flex: 0 1 auto;
+        order: 3;
+        min-inline-size: 0;
+        margin-inline-start: auto;
+    }
+
+    /* The label is the one part of the cluster that can be long. It gets one line
+       and an ellipsis rather than wrapping the whole strip onto another row. */
+    body.format-aicourse .aicourse-hero-banner .aicourse-completion-label {
+        min-inline-size: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    /* Height: a floor that suits a phone, not one borrowed from the sidebar. */
+    body.format-aicourse .aicourse-hero-banner {
+        min-block-size: 0;
+    }
+
+    body.format-aicourse .aicourse-hero-sticky-wrap {
+        --acf-topblock: 0px;
+    }
+
+    /* The title is the reason the banner exists; it keeps its two lines. */
+    body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-title {
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+    }
+
+    /* Chevrons and icon buttons come down a step. 40px still clears the WCAG 2.2
+       AA target minimum of 24px comfortably, and three of them plus a ring have
+       to share 390px with the progress cluster. */
+    body.format-aicourse .aicourse-hero-banner
+    :is(.aicourse-hero-nav, .aicourse-hero-home, .aicourse-hero-grades, .aicourse-hero-back,
+    .aicourse-hero-ai-btn) {
+        inline-size: 40px;
+        block-size: 40px;
+        min-inline-size: 40px;
+        min-block-size: 40px;
+    }
+}
+
+/* The activity banner carries one more icon (Back) and a text label the course
+   banner does not have, so at 390px its control row wanted a third line. The
+   label is the part that can go: the tick beside it already says the same thing,
+   and it keeps its accessible name for anyone who cannot see the tick. */
+@media (max-width: 519px) {
+    body.format-aicourse .aicourse-hero-banner .aicourse-completion-label {
+        position: absolute;
+        inline-size: 1px;
+        block-size: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+        border: 0;
+    }
+
+    body.format-aicourse .aicourse-hero-banner
+    :is(.aicourse-hero-nav, .aicourse-hero-home, .aicourse-hero-grades, .aicourse-hero-back,
+    .aicourse-hero-ai-btn) {
+        inline-size: 36px;
+        block-size: 36px;
+        min-inline-size: 36px;
+        min-block-size: 36px;
+    }
+
+    body.format-aicourse .aicourse-hero-banner
+    :is(.aicourse-hero-icons, .aicourse-hero-nav-progress) {
+        gap: 2px;
+        padding: 3px;
+    }
+}
+
+
+/* Consistent vertical rhythm down the page: search, then the introduction, then the caption, then
+   the list. Each was spaced by whichever rule happened to set it, which is why one gap read as
+   deliberate and the next as a mistake. */
+body#page-admin-setting-formatsettingaicourse #adminsettings .acfs-controls {
+    margin-block: 0.75rem 1.25rem;
+}
+
+body#page-admin-setting-formatsettingaicourse #adminsettings .acfs-intro {
+    margin-block: 0 1.25rem;
+}
+
+body#page-admin-setting-formatsettingaicourse #adminsettings .acfs-list {
+    margin-block: 0 2.5rem;
 }

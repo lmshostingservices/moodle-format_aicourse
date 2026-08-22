@@ -49,55 +49,56 @@
 const CATEGORIES = [
     {
         id: 'time', order: 7, label: 'Estimated time', icon: '◷', hue: 'time',
-        desc: 'How long each activity is estimated to take, and which of the four places show it.',
+        desc: 'The little clock badges. How long each activity is assumed to take, and which of the four places show it.',
         match: [/minutes/, /timing/, /hidetime/],
     },
     {
         id: 'tutor', order: 8, label: 'AI Tutor', icon: '✦', hue: 'tutor',
-        desc: 'The external AI service, its credentials, and what course content is sent to it.',
+        desc: 'The chat bubble that answers learners\' questions. Its connection to the external AI service, and what course content is sent there.',
         match: [/tutor/, /apikey/, /siteid/, /assessmentanswers/, /aiassistant/, /externalservice/,
             /adminreportlink/],
     },
     {
         id: 'tour', order: 9, label: 'Guided tour', icon: '◎', hue: 'tour',
-        desc: 'The first-run tour and its spoken narration.',
+        desc: 'The guided walkthrough a person sees the first time they open a course, and whether it speaks.',
         match: [/tour/],
     },
     {
         id: 'colour', order: 6, label: 'Colours & branding', icon: '◐', hue: 'colour',
-        desc: 'Every colour the format publishes, plus the sidebar logo and light/dark mode.',
+        desc: 'Every colour the format paints — headings, icons, cards, the side menu — plus your logo and light/dark mode.',
         match: [/colour/, /opacity/, /scrim/, /fade/, /overlay/, /playerlogo/, /colourmode/],
     },
     {
         id: 'index', order: 1, label: 'Course index', icon: '☰', hue: 'index',
-        desc: 'Where the course index appears, how it opens, and the player sidebar.',
+        desc: 'The menu that slides out from the side of a course listing every section and activity. Where it shows, how it opens, and whether it becomes a progress tracker.',
         match: [/playerindex/, /indexstate/, /playerheader/, /showcourseindex/, /^index/,
             /forceindex/, /defaultindex/, /hidegeneral/],
     },
     {
         id: 'banner', order: 2, label: 'Hero banner', icon: '▭', hue: 'banner',
-        desc: 'The banner at the top of a course: whether it shows, where it sits, how it scrolls.',
+        desc: 'The wide image strip across the top of a course carrying its name and the learner\'s progress.',
         match: [/herobanner/, /heroattop/, /heroimage/, /herosticky/, /showherobanner/, /hero/],
     },
     {
         id: 'cards', order: 3, label: 'Section cards', icon: '▦', hue: 'cards',
-        desc: 'How sections render on the course home page.',
+        desc: 'The tiles on the course home page, one per section, each showing its own progress and estimated time.',
         match: [/displayascards/, /cardlayout/, /cardtitlesize/, /cardactivitylimit/,
             /showactivities/, /card/],
     },
     {
         id: 'activity', order: 4, label: 'Activity display', icon: '▤', hue: 'activity',
-        desc: 'How activities render inside a section, and next/previous navigation.',
+        desc: 'How the activities inside a section are laid out, and the arrows that move a learner from one to the next.',
         match: [/activitydisplaymode/, /navchevrons/],
     },
     {
         id: 'nav', order: 5, label: 'Navigation & chrome', icon: '⇱', hue: 'nav',
-        desc: "Moodle's own tabs, breadcrumb, footer and logo band on course pages.",
+        desc: 'Moodle\'s own furniture around your course — the tabs, the breadcrumb trail, '
+            + 'the footer and the site logo band.',
         match: [/secondarynav/, /coursenavplace/, /immersive/, /hidefooter/, /hidebreadcrumb/],
     },
     {
         id: 'other', order: 10, label: 'Other', icon: '⚙', hue: 'other',
-        desc: 'Anything not claimed by a category above.',
+        desc: 'Anything not claimed by an area above.',
         match: [],
     }
 ];
@@ -132,120 +133,208 @@ const svg = (d, cls) =>
     + 'stroke-linejoin="round">' + d + '</svg>';
 
 /* --------------------------------------------------------------------------
-   The previews (ACF-FIX-2.1.159)
+   Per-setting wireframes (ACF-FIX-2.1.167)
 
-   A settings page for a course format has a hard problem: the names are abstract. "Activity display
-   mode", "Banner at top of page", "Course index on first entry" — a reader who has not already seen
-   the difference cannot tell what any of them will do, and the description underneath is a sentence
-   trying to describe a layout.
+   A category wireframe says "this area is the sidebar". A per-setting wireframe can say what THIS
+   control does to it — sidebar shown versus hidden, banner at the top versus below the tabs, cards
+   in a grid versus a list. For a page whose settings are almost all layout choices, that is the
+   difference between reading a sentence and seeing the answer.
 
-   So each card shows the layout. These are schematic wireframes of the course page with the part
-   this category governs picked out in the category's own colour and everything else greyed back:
-   the sidebar for Course index, the band across the top for Hero banner, the grid of tiles for
-   Section cards. Not screenshots — a screenshot would be stale the moment the format changed, would
-   need hosting, and would carry one site's colours. These are drawn from the same tokens the cards
-   use, weigh a few hundred bytes each, stay sharp at any zoom, and follow light and dark.
+   Two shapes are drawn:
 
-   Everything is `aria-hidden`: the card's title and description already say what it is, and a
-   screen reader gaining "rectangle rectangle rectangle" is a loss, not a gain.
+     * the setting's own diagram, chosen by name; and
+     * for every `force…` setting, that same diagram repeated three times labelled Course 1, 2, 3 —
+       because the one thing people get wrong about this plugin is the difference between a site
+       DEFAULT (seeds new courses) and an OVERRIDE (changes every course that already exists). The
+       three little courses say "all of them" in a way the sentence underneath has never managed.
    -------------------------------------------------------------------------- */
 
-const PREVIEW_BASE = 'rgb(var(--c) / 0.16)';
+/**
+ * A rounded rectangle, as SVG markup.
+ *
+ * @param {Number} x Left.
+ * @param {Number} y Top.
+ * @param {Number} w Width.
+ * @param {Number} h Height.
+ * @param {String} f Fill.
+ * @param {Number} rd Corner radius.
+ * @returns {String}
+ */
+const rect = (x, y, w, h, f, rd) =>
+    '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h
+    + '" rx="' + (rd === undefined ? 2 : rd) + '" fill="' + f + '"/>';
 
 /**
- * One wireframe, as inline SVG markup.
+ * The diagram for one setting, on a 200x112 page.
  *
- * The viewBox is a 200x112 page. `fill="currentColor"` picks up the muted page furniture; anything
- * the category actually controls is filled with the hue instead, so the eye lands on it first.
+ * Matched on the setting's own name with the `default`/`force` prefix stripped, so a pair shares one
+ * diagram and only the framing differs.
  *
- * @param {String} id A category id.
- * @returns {String} SVG markup.
+ * @param {String} base The setting name without its default/force prefix.
+ * @returns {String} SVG child markup.
  */
-const preview = (id) => {
-    const hue = 'rgb(var(--c) / 0.85)';
-    const soft = 'rgb(var(--c) / 0.32)';
-    const mute = PREVIEW_BASE;
-    const r = (x, y, w, h, f, rd) => '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="'
-        + h + '" rx="' + (rd === undefined ? 2 : rd) + '" fill="' + f + '"/>';
+const settingDiagram = (base) => {
+    const on = 'rgb(var(--c) / 0.85)';
+    const soft = 'rgb(var(--c) / 0.3)';
+    const off = 'rgb(var(--c) / 0.14)';
+    const plate = rect(0, 0, 200, 112, 'rgb(var(--c) / 0.05)', 6);
+    const side = (f) => rect(0, 0, 50, 112, f, 6);
+    const body = (f) => rect(58, 34, 64, 34, f) + rect(128, 34, 64, 34, f)
+        + rect(58, 74, 64, 30, f) + rect(128, 74, 64, 30, f);
+    const bar = (f) => rect(58, 6, 134, 22, f);
 
-    // Shared furniture: the page plate and a header strip.
-    const plate = r(0, 0, 200, 112, 'rgb(var(--c) / 0.05)', 6);
-    const grid = (f1, f2) => r(58, 34, 64, 34, f1) + r(128, 34, 64, 34, f1)
-        + r(58, 74, 64, 30, f2) + r(128, 74, 64, 30, f2);
-
-    switch (id) {
-        case 'index':
-            // The sidebar, picked out; the content beside it greyed.
-            return plate + r(0, 0, 50, 112, hue, 6) + r(8, 10, 34, 6, 'rgb(255 255 255 / 0.75)')
-                + r(8, 24, 26, 4, 'rgb(255 255 255 / 0.5)') + r(8, 34, 34, 4, 'rgb(255 255 255 / 0.5)')
-                + r(8, 44, 30, 4, 'rgb(255 255 255 / 0.5)') + r(8, 54, 34, 4, 'rgb(255 255 255 / 0.5)')
-                + r(8, 64, 24, 4, 'rgb(255 255 255 / 0.5)')
-                + r(58, 8, 134, 18, mute) + grid(mute, mute);
-        case 'banner':
-            // The band across the top, picked out.
-            return plate + r(0, 0, 50, 112, mute, 6) + r(58, 6, 134, 24, hue)
-                + r(66, 13, 60, 5, 'rgb(255 255 255 / 0.8)')
-                + r(66, 22, 38, 3, 'rgb(255 255 255 / 0.55)')
-                + grid(mute, mute);
-        case 'cards':
-            // The grid of section tiles.
-            return plate + r(0, 0, 50, 112, mute, 6) + r(58, 8, 134, 16, mute)
-                + r(58, 32, 64, 34, hue) + r(128, 32, 64, 34, hue)
-                + r(58, 72, 64, 32, soft) + r(128, 72, 64, 32, soft);
-        case 'activity':
-            // Rows inside a section, with a next/previous chevron pair.
-            return plate + r(0, 0, 50, 112, mute, 6) + r(58, 8, 134, 16, mute)
-                + r(58, 32, 134, 14, hue) + r(58, 50, 134, 14, soft)
-                + r(58, 68, 134, 14, soft) + r(58, 90, 30, 12, hue) + r(162, 90, 30, 12, hue);
-        case 'nav':
-            // The chrome: header band, tab strip, breadcrumb, footer.
-            return plate + r(0, 0, 200, 12, hue, 0) + r(0, 16, 200, 8, soft, 0)
-                + r(6, 28, 60, 4, soft) + r(0, 0, 50, 112, mute, 6)
-                + r(58, 38, 134, 44, mute) + r(0, 102, 200, 10, hue, 0);
-        case 'colour':
-            // Swatches over a plate: the one category whose subject is colour itself.
-            return plate + r(0, 0, 50, 112, hue, 6)
-                + r(58, 8, 134, 18, soft) + r(58, 34, 40, 34, hue) + r(104, 34, 40, 34, soft)
-                + r(150, 34, 42, 34, mute) + r(58, 74, 134, 30, soft);
-        case 'time':
-            // The four places a duration pill can appear, as pills.
-            return plate + r(0, 0, 50, 112, mute, 6) + r(8, 24, 22, 7, hue, 3.5)
-                + r(8, 40, 22, 7, hue, 3.5) + r(58, 8, 134, 16, mute)
-                + r(58, 32, 64, 34, mute) + r(128, 32, 64, 34, mute)
-                + r(96, 38, 22, 7, hue, 3.5) + r(166, 38, 22, 7, hue, 3.5)
-                + r(58, 74, 134, 30, mute);
-        case 'tutor':
-            // A conversation: the tutor is the only category that is not a layout.
-            return plate + r(0, 0, 50, 112, mute, 6) + r(58, 8, 134, 16, mute)
-                + r(58, 32, 78, 16, mute, 8) + r(96, 56, 96, 18, hue, 9)
-                + r(58, 82, 62, 14, mute, 7)
-                + '<circle cx="176" cy="98" r="10" fill="' + hue + '"/>';
-        case 'tour':
-            // A spotlight moving across the page.
-            return plate + r(0, 0, 50, 112, mute, 6) + r(58, 8, 134, 16, mute)
-                + grid(mute, mute)
-                + '<circle cx="90" cy="51" r="22" fill="' + soft + '"/>'
-                + '<circle cx="90" cy="51" r="11" fill="' + hue + '"/>';
+    switch (base) {
+        case 'showcourseindex':
+        case 'playerindex':
+        case 'indexstate':
+            return plate + side(on) + rect(8, 12, 34, 5, 'rgb(255 255 255 / 0.75)')
+                + rect(8, 26, 28, 4, 'rgb(255 255 255 / 0.5)')
+                + rect(8, 36, 34, 4, 'rgb(255 255 255 / 0.5)')
+                + rect(8, 46, 30, 4, 'rgb(255 255 255 / 0.5)')
+                + bar(off) + body(off);
+        case 'hidegeneral':
+            return plate + side(off) + bar(off)
+                + rect(58, 34, 134, 14, soft) + rect(58, 54, 64, 24, on) + rect(128, 54, 64, 24, on)
+                + rect(58, 84, 64, 20, on) + rect(128, 84, 64, 20, on);
+        case 'showherobanner':
+        case 'herobannerfade':
+        case 'heroimageoverlay':
+        case 'scrimstrength':
+            return plate + side(off) + bar(on)
+                + rect(66, 12, 58, 5, 'rgb(255 255 255 / 0.8)')
+                + rect(66, 21, 36, 3, 'rgb(255 255 255 / 0.5)') + body(off);
+        case 'heroattop':
+            return plate + rect(0, 0, 200, 24, on, 6) + side(off) + rect(58, 30, 134, 8, soft)
+                + body(off);
+        case 'herosticky':
+            return plate + side(off) + bar(on)
+                + rect(58, 34, 134, 6, soft) + body(off)
+                + '<path d="M182 44 v54 M176 92 l6 6 6-6" stroke="' + on
+                + '" stroke-width="2.5" fill="none" stroke-linecap="round"/>';
+        case 'displayascards':
+        case 'cardlayout':
+            return plate + side(off) + bar(off)
+                + rect(58, 34, 64, 34, on) + rect(128, 34, 64, 34, on)
+                + rect(58, 74, 64, 30, soft) + rect(128, 74, 64, 30, soft);
+        case 'showactivitiesoncards':
+        case 'cardactivitylimit':
+            return plate + side(off) + bar(off)
+                + rect(58, 34, 134, 70, soft)
+                + rect(66, 42, 60, 6, on) + rect(66, 54, 118, 5, on)
+                + rect(66, 64, 100, 5, on) + rect(66, 74, 110, 5, on);
+        case 'cardtitlesize':
+            return plate + side(off) + bar(off)
+                + rect(58, 36, 90, 12, on) + rect(58, 56, 70, 7, soft)
+                + rect(58, 72, 134, 30, off);
+        case 'activitydisplaymode':
+            return plate + side(off) + bar(off)
+                + rect(58, 34, 134, 15, on) + rect(58, 54, 134, 15, soft)
+                + rect(58, 74, 134, 15, soft);
+        case 'shownavchevrons':
+            return plate + side(off) + bar(off) + body(off)
+                + rect(58, 92, 30, 12, on) + rect(162, 92, 30, 12, on);
+        case 'hidesecondarynav':
+        case 'coursenavplace':
+            return plate + rect(0, 0, 200, 10, soft, 6) + rect(0, 14, 200, 8, on, 0)
+                + side(off) + rect(58, 30, 134, 74, off);
+        case 'hidebreadcrumb':
+            return plate + rect(6, 6, 90, 5, on) + side(off) + bar(off) + body(off);
+        case 'hidefooter':
+            return plate + side(off) + bar(off) + rect(58, 34, 134, 54, off)
+                + rect(0, 100, 200, 12, on, 0);
+        case 'immersive':
+            return plate + rect(0, 0, 200, 14, on, 6) + side(off) + bar(off) + body(off);
+        case 'hidetimeindex':
+        case 'hidetimetotal':
+            return plate + side(off) + rect(8, 20, 22, 7, on, 3.5) + rect(8, 34, 22, 7, on, 3.5)
+                + rect(8, 48, 22, 7, on, 3.5) + bar(off) + body(off);
+        case 'hidetimesectioncards':
+            return plate + side(off) + bar(off) + body(off)
+                + rect(96, 40, 22, 7, on, 3.5) + rect(166, 40, 22, 7, on, 3.5);
+        case 'hidetimeactivitycards':
+            return plate + side(off) + bar(off) + rect(58, 34, 134, 15, off)
+                + rect(58, 54, 134, 15, off) + rect(160, 38, 26, 7, on, 3.5)
+                + rect(160, 58, 26, 7, on, 3.5);
+        case 'minutes':
+        case 'minutesperquestion':
+        case 'minutesfallback':
+            return plate + side(off) + bar(off) + rect(58, 34, 134, 15, off)
+                + rect(150, 38, 36, 7, on, 3.5) + rect(58, 54, 134, 15, off)
+                + rect(150, 58, 36, 7, on, 3.5) + rect(58, 74, 134, 15, off)
+                + rect(150, 78, 36, 7, on, 3.5);
+        case 'accentcolour':
+            return plate + side(on) + bar(on) + rect(58, 34, 64, 34, on)
+                + rect(128, 34, 64, 34, soft) + rect(58, 74, 134, 30, soft);
+        case 'indexheadingcolour':
+            return plate + side(off) + rect(4, 8, 42, 12, on, 2) + rect(4, 46, 42, 12, on, 2)
+                + bar(off) + body(off);
+        case 'indexiconcolour':
+            return plate + side(off) + rect(8, 14, 8, 8, on, 2) + rect(8, 28, 8, 8, on, 2)
+                + rect(8, 42, 8, 8, on, 2) + rect(8, 56, 8, 8, on, 2) + bar(off) + body(off);
+        case 'indexcolour':
+        case 'indexopacity':
+        case 'playerheadercolour':
+            return plate + side(on) + bar(off) + body(off);
+        case 'cardcolour':
+        case 'cardopacity':
+            return plate + side(off) + bar(off) + body(on);
+        case 'playerlogo':
+            return plate + side(off) + rect(8, 10, 34, 10, on, 2) + bar(off) + body(off);
+        case 'colourmode':
+            return rect(0, 0, 100, 112, 'rgb(var(--c) / 0.08)', 6)
+                + rect(100, 0, 100, 112, 'rgb(var(--c) / 0.55)', 6)
+                + rect(10, 20, 80, 30, soft) + rect(110, 20, 80, 30, 'rgb(255 255 255 / 0.35)');
+        case 'tourvoiceover':
+        case 'tourvoice':
+            return plate + side(off) + bar(off) + body(off)
+                + '<circle cx="100" cy="56" r="24" fill="' + soft + '"/>'
+                + '<circle cx="100" cy="56" r="12" fill="' + on + '"/>';
+        case 'enabletutor':
+        case 'apikey':
+        case 'siteid':
+        case 'shareassessmentanswers':
+            return plate + side(off) + bar(off) + rect(58, 34, 78, 16, off, 8)
+                + rect(96, 58, 96, 18, on, 9) + rect(58, 84, 62, 14, off, 7);
         default:
-            return plate + r(0, 0, 50, 112, mute, 6) + r(58, 8, 134, 16, mute) + grid(soft, mute);
+            return plate + side(off) + bar(off) + body(soft);
     }
 };
 
 /**
- * The preview element for a card.
+ * The illustration element for one setting.
  *
- * @param {String} id A category id.
- * @returns {Element}
+ * @param {String} name The setting's own name.
+ * @param {Object} t Localised labels.
+ * @returns {Element|null}
  */
-const buildPreview = (id) => {
+const buildSettingPreview = (name, t) => {
+    const isforce = /^force/.test(name);
+    const base = name.replace(/^(default|force)/, '');
+    const diagram = settingDiagram(base);
+
     const wrap = document.createElement('div');
-    wrap.className = 'acfs-preview';
+    wrap.className = 'acfs-sfig' + (isforce ? ' acfs-sfig-all' : '');
     wrap.setAttribute('aria-hidden', 'true');
-    wrap.innerHTML = '<svg viewBox="0 0 200 112" preserveAspectRatio="xMidYMid meet" '
-        + 'focusable="false">' + preview(id) + '</svg>';
+
+    const one = (label) =>
+        '<figure class="acfs-sfigone">'
+        + '<svg viewBox="0 0 200 112" preserveAspectRatio="xMidYMid meet" focusable="false">'
+        + diagram + '</svg>'
+        + (label ? '<figcaption>' + label + '</figcaption>' : '')
+        + '</figure>';
+
+    if (isforce) {
+        // Three courses, so "every course that already exists" is shown rather than asserted.
+        wrap.innerHTML = one(t.course + ' 1') + one(t.course + ' 2') + one(t.course + ' 3');
+        const note = document.createElement('p');
+        note.className = 'acfs-sfignote';
+        note.textContent = t.appliestoall;
+        wrap.appendChild(note);
+    } else {
+        wrap.innerHTML = one('');
+    }
     return wrap;
 };
-
 
 /**
  * Build one collapsed category row.
@@ -288,10 +377,12 @@ const buildPanel = (cat, count, t) => {
         count + ' ' + (count === 1 ? t.setting : t.settings);
     panel.appendChild(head);
 
+    // ACF-FIX-2.1.167: no category wireframe here any more. Every setting inside now carries its
+    // own diagram, so a second, vaguer picture of the same area at the top of the panel was
+    // duplicating the answer and taking the first screenful to do it.
     const body = document.createElement('div');
     body.className = 'acfs-body';
     body.id = bodyid;
-    body.appendChild(buildPreview(cat.id));
     panel.appendChild(body);
 
     return {panel, head, body};
@@ -345,7 +436,9 @@ export const init = (strings) => {
         hint: 'Choose an area to open it. Opening one closes the others.',
         about: 'About this plugin',
         show: 'Show',
-        hide: 'Hide'
+        hide: 'Hide',
+        course: 'Course',
+        appliestoall: 'Applies to every course that already exists'
     }, strings || {});
 
     const root = document.getElementById('adminsettings');
@@ -409,7 +502,26 @@ export const init = (strings) => {
             return;
         }
         const rec = buildPanel(cat, mine.length, t);
-        mine.forEach((s) => rec.body.appendChild(s.item));
+        mine.forEach((s, i) => {
+            // ACF-FIX-2.1.167: numbered, because the header promises "7 settings" and a reader
+            // should be able to see which of the seven they are looking at without counting.
+            const num = document.createElement('span');
+            num.className = 'acfs-num';
+            num.setAttribute('aria-hidden', 'true');
+            num.textContent = (i + 1) + '/' + mine.length;
+            const label = s.item.querySelector('.form-label');
+            if (label) {
+                label.insertBefore(num, label.firstChild);
+            }
+
+            // The illustration goes in the column beside the setting, which was empty.
+            const fig = buildSettingPreview(s.name, t);
+            if (fig) {
+                s.item.appendChild(fig);
+            }
+            s.item.classList.add('acfs-setting');
+            rec.body.appendChild(s.item);
+        });
         rec.rows = mine;
         panels.push(rec);
         list.appendChild(rec.panel);
