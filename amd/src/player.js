@@ -663,8 +663,15 @@ const adoptDrawerControls = (header, strings) => {
     close.setAttribute('data-toggler', 'drawers');
     close.setAttribute('data-action', 'closedrawer');
     close.setAttribute('data-target', 'theme_boost-drawers-courseindex');
-    close.setAttribute('aria-label', strings.closeindex);
-    close.setAttribute('title', strings.closeindex);
+    // ACF-FIX-2.1.157: the label must never be able to stop the button existing. A string that is
+    // missing from a stale language cache resolves to "[[player_closeindex]]" rather than throwing,
+    // but a rejected getString would take the whole init with it -- and the close control is the
+    // one thing on this panel that must not depend on anything else working.
+    const label = (typeof strings.closeindex === 'string' && strings.closeindex.indexOf('[[') !== 0)
+        ? strings.closeindex
+        : 'Close course index';
+    close.setAttribute('aria-label', label);
+    close.setAttribute('title', label);
     close.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">'
         + '<line x1="18" y1="6" x2="6" y2="18"></line>'
         + '<line x1="6" y1="6" x2="18" y2="18"></line></svg>';
@@ -719,6 +726,22 @@ export const init = async(passed) => {
     const header = document.getElementById(HEADER_ID);
     if (header) {
         adoptDrawerControls(header, strings);
+    }
+
+    // ACF-FIX-2.1.157: one line, once, saying what the merge actually did. The close button went
+    // missing in 2.1.154 and there was no way to tell from the page whether the code had run, run
+    // and failed, or not been loaded at all -- which cost a round trip to find out. It is a single
+    // console line on a course page, not a logging framework.
+    if (window.console && window.console.info) {
+        const ctl = document.querySelector('.aicourse-player-drawerctl');
+        window.console.info('[format_aicourse] index merge:', JSON.stringify({
+            build: '2.1.157',
+            merged: document.body.classList.contains('aicourse-index-merged'),
+            ctl: !!ctl,
+            close: !!document.querySelector('.aicourse-player-close'),
+            menu: !!document.querySelector('.aicourse-player-drawerctl .drawerheadercontent'),
+            strip: !!document.querySelector('#theme_boost-drawers-courseindex .drawerheader')
+        }));
     }
 
     decorate(config, strings);
