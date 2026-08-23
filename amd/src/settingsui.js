@@ -128,7 +128,13 @@ const categoryOf = (name) => {
  * @returns {String} Markup.
  */
 const svg = (d, cls) =>
-    '<svg class="' + cls + '" viewBox="0 0 24 24" aria-hidden="true" focusable="false" '
+    // ACF-FIX-2.1.187: width and height on the element, not only in the stylesheet.
+    // An SVG carrying a viewBox but no dimensions has no intrinsic size, so with the plugin's CSS
+    // absent the browser sizes it from its container -- measured at 1100px in that state. The CSS
+    // still governs the real layout; these are the floor beneath it, so no stylesheet condition can
+    // produce a giant icon. Same reasoning as the wireframes below.
+    '<svg class="' + cls + '" viewBox="0 0 24 24" width="18" height="18" '
+    + 'style="width:1em;height:1em" aria-hidden="true" focusable="false" '
     + 'fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" '
     + 'stroke-linejoin="round">' + d + '</svg>';
 
@@ -479,7 +485,15 @@ const buildSettingPreview = (name, t) => {
 
     const one = (label) =>
         '<figure class="acfs-sfigone">'
-        + '<svg viewBox="0 0 200 112" preserveAspectRatio="xMidYMid meet" focusable="false">'
+        // ACF-FIX-2.1.187: width and height stated on the element itself.
+        // With only a viewBox, an SVG is a replaced element with no intrinsic size, and a browser
+        // falls back to 300x112 -- which is what produced the "large black rectangle" on pages
+        // where this plugin's stylesheet was not loaded to size it. The CSS still governs the
+        // layout here; these attributes are the floor beneath it, so the element can never render
+        // at the browser default no matter what stylesheet is or is not present.
+        + '<svg viewBox="0 0 200 112" width="200" height="112" '
+        + 'preserveAspectRatio="xMidYMid meet" focusable="false" '
+        + 'style="max-width:100%;height:auto;display:block" role="presentation">'
         + diagram + '</svg>'
         + (label ? '<figcaption>' + label + '</figcaption>' : '')
         + '</figure>';
@@ -601,6 +615,22 @@ export const init = (strings) => {
         course: 'Course',
         appliestoall: 'Applies to every course that already exists'
     }, strings || {});
+
+    // ACF-FIX-2.1.187: this module only ever touches THIS PLUGIN'S settings page.
+    //
+    // `#adminsettings` is an id Moodle core puts on EVERY admin settings page, so finding it proves
+    // nothing about which page this is. Combined with the module being queued from settings.php --
+    // a file Moodle includes on every admin page while building the admin tree -- this module was
+    // restructuring core's settings pages and unrelated plugins' settings pages on a live site.
+    // Reported by the Wombat LMS platform team; the mechanism is written up in settings.php.
+    //
+    // settings.php now only queues this on the right section. This second check is here because
+    // that one is invisible in the rendered page: anything that loads this module by another route
+    // (a cached page, an aggregated JS bundle, a future caller) must still be unable to alter a
+    // page this plugin does not own. A guard for a site-wide fault belongs on both sides.
+    if (document.body.id !== 'page-admin-setting-formatsettingaicourse') {
+        return;
+    }
 
     const root = document.getElementById('adminsettings');
     if (!root || root.dataset.acfsDone === '1') {

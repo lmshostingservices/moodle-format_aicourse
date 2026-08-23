@@ -244,6 +244,40 @@ if ($hassiteconfig) {
 
     global $PAGE;
 
+    // ACF-FIX-2.1.187: SCOPE THE SETTINGS UI TO THIS PLUGIN'S OWN PAGE.
+    //
+    // Reported from a live production Moodle 5.0.1 site (College Australia, RTO 31222) by the
+    // Wombat LMS platform team, and correct: this module was being loaded on EVERY administration
+    // settings page on the site -- Moodle core's, and unrelated third-party plugins' -- where it
+    // restructured settings into collapsible areas, added a search box, and rendered an unsized
+    // SVG as a large black rectangle.
+    //
+    // THE MECHANISM, because it is not obvious and it is easy to reintroduce:
+    // Moodle includes EVERY plugin's settings.php on EVERY admin settings page request, because it
+    // has to build the whole admin tree to render any part of it. A $PAGE->requires->js_call_amd()
+    // sitting at the top level of this file therefore queues that module on every one of those
+    // pages, not on ours. The `if ($hassiteconfig)` guard above does not help -- it is true for any
+    // administrator, on any page. Nor would `$ADMIN->fulltree`, which is also true while the tree
+    // is being built for a different section.
+    //
+    // The module then found `#adminsettings` -- an id core puts on every settings page -- and went
+    // to work on whatever was inside it.
+    //
+    // The section parameter is the thing that actually identifies the page being rendered, so it is
+    // what is checked. On any other section, or on an admin page with no section at all, nothing is
+    // queued and the plugin has no effect outside its own settings page.
+    //
+    // settingsui.js carries the same check independently (see its init()). Two guards, because this
+    // one is invisible in the rendered page and the fault it prevents is site-wide.
+    //
+    // NOTE FOR THE NEXT PERSON: guard the js_call_amd, do NOT `return` here. A bare `return` at
+    // this point is legal PHP and stops including the rest of the file -- which would leave every
+    // setting declared BELOW this line unregistered whenever the admin tree is built for any other
+    // page. The settings would then disappear from admin search and from the tree itself. The
+    // registrations must always run; only the JavaScript is page-specific.
+    $acfsownpage = (optional_param('section', '', PARAM_ALPHANUMEXT) === 'formatsettingaicourse');
+
+
     // ACF-FIX-2.1.159: the settings page UI.
     //
     // Sixty-five settings in one column is a scroll, not a page. The module puts a hub of feature
@@ -255,17 +289,19 @@ if ($hassiteconfig) {
     // the rest of the old UI: it depended on settingsmeta, which does not parse this file's three
     // different ways of declaring a setting and was never trusted enough to be used without a
     // hand-kept fallback list beside it.
-    $PAGE->requires->js_call_amd('format_aicourse/settingsui', 'init', [[
-        'about' => get_string('settingsui_about', 'format_aicourse'),
-        'show' => get_string('settingsui_show', 'format_aicourse'),
-        'hide' => get_string('settingsui_hide', 'format_aicourse'),
-        'course' => get_string('settingsui_course', 'format_aicourse'),
-        'appliestoall' => get_string('settingsui_appliestoall', 'format_aicourse'),
-        'search' => get_string('settingsui_search', 'format_aicourse'),
-        'nomatches' => get_string('settingsui_nomatches', 'format_aicourse'),
-        'settings' => get_string('settingsui_settings', 'format_aicourse'),
-        'setting' => get_string('settingsui_setting', 'format_aicourse'),
-    ]]);
+    if ($acfsownpage) {
+        $PAGE->requires->js_call_amd('format_aicourse/settingsui', 'init', [[
+            'about' => get_string('settingsui_about', 'format_aicourse'),
+            'show' => get_string('settingsui_show', 'format_aicourse'),
+            'hide' => get_string('settingsui_hide', 'format_aicourse'),
+            'course' => get_string('settingsui_course', 'format_aicourse'),
+            'appliestoall' => get_string('settingsui_appliestoall', 'format_aicourse'),
+            'search' => get_string('settingsui_search', 'format_aicourse'),
+            'nomatches' => get_string('settingsui_nomatches', 'format_aicourse'),
+            'settings' => get_string('settingsui_settings', 'format_aicourse'),
+            'setting' => get_string('settingsui_setting', 'format_aicourse'),
+            ]]);
+    }
 
     // ACF-FIX-2.1.120: say plainly which themes this is built against.
     //
