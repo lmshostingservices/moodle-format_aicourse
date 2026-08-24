@@ -2,6 +2,53 @@
 
 All notable changes to this plugin will be documented in this file.
 
+## [2.1.190] - 2026-08-23
+
+### Important — site-wide fix
+
+- **The settings interface was loading on every administration settings page**, including Moodle
+  core's and unrelated plugins'. Moodle includes every plugin's `settings.php` on every admin page
+  to build the admin tree, so a `js_call_amd()` at the top level of that file loads everywhere.
+  Neither `$hassiteconfig` nor `$ADMIN->fulltree` scopes it. Now restricted to this plugin's own
+  section, with an independent body-id check in `settingsui.js`.
+  Reported by the Wombat LMS platform team for College Australia (RTO 31222).
+- **An SVG could render at the browser's default replaced-element size** where the plugin's
+  stylesheet was not present. Both SVG generators now carry explicit dimensions.
+
+### Added
+
+- Section card activity rows carry the module icon, estimated time and completion tick, and share
+  the course index's completion tooltip — one implementation, one payload.
+- Card progress: ring, bar and percentage count up from zero, deferred until the card is on screen.
+- The activity banner's completion ring draws itself.
+- Settings page rebuilt: ten colour-coded areas, search, numbered settings, per-setting wireframes
+  drawn from real UI furniture, three-course motif for `force…` settings.
+- Settings language rewritten in plain English with inline explanations.
+- Site navigation shown to teachers by default.
+
+### Fixed
+
+- Activity banner: not full width on drawer close, nav icons behind the open drawer, horizontal
+  scrollbar. Root cause: the banner was never lifted to `#page` on activity pages, because
+  `heroinject` places it after `heroatop` has run and only `attach()` listened for the placement.
+- Hero heading sizes unified across course, section and activity into `--acf-hero-heading`; the
+  course-name eyebrow on an activity banner raised from 11px via `--acf-hero-eyebrow`.
+- Hero controls at each end of a banner now match on box, glyph **and** background surface.
+- Course index: close button clipping below a 327px panel; reopen button behind the banner;
+  `--acf-text-tertiary` failing WCAG AA on the sidebar surface.
+- Section cards: explicit 3/2/1 column grid driven by container width, not by section count.
+- Section delete from a card: the only card action without its own `data-courseid`, so it fell
+  through to a document-wide lookup and failed silently when that resolved to nothing.
+- Progress bar drew an ellipse — `--acf-radius-full` is `50%`, and a percentage radius resolves
+  against the box's own dimensions. Use `--acf-radius-pill`.
+- Progress tracks were invisible (`--acf-surface-sunken` on a white card). Now `--acf-track`.
+
+### Notes
+
+- Nine hard bugs in this project have now been the same shape: two rules setting the same property
+  on the same selector, with the edit going on the losing one. **150 such pairs remain.** Run the
+  detector on a selector before editing it.
+
 ## [2.1.166] - 2026-08-22
 
 Sixteen releases in one session. The entries below are grouped by what was wrong rather than by
