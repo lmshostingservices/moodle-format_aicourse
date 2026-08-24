@@ -209,6 +209,27 @@ body.format-aicourse,
     --acf-font-size-xl: 1.25rem;              /* 20px */
     --acf-font-size-2xl: clamp(1.25rem, 1.05rem + 1vw, 1.5rem);
     --acf-font-size-3xl: clamp(1.375rem, 1rem + 2.1vw, 2.125rem);  /* hero, image mode */
+
+    /* ACF-FIX-2.1.188: ONE hero heading size, for every page type.
+       The course/section heading read --acf-font-size-3xl (max 34px) and the activity heading was
+       repeatedly reported as smaller. Making them equal at 34px then made the section heading too
+       big -- so the answer was never "match one to the other", it was that neither number was
+       right and they were declared in two places.
+       This is the single declaration all three page types read. 24px on a desktop, 18px on a
+       phone: a course name is often a long string and at 28px it dominated the banner, while an
+       activity name still reads as the page's heading rather than as a caption at 24.
+       Change it HERE and every hero on every page type moves together -- that is the whole point
+       of it existing. Do not add a second size for one page type; that is what produced four
+       rounds of "one is bigger than the other". */
+    --acf-hero-heading: clamp(1.125rem, 0.95rem + 0.85vw, 1.5rem);   /* 18 -> 24px */
+
+    /* The line ABOVE the activity heading, carrying the course name. Declared next to the heading
+       it sits under, because the two are only right relative to each other. */
+    /* 12px floor, not 13. At 320px -- the width WCAG 2.2 SC 1.4.10 specifies, and what any screen
+       becomes at 400% zoom -- a 13px eyebrow under an 18px title is only 1.38x apart, which reads
+       as two headings rather than a heading and its eyebrow. 12px restores the 1.5x step while
+       staying on the legibility floor. */
+    --acf-hero-eyebrow: clamp(0.75rem, 0.66rem + 0.45vw, 0.9375rem);   /* 12 -> 15px */
     /* Gradient-mode hero title. Sits between 2xl and 3xl: enough presence to
        anchor the banner without competing with the page <h1> in edit mode. */
     --acf-font-size-hero: clamp(1.3125rem, 1.02rem + 1.35vw, 1.75rem); /* 21 -> 28px */
@@ -1728,7 +1749,8 @@ body.format-aicourse .aicourse-hero-title {
 }
 
 body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-title {
-    font-size: var(--acf-font-size-3xl);
+    /* ACF-FIX-2.1.188: the shared heading size -- see --acf-hero-heading. */
+    font-size: var(--acf-hero-heading);
     font-weight: var(--acf-weight-bold);
     color: var(--acf-text-on-media);
     max-inline-size: 46rem;
@@ -1737,12 +1759,22 @@ body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-her
     text-shadow: var(--acf-media-text-shadow);
 }
 
+/* ACF-FIX-2.1.189: the course-name line on an activity banner is 15px, not 11px.
+   This is the element that was being reported as "the activity heading is too small" -- not
+   `.aicourse-hero-title`, which is the activity's own name and was already correct. Four rounds
+   were spent resizing the wrong element because the complaint says "heading" and this line looks
+   like one: on a SECTION page the same course name is the 24px heading, and on an ACTIVITY page it
+   was rendering at 11px, uppercase, with wide tracking. Reading the same string at 24px on one
+   page and 11px on the next is the inconsistency that was actually being described.
+   15px keeps it clearly subordinate to the 24px title above the fold -- it is still an eyebrow,
+   not a second heading -- while being legible. Tracking comes in a step too: `wider` is tuned for
+   an 11px label, and at 15px it reads as spaced-out rather than as small caps. */
 body.format-aicourse .aicourse-hero-section-label {
-    font-size: var(--acf-font-size-2xs);
+    font-size: var(--acf-hero-eyebrow);
     font-weight: var(--acf-weight-semibold);
-    line-height: var(--acf-leading-tight);
+    line-height: var(--acf-leading-snug);
     text-transform: uppercase;
-    letter-spacing: var(--acf-tracking-wider);
+    letter-spacing: var(--acf-tracking-wide);
     /* Was brand @ opacity .55 = 2.89:1. Full-opacity secondary = 7.23:1. */
     color: var(--acf-text-secondary);
     white-space: nowrap;
@@ -11344,21 +11376,24 @@ body.format-aicourse .aicourse-hero-banner .aicourse-hero-title-group .aicourse-
    the small heading back. */
 body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image
 .aicourse-hero-title-group .aicourse-hero-title {
-    font-size: var(--acf-font-size-3xl);
+    font-size: var(--acf-hero-heading);
 }
 
 /* Gradient mode: the course banner uses --acf-font-size-hero there, so this does too. */
 body.format-aicourse .aicourse-hero-banner:not(.aicourse-hero-has-image)
 .aicourse-hero-title-group .aicourse-hero-title {
-    font-size: var(--acf-font-size-hero);
+    font-size: var(--acf-hero-heading);
 }
 
 /* The eyebrow keeps its place in the hierarchy: still clearly subordinate, but no longer so faint
    against a photograph that it reads as an artefact. */
+/* ACF-FIX-2.1.189: this block used to restate `font-size: var(--acf-font-size-2xs)` at (0,3,1),
+   beating the (0,2,1) rule further up that actually owns this element's type. Editing that rule
+   therefore did nothing -- the size is now declared in exactly one place, and this block keeps only
+   what is genuinely specific to the banner: the opacity lift over a photograph.
+   Ninth instance in this sheet of a duplicate declaration silently beating the rule being edited.
+   Run /tmp/dupcheck.py on a selector BEFORE editing it. */
 body.format-aicourse .aicourse-hero-banner .aicourse-hero-section-label {
-    font-size: var(--acf-font-size-2xs);
-    font-weight: var(--acf-weight-semibold);
-    letter-spacing: var(--acf-tracking-wide);
     opacity: 0.92;
 }
 

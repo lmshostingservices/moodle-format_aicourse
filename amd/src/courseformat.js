@@ -1647,7 +1647,23 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function($, Str
                 }
                 var card = btn.closest('.aicourse-card');
                 var sectionId = btn.attr('data-sectionid');
-                var courseId = $('[data-courseid]').first().attr('data-courseid') ||
+                // ACF-FIX-2.1.188: read the BUTTON's own data-courseid first.
+                //
+                // Delete was the only card action that did not. The duplicate button beside it has
+                // always carried data-courseid and read it directly; delete carried only the
+                // section id, so it fell straight through to a document-wide
+                // `$('[data-courseid]').first()` -- whatever element happens to appear first in the
+                // page carrying that attribute, which depends on which optional features are
+                // switched on. If that lookup finds nothing, or finds an element whose attribute is
+                // empty, parseInt() yields NaN, the web service rejects the call as an invalid
+                // parameter, and the section is not deleted.
+                //
+                // The button now carries the id itself (see section_card.mustache), so the value
+                // comes from the same element that knows which section it belongs to. The old
+                // lookups stay as fallbacks for a cached page rendered before this change.
+                var courseId = btn.attr('data-courseid') ||
+                               card.attr('data-courseid') ||
+                               $('[data-courseid]').first().attr('data-courseid') ||
                                $('.aicourse-card-icon-wrap').first().attr('data-courseid');
 
                 // ACF-FIX-2.0 (i18n): strings are already loaded, so the confirm opens
@@ -1658,12 +1674,30 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function($, Str
                     STR.deletelabel,
                     STR.cancel,
                     function() {
+                        // ACF-FIX-2.1.188: refuse to send a request that cannot succeed.
+                        //
+                        // Without this, a missing or unreadable course id produced NaN, the server
+                        // rejected the call as an invalid parameter, and the user saw a generic
+                        // failure with nothing to act on -- reported as "delete doesn't delete".
+                        // Saying which id is missing turns that into something diagnosable.
+                        var cid = parseInt(courseId, 10);
+                        var sid = parseInt(sectionId, 10);
+                        if (!(cid > 0) || !(sid > 0)) {
+                            if (window.console && window.console.warn) {
+                                window.console.warn('[format_aicourse] delete_section: bad ids',
+                                    {courseid: courseId, sectionid: sectionId});
+                            }
+                            notify(STR.jsSectiondeleteerror, 'error');
+                            announce(STR.jsSectiondeleteerror);
+                            return;
+                        }
+
                         btn.prop('disabled', true).attr('aria-busy', 'true');
                         card.css('opacity', '0.5');
 
                         callExternal('delete_section', {
-                            courseid: parseInt(courseId, 10),
-                            sectionid: parseInt(sectionId, 10)
+                            courseid: cid,
+                            sectionid: sid
                         }).done(function() {
                             // ACF-FIX-2.0 (a11y): move focus to a surviving neighbour before the
                             // focused button is destroyed, then announce the removal.
