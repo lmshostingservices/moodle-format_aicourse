@@ -218,17 +218,20 @@ class callbacks {
     /**
      * Whether the running script is /course/section.php.
      *
-     * ACF-FIX-2.1.5: one implementation, three former call sites. Uses the global $SCRIPT that
-     * setup.php derives for exactly this purpose, rather than reading $_SERVER directly -- $SCRIPT
-     * is normalised to a Moodle-relative path, and reviewers are right to flag raw superglobals.
-     * Falls back to $_SERVER only if $SCRIPT is unavailable (CLI, some test bootstraps).
+     * ACF-FIX-2.1.5: one implementation, three former call sites.
+     *
+     * 2.1.200: the raw superglobal fallback is gone. Moodle's setup.php publishes $SCRIPT for
+     * exactly this purpose -- already normalised to a wwwroot-relative path -- and reading the
+     * request environment directly is something Moodle's own guidelines and every reviewer flag.
+     * Where $SCRIPT is unset (CLI, some test bootstraps) the answer is simply false, which is
+     * correct: there is no running web script to be course/section.php.
      *
      * @return bool True when the running script is course/section.php.
      */
     public static function is_section_php_request(): bool {
         global $SCRIPT;
 
-        $script = $SCRIPT ?? ($_SERVER['SCRIPT_NAME'] ?? '');
+        $script = (string) ($SCRIPT ?? '');
 
         return strpos($script, '/course/section.php') !== false;
     }

@@ -54,7 +54,8 @@ const CATEGORIES = [
     },
     {
         id: 'tutor', order: 8, label: 'AI Tutor', icon: '✦', hue: 'tutor',
-        desc: 'The chat bubble that answers learners\' questions. Its connection to the external AI service, and what course content is sent there.',
+        desc: 'The chat bubble that answers learners\' questions. Its connection to the '
+            + 'external AI service, and what course content is sent there.',
         match: [/tutor/, /apikey/, /siteid/, /assessmentanswers/, /aiassistant/, /externalservice/,
             /adminreportlink/],
     },
@@ -70,7 +71,9 @@ const CATEGORIES = [
     },
     {
         id: 'index', order: 1, label: 'Course index', icon: '☰', hue: 'index',
-        desc: 'The menu that slides out from the side of a course listing every section and activity. Where it shows, how it opens, and whether it becomes a progress tracker.',
+        desc: 'The menu that slides out from the side of a course listing every section '
+            + 'and activity. Where it shows, how it opens, and whether it becomes a '
+            + 'progress tracker.',
         match: [/playerindex/, /indexstate/, /playerheader/, /showcourseindex/, /^index/,
             /forceindex/, /defaultindex/, /hidegeneral/],
     },

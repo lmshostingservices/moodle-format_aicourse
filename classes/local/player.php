@@ -157,7 +157,10 @@ class player {
         $percent = $trackable > 0 ? (int) round(($done / $trackable) * 100) : null;
 
         return [
-            'coursename' => format_string($course->fullname),
+            // ACF-FIX-2.1.191: plain text, not HTML. player.js assigns this with textContent,
+            // which inserts characters rather than parsing them, so format_string()'s escaping
+            // arrived in the sidebar as the visible string "&amp;".
+            'coursename' => text::plain($course->fullname, \context_course::instance($course->id)),
             'courseurl' => (new \moodle_url('/course/view.php', ['id' => $course->id]))->out(false),
             'percent' => $percent,
             'totaltime' => progress::format_estimated_time($totalminutes),
@@ -257,7 +260,7 @@ class player {
             return null;
         }
 
-        // completiongradeitemnumber names the item completion depends on, and is null when
+        // The completiongradeitemnumber field names the item completion depends on, and is null when
         // completion does not depend on a grade -- in which case item 0 is the activity's grade.
         $itemnumber = isset($cm->completiongradeitemnumber) && $cm->completiongradeitemnumber !== null
             ? (int) $cm->completiongradeitemnumber

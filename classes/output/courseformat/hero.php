@@ -448,7 +448,10 @@ class hero implements named_templatable, renderable {
         $data->showremovebanner = ($data->canedit && !empty($custombanner) && $PAGE->user_is_editing());
         $data->removebannerlabel = get_string('removebannerimage', 'format_aicourse');
         $data->generatebannerlabel = get_string('generatebannerimage', 'format_aicourse');
-        $data->coursename = format_string($course->fullname);
+        // ACF-FIX-2.1.191: plain text. This is read back out of data-coursename by
+        // courseformat.js and written into the modal with jQuery .text(), which does not parse
+        // markup -- the escaped form showed as "&amp;" in the Generate AI banner dialog.
+        $data->coursename = \format_aicourse\local\text::plain($course->fullname, $context);
         $data->shortname = $course->shortname;
     }
 

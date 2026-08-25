@@ -514,7 +514,16 @@ if ($hassiteconfig) {
         'format_aicourse/defaultimmersive',
         get_string('immersive', 'format_aicourse'),
         get_string('immersive_desc', 'format_aicourse'),
-        0,
+        // 2.1.191: ships hidden FROM STUDENTS. The band carries the site logo, Dashboard and My
+        // courses -- a second, competing navigation directly above a banner that already offers
+        // Home and My courses in the hero's own icon panel. Teachers keep it, because they move
+        // between a course and the rest of the site constantly while building one; learners are
+        // in one course and do not.
+        //
+        // This is the site DEFAULT, so it seeds NEW courses only: upgrading an existing site
+        // changes nothing anywhere. 'Apply to ALL existing courses' below is the setting that
+        // reaches courses that already have a stored value.
+        1,
         [
             0 => get_string('hidesecondarynav_show', 'format_aicourse'),
             1 => get_string('hidesecondarynav_students', 'format_aicourse'),
@@ -590,7 +599,11 @@ if ($hassiteconfig) {
         'format_aicourse/defaulthidefooter',
         get_string('hidefooter', 'format_aicourse'),
         get_string('hidefooter_desc', 'format_aicourse'),
-        0,
+        // 2.1.191: ships hidden. The format ends on its own content, and a theme's copyright band
+        // directly beneath a full-bleed section grid reads as a strip of a different site. This is
+        // a site DEFAULT: it seeds new courses only, so no existing course changes when the plugin
+        // is upgraded -- the force setting below is the one that reaches those.
+        2,
         [
             0 => get_string('hidesecondarynav_show', 'format_aicourse'),
             1 => get_string('hidesecondarynav_students', 'format_aicourse'),

@@ -519,7 +519,13 @@ class format_aicourse extends format_topics {
                 if ($pagecontext instanceof \context_module) {
                     $isactivitypage = true;
                 } else {
-                    $script = (string) ($_SERVER['SCRIPT_NAME'] ?? '');
+                    // 2.1.200: Moodle's own $SCRIPT, not the raw request environment. setup.php
+                    // publishes it already normalised to a wwwroot-relative path, so this reads
+                    // the same value without touching a superglobal. Unset on CLI, where the
+                    // backstop simply does not fire -- and the two checks above are the real
+                    // signals in any case.
+                    global $SCRIPT;
+                    $script = (string) ($SCRIPT ?? '');
                     $isactivitypage = (strpos($script, '/mod/') !== false
                         && substr($script, -strlen('/view.php')) === '/view.php');
                 }

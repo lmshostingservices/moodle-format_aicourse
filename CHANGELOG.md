@@ -2,6 +2,58 @@
 
 All notable changes to this plugin will be documented in this file.
 
+## [2.1.200] - 2026-08-25
+
+### Fixed
+
+- **Course names containing `&` displayed as `&amp;`.** Three places took a name PHP had already
+  escaped for HTML and re-inserted it as plain characters: the course index sidebar, the Generate
+  AI banner dialog, and — invisibly — the course name sent to the image service, which was being
+  asked to illustrate a course with `&amp;` in its title. A new helper returns the filtered name
+  unescaped for the consumers that do not parse markup.
+- **A long course name was cut off instead of wrapping to two lines.** The sidebar name has been
+  clamped to two lines since it was written, but a later accessibility rule set `display: inline-flex`
+  on the same element, which silently disables `-webkit-line-clamp`. The touch-target height is now
+  taken with `min-block-size`, which needs no flex, so both hold at once.
+- **The hero progress ring was invisible on banners with a photograph.** At 0% the coloured arc has
+  no length and the track carried an inline near-black stroke, so both circles were present and
+  neither could be seen. The track is now a light stroke, and the ring container has a size floor.
+- **The inverted focus halo on hero banners never rendered.** One branch of the shared focus rule
+  was more specific than the rest, and `:is()` applies its most specific argument's score to every
+  branch — enough to beat the "controls on imagery" rule. A keyboard user tabbing across a
+  photographic banner got the ring meant for a white page. That branch now sits on its own line.
+- **The settings-page textarea rendered 44px tall instead of 128px.** Its own rule lost on
+  specificity to the shared control block. The touch-target floor now excludes `textarea`.
+- **Direct reads of the request environment removed.** Two places read `$_SERVER` instead of the
+  normalised script path Moodle publishes; both now use `$SCRIPT`.
+- **Course index rows were cramped.** Section bands and activity rows are both 44px, which also
+  clears the WCAG 2.2 target size. They needed different mechanisms: the band has an explicit
+  height, the row has none.
+
+### Added
+
+- **Your own detail in the AI banner dialog.** An optional field whose text is added to the image
+  prompt alongside the course name. Capped at 300 characters server-side.
+
+### Changed
+
+- **The site logo band now ships hidden from students** and visible to teachers, and **the site
+  footer now ships hidden**. Both are site defaults, so they seed new courses only — existing
+  courses are unchanged until the matching "apply to all courses" setting is used.
+- **Moodle 5.2 declared supported** (`$plugin->supported` upper bound raised to 502).
+- **The footer and logo-band rules now match themes that do not use core's own markup**, including
+  `theme_academi`, without touching any toolbar that carries the user menu or drawer toggles.
+
+### Internal
+
+- **Every unreachable CSS declaration removed** — 115 of them, plus 18 rule blocks left empty.
+  Proven equivalent to the previous release both analytically, by comparing the winning declaration
+  of all 4,674 groups, and empirically, by diffing every computed property of every element across
+  18 fixtures at three widths.
+- **Every invisible specificity trap removed** — 13 pairs where the rule a reader would expect to
+  win does not, because `:is()` borrowed specificity from a branch that was not the one matching.
+  Two of them were live bugs, listed above.
+
 ## [2.1.190] - 2026-08-23
 
 ### Important — site-wide fix

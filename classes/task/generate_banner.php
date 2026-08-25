@@ -85,7 +85,10 @@ class generate_banner extends \core\task\adhoc_task {
         generate_banner_image::set_status($courseid, 'running', '');
 
         try {
-            $url = generate_banner_image::generate_and_store($course);
+            $url = generate_banner_image::generate_and_store(
+                $course,
+                (string) ($data->extraprompt ?? '')
+            );
             generate_banner_image::set_status($courseid, 'done', $url);
         } catch (\Throwable $e) {
             generate_banner_image::set_status($courseid, 'failed', $e->getMessage());

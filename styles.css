@@ -572,29 +572,8 @@ body.format-aicourse {
        Both still clear AA for body text and AAA for large text.
        rgba() first as the universal fallback, then color-mix() so the wash
        tracks the SITE's brand rather than the plugin's navy. */
-    --acf-hero-wash:
-        linear-gradient(
-            135deg,
-            rgba(15, 108, 191, 0.16) 0%,
-            rgba(15, 108, 191, 0.08) 46%,
-            rgba(15, 108, 191, 0.025) 100%
-        ),
-        linear-gradient(var(--acf-surface-raised), var(--acf-surface-raised));
-    --acf-hero-wash:
-        linear-gradient(
-            135deg,
-            color-mix(in srgb, var(--acf-brand) 16%, var(--acf-surface-raised)) 0%,
-            color-mix(in srgb, var(--acf-brand)  8%, var(--acf-surface-raised)) 46%,
-            color-mix(in srgb, var(--acf-brand) 2.5%, var(--acf-surface-raised)) 100%
-        );
     /* Soft off-centre bloom behind the progress ring, so the hero's right side
        has a reason to be the anchor. Decorative only — no text sits on it. */
-    --acf-hero-glow:
-        radial-gradient(
-            60% 150% at 82% 18%,
-            var(--acf-brand-tint) 0%,
-            transparent 68%
-        );
     --acf-hero-border: var(--acf-brand-tint);
 
     /* --- Fixed-dark modal chrome (see --acf-inverse-* primitives) -------- */
@@ -1078,8 +1057,18 @@ body.format-aicourse :is(
 .aicourse-icon-search-input, .aicourse-ai-quick-btn, .aicourse-ai-send-btn,
 .aicourse-ai-rate-btn, .aicourse-ai-chatbox-close, .aicourse-bgen-btn,
 .aicourse-bgen-close, .aicourse-tab, .aicourse-rating-btn, .aicourse-correction-btn,
-.aicourse-filter-input, .aicourse-filter-select,
-.aicourse-card-bulkselect input[type="checkbox"]):focus-visible {
+.aicourse-filter-input, .aicourse-filter-select):focus-visible,
+/* 2.1.197: the bulk-select checkbox is a SIBLING selector here, not a branch of the :is() above.
+   Inside the :is() it was the most specific argument -- a class plus an attribute plus an element,
+   (0,2,1), where every other branch is a bare class (0,1,0) -- and :is() takes the specificity of
+   its most specific argument and applies it to ALL of them. That lifted this whole rule from
+   (0,3,1) to (0,4,2), which is how it came to beat the "controls on imagery" rule below it at
+   (0,4,1). The inverted focus halo on the hero banner never rendered: a keyboard user tabbing
+   across a photographic banner got the brand-blue ring meant for a white page.
+
+   Comma-separated selectors each carry their OWN specificity, so moving this one branch out to its
+   own line fixes the inflation without duplicating a single declaration. */
+body.format-aicourse .aicourse-card-bulkselect input[type="checkbox"]:focus-visible {
     outline: var(--acf-focus-width) solid var(--acf-focus-color);
     outline-offset: var(--acf-focus-offset);
     box-shadow: var(--acf-focus-ring);
@@ -1224,7 +1213,6 @@ body.format-aicourse .secondary-navigation {
 }
 
 body.format-aicourse:not(.editing):not(.editingon):not(.editing-mode) #page-header {
-    padding-block: var(--acf-space-2) 0;
     margin-block-end: 0;
 }
 
@@ -1470,13 +1458,7 @@ body.format-aicourse .aicourse-hero-sticky-wrap {
     position: relative;
     z-index: var(--acf-z-raised);
     display: block;
-    margin-block: var(--acf-space-4) var(--acf-space-6);
     margin-inline: auto;
-    inline-size: 100%;
-}
-
-body.format-aicourse .aicourse-hero-sticky-wrap.aicourse-hero-align-left {
-    margin-inline: 0 auto;
 }
 
 /* ACF-FIX-2.1.106: square corners on the banner, in both its modes.
@@ -1495,10 +1477,8 @@ body.format-aicourse .aicourse-hero-banner {
     /* ACF-FIX-2.1.26: --acf-hero-h is gone with the "Hero banner height" setting; the
        banner's floor is the token alone and it grows from there to fit its content. */
     min-block-size: var(--acf-topblock);
-    block-size: auto;
     box-sizing: border-box;
     border: 1px solid var(--acf-hero-border);
-    border-radius: 0;
     background: var(--acf-hero-wash);
     box-shadow: var(--acf-elevation-2);
     overflow: hidden;
@@ -1574,7 +1554,6 @@ body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-her
    --acf-z-base, below .aicourse-hero-content (--acf-z-content), so it can never
    affect the contrast of anything readable. Mirrored in RTL below. */
 body.format-aicourse .aicourse-hero-banner:not(.aicourse-hero-has-image)::after {
-    content: "";
     position: absolute;
     inset: 0;
     z-index: var(--acf-z-base);
@@ -1645,11 +1624,9 @@ body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-her
     display: block;
     z-index: var(--acf-z-raised);
     border-radius: inherit;
-    background: var(--acf-hero-scrim);
 }
 
 body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-overlay::before {
-    content: "";
     position: absolute;
     inset: 0;
     border-radius: inherit;
@@ -1731,8 +1708,6 @@ body.format-aicourse .aicourse-hero-title-wrap {
 
 body.format-aicourse .aicourse-hero-title {
     margin: 0;
-    inline-size: 100%;
-    min-inline-size: 0;
     font-size: var(--acf-font-size-hero);
     font-weight: var(--acf-weight-bold);
     line-height: var(--acf-leading-tight);
@@ -1935,20 +1910,14 @@ body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-her
    (198px) plus a gutter of breathing room. Applied to the title and the meta line, which are
    the two elements that reach the banner's top-right corner. */
 @media (min-width: 600px) {
-    body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image
-    :is(.aicourse-hero-title, .aicourse-hero-summary) {
-        padding-inline-end: 13rem;
-    }
 }
 
 /* Below 600px there is not enough width to reserve for the pill, so it leaves the corner and
    flows as a normal row under the hero content instead of sitting on top of the title. */
 @media (max-width: 599px) {
     body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-icons {
-        position: static;
         justify-content: flex-start;
         margin-block-start: var(--acf-space-3);
-        max-inline-size: 100%;
     }
 }
 
@@ -1996,15 +1965,7 @@ body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image
    Third time in this change that widening a selector caught an indicator that only looked like an
    icon. The exclusion is by the indicator's own class, so it holds wherever a template puts it. */
 
-/* ACF-FIX-2.1.186b: the chevron has NO surface of its own. See the consolidated note further down
-   -- this block used to give it a scrim, a border and a blur, and the block below gave it a second,
-   different one. Only the colour survives here. */
-body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-nav {
-    color: var(--acf-text-on-media);
-}
-
 body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-nav:hover {
-    background: var(--acf-surface-hover);
     transform: scale(1.06);
 }
 
@@ -2361,17 +2322,12 @@ body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-pro
    silently clipped. Now a single horizontally-scrollable row: nothing is ever
    clipped, at any activity count, at any banner height. */
 body.format-aicourse .aicourse-activity-number-circles {
-    display: flex;
     align-items: center;
-    gap: var(--acf-space-2);
-    flex-wrap: nowrap;
     inline-size: 100%;
-    max-inline-size: 100%;
     min-inline-size: 0;
     padding-block: var(--acf-space-1);
     overflow-x: auto;
     overscroll-behavior-inline: contain;
-    scrollbar-width: thin;
     scroll-snap-type: inline proximity;
 }
 
@@ -2488,8 +2444,6 @@ body.format-aicourse .aicourse-hero-has-image .aicourse-activity-number.aicourse
    ========================================================================== */
 
 body.format-aicourse .aicourse-completion-ring-container {
-    inline-size: 2.75rem;
-    block-size: 2.75rem;
     flex-shrink: 0;
 }
 
@@ -2631,7 +2585,6 @@ body.format-aicourse .aicourse-hero-has-image .aicourse-grade-text {
 body.format-aicourse .aicourse-cards-container {
     container-type: inline-size;
     container-name: acf-cards;
-    margin-block-start: var(--acf-space-6);
 }
 
 body.format-aicourse .aicourse-cards-grid {
@@ -2932,7 +2885,6 @@ body.format-aicourse .aicourse-icon-change-label {
    while the visible pill stays 32px, drawn by ::before inset 6px on the block
    axis. Same technique as the card edit chrome above. */
 body.format-aicourse .aicourse-card .aicourse-card-time {
-    position: relative;
     /* ACF-FIX-2.1.151: an explicit stacking context, so the ::before pill is always drawn against
        THIS element -- above its own background box, below its icon and text. Without it the -1
        child lands in whichever ancestor happens to be positioned, which is exactly how 2.1.145
@@ -3114,7 +3066,6 @@ body.format-aicourse .aicourse-card .aicourse-card-title {
     /* stylelint-disable-next-line declaration-no-important -- must travel with the font-size. */
     line-height: var(--acf-leading-snug) !important;
     letter-spacing: var(--acf-tracking-tight);
-    color: var(--acf-text-primary);
     display: -webkit-box;
     -webkit-line-clamp: 2;
     line-clamp: 2;
@@ -7746,7 +7697,6 @@ body.format-aicourse .aicourse-hero-sticky-wrap {
        on the theme. Padding cannot collapse. The wrap has no background, so
        12px of padding is simply 12px of space. */
     margin-block: 0 var(--acf-space-4);
-    padding-block-start: var(--acf-space-3);
 }
 
 body.format-aicourse .aicourse-cards-container {
@@ -7800,7 +7750,6 @@ body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-her
         min-inline-size: 0;
         display: flex;
         flex-direction: column;
-        align-items: flex-start;
         gap: 2px;
     }
 
@@ -7854,7 +7803,6 @@ body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-her
        yields to a long title before the title truncates. */
     body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-nav-progress {
         inline-size: auto;
-        flex: 0 1 26rem;
         justify-content: flex-end;
         min-inline-size: 0;
     }
@@ -8347,19 +8295,6 @@ body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-her
     content: none;
 }
 
-body.format-aicourse,
-body.format-aicourse.aicourse-scrim-medium {
-    --acf-hero-scrim-a: 0.62;
-}
-
-body.format-aicourse.aicourse-scrim-light {
-    --acf-hero-scrim-a: 0.55;
-}
-
-body.format-aicourse:not(.aicourse-scrim-medium):not(.aicourse-scrim-light) {
-    --acf-hero-scrim-a: 0.72;
-}
-
 /* One declaration, at the end, so it resolves whatever set the alpha — the
    site class above or the course's inline --acf-hero-scrim-a. The <600px
    vertical ramp from section 8 is overridden here too; it no longer applies. */
@@ -8588,13 +8523,7 @@ body.format-aicourse:not(.aicourse-scrim-medium):not(.aicourse-scrim-light) {
    clipping to one. min-block-size stays a floor, so a one-line title keeps the
    compact 88-120px banner and only a long name makes it taller. */
 body.format-aicourse .aicourse-hero-banner .aicourse-hero-title {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
     -webkit-box-orient: vertical;
-    overflow: visible;
-    text-overflow: clip;
-    overflow-wrap: break-word;
 }
 
 body.format-aicourse .aicourse-hero-banner {
@@ -8602,9 +8531,6 @@ body.format-aicourse .aicourse-hero-banner {
 }
 
 @media (min-width: 700px) {
-    body.format-aicourse .aicourse-hero-banner .aicourse-hero-content {
-        align-items: center;
-    }
 }
 
 /* ==========================================================================
@@ -8905,10 +8831,17 @@ body.format-aicourse.aicourse-hidenav-students:not(.aicourse-can-edit):not(.edit
 
 /* The nav's own spacing, and the wrappers that carry it. `display: none` on the
    <nav> does not collapse a margin on its parent. */
+/* 2.1.197: `.secondary-navigation` is no longer in this list. It was redundant -- measured in a
+   browser across all four class combinations, the nav is `display: none` in exactly the states
+   where this rule applies, so zeroing its margin achieved nothing -- and it was the last remaining
+   specificity trap in the sheet: at (1,5,1) this rule outranked the (0,7,1) rule below that gives
+   the tab row its top gap, purely because an id inside an :is() outweighs seven classes. Harmless
+   while the nav is hidden, and a live bug the moment anyone made it visible in that state. The
+   wrappers are what this rule is actually for; the comment above says so. */
 body.format-aicourse.aicourse-hidenav-all:not(.editing):not(.editingon):not(.editing-mode)
-:is(#page-content, #region-main-box, #region-main, .main-inner, .secondary-navigation),
+:is(#page-content, #region-main-box, #region-main, .main-inner),
 body.format-aicourse.aicourse-hidenav-students:not(.aicourse-can-edit):not(.editing):not(.editingon):not(.editing-mode)
-:is(#page-content, #region-main-box, #region-main, .main-inner, .secondary-navigation) {
+:is(#page-content, #region-main-box, #region-main, .main-inner) {
     margin-block-start: 0;
     padding-block-start: 0;
 }
@@ -10237,19 +10170,6 @@ body.aicourse-player-on .courseindex-section {
     border-block-start: 0;
 }
 
-/* The activity icon at the head of the row, in the accent so the row is identifiable by shape and
-   colour before it is read. Core's completion circle is hidden with it: it duplicated the tick at
-   the end of the row and told a learner nothing about what the activity is. */
-.aicourse-player-row-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex: none;
-    inline-size: 1.375rem;
-    block-size: 1.375rem;
-    color: var(--acf-brand);
-}
-
 /* Moodle's module icons are monochrome SVGs served as images, so they cannot inherit a colour
    directly. Masking with the image lets the accent show through, which is what makes the icon
    column read as part of the course's palette rather than a row of stock greys. The image itself
@@ -10277,12 +10197,6 @@ body.aicourse-player-on .courseindex-item.aicourse-player-row:hover .aicourse-pl
 body.aicourse-player-on .courseindex-item.aicourse-player-row:focus-within
 .aicourse-player-row-icon {
     transform: scale(1.08) rotate(-4deg);
-}
-
-.aicourse-player-row-icon img {
-    inline-size: 16px;
-    block-size: 16px;
-    object-fit: contain;
 }
 
 /* ACF-FIX-2.1.153: "I chose orange and it looks brown."
@@ -10314,63 +10228,6 @@ body.aicourse-player-on .courseindex-item.aicourse-player-row:focus-within
         -webkit-mask-position: center;
         -webkit-mask-size: contain;
     }
-}
-
-body.aicourse-player-on .courseindex-item.aicourse-player-row .completioninfo {
-    /* stylelint-disable-next-line declaration-no-important */
-    display: none !important;
-}
-
-/* The time, quiet and right-aligned. No pill here: a bordered chip on every row rebuilds the
-   boxed look the rows just shed. */
-.aicourse-player-row-time {
-    display: inline-flex;
-    align-items: center;
-    gap: 3px;
-    flex: none;
-    margin-inline-start: auto;
-    font-size: var(--acf-font-size-2xs);
-    color: var(--acf-text-tertiary);
-    white-space: nowrap;
-}
-
-.aicourse-player-row-time svg {
-    inline-size: 10px;
-    block-size: 10px;
-    flex: none;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 2;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    opacity: 0.7;
-}
-
-/* The tick. Shape as well as colour: an outlined circle when incomplete and a filled one with a
-   check when done, because colour alone would fail WCAG 1.4.1. */
-.aicourse-player-tick {
-    flex: none;
-    display: grid;
-    place-items: center;
-    inline-size: 17px;
-    block-size: 17px;
-    border: 2px solid var(--acf-border-strong);
-    border-radius: 50%;
-}
-
-.aicourse-player-tick-done {
-    border-color: var(--acf-status-done-line);
-    background: var(--acf-status-done-line);
-}
-
-.aicourse-player-tick svg {
-    inline-size: 10px;
-    block-size: 10px;
-    fill: none;
-    stroke: var(--acf-surface-raised);
-    stroke-width: 3.5;
-    stroke-linecap: round;
-    stroke-linejoin: round;
 }
 
 /* --- Scrolling ------------------------------------------------------------
@@ -10434,7 +10291,6 @@ body.aicourse-player-on .courseindex-item.courseindex-section-title {
        than the space between bands -- but an uneven top and bottom shifted the text off centre and
        left 3px more above than below. Even, so the gap either side of a band is the 5px margin and
        nothing else. */
-    padding-block: var(--acf-space-2);
     /* ACF-FIX-2.1.128: the band reaches both edges. The padding indents the TEXT; any margin or
        inline padding on the item itself would indent the fill, leaving a sliver of panel showing
        down the left. Margins zeroed so the colour runs edge to edge. */
@@ -10501,8 +10357,6 @@ body.format-aicourse:is(.aicourse-hidegeneral-all, .aicourse-hidegeneral-student
 }
 
 body.aicourse-player-on .courseindex-section:first-child .courseindex-item.courseindex-section-title {
-    margin-block-start: 0;
-    padding-block-start: 0;
     border-block-start: 0;
 }
 
@@ -10559,6 +10413,9 @@ body.aicourse-player-on .courseindex-item.courseindex-section-title .courseindex
    it duplicated the tick at the end of the row, and it told a learner nothing about what the
    activity actually is. */
 .aicourse-player-row-icon {
+/* The activity icon at the head of the row, in the accent so the row is identifiable by shape and
+   colour before it is read. Core's completion circle is hidden with it: it duplicated the tick at
+   the end of the row and told a learner nothing about what the activity is. */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -10593,6 +10450,8 @@ body.aicourse-player-on .courseindex-item.aicourse-player-row .completioninfo {
 
 /* The time pill: the same bordered, clock-marked treatment as an activity card's. */
 .aicourse-player-row-time {
+/* The time, quiet and right-aligned. No pill here: a bordered chip on every row rebuilds the
+   boxed look the rows just shed. */
     display: inline-flex;
     align-items: center;
     gap: 3px;
@@ -10623,6 +10482,8 @@ body.aicourse-player-on .courseindex-item.aicourse-player-row .completioninfo {
    check when done, because colour alone would fail WCAG 1.4.1. The green is the same
    --acf-status-done token the cards and the hero ring use. */
 .aicourse-player-tick {
+/* The tick. Shape as well as colour: an outlined circle when incomplete and a filled one with a
+   check when done, because colour alone would fail WCAG 1.4.1. */
     flex: none;
     display: grid;
     place-items: center;
@@ -10859,7 +10720,6 @@ body.aicourse-player-on {
     --acf-index-band-leading: 1.25;
     /* 34px, from 46px -- the quarter that was asked for, near enough that the difference is not
        visible and the number is a round one. */
-    --acf-index-band-height: 34px;
 }
 
 body.aicourse-player-on .courseindex-item.courseindex-section-title {
@@ -11562,7 +11422,6 @@ body#page-admin-setting-formatsettingaicourse #adminsettings {
     border-radius: 9px;
     background: var(--acfs-card);
     color: var(--acfs-ink);
-    font-size: 0.875rem;
     line-height: 1.4;
 }
 
@@ -11580,14 +11439,12 @@ body#page-admin-setting-formatsettingaicourse #adminsettings {
 .acfs-hint {
     margin: 1.25rem 0.15rem 0.85rem;
     color: var(--acfs-ink-2);
-    font-size: 0.75rem;
 }
 
 /* --- The ten rows --------------------------------------------------------- */
 .acfs-list {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
     margin-block-end: 2rem;
 }
 
@@ -11664,7 +11521,6 @@ body#page-admin-setting-formatsettingaicourse #adminsettings {
 
 .acfs-title {
     margin: 0;
-    font-size: 0.9375rem;
     font-weight: 700;
     line-height: 1.3;
     letter-spacing: -0.01em;
@@ -11675,7 +11531,6 @@ body#page-admin-setting-formatsettingaicourse #adminsettings {
 .acfs-sub {
     display: block;
     margin-block-start: 1px;
-    font-size: 0.8125rem;
     line-height: 1.4;
     color: var(--acfs-ink-3);
     overflow-wrap: anywhere;
@@ -11687,7 +11542,6 @@ body#page-admin-setting-formatsettingaicourse #adminsettings {
     border-radius: 999px;
     background: rgb(var(--c) / 0.13);
     color: rgb(var(--c) / 1);
-    font-size: 0.6875rem;
     font-weight: 700;
     font-variant-numeric: tabular-nums;
 }
@@ -11711,7 +11565,6 @@ body#page-admin-setting-formatsettingaicourse #adminsettings {
 
 /* --- The open panel ------------------------------------------------------- */
 .acfs-body {
-    padding: 0 1rem 1rem;
     border-block-start: 1px solid rgb(var(--c) / 0.16);
     margin-block-start: -1px;
 }
@@ -11755,7 +11608,6 @@ body#page-admin-setting-formatsettingaicourse #adminsettings .form-item {
 body#page-admin-setting-formatsettingaicourse #adminsettings .acfs-body
 .form-item:first-of-type {
     border-block-start: 0;
-    padding-block-start: 0;
 }
 
 /* Moodle floats the label and the setting; a float adds nothing to its parent's
@@ -11776,29 +11628,21 @@ body#page-admin-setting-formatsettingaicourse #adminsettings .form-item > *:not(
     text-align: start;
 }
 
-body#page-admin-setting-formatsettingaicourse #adminsettings .form-label {
-    margin-block-end: 0.45rem;
-}
-
 body#page-admin-setting-formatsettingaicourse #adminsettings .form-label label {
     display: block;
     margin: 0;
-    font-size: 0.9375rem;
     font-weight: 600;
-    line-height: 1.35;
     color: var(--acfs-ink);
     overflow-wrap: anywhere;
 }
 
 body#page-admin-setting-formatsettingaicourse #adminsettings .form-shortname {
-    display: inline-block;
     margin-block-start: 3px;
     padding: 1px 5px;
     border-radius: 4px;
     background: var(--acfs-sunken);
     color: var(--acfs-ink-3);
     font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    font-size: 0.6875rem;
     font-weight: 400;
     line-height: 1.4;
     letter-spacing: 0;
@@ -11806,12 +11650,9 @@ body#page-admin-setting-formatsettingaicourse #adminsettings .form-shortname {
 }
 
 body#page-admin-setting-formatsettingaicourse #adminsettings .form-description {
-    margin-block-start: 0.5rem;
     /* THE measure, and the only place it is applied. ~75 characters, left aligned against the same
        edge as the label above it. */
     max-inline-size: 72ch;
-    font-size: 0.8125rem;
-    line-height: 1.6;
     color: var(--acfs-ink-2);
     overflow-wrap: anywhere;
 }
@@ -11835,10 +11676,7 @@ body#page-admin-setting-formatsettingaicourse #adminsettings .form-defaultinfo c
 }
 
 body#page-admin-setting-formatsettingaicourse #adminsettings .form-defaultinfo {
-    display: inline-block;
-    margin-block-start: 0.35rem;
     color: var(--acfs-ink-3);
-    font-size: 0.75rem;
     overflow-wrap: anywhere;
 }
 
@@ -11905,7 +11743,6 @@ body#page-admin-setting-formatsettingaicourse #adminsettings input[type="checkbo
     border: 1px dashed var(--acfs-line-strong);
     border-radius: var(--acfs-r);
     color: var(--acfs-ink-3);
-    font-size: 0.875rem;
     text-align: center;
 }
 
@@ -12014,6 +11851,9 @@ body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image
    Two rules were setting this, with different radii and different fills -- the duplicate-declaration
    trap again -- so they are consolidated here into one that sets nothing. */
 body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-nav {
+/* ACF-FIX-2.1.186b: the chevron has NO surface of its own. See the consolidated note further down
+   -- this block used to give it a scrim, a border and a blur, and the block below gave it a second,
+   different one. Only the colour survives here. */
     background: transparent;
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
@@ -12108,10 +11948,6 @@ body.format-aicourse .aicourse-hero-banner
    one leaves "Excavator Operations – A Day on…" as the entire heading. Two
    lines, then ellipsis. */
 @media (max-width: 599px) {
-    body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-title {
-        -webkit-line-clamp: 2;
-        line-clamp: 2;
-    }
 }
 
 /* --- 2. Text below the legibility floor -----------------------------------
@@ -12150,7 +11986,22 @@ body.format-aicourse .aicourse-player-ring-text {
    name and the meta line in the sidebar header are links and were 19px and 16px
    tall. They are given the height rather than a bigger font, so the type scale
    is unchanged and only the hit area grows. */
-body.aicourse-player-on :is(.aicourse-player-coursename, .aicourse-player-meta a) {
+/* 2.1.195: the course name is NO LONGER given `display: inline-flex` here.
+   It is clamped to two lines at 9596 with `display: -webkit-box`, which is the only display value
+   -webkit-line-clamp works on, and setting flex on it silently turned the clamp off. The height
+   this rule wants does not need flex -- min-block-size applies to a -webkit-box exactly as it does
+   to anything else -- so the two are simply separated. They were only ever grouped because they
+   wanted the same number.
+
+   Splitting the :is() also removes a specificity trap: `:is()` takes the specificity of its most
+   specific argument, so `.aicourse-player-meta a` was lending an extra element to the course name's
+   half of the selector. A later single-class rule written to correct the display would have LOST to
+   it, at equal-looking specificity, which is exactly what happened on the first attempt at this. */
+body.aicourse-player-on .aicourse-player-coursename {
+    min-block-size: 24px;
+}
+
+body.aicourse-player-on .aicourse-player-meta a {
     display: inline-flex;
     align-items: center;
     min-block-size: 24px;
@@ -12194,7 +12045,6 @@ body.aicourse-player-on :is(.aicourse-player-coursename, .aicourse-player-meta a
 
 .acfs-introtitle {
     margin: 0 0 0.6rem;
-    font-size: 1rem;
     font-weight: 700;
     letter-spacing: -0.01em;
     color: var(--acfs-ink);
@@ -12214,7 +12064,6 @@ body#page-admin-setting-formatsettingaicourse #adminsettings .acfs-intro .form-i
 
 body#page-admin-setting-formatsettingaicourse #adminsettings .acfs-intro h3 {
     margin: 0 0 0.2rem;
-    font-size: 0.9375rem;
     font-weight: 700;
     color: var(--acfs-ink);
 }
@@ -12546,10 +12395,6 @@ body#page-admin-setting-formatsettingaicourse #adminsettings .acfs-intro h3 {
         order: 3;
     }
 
-    .acfs-body {
-        padding-inline: 0.85rem;
-    }
-
     /* Full-width controls: a 30rem cap is wider than the phone, so the cap does
        nothing and the padding is what needs to give. */
     body#page-admin-setting-formatsettingaicourse #adminsettings
@@ -12638,8 +12483,6 @@ body#page-admin-setting-formatsettingaicourse #adminsettings
 textarea) {
     /* stylelint-disable-next-line declaration-no-important -- beats Bootstrap's fixed height. */
     height: auto !important;
-    /* 44px: no clipping, and a comfortable touch target on a phone. */
-    min-block-size: 44px;
     max-block-size: none;
     padding: 0.65rem 0.85rem;
     line-height: 1.45;
@@ -12661,6 +12504,24 @@ textarea) {
 
 body#page-admin-setting-formatsettingaicourse #adminsettings select:hover {
     border-color: var(--acfs-brand);
+}
+
+/* 2.1.197: the 44px touch-target floor is set HERE rather than in the shared block above, and
+   deliberately excludes <textarea>.
+
+   In the shared block it applied to the textarea too, at (2,1,2) -- the :is() there contains
+   `input[type="text"]`, whose attribute selector sets the specificity for every branch. The
+   textarea's own 8rem below scores (2,0,2) and lost, so the settings textarea rendered 44px tall
+   instead of 128px. The comment in that block warns about this exact trap for background-image;
+   the same trap was live four declarations further down.
+
+   Splitting the property out means the two rules no longer describe the same element at all, so
+   there is nothing left to lose -- no specificity escalation, and nothing for a later reader to
+   have to work out. */
+body#page-admin-setting-formatsettingaicourse #adminsettings
+:is(select, input[type="text"], input[type="password"], input[type="url"], input[type="number"]) {
+    /* 44px: no clipping, and a comfortable touch target on a phone. */
+    min-block-size: 44px;
 }
 
 body#page-admin-setting-formatsettingaicourse #adminsettings textarea {
@@ -13246,4 +13107,237 @@ body#page-admin-setting-formatsettingaicourse #adminsettings :is(
 .acfs-save) {
     max-inline-size: 1120px;
     margin-inline-end: auto;
+}
+
+/* ==========================================================================
+   2.1.191
+   ========================================================================== */
+
+/* --- Hero progress ring: cannot be crushed, cannot be invisible -----------
+   Reported against Moodle 5.2.2: the banner showed the progress BAR and the
+   "0%" text with no ring around the number, on both the course home and the
+   section page. Two failure modes produce exactly that picture and only one
+   of them was already guarded against, so both are closed here.
+
+   1. SIZE. The ring is an absolutely-positioned SVG filling its container,
+      so a container collapsed to nothing takes the ring with it while the
+      percentage text -- which sizes itself -- carries on rendering. This
+      plugin has crushed its own rings twice before with icon-sizing rules
+      that matched a wrapper the ring happens to live inside, and a host
+      theme can do the same thing from outside. A floor on the container and
+      on the SVG makes that impossible rather than merely unlikely.
+
+   2. CONTRAST. The track circle carries an inline stroke of rgba(0,0,0,0.1)
+      as its presentation attribute. Over a dark banner photograph that is
+      invisible, and at 0% the fill arc is zero-length -- so the whole ring
+      disappears. The stylesheet already sets a light track for banners with
+      an image; this repeats it at a specificity nothing in a theme is likely
+      to beat, and gives the no-image case a floor too. Presentation
+      attributes lose to any declaration, so these win wherever the
+      stylesheet is loaded at all.
+
+   The templates were changed in the same release so the inline attribute is
+   itself a visible colour: that is the state a site sees if this stylesheet
+   is stale in its cache, which is the one condition CSS cannot fix. */
+body.format-aicourse .aicourse-progress-ring-container {
+    min-inline-size: var(--acf-ring-inline);
+    min-block-size: var(--acf-ring-inline);
+}
+
+body.format-aicourse .aicourse-hero-banner .aicourse-progress-ring-container {
+    min-inline-size: var(--acf-hero-ring-image);
+    min-block-size: var(--acf-hero-ring-image);
+}
+
+/* The SVG itself is deliberately NOT given a size floor. In image mode it is inset 4px inside the
+   container (rule at ~10833, which is more specific than anything written here and wins), so a
+   min-inline-size of 100% would make a 100%-wide SVG start 4px in and overflow the panel by 4px on
+   the trailing edge. The container's floor above is what keeps the ring from being crushed; the
+   SVG is `inset`-positioned and follows it. */
+
+body.format-aicourse .aicourse-hero-banner .aicourse-progress-ring-bg {
+    stroke: var(--acf-track-media);
+}
+
+body.format-aicourse .aicourse-hero-banner:not(.aicourse-hero-has-image) .aicourse-progress-ring-bg {
+    stroke: var(--acf-track);
+}
+
+/* --- Course index row height ---------------------------------------------
+   Reported as looking cramped. The two row types are raised by DIFFERENT
+   mechanisms, because they are built differently and treating them alike
+   would have broken one of them:
+
+   * A section band's height is set outright by --acf-index-band-height (34px
+     since 2.1.153), with its padding deliberately at zero -- the comment on
+     that token says so. Adding padding here would have stacked on top of the
+     explicit height rather than replacing it, giving a 58px band from a 34px
+     one. The token is raised instead, which is the single number that
+     rule exists to expose.
+
+   * An activity row has no explicit height; it is padding plus its line box.
+     3px a side takes it from ~38px to ~44px, which is also the WCAG 2.2
+     SC 2.5.8 target size, so the row stops being a near-miss on that as well.
+
+   Both are appended rather than edited in place so the reasoning at the
+   original sites stays readable, and both sit later in the file than every
+   rule they need to beat -- checked, not assumed: the section band is set at
+   10866 and the row's padding shorthand at 10047. */
+body.aicourse-player-on {
+    --acf-index-band-height: 44px;
+}
+
+body.aicourse-player-on .courseindex-item.aicourse-player-row {
+    padding-block: 10px;
+}
+
+/* --- Site footer: themes that do not use core's own footer element --------
+   2.1.191. The hide-footer feature has existed since 2.1.50, but its selector list was
+   `#page-footer, .footer-popover` -- core's markup, and theme_academi's. A site running a theme
+   that renders its own <footer> outside #page kept its copyright band with the setting on, which
+   reads as the setting being broken rather than as the selector missing a case.
+
+   The classes and the :not() guards are the ones the original rule established and are unchanged:
+   this widens WHAT is matched, not WHO it is hidden from, and edit mode is still exempt so a
+   teacher never loses the sticky bulk-action bar. `.stickyfooter` remains deliberately unmatched
+   for that same reason.
+
+   `body > footer` cannot be written inside the descendant list -- it would ask for a <body> inside
+   a <body> -- so the direct-child case is its own rule below. */
+body.format-aicourse.aicourse-hidefooter-all:not(.editing):not(.editingon):not(.editing-mode)
+:is(footer#page-footer, .footer-dark, .footer-light, [data-region="footer"], #page > footer,
+footer[role="contentinfo"]),
+body.format-aicourse.aicourse-hidefooter-students:not(.aicourse-can-edit):not(.editing):not(.editingon):not(.editing-mode)
+:is(footer#page-footer, .footer-dark, .footer-light, [data-region="footer"], #page > footer,
+footer[role="contentinfo"]) {
+    display: none;
+}
+
+body.format-aicourse.aicourse-hidefooter-all:not(.editing):not(.editingon):not(.editing-mode) > footer,
+body.format-aicourse.aicourse-hidefooter-students:not(.aicourse-can-edit):not(.editing):not(.editingon):not(.editing-mode)
+> footer {
+    display: none;
+}
+
+/* --- AI banner modal: the teacher's own prompt detail ---------------------
+   2.1.191. The modal is a dark surface, and a textarea left to the browser's
+   defaults renders white-on-white inside it -- the field looked like a hole
+   punched in the card. Every colour is therefore stated rather than
+   inherited, including the placeholder, which browsers derive from their own
+   default rather than from `color`.
+
+   Sized in rows plus a min-block-size rather than a fixed height so the field
+   grows with the user's own text size, and resize is limited to the block
+   axis: a horizontally resizable field inside a fixed-width dialog can be
+   dragged past the card's edge. */
+body.format-aicourse .aicourse-bgen-extra {
+    margin-block-end: var(--acf-space-5);
+}
+
+body.format-aicourse .aicourse-bgen-extra-label {
+    display: block;
+    margin-block-end: var(--acf-space-2);
+    font-size: var(--acf-font-size-sm);
+    font-weight: var(--acf-weight-semibold);
+    color: var(--acf-inverse-text);
+}
+
+body.format-aicourse .aicourse-bgen-extra-input {
+    display: block;
+    inline-size: 100%;
+    min-block-size: 4.5rem;
+    box-sizing: border-box;
+    padding: var(--acf-space-3);
+    border: 1px solid var(--acf-ai-border);
+    border-radius: var(--acf-radius-lg);
+    background: var(--acf-inverse-ai-wash);
+    color: var(--acf-inverse-text);
+    font-family: inherit;
+    font-size: var(--acf-font-size-md);
+    line-height: var(--acf-leading-relaxed);
+    resize: vertical;
+}
+
+body.format-aicourse .aicourse-bgen-extra-input::placeholder {
+    color: var(--acf-inverse-text-muted);
+    opacity: 1;
+}
+
+body.format-aicourse .aicourse-bgen-extra-input:focus-visible {
+    outline: 2px solid var(--acf-ai-400);
+    outline-offset: 2px;
+    border-color: var(--acf-ai-400);
+}
+
+body.format-aicourse .aicourse-bgen-extra-hint {
+    margin: var(--acf-space-2) 0 0;
+    font-size: var(--acf-font-size-xs);
+    line-height: var(--acf-leading-normal);
+    color: var(--acf-inverse-text-muted);
+}
+
+/* --- Logo band: themes whose band is their own navbar ---------------------
+   2.1.192. The immersive rules matched `.header-main, #page-header` -- core's markup, checked
+   against theme_academi at the time for the elements it shares with core. theme_academi renders
+   the band the setting is actually about somewhere else entirely: its own
+
+       <nav class="navbar navbar-light bg-faded navbar-expand">
+         <a class="navbar-brand has-logo">...</a>
+         <div class="primary-navigation">Dashboard / My courses / Site administration</div>
+       </nav>
+
+   which the old selector never touched, so the setting appeared to do nothing on that theme.
+
+   `.navbar` on its own is far too blunt to hide: on Boost the element with that class carries the
+   user menu, the notification and message popovers and the drawer toggles, and hiding it would
+   take a student's way of logging out. The two :not(:has()) guards are what make this safe rather
+   than lucky -- they say "a navbar that is ONLY a logo and a nav", which is precisely the thing
+   the setting exists to remove, and they exclude every toolbar that carries controls by testing
+   for the controls themselves rather than by naming themes.
+
+   Requiring a brand keeps it from matching a bare secondary nav; the plugin's own hero panel
+   already offers Home and My courses, so nothing here is a learner's only route anywhere.
+
+   :has() is unsupported only on engines older than every browser Moodle 4.4 targets, and there
+   the rule simply does not apply -- the band stays, which is the previous behaviour. */
+body.format-aicourse.aicourse-hidelogoband-all:not(.editing):not(.editingon):not(.editing-mode)
+nav.navbar:has(.navbar-brand):not(:has(.usermenu)):not(:has(#user-menu-toggle)):not(:has([data-region="drawer-toggle"])):not(:has(.editmode-switch-form)),
+body.format-aicourse.aicourse-hidelogoband-students:not(.aicourse-can-edit):not(.editing):not(.editingon):not(.editing-mode)
+nav.navbar:has(.navbar-brand):not(:has(.usermenu)):not(:has(#user-menu-toggle)):not(:has([data-region="drawer-toggle"])):not(:has(.editmode-switch-form)) {
+    /* stylelint-disable-next-line declaration-no-important */
+    display: none !important;
+}
+
+/* --- Footer: themes whose footer is a DIV, not a <footer> -----------------
+   2.1.193/2.1.194. theme_academi emits
+
+       <div id="footer">
+         <div class="footer-bottom"><p>Copyright ... </p></div>      <- the visible band
+         <div data-region="footer-container-popover">...</div>       <- the "?" button
+         <div class="footer-content-popover">...</div>               <- the popover's contents
+       </div>
+
+   Every selector added in 2.1.191 missed it, and the reason is worth writing down: they all
+   assumed the element was a <footer> (or core's #page-footer). This one is a plain div with an
+   id, so `footer[role="contentinfo"]`, `#page > footer` and `body > footer` could none of them
+   match. Checking against core's markup and one other theme was not enough.
+
+   2.1.193 hid only `.footer-bottom`, holding back from the container because the popover inside it
+   carries "You are logged in as ... (Log out)". 2.1.194 takes the whole thing, which was asked for
+   and is safe on the evidence: that popover is a SECOND route to logging out, not the only one --
+   the primary is the user menu in the site header, which this plugin never touches. Nothing in the
+   footer is a learner's sole route anywhere.
+
+   Hiding the container does not disturb the page's JavaScript. Moodle emits every queued script
+   inside that popover, and `display: none` has no bearing on whether a script runs -- scripts
+   execute when the parser reaches them, long before style is applied to their container. Verified
+   rather than assumed: /root/harness/footband.js asserts the modules inside still execute.
+
+   `.stickyfooter` is still deliberately unmatched, and edit mode is still exempt, so a teacher
+   never loses the bulk-action bar. */
+body.format-aicourse.aicourse-hidefooter-all:not(.editing):not(.editingon):not(.editing-mode)
+:is(#footer, #page-footer),
+body.format-aicourse.aicourse-hidefooter-students:not(.aicourse-can-edit):not(.editing):not(.editingon):not(.editing-mode)
+:is(#footer, #page-footer) {
+    display: none;
 }

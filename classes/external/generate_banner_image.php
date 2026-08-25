@@ -53,6 +53,15 @@ class generate_banner_image extends external_api {
     public static function execute_parameters(): external_function_parameters {
         return new external_function_parameters([
             'courseid' => new external_value(PARAM_INT, 'Id of the course to generate a banner for'),
+            // 2.1.191: the teacher's own extra direction for the image, e.g. "warm evening light,
+            // no people". Optional and defaulted, so an older cached courseformat.js that does not
+            // send it still calls this function successfully rather than failing validation.
+            'extraprompt' => new external_value(
+                PARAM_TEXT,
+                'Optional extra detail from the teacher, added to the image prompt',
+                VALUE_DEFAULT,
+                ''
+            ),
         ]);
     }
 
@@ -62,11 +71,12 @@ class generate_banner_image extends external_api {
      * @param int $courseid Id of the course.
      * @return array The URL of the stored image and the credits it cost.
      */
-    public static function execute(int $courseid): array {
+    public static function execute(int $courseid, string $extraprompt = ''): array {
         global $CFG, $USER;
 
         $params = self::validate_parameters(self::execute_parameters(), [
             'courseid' => $courseid,
+            'extraprompt' => $extraprompt,
         ]);
 
         $course = get_course($params['courseid']);
@@ -106,8 +116,18 @@ class generate_banner_image extends external_api {
         // connection was already severed upstream of PHP.
         //
         // The browser now gets an answer immediately and polls get_banner_status for the result.
+        // 2.1.191: the extra prompt travels with the task, not in a session or a cache. The task
+        // may run minutes later in cron, in a different process, for a user who has since logged
+        // out -- custom data is the only thing that survives that journey. Capped at 300
+        // characters here, which is the authoritative cap; the textarea's maxlength and the JS
+        // slice are conveniences, and neither is trusted.
+        $extra = \core_text::substr(trim($params['extraprompt']), 0, 300);
+
         $task = new \format_aicourse\task\generate_banner();
-        $task->set_custom_data(['courseid' => (int) $course->id]);
+        $task->set_custom_data([
+            'courseid' => (int) $course->id,
+            'extraprompt' => $extra,
+        ]);
         $task->set_component('format_aicourse');
         self::set_status((int) $course->id, 'queued', '');
         \core\task\manager::queue_adhoc_task($task);
@@ -174,7 +194,7 @@ class generate_banner_image extends external_api {
      * @param \stdClass $course The course to generate for.
      * @return string The moodle_url of the stored image.
      */
-    public static function generate_and_store(\stdClass $course): string {
+    public static function generate_and_store(\stdClass $course, string $extraprompt = ''): string {
         global $CFG;
 
         $context = \context_course::instance($course->id);
@@ -184,10 +204,20 @@ class generate_banner_image extends external_api {
         $postdata = [
             'siteUrl' => $siteid,
             'apiKey' => $apikey,
-            'courseName' => format_string($course->fullname),
+            // ACF-FIX-2.1.191: the image service is given a course name to read, not markup to
+            // render. It was being sent "Research Design &amp; Industry Context".
+            'courseName' => \format_aicourse\local\text::plain($course->fullname, $context),
             'courseShortname' => $course->shortname,
             'courseId' => $course->id,
         ];
+
+        // 2.1.191: sent only when there is something to send. An empty key would ask the image
+        // service to reason about a blank instruction, and the parameter is new on this side --
+        // omitting it entirely is what a service that has not been updated for it expects.
+        $extraprompt = trim($extraprompt);
+        if ($extraprompt !== '') {
+            $postdata['extraDetail'] = \core_text::substr($extraprompt, 0, 300);
+        }
 
         // ACF-FIX-2.1.10: 180 seconds, not 90.
         //

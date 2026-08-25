@@ -187,7 +187,7 @@
             }}{{#progressenabled}}<div class="aicourse-hero-progress">{{!
                 }}<div class="aicourse-progress-ring-container{{#iscomplete}} completed{{/iscomplete}}" data-percentage="{{percentage}}" data-courseid="{{courseid}}" data-radius="{{radius}}" role="progressbar" aria-valuenow="{{percentage}}" aria-valuemin="0" aria-valuemax="100" aria-valuetext="{{progresstext}}" aria-label="{{progresslabel}}">{{!
                     }}<svg aria-hidden="true" focusable="false" class="aicourse-progress-ring" viewBox="0 0 200 200" style="transform: rotate(-90deg);">{{!
-                        }}<circle class="aicourse-progress-ring-bg" cx="100" cy="100" r="{{radius}}" fill="none" stroke="rgba(0,0,0,0.1)" stroke-width="{{strokewidth}}"/>{{!
+                        }}<circle class="aicourse-progress-ring-bg" cx="100" cy="100" r="{{radius}}" fill="none" stroke="rgba(255,255,255,0.28)" stroke-width="{{strokewidth}}"/>{{!
                         }}<circle class="aicourse-progress-ring-fill" cx="100" cy="100" r="{{radius}}" fill="none" stroke="#357a32" stroke-width="{{strokewidth}}" stroke-linecap="round" stroke-dasharray="{{circumference}}" stroke-dashoffset="{{circumference}}" data-target-offset="{{targetoffset}}"/>{{!
                     }}</svg>{{!
                     }}{{#iscomplete}}<span class="aicourse-progress-ring-text aicourse-progress-complete" data-target="{{percentage}}"><svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg><span class="accesshide">{{progresstext}}</span></span>{{/iscomplete}}{{!
