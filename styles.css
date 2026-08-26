@@ -7996,7 +7996,7 @@ body.format-aicourse:not(.editing):not(.editingon):not(.editing-mode) #region-ma
    prefix, never in full. Hiding the outer wrapper is enough when the whole structure is nested;
    matching the inner elements as well covers a theme that renders the nav or the list outside
    that wrapper, which is why the bar could survive on one theme while disappearing on another. */
-body.format-aicourse.aicourse-hidenav-students:not(.aicourse-can-edit):not(.editing):not(.editingon):not(.editing-mode)
+body.format-aicourse.aicourse-hidenav-students:not(.aicourse-is-grader):not(.editing):not(.editingon):not(.editing-mode)
 :is(.secondary-navigation, nav.moremenu.navigation, .moremenu, ul.more-nav, [id^="moremenu-"]),
 body.format-aicourse.aicourse-hidenav-all:not(.editing):not(.editingon):not(.editing-mode)
 :is(.secondary-navigation, nav.moremenu.navigation, .moremenu, ul.more-nav, [id^="moremenu-"]) {
@@ -8723,7 +8723,7 @@ body.format-aicourse:is(.aicourse-hidenav-all, .aicourse-hidenav-students)
    Never in edit mode. */
 body.format-aicourse.aicourse-hidelogoband-all:not(.editing):not(.editingon):not(.editing-mode)
 :is(.header-main, #page-header),
-body.format-aicourse.aicourse-hidelogoband-students:not(.aicourse-can-edit):not(.editing):not(.editingon):not(.editing-mode)
+body.format-aicourse.aicourse-hidelogoband-students:not(.aicourse-is-grader):not(.editing):not(.editingon):not(.editing-mode)
 :is(.header-main, #page-header) {
     /* stylelint-disable-next-line declaration-no-important */
     display: none !important;
@@ -8782,7 +8782,7 @@ body.format-aicourse .secondary-navigation.aicourse-coursenav-moved .nav-link.ac
    mid-edit. The `:not(.editing)` guards make that doubly certain. */
 body.format-aicourse.aicourse-hidefooter-all:not(.editing):not(.editingon):not(.editing-mode)
 :is(#page-footer, .footer-popover),
-body.format-aicourse.aicourse-hidefooter-students:not(.aicourse-can-edit):not(.editing):not(.editingon):not(.editing-mode)
+body.format-aicourse.aicourse-hidefooter-students:not(.aicourse-is-grader):not(.editing):not(.editingon):not(.editing-mode)
 :is(#page-footer, .footer-popover) {
     display: none;
 }
@@ -8817,7 +8817,7 @@ body.format-aicourse.aicourse-hidefooter-students:not(.aicourse-can-edit):not(.e
    list, whatever the theme labels it. */
 body.format-aicourse.aicourse-hidecrumb-all:not(.editing):not(.editingon):not(.editing-mode)
 :is(#page-navbar, .page-navbar, nav:has(> .breadcrumb), .breadcrumb),
-body.format-aicourse.aicourse-hidecrumb-students:not(.aicourse-can-edit):not(.editing):not(.editingon):not(.editing-mode)
+body.format-aicourse.aicourse-hidecrumb-students:not(.aicourse-is-grader):not(.editing):not(.editingon):not(.editing-mode)
 :is(#page-navbar, .page-navbar, nav:has(> .breadcrumb), .breadcrumb) {
     display: none;
 }
@@ -8825,7 +8825,7 @@ body.format-aicourse.aicourse-hidecrumb-students:not(.aicourse-can-edit):not(.ed
 /* The header band. It is empty on a course page for a student — no heading, no
    breadcrumb — so with the tabs gone there is nothing left in it to show. */
 body.format-aicourse.aicourse-hidenav-all:not(.editing):not(.editingon):not(.editing-mode) #page-header,
-body.format-aicourse.aicourse-hidenav-students:not(.aicourse-can-edit):not(.editing):not(.editingon):not(.editing-mode) #page-header {
+body.format-aicourse.aicourse-hidenav-students:not(.aicourse-is-grader):not(.editing):not(.editingon):not(.editing-mode) #page-header {
     display: none;
 }
 
@@ -8840,7 +8840,7 @@ body.format-aicourse.aicourse-hidenav-students:not(.aicourse-can-edit):not(.edit
    wrappers are what this rule is actually for; the comment above says so. */
 body.format-aicourse.aicourse-hidenav-all:not(.editing):not(.editingon):not(.editing-mode)
 :is(#page-content, #region-main-box, #region-main, .main-inner),
-body.format-aicourse.aicourse-hidenav-students:not(.aicourse-can-edit):not(.editing):not(.editingon):not(.editing-mode)
+body.format-aicourse.aicourse-hidenav-students:not(.aicourse-is-grader):not(.editing):not(.editingon):not(.editing-mode)
 :is(#page-content, #region-main-box, #region-main, .main-inner) {
     margin-block-start: 0;
     padding-block-start: 0;
@@ -8849,7 +8849,7 @@ body.format-aicourse.aicourse-hidenav-students:not(.aicourse-can-edit):not(.edit
 /* And the banner keeps its own 12px, so the cards sit one gutter below it
    rather than welded to its lower edge. */
 body.format-aicourse.aicourse-hidenav-all:not(.editing):not(.editingon):not(.editing-mode) .aicourse-cards-container,
-body.format-aicourse.aicourse-hidenav-students:not(.aicourse-can-edit):not(.editing):not(.editingon):not(.editing-mode) .aicourse-cards-container {
+body.format-aicourse.aicourse-hidenav-students:not(.aicourse-is-grader):not(.editing):not(.editingon):not(.editing-mode) .aicourse-cards-container {
     margin-block-start: var(--acf-space-4);
 }
 
@@ -9738,7 +9738,7 @@ body.format-aicourse .aicourse-hero-banner {
    moment editing is switched on, like every other visibility rule here. */
 body.format-aicourse.aicourse-hidegeneral-all:not(.editing):not(.editingon):not(.editing-mode)
 :is(.courseindex-section[data-number="0"], .aicourse-card[data-section="0"]),
-body.format-aicourse.aicourse-hidegeneral-students:not(.aicourse-can-edit):not(.editing):not(.editingon):not(.editing-mode)
+body.format-aicourse.aicourse-hidegeneral-students:not(.aicourse-is-grader):not(.editing):not(.editingon):not(.editing-mode)
 :is(.courseindex-section[data-number="0"], .aicourse-card[data-section="0"]) {
     display: none;
 }
@@ -13207,14 +13207,14 @@ body.aicourse-player-on .courseindex-item.aicourse-player-row {
 body.format-aicourse.aicourse-hidefooter-all:not(.editing):not(.editingon):not(.editing-mode)
 :is(footer#page-footer, .footer-dark, .footer-light, [data-region="footer"], #page > footer,
 footer[role="contentinfo"]),
-body.format-aicourse.aicourse-hidefooter-students:not(.aicourse-can-edit):not(.editing):not(.editingon):not(.editing-mode)
+body.format-aicourse.aicourse-hidefooter-students:not(.aicourse-is-grader):not(.editing):not(.editingon):not(.editing-mode)
 :is(footer#page-footer, .footer-dark, .footer-light, [data-region="footer"], #page > footer,
 footer[role="contentinfo"]) {
     display: none;
 }
 
 body.format-aicourse.aicourse-hidefooter-all:not(.editing):not(.editingon):not(.editing-mode) > footer,
-body.format-aicourse.aicourse-hidefooter-students:not(.aicourse-can-edit):not(.editing):not(.editingon):not(.editing-mode)
+body.format-aicourse.aicourse-hidefooter-students:not(.aicourse-is-grader):not(.editing):not(.editingon):not(.editing-mode)
 > footer {
     display: none;
 }
@@ -13302,7 +13302,7 @@ body.format-aicourse .aicourse-bgen-extra-hint {
    the rule simply does not apply -- the band stays, which is the previous behaviour. */
 body.format-aicourse.aicourse-hidelogoband-all:not(.editing):not(.editingon):not(.editing-mode)
 nav.navbar:has(.navbar-brand):not(:has(.usermenu)):not(:has(#user-menu-toggle)):not(:has([data-region="drawer-toggle"])):not(:has(.editmode-switch-form)),
-body.format-aicourse.aicourse-hidelogoband-students:not(.aicourse-can-edit):not(.editing):not(.editingon):not(.editing-mode)
+body.format-aicourse.aicourse-hidelogoband-students:not(.aicourse-is-grader):not(.editing):not(.editingon):not(.editing-mode)
 nav.navbar:has(.navbar-brand):not(:has(.usermenu)):not(:has(#user-menu-toggle)):not(:has([data-region="drawer-toggle"])):not(:has(.editmode-switch-form)) {
     /* stylelint-disable-next-line declaration-no-important */
     display: none !important;
@@ -13337,7 +13337,7 @@ nav.navbar:has(.navbar-brand):not(:has(.usermenu)):not(:has(#user-menu-toggle)):
    never loses the bulk-action bar. */
 body.format-aicourse.aicourse-hidefooter-all:not(.editing):not(.editingon):not(.editing-mode)
 :is(#footer, #page-footer),
-body.format-aicourse.aicourse-hidefooter-students:not(.aicourse-can-edit):not(.editing):not(.editingon):not(.editing-mode)
+body.format-aicourse.aicourse-hidefooter-students:not(.aicourse-is-grader):not(.editing):not(.editingon):not(.editing-mode)
 :is(#footer, #page-footer) {
     display: none;
 }

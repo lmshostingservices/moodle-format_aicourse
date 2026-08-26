@@ -2,6 +2,45 @@
 
 All notable changes to this plugin will be documented in this file.
 
+## [2.1.201] - 2026-08-26
+
+### Fixed
+
+- **"Hide from students" was also hiding from non-editing teachers.** Every `-students`
+  visibility rule in `styles.css` was scoped with `:not(.aicourse-can-edit)`, and that body class
+  is added only for a user holding `moodle/course:update`. A non-editing teacher does not hold it,
+  so the course tabs, the breadcrumb, the site footer, the site logo band and the General section
+  were all taken away from them as though they were learners.
+
+  The most damaging case was the course tabs: on an activity page that row is the secondary
+  navigation, so a non-editing teacher lost the assignment's **Submissions** tab and had no route
+  to the submissions they are enrolled to mark. A cosmetic setting was removing a marking
+  workflow.
+
+  All twelve rules are now scoped with `:not(.aicourse-is-grader)`. That class comes from
+  `permissions::is_grader()`, which recognises every teacher archetype — `teacher`,
+  `editingteacher`, `manager`, `coursecreator` — plus custom roles carrying teacher-like
+  capabilities, and is a strict superset of `aicourse-can-edit`, so nothing an editing teacher saw
+  before is lost.
+
+  `aicourse-can-edit` is untouched and still does its own job: the two rules that deliberately
+  style the *non-editing* grader (`#page-header h1`, the hero sticky wrap, both
+  `is-grader:not(.can-edit)`) are unchanged.
+
+  Role switching is unaffected: `is_grader()` already returns false under "Switch role to…", so a
+  teacher previewing the course as a student still sees what a student sees.
+
+- **The "Course tabs in the site header" placement excluded non-editing teachers.** Gated on
+  `moodle/course:update`, so with the tab bar restored to non-editing teachers they would have
+  kept it in its default position while editing teachers saw it in the header. Now gated on the
+  same `is_grader()` test.
+
+### Changed
+
+- Settings help text for the five visibility settings now says explicitly that "Hide from
+  students" keeps the item for **all course staff, including non-editing teachers**, rather than
+  the ambiguous "teachers".
+
 ## [2.1.200] - 2026-08-25
 
 ### Fixed

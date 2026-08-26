@@ -173,14 +173,18 @@ class before_footer_html_generation {
             unset($e);
         }
 
-        // ACF-FIX-2.1.89: move the course tab bar into the site header, for users who can edit
+        // ACF-FIX-2.1.89: move the course tab bar into the site header, for course staff
         // and only when the course asks for it.
+        // ACF-FIX-2.1.201: was gated on moodle/course:update, which excludes non-editing
+        // teachers -- so with the bar restored to them (see styles.css) they would have kept it
+        // in its default position while editing teachers saw it in the header. The gate is now
+        // the same is_grader() test that decides whether the bar is visible to them at all.
         try {
             $navctx = \context_course::instance($COURSE->id);
             $navopts = course_get_format($COURSE)->get_format_options();
             if (
                 !empty($navopts['coursenavplace'])
-                    && has_capability('moodle/course:update', $navctx)
+                    && permissions::is_grader($navctx, false)
             ) {
                 $PAGE->requires->js_call_amd('format_aicourse/coursenav', 'init');
             }

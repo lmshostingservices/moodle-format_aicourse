@@ -468,7 +468,7 @@ $string['hidebreadcrumb_help'] = 'The breadcrumb is the small trail of links nea
 On this format the banner already tells you the course, the section and the activity you are in — so the breadcrumb usually repeats all three, immediately below it.
 
 * **Show** — leave it as your theme draws it.
-* **Hide from students** — teachers keep it, students do not.
+* **Hide from students** — all course staff keep it, including non-editing teachers. Students do not.
 * **Hide from everyone** — nobody sees it while reading the course.
 
 This hides a trail, it does not lock anything: every page it pointed at is still reachable, and still checks permissions in the normal way. It returns in Edit mode.';
@@ -479,7 +479,7 @@ $string['hidefooter_help'] = 'The site footer is the strip at the very bottom of
 On a course page it is the last thing a learner needs and the first thing between them and the end of the content.
 
 * **Show** — leave it as your theme draws it.
-* **Hide from students** — teachers keep it, students do not.
+* **Hide from students** — all course staff keep it, including non-editing teachers. Students do not.
 * **Hide from everyone** — nobody sees it while reading the course.
 
 The editing toolbar that appears at the bottom of the screen while you build a course is a different thing and is **never** hidden, so Move, Duplicate and Delete always stay available. The footer returns in Edit mode.';
@@ -489,7 +489,7 @@ $string['hidegeneral_desc'] = '<strong>What the General section is:</strong> eve
 $string['hidegeneral_help'] = 'Section 0 of a Moodle course is called "General". It usually holds only the Announcements forum, and on a course whose real content starts at Section 1 it is a heading learners read past before reaching anything they came for.
 
 * **Show** - leave it in the course index and the cards.
-* **Hide from students** - teachers still see it, students do not.
+* **Hide from students** - all course staff still see it, including non-editing teachers. Students do not.
 * **Hide from everyone** - nobody sees it while reading the course.
 
 This hides the section from view. It does not delete anything and does not stop announcements being posted or emailed - the forum still works exactly as before.
@@ -497,13 +497,13 @@ This hides the section from view. It does not delete anything and does not stop 
 It always comes back in edit mode, so a teacher can still reach it.';
 $string['hidesecondarynav'] = 'Course tabs (Course, Settings, Participants, Grades, Reports)';
 $string['hidesecondarynav_all'] = 'Hide from everyone';
-$string['hidesecondarynav_desc'] = '<strong>What the course tabs are:</strong> the row reading <em>Course, Settings, Participants, Grades, Reports, More</em> that Moodle puts under the course name.<br /><br /><strong>What this does:</strong> hides that row.<br /><br /><em>Why you might:</em> almost none of it is for learners — Settings, Reports and Participants are teacher tools. \'Hide from students\' keeps the tabs for staff and clears them away for everyone else.';
+$string['hidesecondarynav_desc'] = '<strong>What the course tabs are:</strong> the row reading <em>Course, Settings, Participants, Grades, Reports, More</em> that Moodle puts under the course name.<br /><br /><strong>What this does:</strong> hides that row.<br /><br /><em>Why you might:</em> almost none of it is for learners — Settings, Reports and Participants are teacher tools. \'Hide from students\' keeps the tabs for course staff — teachers, non-editing teachers and managers alike — and clears them away for everyone else.<br /><br />A non-editing teacher needs this row as much as an editing one does: on an activity page it is the row carrying the assignment\'s <em>Submissions</em> tab.';
 $string['hidesecondarynav_help'] = 'The Course navigation tabs are the row of links Moodle puts above your course content: Course, Settings, Participants, Grades, Reports and More.
 
 This format already gives you the same places to go — the banner has quick links, and the course index lists every section and activity — so the tabs are often just a duplicate row taking up space.
 
 * **Show** — leave them exactly as your theme draws them.
-* **Hide from students** — teachers and anyone who can edit the course still see them. Students do not.
+* **Hide from students** — all course staff still see them: teachers, non-editing teachers, managers and anyone who can edit the course. Students do not.
 * **Hide from everyone** — nobody sees them while simply reading the course.
 
 **They always come back when you turn Edit mode on**, so you never lose them while you are building the course.
@@ -607,7 +607,7 @@ $string['immersive_help'] = 'Most themes put two bands across the top of every p
 This setting hides the **second** band only, which is often 100–150 pixels of height on every single course page.
 
 * **Show** — leave both bands alone.
-* **Hide from students** — teachers keep the logo band, students do not.
+* **Hide from students** — all course staff keep the logo band, including non-editing teachers. Students do not.
 * **Hide from everyone** — nobody sees the logo band while reading the course.
 
 **The thin bar with your profile and the Edit mode switch is never hidden**, so nothing is taken away — and if you turn on the player sidebar, your logo appears there instead.
