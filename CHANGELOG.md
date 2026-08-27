@@ -2,6 +2,37 @@
 
 All notable changes to this plugin will be documented in this file.
 
+## [2.1.202] - 2026-08-26
+
+### Fixed - the site-footer setting was hiding every core modal's buttons
+
+- **A core save/cancel dialog rendered with no footer.** The buttons were in the DOM and fully
+  wired; they simply never appeared, so the dialog could not be confirmed or cancelled.
+
+  The "hide the site footer" rule matched `[data-region="footer"]` as a descendant of
+  `body.format-aicourse`. That attribute is not ours — Moodle's own modal template emits its
+  button row as `<div class="modal-footer" data-region="footer">` — so the rule reached inside
+  every core dialog on the page.
+
+  Reported against `mod_contentcreator`, whose "Reset & Start Over" confirmation became
+  unreachable and left authors unable to clear a module in a bad state. Nothing about it was
+  specific to that plugin: every core `ModalSaveCancel` on these pages was affected.
+
+  **The `:not(.editing)` guards did not help.** Moodle does not add the `editing` body class on an
+  activity's view page even with edit mode switched on — so an activity page was exactly where the
+  rule applied, and exactly where the dialogs live.
+
+  Now scoped `[data-region="footer"]:not(.modal-footer)`. That is the narrowest fix that keeps the
+  case the attribute was added for in 2.1.192 — a theme rendering its page footer with that
+  attribute, which may be a `<div>` and so cannot simply be narrowed to
+  `footer[data-region="footer"]`. Core always pairs the attribute with the `modal-footer` class on
+  a dialog and never on a page footer.
+
+  Verified by rendering the real stylesheet against core's real modal markup across six viewer
+  and page states: the modal footer is visible in all six, the page footer still hides for
+  hide-from-all and for students, still shows for staff and in edit mode, and a theme footer using
+  the attribute — as either a `<footer>` or a `<div>` — is still covered.
+
 ## [2.1.201] - 2026-08-26
 
 ### Fixed

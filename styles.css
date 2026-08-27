@@ -13203,12 +13203,36 @@ body.aicourse-player-on .courseindex-item.aicourse-player-row {
    for that same reason.
 
    `body > footer` cannot be written inside the descendant list -- it would ask for a <body> inside
-   a <body> -- so the direct-child case is its own rule below. */
+   a <body> -- so the direct-child case is its own rule below.
+
+   FIX-ACF-MODAL-FOOTER (2.1.202): `[data-region="footer"]` is NOT ours. Core's modal template
+   emits its button row as `<div class="modal-footer" data-region="footer">`, so this descendant
+   selector reached inside every core save/cancel dialog on the page and computed its footer to
+   display:none -- buttons present in the DOM, fully wired, invisible. A confirmation dialog that
+   cannot be confirmed or cancelled.
+
+   Reported against mod_contentcreator, whose "Reset & Start Over" dialog became unreachable, but
+   nothing about it was specific to that plugin: every core ModalSaveCancel on these pages was
+   affected.
+
+   The `:not(.editing)` guards did not save it. Moodle does not add the `editing` body class on an
+   activity's view page even with edit mode switched on, so an activity page is exactly where the
+   rule applied and exactly where the dialogs live.
+
+   (That sentence originally wrote the path as mod-slash-star-slash-view.php. The star-slash
+   closed this comment early and silently swallowed the rule below it -- the harness caught it
+   because the "before" run had failed in specific rows and the "after" run failed in different
+   ones. Never write a glob containing a star followed by a slash inside a CSS comment.)
+
+   `:not(.modal-footer)` is the narrowest fix that keeps the case the attribute was added for --
+   a theme rendering its page footer as `[data-region="footer"]`, which may be a <div> and so
+   cannot simply be narrowed to `footer[data-region="footer"]`. Core always pairs the attribute
+   with the class on a modal, never on a page footer. */
 body.format-aicourse.aicourse-hidefooter-all:not(.editing):not(.editingon):not(.editing-mode)
-:is(footer#page-footer, .footer-dark, .footer-light, [data-region="footer"], #page > footer,
+:is(footer#page-footer, .footer-dark, .footer-light, [data-region="footer"]:not(.modal-footer), #page > footer,
 footer[role="contentinfo"]),
 body.format-aicourse.aicourse-hidefooter-students:not(.aicourse-is-grader):not(.editing):not(.editingon):not(.editing-mode)
-:is(footer#page-footer, .footer-dark, .footer-light, [data-region="footer"], #page > footer,
+:is(footer#page-footer, .footer-dark, .footer-light, [data-region="footer"]:not(.modal-footer), #page > footer,
 footer[role="contentinfo"]) {
     display: none;
 }
