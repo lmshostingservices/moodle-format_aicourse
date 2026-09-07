@@ -114,7 +114,9 @@ const placeHero = () => {
     } catch (e) {
         // CustomEvent is available everywhere this plugin supports; if it somehow is not, the page
         // keeps the layout it has rather than throwing during page setup.
-        window.console && window.console.debug && window.console.debug(e);
+        if (window.console && window.console.debug) {
+            window.console.debug(e);
+        }
     }
 };
 

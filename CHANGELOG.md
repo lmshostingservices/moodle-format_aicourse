@@ -2,6 +2,112 @@
 
 All notable changes to this plugin will be documented in this file.
 
+## [2.2.0] - 2026-09-07
+
+Minor version bump. Everything below is a fix; the bump marks the point at which the course
+index's selected-row styling stopped depending on the site's theme and brand colour, which is a
+visible behavioural change on sites whose theme primary is a light colour.
+
+### Fixed - the section you were editing vanished from the course index
+
+- **The selected row's name was painted in dark text on a dark background: 1.00:1 contrast,
+  which is invisible.** The highlight and the text colour were settled by two separate rules,
+  and a theme could take one and leave the other.
+
+  2.1.6 tried to keep the pair together with `!important` alone. That is only half the cascade:
+  importance is settled first, so `!important` beats any number of plain theme declarations —
+  but between two `!important` declarations, specificity still decides. The moment a theme
+  marks its own course-index rule `!important` it outranked ours, took the background, and left
+  our text colour untouched.
+
+  Two changes, both needed:
+
+  - The pair is now pinned on **both** axes. `:not(#_acf_never)` matches every element and
+    contributes an id's worth of specificity, giving these rules `(2,3,1)`. No class-only theme
+    selector can reach that however deeply it nests.
+  - The selected background is now **opaque**. It was an 8% brand tint over `transparent`, so on
+    a theme that paints the course index dark the drawer showed straight through the highlight
+    and took the row dark again. It now mixes into the raised surface instead.
+
+  The text rule also reaches core's inplace-editable wrapper (`.inplaceeditable`,
+  `.quickeditlink`), which is what the section name is wrapped in while edit mode is on — the
+  exact case reported — and now excludes `.badge`, which was being lettered in brand navy on the
+  "Highlighted" badge's own primary background.
+
+- **The same row also failed WCAG AA on any site whose theme primary is a light colour.** Found
+  while verifying the fix above, and worth calling out separately because nothing about it was
+  visible on our own site.
+
+  The selected row's text was `--acf-text-brand` — the site's brand at full strength — on a
+  background that is 8% of that same brand. The contrast ratio was therefore decided entirely by
+  how dark the site's theme primary happened to be. Measured: navy 8.51:1 and Boost blue 4.80:1
+  pass, but azure **2.31:1**, teal **2.00:1** and amber **1.96:1** all fail. Same code, same
+  release; the only variable is the customer's colour.
+
+  The selection is already carried by the tint, the border and the semibold weight, so the text
+  now uses `--acf-text-primary` like the rest of the index. Worst case across every brand,
+  colour scheme and theme combination tested is now **8.68:1**.
+
+  Verified against a theme that paints the drawer, the section container and the selected row
+  dark, in both plain and `!important` flavours, across five brand colours in light and dark
+  schemes. The same harness scores the previous release at 1.00:1.
+
+### Fixed - deleting the section you were viewing produced three errors and a broken redirect
+
+- **`Warning: Attempt to read property "id" on null in course/format/topics/lib.php on line 124`,
+  then a redirect to `/course/section.php?id` with no value, then
+  `Can't find data record in database table course_sections`.**
+
+  `course/editsection.php` keeps `sr` in the parameters it redirects back to *after* deleting the
+  section, and `sr` outranks the section number passed alongside it. So deleting the last section
+  of a course while viewing it on `course/section.php` — where `sr` is that very section — asks
+  `get_view_url()` for a section that was destroyed two lines earlier. `get_section()` returns
+  null and core dereferences it unchecked.
+
+  The knock-on effects follow from that one null: the warning produces output, so `redirect()`
+  can no longer send a `Location` header and prints a "Continue" page instead; rendering that
+  page writes `$SESSION->editedpages` after `redirect()` had already closed the session, which is
+  the third message, `Script ... mutated the session after it was closed`.
+
+  This is core behaviour and reproduces identically on stock `format_topics`, but it is this
+  format people see it through, so `get_view_url()` now handles it. It does **not** answer the
+  question itself — it drops the stale section return and lets core answer as if none had been
+  supplied. That matters because core's answer differs by version: Moodle 5.0 fixed this
+  upstream (`base::get_view_url()` resolves the return with `IGNORE_MISSING`) and also sets a
+  `#section-N` anchor so the reader still lands next to where the deleted section was, while 4.4
+  returns a bare course URL. Deferring keeps whichever is correct on the site it is running on.
+
+  Section returns that *do* resolve are unaffected. Four regression tests cover both directions,
+  including an assertion that a stale return produces exactly what core produces for no return
+  at all — an invariant rather than a hard-coded URL, so it cannot pass on one supported version
+  while silently regressing the other. Verified on 4.4.12+ and 5.0.9.
+
+### Fixed - the same row was invisible in player mode too, for a different reason
+
+- With the player sidebar on, the selected section heading was brand navy text on a brand navy
+  fill: **1.00:1**. The player deliberately paints that heading with a solid brand fill and white
+  text, but the generic selected-row colour rule was one class more specific than the player's,
+  so it took the text colour and left the fill. Both of the player's rules now carry the same
+  specificity tokens as the generic rule and name one more class, so the more specific intent
+  wins. Measured 9.72:1.
+
+### Build
+
+- `amd/build/bodyclass.min.js`, `chatbox.min.js` and `coursenav.min.js` each carried a duplicated
+  `//# sourceMappingURL` line. Harmless at runtime, visible in review; de-duplicated.
+- The three modules rebuilt for this release were checked against the 2.1.203 artefacts for an
+  identical exported API surface, along with the other thirteen, before packaging.
+
+## [2.1.203] - 2026-08-26
+
+### Fixed - "Too much data passed as arguments to js_call_amd" on every page offering the tour
+
+- The tour configuration carries a row per step, each with its own title and body text, so the
+  argument string ran past the 1024-character limit `js_call_amd()` warns about. The config now
+  travels in an inert `<script type="application/json">` element and the module reads it from the
+  page, mirroring what the player already did in the same file. The argument is still honoured,
+  so an older cached page keeps working.
+
 ## [2.1.202] - 2026-08-26
 
 ### Fixed - the site-footer setting was hiding every core modal's buttons

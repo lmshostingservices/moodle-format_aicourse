@@ -404,6 +404,14 @@ body.format-aicourse,
     --acf-brand-tint-strong: rgba(25, 72, 102, 0.18);
     --acf-brand-tint-strong: color-mix(in srgb, var(--acf-brand) 18%, transparent);
 
+    /* ACF-FIX-2.1.204. The course index's selected row needs an OPAQUE tint, not a
+       translucent one. A translucent highlight lets whatever the theme painted on the
+       drawer show through, so on a theme with a dark course index the row went dark and
+       the dark brand text on top of it disappeared. Mixing into the raised surface instead
+       of into `transparent` gives the same tint with nothing showing through. */
+    --acf-index-selected-bg: #edf0f3;
+    --acf-index-selected-bg: color-mix(in srgb, var(--acf-brand) 8%, var(--acf-surface-raised));
+
     /* --- Status: bg + fg + border declared together so every pair is
            auditable in one place. All ratios measured on the stated bg. ---- */
     --acf-status-done-bg: rgba(22, 163, 74, 0.13);
@@ -703,6 +711,10 @@ body.aicourse-force-dark :is(.aicadmin-wrap, .aitutor-report-index) {
     --acf-brand-tint-strong: rgba(148, 163, 184, 0.28);
     --acf-brand-tint-strong: color-mix(in srgb, var(--acf-brand) 42%, transparent);
 
+    /* Opaque selected row, dark scheme. See the light-scheme note. */
+    --acf-index-selected-bg: #2e3b4e;
+    --acf-index-selected-bg: color-mix(in srgb, var(--acf-brand) 22%, var(--acf-surface-raised));
+
     --acf-status-done-bg: rgba(22, 163, 74, 0.20);
     --acf-status-done-fg: var(--acf-green-300);   /* 7.93:1 on the tint */
     --acf-status-done-border: rgba(134, 239, 172, 0.34);
@@ -836,6 +848,10 @@ body.aicourse-force-dark :is(.aicadmin-wrap, .aitutor-report-index) {
         --acf-brand-tint: color-mix(in srgb, var(--acf-brand) 30%, transparent);
         --acf-brand-tint-strong: rgba(148, 163, 184, 0.28);
         --acf-brand-tint-strong: color-mix(in srgb, var(--acf-brand) 42%, transparent);
+
+        /* Opaque selected row, dark scheme. See the light-scheme note. */
+        --acf-index-selected-bg: #2e3b4e;
+        --acf-index-selected-bg: color-mix(in srgb, var(--acf-brand) 22%, var(--acf-surface-raised));
 
         --acf-status-done-bg: rgba(22, 163, 74, 0.20);
         --acf-status-done-fg: var(--acf-green-300);
@@ -5764,26 +5780,36 @@ body.format-aicourse .courseindex-item:hover {
     background: var(--acf-surface-hover);
 }
 
-/* ACF-FIX-2.1.6: the selected item's background and its text colour are forced together.
-   The background and the colour used to be settled by two rules of different specificity,
-   so a theme could win one and lose the other -- which is precisely what happens with
-   theme_academi, whose
+/* ACF-FIX-2.1.204: the selected item's background and its text colour must be won TOGETHER.
+   If a theme takes one and this sheet keeps the other, the row is painted in the theme's
+   dark primary and then lettered in this sheet's dark brand navy: a 1.00:1 contrast ratio,
+   which is literally invisible. That is what the course index showed for the section you
+   were editing -- its name vanished into the highlight.
+
+   2.1.6 tried to make the pair inseparable with !important alone. That is only half the
+   cascade. Importance is settled first, so !important beats any number of plain theme
+   declarations -- but between two !important declarations of the same origin, SPECIFICITY
+   still decides. theme_academi's
 
        .drawer .drawercontent .courseindex .courseindex-section
        .courseindex-sectioncontent .courseindex-item.pageitem { background-color: $primary; }
 
-   is (0,7,0). It outranked this rule's background while the colour rule below still won,
-   so the selected activity was painted in the theme's dark primary and then lettered in
-   this sheet's dark brand navy: unreadable, which is exactly what the drawer showed.
-   Raising specificity is an arms race against every theme, so the pair is pinned with
-   !important instead. That keeps the two declarations inseparable: whatever a theme does,
-   it can no longer take one and leave the other. */
-body.format-aicourse .courseindex .courseindex-item.pageitem,
-body.format-aicourse .courseindex .courseindex-item[data-selected="true"],
-body.format-aicourse .courseindex-item.pageitem,
-body.format-aicourse .courseindex-item[data-selected="true"] {
+   is (0,7,0). The moment a theme marks a rule like that !important it outranks the (0,4,1)
+   selector 2.1.6 used, takes the background, and leaves the colour rule below untouched --
+   the split reappears.
+
+   So the pair is pinned on BOTH axes. `:not(#_acf_never)` matches every element (no such id
+   exists anywhere in Moodle) and contributes an id's worth of specificity each time, giving
+   these rules (2,3,1). No class-only theme selector can reach that however deeply it nests,
+   so background and colour can no longer be separated by anything short of a theme that
+   writes three ids into one course-index selector. Two tokens, no arms race, and it does
+   not depend on which stylesheet a theme happens to load last. */
+body.format-aicourse .courseindex-item:is(.pageitem, [data-selected="true"]):not(#_acf_never):not(#_acf_never) {
     /* stylelint-disable-next-line declaration-no-important -- see the note above. */
-    background: var(--acf-brand-tint-weak) !important;
+    background: var(--acf-index-selected-bg) !important;
+    /* A theme gradient would otherwise paint over the flat colour set above. */
+    /* stylelint-disable-next-line declaration-no-important -- must travel with the background. */
+    background-image: none !important;
     /* stylelint-disable-next-line declaration-no-important -- must travel with the background. */
     border-color: var(--acf-brand-tint) !important;
 }
@@ -5797,16 +5823,27 @@ body.format-aicourse .courseindex-item .text-truncate {
     text-decoration: none;
 }
 
-body.format-aicourse .courseindex .courseindex-item.pageitem,
-body.format-aicourse .courseindex .courseindex-item[data-selected="true"],
-body.format-aicourse .courseindex .courseindex-item.pageitem :is(a, .text-truncate, span),
-body.format-aicourse .courseindex .courseindex-item[data-selected="true"] :is(a, .text-truncate, span),
-body.format-aicourse .courseindex-item.pageitem a,
-body.format-aicourse .courseindex-item[data-selected="true"] a,
-body.format-aicourse .courseindex-item.pageitem .text-truncate,
-body.format-aicourse .courseindex-item[data-selected="true"] .text-truncate {
+/* The other half of the pair. Same (2,3,1) base so it cannot be separated from the
+   background, and the descendant list now names the section-title elements as well as the
+   activity ones: in edit mode the section name is wrapped in core's inplace-editable markup
+   (.inplaceeditable > a.quickeditlink > span), so a rule that only reached `a` and `span`
+   left the theme free to colour the parts in between.
+
+   The colour is --acf-text-primary, NOT --acf-text-brand. The background here is 8% of the
+   site's brand over the page surface, and --acf-text-brand is that same brand at full
+   strength, so lettering one on the other means the contrast ratio is decided entirely by
+   how dark the site's theme primary happens to be. Measured across the brands Moodle sites
+   actually use: navy 8.51:1 and Boost blue 4.80:1 pass, but azure 2.31:1, teal 2.00:1 and
+   amber 1.96:1 all fail WCAG AA -- on the same code, with nothing wrong but the site's
+   colour choice. That is the shape of bug that gets reported as "it works for me but not
+   for them" and is never reproducible by the person fixing it. The selection is already
+   carried by the tint, the border and the semibold weight, so the text can safely stay the
+   colour the rest of the index uses and be legible on every site. */
+body.format-aicourse .courseindex-item:is(.pageitem, [data-selected="true"]):not(#_acf_never):not(#_acf_never),
+body.format-aicourse .courseindex-item:is(.pageitem, [data-selected="true"]):not(#_acf_never):not(#_acf_never)
+    :is(a, span, .text-truncate, .courseindex-link, .courseindex-sectionname, .inplaceeditable, .quickeditlink):not(.badge) {
     /* stylelint-disable-next-line declaration-no-important -- pinned to the background above. */
-    color: var(--acf-text-brand) !important;
+    color: var(--acf-text-primary) !important;
     font-weight: var(--acf-weight-semibold);
 }
 
@@ -10065,11 +10102,18 @@ body.aicourse-player-on .courseindex-item.courseindex-section-title:hover,
 body.aicourse-player-on .courseindex-item.courseindex-section-title:focus,
 body.aicourse-player-on .courseindex-item.courseindex-section-title:focus-within,
 body.aicourse-player-on .courseindex-item.courseindex-section-title.active,
-body.aicourse-player-on .courseindex-item.courseindex-section-title.pageitem,
+/* ACF-FIX-2.1.204: the two `.pageitem` selectors here carry the same `:not(#_acf_never)`
+   specificity tokens as the generic selected-row rule further up this sheet, for the same
+   reason and by the same convention. Without them the generic rule -- which is deliberately
+   pitched high enough that no theme can outrank it -- would also outrank THIS rule, and the
+   player's solid brand heading would be replaced by the generic pale highlight. The tokens
+   name one extra class than the generic rule does, so the more specific intent wins, and
+   both stay out of reach of a theme. */
+body.aicourse-player-on .courseindex-item.courseindex-section-title.pageitem:not(#_acf_never):not(#_acf_never),
 body.aicourse-player-on .courseindex-section.current
 .courseindex-item.courseindex-section-title,
 body.aicourse-player-on .drawercontent .courseindex
-.courseindex-item.courseindex-section-title.pageitem,
+.courseindex-item.courseindex-section-title.pageitem:not(#_acf_never):not(#_acf_never),
 body.aicourse-player-on .drawercontent .courseindex
 .courseindex-item.courseindex-section-title.active {
     /* stylelint-disable-next-line declaration-no-important */
@@ -10083,10 +10127,13 @@ body.aicourse-player-on .drawercontent .courseindex
 body.aicourse-player-on .courseindex-item.courseindex-section-title:hover a,
 body.aicourse-player-on .courseindex-item.courseindex-section-title:hover .courseindex-chevron,
 body.aicourse-player-on .courseindex-item.courseindex-section-title.active a,
-body.aicourse-player-on .courseindex-item.courseindex-section-title.pageitem a,
+/* Specificity tokens, as on the background rule above -- the pair has to travel together. */
+body.aicourse-player-on .courseindex-item.courseindex-section-title.pageitem:not(#_acf_never):not(#_acf_never) a,
+body.aicourse-player-on .courseindex-item.courseindex-section-title.pageitem:not(#_acf_never):not(#_acf_never)
+:is(span, .text-truncate, .courseindex-link),
 body.aicourse-player-on .courseindex-item.courseindex-section-title:focus-within a,
 body.aicourse-player-on .courseindex-item.courseindex-section-title.active .courseindex-chevron,
-body.aicourse-player-on .courseindex-item.courseindex-section-title.pageitem
+body.aicourse-player-on .courseindex-item.courseindex-section-title.pageitem:not(#_acf_never):not(#_acf_never)
 .courseindex-chevron {
     /* stylelint-disable-next-line declaration-no-important */
     background: transparent !important;

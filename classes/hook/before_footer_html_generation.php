@@ -122,7 +122,6 @@ class before_footer_html_generation {
                 }
 
                 $PAGE->requires->js_call_amd('format_aicourse/heroatop', 'init');
-
             }
         } catch (\Throwable $e) {
             unset($e);
@@ -236,11 +235,29 @@ class before_footer_html_generation {
         try {
             $tourcontext = \context_course::instance($COURSE->id);
             if (\format_aicourse\local\tour::should_offer($tourcontext)) {
-                $PAGE->requires->js_call_amd(
-                    'format_aicourse/tour',
-                    'init',
-                    [\format_aicourse\local\tour::get_js_config($tourcontext)]
+                // ACF-FIX-2.1.203: the config goes in the page, not in the JS call arguments.
+                //
+                // It carries a row per tour step, each with its own title and body text, so the
+                // argument string runs past the 1024-character limit js_call_amd() warns about on
+                // every page that offers the tour. Moodle's advice for this is to pass the data
+                // through the page rather than the call. This is the same treatment the player
+                // config above already uses.
+                //
+                // A script element of type application/json is inert: the browser does not execute
+                // it, and JSON_HEX_TAG means a "</script>" appearing in any step's text cannot
+                // close the element early.
+                $tourconfig = \format_aicourse\local\tour::get_js_config($tourcontext);
+                $encoded = json_encode(
+                    $tourconfig,
+                    JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_SLASHES
                 );
+                if ($encoded !== false) {
+                    $hook->add_html(
+                        '<script type="application/json" id="aicourse-tour-config">'
+                        . $encoded . '</script>'
+                    );
+                    $PAGE->requires->js_call_amd('format_aicourse/tour', 'init');
+                }
             }
         } catch (\Throwable $e) {
             // The tour is a nicety; never let it break a page render.
@@ -283,7 +300,6 @@ class before_footer_html_generation {
 
         // Ensure JS runs on section/activity/grade pages too.
         $PAGE->requires->js_call_amd('format_aicourse/courseformat', 'init');
-
 
         // Check course index visibility setting (bitmask: 1=home, 2=section, 4=activity).
         $courseindexsetting = isset($options['showcourseindex']) ? (int)$options['showcourseindex'] : 7;

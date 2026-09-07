@@ -493,14 +493,15 @@ class format_aicourse extends format_topics {
             // The other half of the decision lives in the footer hook, which reads bit 2 correctly
             // and pushes the class through bodyclass.js. That module can only ADD a class, never
             // remove one, so the two halves could not correct each other -- they could only ever
-            // add up:
+            // add up.
             //
-            //   showcourseindex = 4 (activity only):  bit 0 is clear, so THIS code hid the index on
-            //     an activity page. The hook wanted it shown and therefore added nothing. The index
-            //     was hidden on precisely the pages the setting exists to show it on.
-            //   showcourseindex = 1 (home only):      bit 0 is set, so nothing was added here. The
-            //     hook wanted it hidden and added the class AFTER the page had rendered -- the index
-            //     appeared, then vanished, taking the whole content column through a relayout.
+            // At showcourseindex = 4, activity pages only, bit 0 is clear, so this code hid the
+            // index on an activity page. The hook wanted it shown and therefore added nothing.
+            // The index was hidden on precisely the pages the setting exists to show it on.
+            //
+            // At showcourseindex = 1, course home only, bit 0 is set, so nothing was added here.
+            // The hook wanted it hidden and added the class after the page had rendered, so the
+            // index appeared and then vanished, taking the content column through a relayout.
             //
             // Values 3 and 7 agree by coincidence, which is why this survived: 7 is the default.
             //
@@ -1194,6 +1195,78 @@ class format_aicourse extends format_topics {
      */
     public function supports_components() {
         return true;
+    }
+
+    /**
+     * The URL to use for the specified course section.
+     *
+     * ACF-FIX-2.1.204. This exists only to survive a section return ('sr') that no longer
+     * points at a section. format_topics::get_view_url() does:
+     *
+     *     $sectioninfo = $this->get_section($sectionno);
+     *     return new moodle_url('/course/section.php', ['id' => $sectioninfo->id]);
+     *
+     * get_section() returns null for a section number that is not in the course, and nothing
+     * checks for it, so the null is dereferenced.
+     *
+     * That is reachable from ordinary editing. course/editsection.php keeps 'sr' in the
+     * parameters it redirects back to AFTER deleting the section:
+     *
+     *     course_delete_section($course, $sectioninfo, true, true);
+     *     $courseurl = course_get_url($course, $sectioninfo->section - 1, $returnparams);
+     *
+     * and 'sr' takes priority over the section number passed alongside it. So deleting the
+     * last section of a course while viewing it on course/section.php -- where 'sr' is that
+     * section -- asks for a section that was destroyed two lines earlier. The result is
+     *
+     *     Warning: Attempt to read property "id" on null in course/format/topics/lib.php
+     *
+     * followed by a redirect to "/course/section.php?id" with no value, and because the
+     * warning has already produced output, redirect() cannot send a Location header: it
+     * prints a "Continue" page instead, whose rendering then writes $SESSION->editedpages
+     * after redirect() had already closed the session, adding a third error about mutating
+     * a closed session. One null, three messages.
+     *
+     * This is core behaviour, not something this format introduces -- it reproduces
+     * identically on stock format_topics -- but the format is what people see it through,
+     * so it is handled here rather than waited on upstream. A section return that no longer
+     * resolves is not an error worth a stack trace: the honest answer is the course page.
+     *
+     * Moodle 5.0 fixed this upstream. core_courseformat\base::get_view_url() resolves the
+     * section return with IGNORE_MISSING and falls back to the course page itself, and 5.0's
+     * format_topics delegates to it rather than carrying its own copy. So on 5.0 this method
+     * must not answer the question itself, only decline to ask it the broken way -- which is
+     * why the guard below unsets the stale option and defers instead of returning a URL.
+     *
+     * @param int|stdClass|section_info $section Section object or number, or null for the course.
+     * @param array $options Options for the view URL; 'navigation' and 'sr' as per core.
+     * @return null|moodle_url
+     */
+    public function get_view_url($section, $options = []) {
+        $sectionno = null;
+        if (array_key_exists('sr', $options) && !is_null($options['sr'])) {
+            $sectionno = $options['sr'];
+        } else if (is_object($section)) {
+            $sectionno = $section->section;
+        } else {
+            $sectionno = $section;
+        }
+
+        $wantssectionpage = (!empty($options['navigation']) || array_key_exists('sr', $options))
+            && $sectionno !== null;
+
+        if ($wantssectionpage && $this->get_section($sectionno) === null) {
+            // Drop the stale section return and let core answer exactly as it would have been
+            // asked for the course page in the first place. Building the URL here instead would
+            // mean reimplementing core's answer, and core's answer is not the same on every
+            // supported version: 4.4 returns a bare course URL, while 5.0 also sets a
+            // "#section-N" anchor for the section that was asked for, so the reader still lands
+            // next to where the deleted one was. Deferring keeps both, and keeps them correct if
+            // either changes again.
+            unset($options['sr'], $options['navigation']);
+        }
+
+        return parent::get_view_url($section, $options);
     }
 
     /**

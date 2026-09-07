@@ -125,11 +125,10 @@ class activityhero implements named_templatable, renderable {
             // titles get.
             //
             // This is why "the activity heading is small again" kept coming back and why no amount
-            // of CSS ever fixed it: hero.mustache emits
-            //     <span class="aicourse-hero-title aicourse-title-{{titlesize}}">
-            // while activity_hero.mustache emitted
-            //     <span class="aicourse-hero-title">
-            // with no tier at all, because this exporter never computed one. Every tier rule in the
+            // of CSS ever fixed it. The hero template gives its title span both the shared
+            // aicourse-hero-title class and an aicourse-title-N tier class taken from titlesize,
+            // whereas the activity hero template gave it the shared class alone and no tier,
+            // because this exporter never computed one. Every tier rule in the
             // stylesheet is keyed to `.aicourse-title-*`, so the activity title fell through to the
             // base size -- 26px against the course title's 34px -- on every activity page, at every
             // title length, permanently. A class that is never emitted cannot be styled.

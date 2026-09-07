@@ -267,8 +267,13 @@ const getTip = () => {
  */
 const buildCondition = (condition) => {
     const li = document.createElement('li');
-    li.className = 'aicourse-tip-item '
-        + (condition.met ? 'aicourse-tip-met' : (condition.failed ? 'aicourse-tip-failed' : 'aicourse-tip-unmet'));
+    let state = 'aicourse-tip-unmet';
+    if (condition.met) {
+        state = 'aicourse-tip-met';
+    } else if (condition.failed) {
+        state = 'aicourse-tip-failed';
+    }
+    li.className = 'aicourse-tip-item ' + state;
 
     const marker = document.createElement('span');
     marker.className = 'aicourse-tip-marker';

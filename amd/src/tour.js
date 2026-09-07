@@ -574,12 +574,36 @@ class Tour {
 }
 
 /**
+ * Read the tour configuration the footer hook wrote into the page.
+ *
+ * The config carries a row per tour step, so it is passed through the page rather than as a
+ * js_call_amd() argument, which warns above 1024 characters. Same approach as the player.
+ *
+ * @returns {Object|null} The parsed configuration, or null when absent or malformed.
+ */
+export const readConfig = () => {
+    const node = document.getElementById('aicourse-tour-config');
+    if (!node) {
+        return null;
+    }
+    try {
+        return JSON.parse(node.textContent || '');
+    } catch (e) {
+        // Malformed config: offer no tour rather than a half-built one.
+        return null;
+    }
+};
+
+/**
  * Offer the tour, and run it when accepted.
  *
- * @param {Object} config Steps and settings from the server.
+ * @param {Object} [passed] Steps and settings. Omitted now that the config is read from the page.
  * @returns {void}
  */
-export const init = (config) => {
+export const init = (passed) => {
+    // The argument is still honoured so an older cached page, or anything else calling this
+    // directly, keeps working.
+    const config = passed || readConfig();
     if (!config || !config.steps || !config.steps.length) {
         return;
     }
