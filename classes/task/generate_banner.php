@@ -75,6 +75,9 @@ class generate_banner extends \core\task\adhoc_task {
             return;
         }
 
+        // 2.2.0: absent on a task queued before the upgrade, which means the course banner.
+        $sectionid = (int) ($data->sectionid ?? 0);
+
         try {
             $course = get_course($courseid);
         } catch (\moodle_exception $e) {
@@ -82,16 +85,20 @@ class generate_banner extends \core\task\adhoc_task {
             return;
         }
 
-        generate_banner_image::set_status($courseid, 'running', '');
+        generate_banner_image::set_status($courseid, 'running', '', $sectionid);
 
         try {
             $url = generate_banner_image::generate_and_store(
                 $course,
-                (string) ($data->extraprompt ?? '')
+                (string) ($data->extraprompt ?? ''),
+                $sectionid
             );
-            generate_banner_image::set_status($courseid, 'done', $url);
+            generate_banner_image::set_status($courseid, 'done', $url, $sectionid);
         } catch (\Throwable $e) {
-            generate_banner_image::set_status($courseid, 'failed', $e->getMessage());
+            // A section deleted between queueing and running lands here too: generate_and_store()
+            // re-checks the target, so the teacher is told the section is gone rather than an
+            // image being filed under an item id nothing points at any more.
+            generate_banner_image::set_status($courseid, 'failed', $e->getMessage(), $sectionid);
         }
     }
 }

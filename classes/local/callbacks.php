@@ -53,26 +53,49 @@ class callbacks {
             send_file_not_found();
         }
 
-        if ($filearea !== 'bannerimage') {
+        if ($filearea !== banner::COURSE_AREA && $filearea !== banner::SECTION_AREA) {
             send_file_not_found();
         }
 
         require_login($course);
 
-        // The item id is shifted off the path but deliberately not used for the lookup. There is
-        // exactly one banner per course and it is always stored under banner::BANNER_ITEMID; a
-        // URL cached by a browser before the 2.1.5 item id migration still carries the old course
-        // id, and serving it from the canonical item id keeps those links working.
-        array_shift($args);
+        $itemid = (int) array_shift($args);
         $filename = array_pop($args);
         $filepath = $args ? '/' . implode('/', $args) . '/' : '/';
+
+        if ($filearea === banner::COURSE_AREA) {
+            // The item id was shifted off the path but is deliberately not used for the lookup.
+            // There is exactly one banner per course and it is always stored under
+            // banner::BANNER_ITEMID; a URL cached by a browser before the 2.1.5 item id migration
+            // still carries the old course id, and serving it from the canonical item id keeps
+            // those links working.
+            $itemid = banner::BANNER_ITEMID;
+        } else {
+            // A section banner's item id IS meaningful -- it names the section -- so unlike the
+            // course banner it has to be taken from the URL, and therefore has to be checked.
+            //
+            // The check is not ceremony. Section banners are stored in the COURSE context, so
+            // require_login() above establishes only that this person is in the course, not that
+            // they may see this section. Without the check, any enrolled learner could read the
+            // banner of a hidden section straight from its pluginfile URL. A picture is a small
+            // leak on its own, but a hidden section's banner is often the first evidence that
+            // next term's material exists, and the URL is guessable by item id.
+            $sectioninfo = get_fast_modinfo($course)->get_section_info_by_id($itemid, IGNORE_MISSING);
+            if (!$sectioninfo) {
+                send_file_not_found();
+            }
+            $mayseehidden = has_capability('moodle/course:viewhiddensections', $context);
+            if (!$sectioninfo->uservisible && !$mayseehidden) {
+                send_file_not_found();
+            }
+        }
 
         $fs   = get_file_storage();
         $file = $fs->get_file(
             $context->id,
             'format_aicourse',
-            'bannerimage',
-            banner::BANNER_ITEMID,
+            $filearea,
+            $itemid,
             $filepath,
             $filename
         );

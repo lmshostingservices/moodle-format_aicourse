@@ -46,6 +46,10 @@ $observers = [
         'callback' => '\format_aicourse\observer::course_section_updated',
     ],
     [
+        'eventname' => '\core\event\course_section_deleted',
+        'callback' => '\format_aicourse\observer::course_section_deleted',
+    ],
+    [
         'eventname' => '\core\event\course_updated',
         'callback' => '\format_aicourse\observer::course_updated',
     ],

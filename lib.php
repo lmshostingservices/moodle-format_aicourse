@@ -1411,6 +1411,68 @@ class format_aicourse extends format_topics {
 
         return parent::update_course_format_options($data, $oldcourse);
     }
+
+    /**
+     * Return the section settings form, with this format's section banner field on it.
+     *
+     * base::editsection_form() is the documented factory for that form and this overrides it
+     * rather than adding the field from create_edit_form_elements(), which core never calls for
+     * a format that declares no section format options -- and a file cannot be one.
+     * {@see \format_aicourse\form\section_edit_form} has the full reasoning.
+     *
+     * @param mixed $action The action attribute for the form.
+     * @param array $customdata Form custom data, including 'cs', the section being edited.
+     * @return \moodleform The section settings form.
+     */
+    public function editsection_form($action, $customdata = []) {
+        if (!array_key_exists('course', $customdata)) {
+            $customdata['course'] = $this->get_course();
+        }
+
+        return new \format_aicourse\form\section_edit_form($action, $customdata);
+    }
+
+    /**
+     * Save the section banner image, then let core store the section's format options.
+     *
+     * Core reaches this with the whole submitted form -- sectionactions::update() strips only
+     * id, course, section and sequence before passing the rest on -- so the filemanager's draft
+     * item id arrives here, and this is the only place that saves it. The field is unset before
+     * delegating so the parent cannot try to store a draft item id as a format option.
+     *
+     * @param \stdClass|array $data Submitted section settings, including 'id', the section id.
+     * @return bool Whether the section was updated.
+     */
+    public function update_section_format_options($data) {
+        $data = (array) $data;
+
+        $sectionid = (int) ($data['id'] ?? 0);
+        $draftitemid = (int) ($data[\format_aicourse\form\section_edit_form::ELEMENT] ?? 0);
+
+        // The same guard the course banner needs, for the same reason: a save that did not come
+        // from this form carries no draft item id, and passing 0 to file_save_draft_area_files()
+        // deletes the stored image. Section settings are updated by plenty of things that have
+        // never heard of this field -- bulk edit tools, restore, web services, the reactive
+        // editor's rename -- and every one of them would otherwise clear the banner.
+        if ($sectionid > 0 && $draftitemid > 0) {
+            file_save_draft_area_files(
+                $draftitemid,
+                context_course::instance($this->get_courseid())->id,
+                'format_aicourse',
+                \format_aicourse\local\banner::SECTION_AREA,
+                $sectionid,
+                [
+                    'maxbytes' => \format_aicourse\form\section_edit_form::MAX_BYTES,
+                    'maxfiles' => 1,
+                    'subdirs' => 0,
+                ]
+            );
+        }
+
+        unset($data[\format_aicourse\form\section_edit_form::ELEMENT]);
+
+        return parent::update_section_format_options($data);
+    }
 }
 
 /**

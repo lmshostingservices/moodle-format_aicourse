@@ -71,4 +71,41 @@ class backup_format_aicourse_plugin extends backup_format_plugin {
 
         return $plugin;
     }
+
+    /**
+     * Define the plugin structure attached to each section element.
+     *
+     * 2.2.0: section banners. These cannot be handled the way the course banner above is.
+     * The course banner is annotated with a null item id so every file in the area is swept up
+     * and copied verbatim, which is safe precisely because that area only ever holds one file
+     * under one fixed item id. A section banner's item id is the section, so the files have to
+     * be collected per section and, on the way back in, the old section id has to be translated
+     * into the restored course's new one -- otherwise every banner would be filed under an item
+     * id nothing points at, and the images would be present in the backup, restored into the
+     * file pool, and invisible.
+     *
+     * @return backup_plugin_element The plugin element.
+     */
+    protected function define_section_plugin_structure() {
+        $plugin = $this->get_plugin_element();
+
+        $pluginwrapper = new backup_nested_element($this->get_recommended_name());
+        $plugin->add_child($pluginwrapper);
+
+        $banner = new backup_nested_element('sectionbanner', ['id'], ['sectionid']);
+        $pluginwrapper->add_child($banner);
+
+        $banner->set_source_array([
+            (object) [
+                'id' => 1,
+                'sectionid' => $this->task->get_sectionid(),
+            ],
+        ]);
+
+        // Third argument is the name of the element supplying the item id, not an item id: the
+        // files collected are those whose itemid equals this element's 'sectionid' value.
+        $banner->annotate_files('format_aicourse', 'sectionbannerimage', 'sectionid');
+
+        return $plugin;
+    }
 }

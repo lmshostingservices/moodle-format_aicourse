@@ -97,13 +97,31 @@ class activityhero implements named_templatable, renderable {
         $options = $this->options;
         $cm = $this->cm;
 
-        // Custom banner image takes priority; fall back to course overview image.
-        // Track custom banner separately so we can show the delete button only for custom images.
-        $custombanner = banner::get_banner_image_url($course);
-        $imageurl = $custombanner;
-        if (!$imageurl) {
-            $imageurl = banner::get_course_image($course);
+        // 2.2.0: an activity inherits the banner of the SECTION it lives in, so moving between
+        // the activities of one section keeps you visually inside that section instead of
+        // snapping back to the course banner the moment you click into something. Same chain as
+        // the section page, resolved by the same method: section, then course, then overview.
+        //
+        // The section is taken from the cm's section ID, not its section NUMBER: the file is
+        // filed under course_sections.id and the two are not interchangeable.
+        //
+        // Both shapes of $cm have to be handled. The class docblock says cm_info|stdClass and it
+        // means it: the footer hook builds this hero from get_coursemodule_from_id(), which
+        // returns a plain record with no get_section_info() on it, while other callers pass a
+        // real cm_info. Guarding on `instanceof cm_info` alone silently produced the COURSE
+        // banner on every activity page -- the fallback is legitimate behaviour, so nothing
+        // failed, nothing was logged, and the section banner simply never appeared.
+        $sectionid = null;
+        if ($cm instanceof \cm_info) {
+            $cmsection = $cm->get_section_info();
+            $sectionid = $cmsection ? (int) $cmsection->id : null;
+        } else if (!empty($cm->section)) {
+            // The `section` column on course_modules holds the section's ID, not its number,
+            // in both Moodle 4.4 and 5.x.
+            $sectionid = (int) $cm->section;
         }
+        $resolved = banner::resolve($course, $sectionid);
+        $imageurl = $resolved['url'];
 
         $navdata = navigation::get_nav_links($course, $USER->id);
         $currentsection = navigation::get_current_section($course, $USER->id);
@@ -143,16 +161,30 @@ class activityhero implements named_templatable, renderable {
             'imageurl' => (string) $imageurl,
             'hassection' => !empty($currentsection),
             'sectionlabel' => '',
+            // The target the hero's banner buttons act on: this activity's section.
+            'bannersectionid' => (int) ($sectionid ?? 0),
+            'bannertargetname' => '',
         ];
 
         if (!empty($currentsection)) {
             // ACF-FIX-2.0: i18n — single placeholder string instead of "Section" . ' ' . number.
             $data->sectionlabel = format_string($this->section_name($currentsection));
+            $data->bannertargetname = \format_aicourse\local\text::plain(
+                $data->sectionlabel,
+                \context_course::instance($course->id)
+            );
         }
+
+        // Whether the image on screen belongs to this page's own target, which is what decides
+        // if a "remove" button may be offered. An activity showing an inherited course banner
+        // must not offer to remove it from here.
+        $ownsbanner = ($sectionid !== null && $sectionid > 0)
+            ? ($resolved['source'] === 'section')
+            : ($resolved['source'] === 'course');
 
         $this->export_nav($data, $navdata);
         $this->export_completion($data, $completioninfo);
-        $this->export_icons($data, $currentsection, $custombanner);
+        $this->export_icons($data, $currentsection, $ownsbanner);
 
         return $data;
     }
@@ -261,10 +293,11 @@ class activityhero implements named_templatable, renderable {
      *
      * @param stdClass $data Context being built, modified in place.
      * @param array|null $currentsection Section descriptor with 'num' and 'name', or null.
-     * @param string|null $custombanner URL of the uploaded custom banner, or null when there is none.
+     * @param mixed $currentsection The section the activity sits in, for the section label.
+     * @param bool $ownsbanner Whether the image on screen belongs to this page's own target.
      * @return void
      */
-    protected function export_icons(stdClass $data, $currentsection, $custombanner): void {
+    protected function export_icons(stdClass $data, $currentsection, bool $ownsbanner): void {
         global $PAGE;
 
         $course = $this->course;
@@ -305,10 +338,22 @@ class activityhero implements named_templatable, renderable {
 
         // AI Generate Banner button — editors only. The delete button additionally needs an
         // uploaded custom banner AND Moodle to be in edit mode.
+        //
+        // 2.2.0: on an activity page the buttons act on the SECTION the activity is in, because
+        // that is now whose banner is on screen. The rule everywhere is that these buttons act
+        // on the image you can see: a generate button that quietly replaced the course banner
+        // while showing a section's would be a trap. Remove appears only when this section owns
+        // the image; when it is inheriting the course banner there is nothing here to remove,
+        // and doing it from the course home page is unambiguous.
+        $sectionid = (int) ($data->bannersectionid ?? 0);
         $data->canedit = has_capability('moodle/course:update', $context);
-        $data->showremovebanner = ($data->canedit && !empty($custombanner) && $PAGE->user_is_editing());
-        $data->removebannerlabel = get_string('removebannerimage', 'format_aicourse');
-        $data->generatebannerlabel = get_string('generatebannerimage', 'format_aicourse');
+        $data->showremovebanner = ($data->canedit && $ownsbanner && $PAGE->user_is_editing());
+        $data->removebannerlabel = ($sectionid > 0)
+            ? get_string('removesectionbannerimage', 'format_aicourse')
+            : get_string('removebannerimage', 'format_aicourse');
+        $data->generatebannerlabel = ($sectionid > 0)
+            ? get_string('generatesectionbannerimage', 'format_aicourse')
+            : get_string('generatebannerimage', 'format_aicourse');
         // ACF-FIX-2.1.191: plain text. This is read back out of data-coursename by
         // courseformat.js and written into the modal with jQuery .text(), which does not parse
         // markup -- the escaped form showed as "&amp;" in the Generate AI banner dialog.

@@ -2,6 +2,73 @@
 
 All notable changes to this plugin will be documented in this file.
 
+## [2.3.0] - 2026-09-09
+
+### Added - per-section banner images
+
+Each section can now have its own hero banner, and falls back to the course banner when it has
+none. Nothing changes for a course that does not use the feature.
+
+- **Set it two ways, matching the course banner.** An "AI banner" button on the section's hero
+  generates one; a "Section Banner Image" field in the section's settings uploads one. The AI is
+  given the section's name and summary alongside the course name, so the image is about that
+  topic while staying in the course's visual family.
+
+- **Activities inherit their section's banner.** An activity in Module 2 shows Module 2's banner,
+  so moving between the activities of one section keeps you visually inside it rather than
+  snapping back to the course banner on every click.
+
+- **The resolution order is one method, not three copies.** `banner::resolve()` answers section,
+  then course, then course overview image, for the course hero, the section hero and the activity
+  hero alike. It also reports *where* the image came from, which is what lets the "remove" button
+  appear only when this page's own target owns the image. A section displaying an inherited
+  course banner offers no remove button — removing it there would take the banner from every
+  other section too.
+
+- **Removing a section banner reveals the course banner rather than blanking the hero.** The
+  delete call now reports the image that applies afterwards, and the page repaints with it.
+
+Storage, and why it is more involved than the course banner: section banners live in a new
+`sectionbannerimage` file area under the section's `course_sections.id`, because there is one per
+section rather than one per course. That has consequences the course banner never had, all
+handled here:
+
+- Backup annotates the area per section and restore maps the old section id to the new one
+  through core's `course_section` mapping. Without that, a restored course keeps every image in
+  the file pool, filed against sections that do not exist in it — present, and invisible.
+- Deleting a section now deletes its banner. The file is in the course context, so nothing else
+  would have; left alone they accumulate and follow the course into every backup.
+- `pluginfile` checks section visibility. The area is in the course context, so Moodle's own
+  access control gets a caller no further than "is enrolled here", and the item id is a small
+  integer that can simply be tried. A hidden section's banner is now refused to anyone who
+  cannot see the section — verified over HTTP, not only in unit tests.
+- Each generation has its own status key. Two started a few seconds apart, which is how a teacher
+  works through a course, would otherwise overwrite each other and the browser could apply the
+  wrong image to the wrong section.
+
+The AI generation limit is deliberately shared with the course banner rather than given to each
+section: it exists because each call spends credits, and a per-section allowance would multiply
+the ceiling by the number of sections.
+
+### Fixed
+
+- **The activity hero showed the course banner instead of the section's.** The footer hook builds
+  that hero from `get_coursemodule_from_id()`, which returns a plain record, so a guard written
+  as `instanceof cm_info` never matched. The fallback is legitimate behaviour, so nothing failed
+  and nothing was logged — the section banner simply never appeared. Both shapes are handled now.
+- **`get_banner_status` could fatal on PHP 8.** Its fallback passed a course *id* to a method
+  that takes a course *record* and immediately reads `->id` off it. It only ran when a generation
+  finished but its status write came back empty, which is why it survived. Found by reading.
+
+### Notes for section settings
+
+A course format is supposed to add section fields from `create_edit_form_elements()`, but core
+only calls that method when the format declares at least one section format option — and format
+options are rows of text, so a file cannot be one. Rather than declare a meaningless option in
+every section of every course to open that `if`, the format overrides `editsection_form()`, which
+is the documented factory for the form. That also supplies the section id, which
+`create_edit_form_elements()` is never told.
+
 ## [2.2.0] - 2026-09-07
 
 Minor version bump. Everything below is a fix; the bump marks the point at which the course

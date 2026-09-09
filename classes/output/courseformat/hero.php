@@ -106,15 +106,7 @@ class hero implements named_templatable, renderable {
         $options = $this->options;
         $sectionnum = $this->sectionnum;
 
-        // Custom banner image takes priority; fall back to course overview image.
-        // Track custom banner separately so we can show the delete button only for custom images.
-        $custombanner = banner::get_banner_image_url($course);
-        $imageurl = $custombanner;
-        if (!$imageurl) {
-            $imageurl = banner::get_course_image($course);
-        }
-
-        // Get section info first if viewing a section.
+        // Section info is resolved first, because from 2.2.0 the banner depends on it.
         $modinfo = get_fast_modinfo($course, $USER->id);
         $sectioninfo = null;
         $titletext = format_string($course->fullname);
@@ -125,6 +117,12 @@ class hero implements named_templatable, renderable {
                 $titletext = get_section_name($course, $sectioninfo);
             }
         }
+
+        // 2.2.0: this section's own banner, then the course banner, then the course overview
+        // image. The chain lives in banner::resolve() so the course hero, the section hero and
+        // the activity hero cannot drift into answering it differently.
+        $resolved = banner::resolve($course, $sectioninfo ? (int) $sectioninfo->id : null);
+        $imageurl = $resolved['url'];
 
         // Use section-specific progress when viewing a section, otherwise course progress.
         // Create one shared completion_info here so both get_section_progress() and
@@ -198,7 +196,7 @@ class hero implements named_templatable, renderable {
 
         $this->export_nav($data, $navdata);
         $this->export_progress($data, $progressdata, $modinfo, $sectioninfo);
-        $this->export_icons($data, $custombanner);
+        $this->export_icons($data, $resolved, $sectioninfo ? (int) $sectioninfo->id : 0);
 
         return $data;
     }
@@ -418,10 +416,11 @@ class hero implements named_templatable, renderable {
      * shown on keyboard focus.
      *
      * @param stdClass $data Context being built, modified in place.
-     * @param string|null $custombanner URL of the uploaded custom banner, or null when there is none.
+     * @param array $resolved The banner decision from {@see banner::resolve()}: url and source.
+     * @param int $sectionid course_sections.id on a section page, 0 on the course home page.
      * @return void
      */
-    protected function export_icons(stdClass $data, $custombanner): void {
+    protected function export_icons(stdClass $data, array $resolved, int $sectionid = 0): void {
         global $PAGE;
 
         $course = $this->course;
@@ -444,10 +443,29 @@ class hero implements named_templatable, renderable {
 
         // AI Generate Banner button — editors only. The delete button additionally needs an
         // uploaded custom banner AND Moodle to be in edit mode.
+        //
+        // 2.2.0: both buttons act on THIS page's banner, so they carry the section id and the
+        // remove button appears only when the image on screen actually belongs to this target.
+        // On a section showing an inherited course banner, source is 'course', so no remove
+        // button is offered -- removing it there would take the banner away from every other
+        // section as well, which is not what "remove this section's image" means to anyone.
+        $data->bannersectionid = $sectionid;
         $data->canedit = has_capability('moodle/course:update', $context);
-        $data->showremovebanner = ($data->canedit && !empty($custombanner) && $PAGE->user_is_editing());
-        $data->removebannerlabel = get_string('removebannerimage', 'format_aicourse');
-        $data->generatebannerlabel = get_string('generatebannerimage', 'format_aicourse');
+        $ownsbanner = ($sectionid > 0)
+            ? ($resolved['source'] === 'section')
+            : ($resolved['source'] === 'course');
+        $data->showremovebanner = ($data->canedit && $ownsbanner && $PAGE->user_is_editing());
+        $data->removebannerlabel = ($sectionid > 0)
+            ? get_string('removesectionbannerimage', 'format_aicourse')
+            : get_string('removebannerimage', 'format_aicourse');
+        $data->generatebannerlabel = ($sectionid > 0)
+            ? get_string('generatesectionbannerimage', 'format_aicourse')
+            : get_string('generatebannerimage', 'format_aicourse');
+        // Read back out of the dialogue's data attributes so it can name what it is generating
+        // for. Plain text for the same reason coursename is -- it is written with .text().
+        $data->bannertargetname = ($sectionid > 0)
+            ? \format_aicourse\local\text::plain($data->title, $context)
+            : '';
         // ACF-FIX-2.1.191: plain text. This is read back out of data-coursename by
         // courseformat.js and written into the modal with jQuery .text(), which does not parse
         // markup -- the escaped form showed as "&amp;" in the Generate AI banner dialog.

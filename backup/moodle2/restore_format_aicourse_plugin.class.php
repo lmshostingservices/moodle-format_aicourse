@@ -76,4 +76,47 @@ class restore_format_aicourse_plugin extends restore_format_plugin {
     public function after_restore_course() {
         $this->add_related_files('format_aicourse', 'bannerimage', null);
     }
+
+    /**
+     * Define the paths this plugin handles inside each section element.
+     *
+     * As with the course element, the data carries nothing worth restoring and the element
+     * exists only so that after_restore_section() below is called at all.
+     *
+     * @return array Array of restore_path_element.
+     */
+    protected function define_section_plugin_structure() {
+        return [
+            new restore_path_element('aicourse_sectionbanner', $this->get_pathfor('/sectionbanner')),
+        ];
+    }
+
+    /**
+     * Process the section banner element.
+     *
+     * Intentionally a no-op. See define_section_plugin_structure() for why the element exists.
+     *
+     * @param array|stdClass $data The parsed element.
+     * @return void
+     */
+    public function process_aicourse_sectionbanner($data) {
+        return;
+    }
+
+    /**
+     * Restore this section's banner image once the section itself has been restored.
+     *
+     * 2.2.0. The mapping argument is 'course_section' rather than the null the course banner
+     * uses, and that difference is the entire point: a section banner's item id names a section,
+     * and a restored course has new section ids. Core registers the old-to-new section mapping
+     * under that name in restore_section_structure_step, so restore_dbops::send_files_to_pool()
+     * translates each file's item id as it goes. Passing null here instead would copy the old
+     * ids verbatim and file every banner against a section that does not exist in this course:
+     * present in the file pool, reachable by nothing, and silent about it.
+     *
+     * @return void
+     */
+    public function after_restore_section() {
+        $this->add_related_files('format_aicourse', 'sectionbannerimage', 'course_section');
+    }
 }

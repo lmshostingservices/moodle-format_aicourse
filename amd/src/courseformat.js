@@ -1942,8 +1942,13 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
              */
             function openModal(btn) {
                 currentBtn = btn;
-                // .text() - the course name is user-controlled.
-                $('#aicourse-bgen-cname').text(btn.data('coursename') || '');
+                // 2.2.0: name what is being generated FOR. The dialogue costs credits and is
+                // reachable from the course page, a section page and an activity page, which now
+                // target different banners -- showing the course name on all three would make
+                // the expensive button look identical wherever it was pressed.
+                // .text() - both values are user-controlled.
+                var targetname = btn.data('targetname');
+                $('#aicourse-bgen-cname').text(targetname || btn.data('coursename') || '');
                 setState('confirm');
                 openDialog(overlayEl, {
                     labelledby: titleId,
@@ -2015,6 +2020,8 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
                 $generate.prop('disabled', true);
 
                 var courseid = currentBtn.data('courseid');
+                // 0 when the button is on the course hero: the course banner.
+                var sectionid = parseInt(currentBtn.data('sectionid'), 10) || 0;
 
                 setState('loading');
                 announce(STR.bannergenLoadingtitle);
@@ -2058,7 +2065,10 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
                         return;
                     }
                     callExternal('get_banner_status', {
-                        courseid: parseInt(courseid, 10)
+                        courseid: parseInt(courseid, 10),
+                        // Must match the generate call: each target has its own status, so
+                        // polling the course's while a section generates reports the wrong one.
+                        sectionid: sectionid
                     }).done(function (status) {
                         if (!status) {
                             schedule(poll, POLL_EVERY);
@@ -2087,7 +2097,8 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
 
                 callExternal('generate_banner_image', {
                     courseid: parseInt(courseid, 10),
-                    extraprompt: extra
+                    extraprompt: extra,
+                    sectionid: sectionid
                 }).done(function (response) {
                     if (response && response.imageurl) {
                         // A server still running the synchronous version: use the image directly.
@@ -2145,6 +2156,11 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
          * Confirms then calls format_aicourse_delete_banner_image, then updates the page in-place.
          */
         initDeleteBanner: function () {
+            // Needed by the confirm handler, which now repaints the hero with whatever banner
+            // applies after the removal. Without this, `self` would resolve to window.self --
+            // the window object, which is defined -- so the failure would be a silent no-op at
+            // the one moment the teacher is watching, not an obvious error.
+            var self = this;
             var modalId = 'aicourse-bdel-modal';
             var titleId = 'aicourse-bdel-title';
 
@@ -2246,17 +2262,28 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
                     return;
                 }
                 var courseid = currentDeleteBtn.data('courseid');
+                var sectionid = parseInt(currentDeleteBtn.data('sectionid'), 10) || 0;
 
                 confirmBtn.prop('disabled', true).text(STR.bannerdelRemoving + '…');
                 $('#aicourse-bdel-error').hide().text('');
 
                 callExternal('delete_banner_image', {
-                    courseid: parseInt(courseid, 10)
-                }).done(function () {
-                    // ACF-FIX-2.0 (bug 3): selectors kept consistent with applyHeroBanner().
-                    $('.aicourse-hero-bg-img').css('background-image', 'none').hide();
-                    $('.aicourse-hero-banner').removeClass('aicourse-hero-has-image');
-                    // Hide the delete button(s) - they are no longer relevant.
+                    courseid: parseInt(courseid, 10),
+                    sectionid: sectionid
+                }).done(function (response) {
+                    // 2.2.0: removing a SECTION banner does not leave the page with no image --
+                    // it leaves the section inheriting the course banner. The server says what
+                    // applies now, so show that rather than assuming the hero goes blank.
+                    var fallback = response && response.imageurl;
+                    if (fallback) {
+                        self.applyHeroBanner(fallback);
+                    } else {
+                        // ACF-FIX-2.0 (bug 3): selectors kept consistent with applyHeroBanner().
+                        $('.aicourse-hero-bg-img').css('background-image', 'none').hide();
+                        $('.aicourse-hero-banner').removeClass('aicourse-hero-has-image');
+                    }
+                    // Hide the delete button(s): whatever is on screen now, this target no
+                    // longer owns an image of its own, so there is nothing here to remove.
                     $('.aicourse-ai-delete-banner').hide();
                     closeDeleteModal();
                     announce(STR.bannerdelRemoved);

@@ -95,6 +95,39 @@ class observer {
     }
 
     /**
+     * Triggered via \core\event\course_section_deleted.
+     *
+     * 2.2.0: removes the deleted section's banner image.
+     *
+     * Nothing else would. A section banner is filed in the COURSE context under the section's
+     * id, so deleting the section leaves the file behind: the context survives, and no code
+     * path ever looks at that item id again. On a course edited over a few terms this quietly
+     * accumulates unreachable images, and they follow the course into every backup. The course
+     * banner has never had this problem because it lives under a fixed item id that is reused
+     * rather than abandoned.
+     *
+     * @param \core\event\course_section_deleted $event The event.
+     */
+    public static function course_section_deleted(\core\event\course_section_deleted $event): void {
+        self::purge_course_content($event->courseid);
+
+        try {
+            $context = \context_course::instance($event->courseid);
+        } catch (\moodle_exception $e) {
+            // The whole course is going: its files go with the context, and this event can
+            // arrive after the context has already been removed.
+            return;
+        }
+
+        get_file_storage()->delete_area_files(
+            $context->id,
+            'format_aicourse',
+            \format_aicourse\local\banner::SECTION_AREA,
+            (int) $event->objectid
+        );
+    }
+
+    /**
      * Triggered via \core\event\course_updated.
      *
      * @param \core\event\course_updated $event The event.

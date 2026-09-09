@@ -50,6 +50,13 @@ class get_banner_status extends external_api {
     public static function execute_parameters(): external_function_parameters {
         return new external_function_parameters([
             'courseid' => new external_value(PARAM_INT, 'Course id'),
+            // 2.2.0: which generation to report on. 0, the default, is the course banner.
+            'sectionid' => new external_value(
+                PARAM_INT,
+                'course_sections.id to report a section banner generation, or 0 for the course banner',
+                VALUE_DEFAULT,
+                0
+            ),
         ]);
     }
 
@@ -57,11 +64,13 @@ class get_banner_status extends external_api {
      * Return the current state of this course's banner generation.
      *
      * @param int $courseid Course to report on.
+     * @param int $sectionid course_sections.id for a section banner, 0 for the course banner.
      * @return array{status: string, imageurl: string, message: string}
      */
-    public static function execute(int $courseid): array {
+    public static function execute(int $courseid, int $sectionid = 0): array {
         $params = self::validate_parameters(self::execute_parameters(), [
             'courseid' => $courseid,
+            'sectionid' => $sectionid,
         ]);
 
         $course = get_course($params['courseid']);
@@ -71,7 +80,10 @@ class get_banner_status extends external_api {
         // surface the service's failure text, which is not for learners.
         require_capability('moodle/course:update', $context);
 
-        $status = generate_banner_image::get_status((int) $course->id);
+        $sectioninfo = \format_aicourse\local\banner::require_section_in_course($course, (int) $params['sectionid']);
+        $targetsectionid = $sectioninfo ? (int) $sectioninfo->id : 0;
+
+        $status = generate_banner_image::get_status((int) $course->id, $targetsectionid);
 
         $imageurl = '';
         if ($status['state'] === 'done') {
@@ -79,7 +91,19 @@ class get_banner_status extends external_api {
             // banner that landed while the status write failed is still reported as present.
             $imageurl = $status['detail'];
             if ($imageurl === '') {
-                $imageurl = (string) \format_aicourse\local\banner::get_banner_image_url($course->id);
+                // 2.2.0: this fallback used to pass $course->id to get_banner_image_url(), which
+                // takes a COURSE RECORD and immediately reads ->id off it. Passing the int made
+                // it fatal on PHP 8. It only ran when a generation finished but its status write
+                // came back empty, which is why it survived: rare, and inside the branch nobody
+                // reaches on a healthy site. Found by reading, not by a failure.
+                if ($targetsectionid > 0) {
+                    $imageurl = (string) \format_aicourse\local\banner::get_section_banner_image_url(
+                        (int) $course->id,
+                        $targetsectionid
+                    );
+                } else {
+                    $imageurl = (string) \format_aicourse\local\banner::get_banner_image_url($course);
+                }
             }
         }
 

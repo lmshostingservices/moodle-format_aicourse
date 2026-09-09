@@ -62,6 +62,15 @@ class generate_banner_image extends external_api {
                 VALUE_DEFAULT,
                 ''
             ),
+            // 2.2.0: which banner to generate. 0, the default, means the course banner, so a
+            // browser still running an older bundle keeps calling this function successfully and
+            // keeps generating course banners, which is what it thinks it is doing.
+            'sectionid' => new external_value(
+                PARAM_INT,
+                'course_sections.id to generate a section banner for, or 0 for the course banner',
+                VALUE_DEFAULT,
+                0
+            ),
         ]);
     }
 
@@ -71,12 +80,13 @@ class generate_banner_image extends external_api {
      * @param int $courseid Id of the course.
      * @return array The URL of the stored image and the credits it cost.
      */
-    public static function execute(int $courseid, string $extraprompt = ''): array {
+    public static function execute(int $courseid, string $extraprompt = '', int $sectionid = 0): array {
         global $CFG, $USER;
 
         $params = self::validate_parameters(self::execute_parameters(), [
             'courseid' => $courseid,
             'extraprompt' => $extraprompt,
+            'sectionid' => $sectionid,
         ]);
 
         $course = get_course($params['courseid']);
@@ -84,12 +94,23 @@ class generate_banner_image extends external_api {
         self::validate_context($context);
         require_capability('moodle/course:update', $context);
 
+        // Refuses a section belonging to some other course: the capability above was checked
+        // against THIS course's context and would otherwise authorise writing into that one.
+        $sectioninfo = banner::require_section_in_course($course, (int) $params['sectionid']);
+        $targetsectionid = $sectioninfo ? (int) $sectioninfo->id : 0;
+
         // ACF-FIX-2.0: Guests must never spend API credits.
         if (isguestuser()) {
             throw new \moodle_exception('error_guestnotallowed', 'format_aicourse');
         }
 
         // ACF-FIX-2.0: Banner generation is a 90 second call that spends purchased credits.
+        //
+        // 2.2.0: section banners deliberately share the COURSE's bucket rather than getting one
+        // each. The limit exists because each call spends real credits, and a per-section bucket
+        // would multiply the ceiling by the number of sections -- which is the opposite of a
+        // limit. Three a minute still allows a teacher to work through a course's sections
+        // steadily; it only stops a stuck retry loop or a scripted burst.
         throttle::check(
             'bannerimage',
             $course->id,
@@ -127,9 +148,10 @@ class generate_banner_image extends external_api {
         $task->set_custom_data([
             'courseid' => (int) $course->id,
             'extraprompt' => $extra,
+            'sectionid' => $targetsectionid,
         ]);
         $task->set_component('format_aicourse');
-        self::set_status((int) $course->id, 'queued', '');
+        self::set_status((int) $course->id, 'queued', '', $targetsectionid);
         \core\task\manager::queue_adhoc_task($task);
 
         return [
@@ -150,24 +172,48 @@ class generate_banner_image extends external_api {
      * @param int $courseid The course being generated for.
      * @param string $state One of queued, running, done, failed.
      * @param string $detail The image URL when done, the failure reason when failed.
+     * @param int $sectionid course_sections.id for a section banner, 0 for the course banner.
      * @return void
      */
-    public static function set_status(int $courseid, string $state, string $detail): void {
+    public static function set_status(int $courseid, string $state, string $detail, int $sectionid = 0): void {
         set_config(
-            'bannerstatus_' . $courseid,
+            self::status_key($courseid, $sectionid),
             json_encode(['state' => $state, 'detail' => $detail, 'time' => time()]),
             'format_aicourse'
         );
     }
 
     /**
+     * Name of the config setting holding one generation's state.
+     *
+     * Section banners get their own key. Sharing the course's would mean two generations started
+     * a few seconds apart -- which is exactly how a teacher works through a course's sections --
+     * overwriting each other's state, so the browser polling for one would be told about the
+     * other and could apply the wrong image to the wrong section.
+     *
+     * The course banner's key is left in its original shape so a generation already queued when
+     * a site upgrades is still found by the poll that follows it.
+     *
+     * @param int $courseid The course.
+     * @param int $sectionid course_sections.id, or 0 for the course banner.
+     * @return string
+     */
+    protected static function status_key(int $courseid, int $sectionid): string {
+        if ($sectionid > 0) {
+            return 'bannerstatus_' . $courseid . '_s' . $sectionid;
+        }
+        return 'bannerstatus_' . $courseid;
+    }
+
+    /**
      * Read back the state of a course's banner generation.
      *
      * @param int $courseid The course to report on.
+     * @param int $sectionid course_sections.id for a section banner, 0 for the course banner.
      * @return array{state: string, detail: string, time: int}
      */
-    public static function get_status(int $courseid): array {
-        $raw = get_config('format_aicourse', 'bannerstatus_' . $courseid);
+    public static function get_status(int $courseid, int $sectionid = 0): array {
+        $raw = get_config('format_aicourse', self::status_key($courseid, $sectionid));
         if ($raw === false || $raw === '') {
             return ['state' => 'idle', 'detail' => '', 'time' => 0];
         }
@@ -192,9 +238,11 @@ class generate_banner_image extends external_api {
      * accepted back.
      *
      * @param \stdClass $course The course to generate for.
+     * @param string $extraprompt The teacher's own extra direction for the image.
+     * @param int $sectionid course_sections.id for a section banner, 0 for the course banner.
      * @return string The moodle_url of the stored image.
      */
-    public static function generate_and_store(\stdClass $course, string $extraprompt = ''): string {
+    public static function generate_and_store(\stdClass $course, string $extraprompt = '', int $sectionid = 0): string {
         global $CFG;
 
         $context = \context_course::instance($course->id);
@@ -210,6 +258,37 @@ class generate_banner_image extends external_api {
             'courseShortname' => $course->shortname,
             'courseId' => $course->id,
         ];
+
+        // 2.2.0: a section banner is still a banner FOR THIS COURSE -- the course name stays in
+        // the payload so the image keeps the course's visual family, and the section's own name
+        // and summary are added so it is recognisably about this topic rather than a second
+        // rendering of the course as a whole.
+        //
+        // Both are sent as plain text. The summary is stored as HTML and is frequently long; it
+        // is flattened and capped so the request cannot balloon and the service is not asked to
+        // read markup. Sections often have no name of their own, in which case get_section_name()
+        // returns the format's default ("Topic 3"), which says nothing useful about the topic --
+        // so an unnamed section is sent with no section name at all rather than with a number,
+        // and the summary carries the meaning.
+        $sectioninfo = banner::require_section_in_course($course, $sectionid);
+        if ($sectioninfo) {
+            $postdata['sectionId'] = (int) $sectioninfo->id;
+            $postdata['sectionNumber'] = (int) $sectioninfo->section;
+
+            $sectionname = trim((string) $sectioninfo->name);
+            if ($sectionname !== '') {
+                $postdata['sectionName'] = \format_aicourse\local\text::plain($sectionname, $context);
+            }
+
+            $summary = \core_text::substr(
+                trim(html_to_text((string) $sectioninfo->summary, 0, false)),
+                0,
+                600
+            );
+            if ($summary !== '') {
+                $postdata['sectionSummary'] = $summary;
+            }
+        }
 
         // 2.1.191: sent only when there is something to send. An empty key would ask the image
         // service to reason about a blank instruction, and the parameter is new on this side --
@@ -322,13 +401,17 @@ class generate_banner_image extends external_api {
 
         $fs = get_file_storage();
 
-        // Remove any existing banner images for this course.
-        $fs->delete_area_files($context->id, 'format_aicourse', 'bannerimage', banner::BANNER_ITEMID);
+        // Where this image belongs: the course area, or this section's slot in the section area.
+        [$filearea, $itemid] = banner::target($sectionid);
+
+        // Remove any existing banner image for this target. Scoped by item id, so generating a
+        // section banner cannot clear the course banner or another section's.
+        $fs->delete_area_files($context->id, 'format_aicourse', $filearea, $itemid);
 
         $fileinfo = [
             'component' => 'format_aicourse',
-            'filearea' => 'bannerimage',
-            'itemid' => banner::BANNER_ITEMID,
+            'filearea' => $filearea,
+            'itemid' => $itemid,
             'contextid' => $context->id,
             'filepath' => '/',
             'filename' => 'ai_banner_' . time() . '.' . $allowedmimes[$imageinfo['mime']],
@@ -344,7 +427,7 @@ class generate_banner_image extends external_api {
         $fileurl = \moodle_url::make_pluginfile_url(
             $file->get_contextid(),
             'format_aicourse',
-            'bannerimage',
+            $filearea,
             $file->get_itemid(),
             $file->get_filepath(),
             $file->get_filename()
