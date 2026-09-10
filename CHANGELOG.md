@@ -2,6 +2,34 @@
 
 All notable changes to this plugin will be documented in this file.
 
+## [2.3.1] - 2026-09-10
+
+### Fixed - the grade chip on activity banners could not hold its own value
+
+- **A grade like `100/100` ran outside the circle it was drawn in.** The chip was a fixed 2.75rem
+  square with a full border radius -- a circle sized for two or three characters -- but the value
+  it holds is `{current}/{max}`, taken from the activity's grade item. `-/100`, `100/100` and
+  `850/1000` are all ordinary, and anything past about four characters spilled onto the banner
+  beside it.
+
+  The chip is now a pill: a floor on the width instead of a fixed width, so it is never narrower
+  than it is tall and grows to whatever the value needs. Measured across the range the value
+  really takes -- `7/10`, `-/100`, `85/100`, `100/100`, `-/1000`, `1000/1000` -- every one now
+  sits inside it.
+
+  Short values are a soft pill rather than a true circle, which is a deliberate trade. Padding
+  wide enough to keep a long value off the rounded edge is also wide enough to push a short one
+  past a circle's width, so "circle when it fits, pill when it does not" would mean the chip
+  changing shape according to the learner's mark. One shape that always fits reads as a designed
+  component; a shape that depends on the number inside it reads as a fault.
+
+- **Two further layers had to give way for that to be visible.** The chip is a flex item, so a
+  width floor alone was not enough -- it was squeezed straight back to the floor and spilled
+  again. And its container is itself a fixed square sized for the completion *ring*, so a widened
+  chip then overflowed the container by 13px and came to rest on top of the "Required grade"
+  label. The container now sizes to the chip when it is holding one, via a class the template
+  sets, and the gap to the label is back to 13px.
+
 ## [2.3.0] - 2026-09-09
 
 ### Added - per-section banner images

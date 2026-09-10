@@ -2560,12 +2560,47 @@ body.format-aicourse .aicourse-completion-clickable {
     text-underline-offset: 3px;
 }
 
+/* ACF-FIX-2.3.1: the grade chip HUGS its value instead of being a fixed circle.
+   It used to be a hard 2.75rem square with `border-radius: full` -- a circle sized for two or
+   three characters. The value it holds is "{current}/{max}", and the max comes from the
+   activity's grade item, so "-/100", "100/100" and "1000/1000" are all ordinary. Anything past
+   about four characters ran straight out of the circle: the text has `white-space: nowrap` and
+   nothing clipped it, so it simply sat on top of the banner beside a ring it no longer fitted.
+
+   It is now a pill: a floor on the width instead of a fixed width, so the box is never
+   narrower than it is tall and grows to whatever the value needs. Measured across the range the
+   value actually takes -- 7/10, -/100, 85/100, 100/100, -/1000, 1000/1000 -- the box runs from
+   59px to 100px wide and every one of them sits inside it.
+
+   Short values are therefore a soft pill rather than a true circle, which IS a change to
+   activities that fit before. That is the deliberate part. Padding wide enough to keep a long
+   value off the rounded edge is also wide enough to push a short one past a circle's width, so
+   "circle when it fits, pill when it does not" would mean the chip changing shape according to
+   the learner's mark. One shape that always fits reads as a designed component; a shape that
+   depends on the number inside it reads as a bug.
+
+   Fully rounded rather than slightly rounded, so it stays in the same family as the completion
+   ring and tick that occupy this slot in the other states.
+
+   The height stays fixed. ACF-FIX-2.1.186 levelled the two hero clusters against each other,
+   and a chip that grew vertically would undo it. */
 body.format-aicourse .aicourse-grade-display {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    inline-size: 2.75rem;
+    /* The chip is a flex item in the hero's icon cluster, and a flex item shrinks past its
+       content by default -- so a width floor alone is not enough. Without this it was squeezed
+       to exactly the floor (measured 36x36 on a live activity page) and the nowrap value spilled
+       out again, with the stylesheet nonetheless serving every declaration below correctly. The
+       synthetic test page missed it because the chip sat in a plain block there, not in the
+       cluster it really lives in. */
+    flex: 0 0 auto;
+    min-inline-size: 2.75rem;
+    inline-size: auto;
     block-size: 2.75rem;
+    /* Breathing room once the value is wide enough to make the box a pill; invisible while it
+       is still a circle, because the minimum width is doing the work there. */
+    padding-inline: 0.6rem;
     border-radius: var(--acf-radius-full);
     border: 2px solid var(--acf-border-strong);
     background: var(--acf-surface-hover);
@@ -12924,6 +12959,27 @@ body.format-aicourse .aicourse-hero-banner .aicourse-completion-ring-container {
     flex: none;
 }
 
+/* ACF-FIX-2.3.1: the container sizes to the grade chip when it is holding one.
+   Everywhere else this container wraps the completion RING -- an SVG that fills it -- so it is
+   given a fixed square: 36px here, and --acf-hero-ring-image in image mode. A grade chip is not
+   square. "85/100" needs 63px, so it overflowed its own container by 13px and came to rest ON
+   TOP of the "Required grade" label beside it. Widening the chip alone stopped the text spilling
+   out of the chip and left the chip spilling out of the container instead.
+
+   This has to sit AFTER the rule above, not with the other container rules further up the sheet,
+   because that is where it was first written and the rule above -- same specificity, later in
+   the file -- simply won. The measurement said 36px while the class was present and the
+   declaration was served, which is what specificity ties look like from the outside.
+
+   The modifier class comes from the template rather than :has(), so the intent is visible in the
+   markup and there is no selector-support question. */
+body.format-aicourse .aicourse-ring-container-grade,
+body.format-aicourse .aicourse-hero-banner .aicourse-ring-container-grade,
+body.format-aicourse .aicourse-hero-has-image .aicourse-ring-container-grade {
+    inline-size: auto;
+    block-size: auto;
+}
+
 body.format-aicourse .aicourse-hero-banner .aicourse-completion-ring {
     inline-size: 100%;
     block-size: 100%;
@@ -12935,11 +12991,15 @@ body.format-aicourse .aicourse-hero-banner .aicourse-completion-label {
     line-height: var(--acf-leading-snug);
 }
 
-/* The grade chip that can replace the tick keeps the same box, so the cluster does
-   not change height depending on whether an activity is graded. */
+/* The grade chip that can replace the tick keeps the same box height, so the cluster does not
+   change height depending on whether an activity is graded.
+   ACF-FIX-2.3.1: the width is a floor, not a fixed size -- see the base rule. This override
+   used to set `min-block-size` alongside it, which could never do anything: the base rule sets
+   `block-size` outright, and a minimum cannot shrink a declared size. Replaced with the height
+   this cluster actually wants, so the intent and the effect finally agree. */
 body.format-aicourse .aicourse-hero-banner .aicourse-grade-display {
     min-inline-size: 2.25rem;
-    min-block-size: 2.25rem;
+    block-size: 2.25rem;
     font-size: var(--acf-font-size-xs);
 }
 

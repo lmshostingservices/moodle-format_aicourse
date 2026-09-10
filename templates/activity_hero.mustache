@@ -70,6 +70,8 @@
     * togglelabel string Accessible name of the completion toggle, naming the activity.
     * manualtitle string Tooltip of the completion toggle ("Mark as done").
     * showgrade bool True when the current grade replaces the pending ring.
+      When it does, the container also carries aicourse-ring-container-grade: the container
+      is otherwise a fixed square sized for the RING, and a grade chip is wider than tall.
     * gradetext string PRE-ESCAPED language string, e.g. "7 / 10". Language pack text and numbers
       formatted with format_float() only - never caller-supplied data.
     * completionlabel string PRE-ESCAPED language string: either the manual completion label, the
@@ -152,12 +154,12 @@
             }}{{^hasprev}}<div class="aicourse-hero-nav-spacer"></div>{{/hasprev}}{{!
             }}<div class="aicourse-hero-progress">{{!
                 }}{{#ismanualtoggle}}<button type="button" class="aicourse-hero-completion-toggle {{#iscompleted}}aicourse-hero-completion-done{{/iscompleted}}{{^iscompleted}}aicourse-hero-completion-pending{{/iscompleted}}" data-cmid="{{cmid}}" data-completed="{{completedflag}}" aria-pressed="{{pressed}}" aria-label="{{togglelabel}}" title="{{manualtitle}}">{{!
-                    }}<div class="aicourse-completion-ring-container">{{!
+                    }}<div class="aicourse-completion-ring-container{{^iscompleted}}{{#showgrade}} aicourse-ring-container-grade{{/showgrade}}{{/iscompleted}}">{{!
                         }}{{#iscompleted}}<svg aria-hidden="true" focusable="false" class="aicourse-completion-ring aicourse-completion-done" viewBox="0 0 50 50"><circle cx="25" cy="25" r="20" fill="none" stroke="#357a32" stroke-width="2.5"/><path d="M17 25 L22 30 L33 19" fill="none" stroke="#357a32" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>{{/iscompleted}}{{!
                         }}{{^iscompleted}}<svg aria-hidden="true" focusable="false" class="aicourse-completion-ring aicourse-completion-pending" viewBox="0 0 50 50"><circle cx="25" cy="25" r="20" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="2.5"/><path d="M17 25 L22 30 L33 19" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>{{/iscompleted}}{{!
                     }}</div>{{!
                 }}</button>{{/ismanualtoggle}}{{!
-                }}{{^ismanualtoggle}}{{#hascompletion}}<div class="aicourse-completion-ring-container">{{!
+                }}{{^ismanualtoggle}}{{#hascompletion}}<div class="aicourse-completion-ring-container{{^iscompleted}}{{#showgrade}} aicourse-ring-container-grade{{/showgrade}}{{/iscompleted}}">{{!
                     }}{{#iscompleted}}<svg aria-hidden="true" focusable="false" class="aicourse-completion-ring aicourse-completion-done" viewBox="0 0 50 50"><circle cx="25" cy="25" r="20" fill="none" stroke="#357a32" stroke-width="2.5"/><path d="M17 25 L22 30 L33 19" fill="none" stroke="#357a32" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>{{/iscompleted}}{{!
                     }}{{^iscompleted}}{{#showgrade}}<div class="aicourse-grade-display"><span class="aicourse-grade-text">{{{gradetext}}}</span></div>{{/showgrade}}{{^showgrade}}<svg aria-hidden="true" focusable="false" class="aicourse-completion-ring aicourse-completion-pending" viewBox="0 0 50 50"><circle cx="25" cy="25" r="20" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="2.5"/></svg>{{/showgrade}}{{/iscompleted}}{{!
                 }}</div>{{/hascompletion}}{{/ismanualtoggle}}{{!
