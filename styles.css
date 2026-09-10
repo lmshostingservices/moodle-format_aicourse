@@ -2560,56 +2560,32 @@ body.format-aicourse .aicourse-completion-clickable {
     text-underline-offset: 3px;
 }
 
-/* ACF-FIX-2.3.1: the grade chip HUGS its value instead of being a fixed circle.
-   It used to be a hard 2.75rem square with `border-radius: full` -- a circle sized for two or
-   three characters. The value it holds is "{current}/{max}", and the max comes from the
-   activity's grade item, so "-/100", "100/100" and "1000/1000" are all ordinary. Anything past
-   about four characters ran straight out of the circle: the text has `white-space: nowrap` and
-   nothing clipped it, so it simply sat on top of the banner beside a ring it no longer fitted.
+/* ACF-FIX-2.3.2: the grade is bare text. No ring, no fill, no border.
+   It was a circle, then briefly a pill, and the whole exercise was about making a shape hold a
+   value that varies in length -- "-/100", "100/100", "1000/1000" all come from the activity's
+   grade item. Removing the shape removes the problem rather than accommodating it: text has no
+   width to overflow.
 
-   It is now a pill: a floor on the width instead of a fixed width, so the box is never
-   narrower than it is tall and grows to whatever the value needs. Measured across the range the
-   value actually takes -- 7/10, -/100, 85/100, 100/100, -/1000, 1000/1000 -- the box runs from
-   59px to 100px wide and every one of them sits inside it.
+   It stays legible without a container because of where it sits. On a banner with an image the
+   right-hand cluster already has its own dark glass panel behind it (see
+   .aicourse-hero-nav-progress), and in gradient mode the text takes --acf-text-primary against
+   the gradient. Neither case was relying on this element's own background.
 
-   Short values are therefore a soft pill rather than a true circle, which IS a change to
-   activities that fit before. That is the deliberate part. Padding wide enough to keep a long
-   value off the rounded edge is also wide enough to push a short one past a circle's width, so
-   "circle when it fits, pill when it does not" would mean the chip changing shape according to
-   the learner's mark. One shape that always fits reads as a designed component; a shape that
-   depends on the number inside it reads as a bug.
-
-   Fully rounded rather than slightly rounded, so it stays in the same family as the completion
-   ring and tick that occupy this slot in the other states.
-
-   The height stays fixed. ACF-FIX-2.1.186 levelled the two hero clusters against each other,
-   and a chip that grew vertically would undo it. */
+   The height is still declared. ACF-FIX-2.1.186 levelled the two hero clusters against each
+   other and that only holds while this box keeps the height of the ring it replaces. */
 body.format-aicourse .aicourse-grade-display {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    /* The chip is a flex item in the hero's icon cluster, and a flex item shrinks past its
-       content by default -- so a width floor alone is not enough. Without this it was squeezed
-       to exactly the floor (measured 36x36 on a live activity page) and the nowrap value spilled
-       out again, with the stylesheet nonetheless serving every declaration below correctly. The
-       synthetic test page missed it because the chip sat in a plain block there, not in the
-       cluster it really lives in. */
+    /* Still a flex item in the icon cluster: without this it is squeezed by its siblings and
+       the nowrap value spills, container or no container. */
     flex: 0 0 auto;
-    min-inline-size: 2.75rem;
     inline-size: auto;
     block-size: 2.75rem;
-    /* Breathing room once the value is wide enough to make the box a pill; invisible while it
-       is still a circle, because the minimum width is doing the work there. */
-    padding-inline: 0.6rem;
-    border-radius: var(--acf-radius-full);
-    border: 2px solid var(--acf-border-strong);
-    background: var(--acf-surface-hover);
+    /* Keeps the number off whatever sits beside it; nothing is drawn, so this is spacing only. */
+    padding-inline: 0.35rem;
 }
 
-body.format-aicourse .aicourse-hero-has-image .aicourse-grade-display {
-    border-color: var(--acf-media-line-soft);
-    background: var(--acf-media-scrim);
-}
 
 body.format-aicourse .aicourse-grade-text {
     font-size: var(--acf-font-size-sm);
@@ -9479,10 +9455,6 @@ body.aicourse-tour-open {
 body.aicourse-player-on .aicourse-player-header {
     margin-block: 0;
     margin-inline: 0;
-    /* ACF-FIX-2.1.146: a little room below the progress ring, so it does not sit hard against the
-       first section band. The ring is the tallest thing in this block, so the gap is measured from
-       it rather than from the course name beside it. */
-    padding-block-end: var(--acf-space-4);
     /* ACF-FIX-2.1.131: the remainder of the top block, so the drawer strip plus this header equals
        the banner exactly. Stated as a height rather than left to the content, because the content
        varies -- a long course name wraps -- and the two edges have to line up regardless. Centred
@@ -9494,6 +9466,16 @@ body.aicourse-player-on .aicourse-player-header {
     justify-content: center;
     gap: var(--acf-space-2);
     padding: var(--acf-space-3) var(--acf-space-4);
+    /* ACF-FIX-2.3.2: room below the progress ring and the time, so they do not sit hard against
+       the first section band.
+       This declaration existed since 2.1.146 but was written ABOVE the `padding` shorthand two
+       lines down, which resets all four sides -- so it had been doing nothing at all, and the
+       header stayed cramped no matter what the value said. It is now after the shorthand, which
+       is the only place a single-side override can survive one.
+       Because the contents are centred, padding at the end shortens the content box from the
+       bottom and lifts everything up, which is what puts the new space under the ring rather
+       than splitting it evenly above and below. */
+    padding-block-end: var(--acf-space-6);
     background: var(--acf-player-header-bg, var(--acf-player-header-default));
     border-block-end: 1px solid var(--acf-player-line);
 }
@@ -11021,7 +11003,15 @@ body.aicourse-index-merged #theme_boost-drawers-courseindex .drawerheader {
    the other. 164px was 44 of strip plus 120 of band; the strip is gone, so 120 is the whole of it. */
 body.aicourse-index-merged {
     --acf-drawerstrip: 0px;
-    --acf-topblock: 120px;
+    /* ACF-FIX-2.3.2: 168, not 120.
+       Two things wanted this. The banner is very wide and very short -- 11.4:1 at 1920px, 8.5:1
+       at 1440px -- while the generated image arrives at 3.33:1, so `background-size: cover` was
+       discarding about 70% of the picture's height and what showed read as a zoomed-in crop.
+       And the sidebar header had no room under the progress ring and the time.
+       One token fixes both, which is the whole point of it being shared: the banner reads this
+       number and so does the header beside it, so they cannot drift apart. At 168 the banner is
+       7.7:1 on a 1440px screen and shows roughly half again as much of the image. */
+    --acf-topblock: 168px;
 }
 
 /* The adopted controls, at the end of the icon row. A hairline separates them from the site nav
@@ -12998,7 +12988,6 @@ body.format-aicourse .aicourse-hero-banner .aicourse-completion-label {
    `block-size` outright, and a minimum cannot shrink a declared size. Replaced with the height
    this cluster actually wants, so the intent and the effect finally agree. */
 body.format-aicourse .aicourse-hero-banner .aicourse-grade-display {
-    min-inline-size: 2.25rem;
     block-size: 2.25rem;
     font-size: var(--acf-font-size-xs);
 }

@@ -68,9 +68,9 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
         jsIconremoved: 'Icon removed',
         bannergenTitle: 'Generate AI banner',
         bannergenSubtitle: 'AI image generation',
-        bannergenDesc: 'AI reads your course name and generates a cinematic, full-width banner ' +
-            'image tailored to your course subject. The image is automatically cropped and ' +
-            'optimised for your course header, then saved directly to your course.',
+        bannergenDesc: 'AI reads your course name and generates a professional, photorealistic ' +
+            'full-width banner image tailored to your course subject. The image is automatically ' +
+            'cropped and optimised for your course header, then saved directly to your course.',
         bannergenExtralabel: 'Add your own detail (optional)',
         bannergenExtraph: 'e.g. warm evening light, a laboratory bench, muted blues, no people',
         bannergenExtrahint: 'Anything you type here is added to the image prompt alongside the ' +
@@ -79,7 +79,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
         bannergenCostdetail: 'One-time generation cost',
         bannergenGenerate: 'Generate banner',
         bannergenLoadingtitle: 'Generating your banner',
-        bannergenLoadingsub: 'AI is crafting a cinematic banner for your course. ' +
+        bannergenLoadingsub: 'AI is crafting a photorealistic banner for your course. ' +
             'This usually takes one to two minutes - please leave this window open.',
         bannergenPreviewalt: 'Generated course banner',
         bannergenApplied: 'Banner applied to your course',
@@ -2037,10 +2037,18 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
                 // of one expensive question once, so no single request is ever long enough to be
                 // cut, whatever the hosting stack does.
                 var pollAttempts = 0;
-                var POLL_EVERY = 4000;
-                // 90 polls at 4s is six minutes: comfortably past the ~110s the service takes,
-                // with room for the adhoc task to be picked up by the next cron run.
-                var POLL_LIMIT = 90;
+                // ACF-FIX-2.3.3: 2s, halved from 4s. The generation itself is unchanged; what
+                // this shortens is the dead time between the image being ready on the server and
+                // the browser noticing. At 4s that wait averaged 2s and could reach 4s, which is
+                // a long pause on a screen that has already said it is finished. The request is
+                // a status lookup, so twice as often is still cheap.
+                var POLL_EVERY = 2000;
+                // 180 polls at 2s is six minutes -- deliberately the same ceiling as the previous
+                // 90 at 4s. This limit and POLL_EVERY multiply together to form the timeout, so
+                // changing one without the other silently moves it: halving the interval alone
+                // would have cut the wait to three minutes and abandoned generations that were
+                // still legitimately in progress behind a slow cron run.
+                var POLL_LIMIT = 180;
 
                 var succeed = function (imageurl) {
                     $generate.prop('disabled', false);

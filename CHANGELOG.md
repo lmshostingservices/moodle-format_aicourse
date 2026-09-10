@@ -2,6 +2,72 @@
 
 All notable changes to this plugin will be documented in this file.
 
+## [2.3.3] - 2026-09-10
+
+### Changed - the banner generator no longer promises a cinematic image
+
+- **"cinematic" is gone from `bannergen_desc` and `bannergen_loadingsub`; both now say
+  "professional, photorealistic".** The wording was left over from when the service really did
+  produce stylised images. The prompt behind the endpoint was rewritten to ask for editorial
+  photography -- wide establishing shots, natural light, no sci-fi treatment -- so the interface
+  was describing the old behaviour and setting the wrong expectation for the new one.
+
+  Changed in `lang/en/format_aicourse.php` and in the fallback string table in
+  `amd/src/courseformat.js`. Both copies have to move together: the JS table is what renders when
+  the language strings have not been passed through, so leaving it behind would have shown
+  "cinematic" to exactly the users who could not see the corrected string.
+
+### Changed - a finished banner appears about two seconds sooner
+
+- **The generation status poll runs every 2 seconds instead of every 4.** Nothing about the
+  generation itself is faster. What this removes is the dead time after the image is already
+  waiting on the server: at a 4-second interval that gap averaged 2 seconds and could reach 4,
+  which is a noticeable pause on a dialog that has finished its work. The call is a cheap status
+  lookup, so asking twice as often costs little.
+
+- **`POLL_LIMIT` was raised from 90 to 180 in the same change, and this is not optional.** The two
+  constants multiply to form the overall timeout. 90 polls at 4 seconds was a deliberate six-minute
+  ceiling -- comfortably past the ~110 seconds the service takes, with room for the adhoc task to
+  wait for the next cron run. Halving the interval alone would have quietly cut that ceiling to
+  three minutes and failed generations that were still legitimately in progress on a site whose
+  cron runs less often. 180 at 2 seconds restores exactly the six minutes that were there before.
+
+## [2.3.2] - 2026-09-10
+
+### Changed - the activity grade is now plain text
+
+- The score on an activity banner no longer sits inside a ring. It is just the numbers.
+
+  It was a circle, then briefly a pill, and the whole exercise was about getting a fixed shape to
+  hold a value that varies in length -- `-/100`, `100/100` and `1000/1000` all come from the
+  activity's grade item. Removing the shape removes the problem rather than accommodating it:
+  text has no width to overflow.
+
+  It stays legible without a container because of where it sits. On a banner with an image the
+  right-hand cluster already has its own dark glass panel behind it; in gradient mode the text
+  takes the standard body colour against the gradient. Neither case was relying on the badge's
+  own background.
+
+### Changed - the course index header now matches the banner's height
+
+- **The drawer header and the banner beside it are the same height again.** In merged course
+  index mode the two are drawn from one shared token, `--acf-topblock`, which the banner reads as
+  its `min-block-size` and the player header reads as `block-size` less the drawer strip. Raising
+  it from 120px to 168px moves both together, so the top of the page stays level across the seam.
+
+  The height also buys back image. At 120px the banner ran 11.4:1 on a 1920px screen -- far wider
+  than the 3.33:1 image being delivered into it, so most of the frame's height was cropped away.
+  At 168px it is 8.3:1 on a 1440px screen, showing roughly half again as much of the picture.
+
+### Fixed - the progress ring in the course index header had no room beneath it
+
+- **A single-side padding override had been dead since 2.1.146.** `.aicourse-player-header`
+  declared `padding-block-end` *above* the `padding` shorthand, and a shorthand resets every side
+  it covers -- so the override was overwritten on the very next line and the header had only the
+  shorthand's 12px under the ring and the duration. It now sits after the shorthand, which is the
+  only position a single-side override survives one, and is raised to 24px so the extra header
+  height reads as space rather than as a taller box with the same crowding in it.
+
 ## [2.3.1] - 2026-09-10
 
 ### Fixed - the grade chip on activity banners could not hold its own value
