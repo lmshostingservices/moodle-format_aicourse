@@ -2,6 +2,31 @@
 
 All notable changes to this plugin will be documented in this file.
 
+## [2.3.4] - 2026-09-11
+
+### Changed - the top band is a quarter shorter
+
+- **`--acf-topblock` is 126px, down from 168px.** 2.3.2 raised it from 120 to 168 to recover the
+  image height that `background-size: cover` was cropping away, and took it too far: the band read
+  as too tall for the little it holds -- a title and an eyebrow on one side, a progress ring and a
+  duration on the other. 126 is 168 less a quarter. It keeps part of the gain 2.3.2 was after --
+  the banner runs about 8.7:1 on a 1440px screen rather than the 11:1 it was at 120px -- without
+  the top of every page claiming so much of it.
+
+  It is one token and it moves two elements: the banner reads it as `min-block-size`, the course
+  index header reads it as `block-size` less the drawer strip. That is deliberate, and it is why
+  neither can be resized on its own. Measured at 126px on the course page, the section page and
+  an activity page, banner and header identical on all three.
+
+  The 24px under the progress ring that 2.3.3 shipped survives the reduction: the header's own
+  contents come to about 90px including it, so 126 still clears them with nothing clipped.
+  Below roughly 116px that padding starts to be squeezed and the ring crowds the edge again.
+
+- **Phones are unaffected.** Under 600px the sticky wrapper sets `--acf-topblock: 0px` outright
+  rather than tracking the desktop value, so the banner there is sized by its own content as
+  before. The comment above that block still described the token as 120px; it no longer quotes a
+  number that has now changed three times.
+
 ## [2.3.3] - 2026-09-10
 
 ### Changed - the banner generator no longer promises a cinematic image
