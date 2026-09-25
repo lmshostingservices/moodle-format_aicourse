@@ -2,6 +2,51 @@
 
 All notable changes to this plugin will be documented in this file.
 
+## [2.4.0] - 2026-09-25
+
+### Added - the top band collapses
+
+- **A chevron on the band's lower edge shuts it; the same chevron, now at the top of the page,
+  brings it back.** The band is 126px of banner and, in merged course index mode, the drawer
+  header beside it. Collapsed, both go to zero together and the page begins at its content.
+
+  It is one control in one horizontal position, not two. Expanded it is pulled up by exactly its
+  own height so it sits on the banner's bottom edge and costs the band nothing; collapsed it
+  drops back into the flow with a few pixels of clearance. Styling the two states differently was
+  tried first and read as two different controls, so the pill carries its own surface and border
+  and looks the same whether it is sitting on a dark photograph or on the page.
+
+- **The state is remembered, and remembered without a flash.** It is a user preference, so it
+  follows the learner from page to page and between sessions.
+
+  The class that collapses the band is written into the `<body>` tag server-side, in
+  `page_set_course()`, alongside the colour mode and the grader class -- not by the JavaScript.
+  This is the whole difference between the feature feeling built-in and feeling bolted on: a
+  learner who keeps the band shut loads many pages, and had the class been added by script, every
+  one of them would have painted the full band and snapped it closed a moment later. Verified by
+  reading the body class at first paint on reload, not merely after the page settles.
+
+  The preference is deliberately one flag for the whole site rather than one per course. Someone
+  who wants the extra room wants it in every course, not in one.
+
+- **It is a real button.** Focusable, operable with Enter and Space, `aria-expanded` kept in step,
+  and its label says what the next press will do rather than what the band currently is -- so a
+  page rendered already-collapsed does not announce "Collapse header". 48x24, which clears the
+  WCAG 2.2 minimum target size; a control whose only job is to be clicked should not be the one
+  that fails it. Collapsed, the banner is `visibility: hidden`, so its title and its four links
+  leave the accessibility tree and the tab order rather than becoming invisible tab stops.
+
+### Notes for anyone changing this later
+
+- Three things have to give way for the band to reach zero, and missing any one leaves a strip
+  behind: the shared `--acf-topblock` token (which alone only removes the floor), an explicit
+  `block-size: 0` on the banner, and the drawer header's padding -- it is `box-sizing:
+  border-box`, so with 12px/24px of padding a height of zero still renders a 36px strip.
+
+- The preference must stay declared in `format_aicourse_user_preferences()`. Undeclared, core
+  rejects the AJAX write, the band reopens on every page, and nothing anywhere reports an error.
+  That is ACF-FIX-2.1.43 repeating, and there is now a test that fails if the declaration goes.
+
 ## [2.3.4] - 2026-09-11
 
 ### Changed - the top band is a quarter shorter

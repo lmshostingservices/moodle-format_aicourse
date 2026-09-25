@@ -439,6 +439,8 @@ The default is 110, which matches the compact banner layout. Set it to 0 to let 
 Courses **with** a banner image ignore this: an image banner is sized by its own layout so the picture always has a sensible aspect ratio.';
 $string['herobannerwidth'] = 'Hero banner width';
 $string['herobannerwidth_help'] = 'Set the maximum width of the hero banner in pixels to match your theme\'s content width. For example, if your Moodle theme has a 1200px content area, set this to 1200. Set to 0 (default) for full width up to 1400px.';
+$string['herocollapse'] = 'Collapse header';
+$string['heroexpand'] = 'Expand header';
 $string['heroimageoverlay'] = 'How much to darken the banner image behind the text';
 $string['heroimageoverlay_desc'] = '<strong>What this does:</strong> darkens the banner image so the white course title on top of it stays readable. 0 means no darkening at all; 100 is almost black.<br /><br /><em>Why it matters:</em> a pale photograph — snow, a bright sky, a white background — makes white text vanish. The overlay is what stops that.<br /><br /><em>Suggested:</em> around 45 for a normal photograph. Below 25 only if your images are already dark. Above 70 the picture is barely visible.';
 $string['heroimageoverlay_help'] = 'How dark the overlay between the banner **image** and the banner text is, as a percentage. Leave it at **-1** to follow the site-wide "Banner overlay strength" setting.

@@ -304,6 +304,12 @@ class format_aicourse extends format_topics {
                 if ($colourclass !== '') {
                     $page->add_body_class($colourclass);
                 }
+                // 2.4.0: the collapsed state of the top band. Read here with the other body
+                // classes for the same reason they are: written into the <body> tag, so a page
+                // whose band is collapsed never paints the open band first and snaps shut.
+                if (\format_aicourse\local\herocollapse::is_collapsed()) {
+                    $page->add_body_class(\format_aicourse\local\herocollapse::BODY_CLASS);
+                }
                 // ACF-FIX-2.1.12: hero banner overlay strength.
                 $scrimclass = \format_aicourse\local\callbacks::get_scrim_class();
                 if ($scrimclass !== '') {
@@ -1586,6 +1592,16 @@ function format_aicourse_user_preferences(): array {
         // ACF-FIX-2.1.55: records that a course's initial drawer state has been applied once.
         '/^format_aicourse_indexstate_\d+$/' => [
             'isregex' => true,
+            'type' => PARAM_INT,
+            'null' => NULL_NOT_ALLOWED,
+            'default' => 0,
+            'permissioncallback' => [core_user::class, 'is_current_user'],
+        ],
+        // 2.4.0: the collapsed state of the top band. Not a regex and not per course -- one
+        // flag for the whole site, because someone who wants the room wants it everywhere.
+        // Undeclared, core_user_update_user_preferences rejects the write and the band silently
+        // reopens on the next page (ACF-FIX-2.1.43).
+        \format_aicourse\local\herocollapse::PREF => [
             'type' => PARAM_INT,
             'null' => NULL_NOT_ALLOWED,
             'default' => 0,

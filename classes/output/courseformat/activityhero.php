@@ -336,6 +336,13 @@ class activityhero implements named_templatable, renderable {
         $data->homeurl = (new moodle_url('/course/view.php', ['id' => $course->id]))->out();
         $data->homelabel = get_string('gotocourse', 'format_aicourse');
 
+        // 2.4.0: the collapse toggle. Assembled in one place because both hero templates render
+        // the same control, and because the label on load has to agree with the body class the
+        // page is about to carry -- see \format_aicourse\local\herocollapse.
+        foreach (\format_aicourse\local\herocollapse::export() as $key => $value) {
+            $data->$key = $value;
+        }
+
         // AI Generate Banner button — editors only. The delete button additionally needs an
         // uploaded custom banner AND Moodle to be in edit mode.
         //

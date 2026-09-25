@@ -74,6 +74,16 @@ class before_footer_html_generation {
             return;
         }
 
+        // 2.4.0: the collapse toggle, on every page this format draws a banner on.
+        //
+        // Required here rather than beside heroatop below because the two have different
+        // conditions: heroatop only runs when the "banner above the tabs" option is on and edit
+        // mode is off, whereas the toggle belongs to the banner itself and has to work wherever
+        // the banner appears -- including in edit mode, and including activity pages where the
+        // banner arrives later via heroinject. The module is inert when there is no toggle on
+        // the page, so requiring it unconditionally costs one cached AMD request.
+        $PAGE->requires->js_call_amd('format_aicourse/herocollapse', 'init');
+
         // ACF-FIX-2.1.26: lift the banner to the very top of the page.
         //
         // This runs before the hero-injection branch below and independently of it, because the

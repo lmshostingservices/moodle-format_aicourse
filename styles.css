@@ -13463,3 +13463,121 @@ body.format-aicourse.aicourse-hidefooter-students:not(.aicourse-is-grader):not(.
 :is(#footer, #page-footer) {
     display: none;
 }
+
+/* ==========================================================================
+   2.4.0 — THE COLLAPSIBLE TOP BAND
+
+   The band is the hero banner and, in merged course index mode, the drawer header beside it.
+   Collapsing is one body class, aicourse-hero-collapsed, written into the <body> tag server-side
+   (see \format_aicourse\local\herocollapse) so a page whose band is shut never paints it open
+   first. The JavaScript only toggles the class on click.
+
+   Three things have to give way for the band to actually reach zero, and missing any one of them
+   leaves a stubborn strip behind:
+
+     1. --acf-topblock, the shared token. On its own this only removes the FLOOR -- the banner
+        would still be as tall as its own contents.
+     2. An explicit block-size: 0 on the banner, which its existing overflow: hidden then clips.
+     3. The drawer header's padding. It is box-sizing: border-box with 12px/24px of padding, so
+        block-size: 0 alone still renders a 36px strip -- the padding is the height.
+
+   The handle is NOT hidden with the band; it is the way back.
+   ========================================================================== */
+
+body.format-aicourse.aicourse-hero-collapsed {
+    --acf-topblock: 0px;
+}
+
+/* The banner. The second selector is deliberately more specific than image mode's own
+   `.aicourse-hero-banner.aicourse-hero-has-image` rule rather than merely later than it: at equal
+   specificity this would be decided by file order alone, which is how the 2.3.1 chip fix came to
+   need relocating. Stated once, it wins in both modes wherever it sits. */
+body.format-aicourse.aicourse-hero-collapsed .aicourse-hero-banner,
+body.format-aicourse.aicourse-hero-collapsed .aicourse-hero-banner.aicourse-hero-has-image {
+    block-size: 0;
+    min-block-size: 0;
+    border-block: 0;
+    box-shadow: none;
+    /* Taken out of the accessibility tree as well as hidden: a collapsed banner's title and
+       progress ring should not still be read out, and its links should not still be tab stops. */
+    visibility: hidden;
+}
+
+/* The drawer header beside it. Higher specificity than the rule that sizes it
+   (body.aicourse-player-on .aicourse-player-header), so the two stay level when shut just as
+   they do when open. */
+body.aicourse-player-on.aicourse-hero-collapsed .aicourse-player-header {
+    block-size: 0;
+    min-block-size: 0;
+    padding-block: 0;
+    border-block: 0;
+    overflow: hidden;
+    visibility: hidden;
+}
+
+/* --- The handle ---------------------------------------------------------
+
+   One control, centred, in both states -- it never moves horizontally, so the click target is
+   where the user last left it.
+
+   Expanded, it is pulled up onto the banner's bottom edge by exactly its own height, so the
+   handle costs the band nothing. That negative margin is undone when collapsed, where there is
+   no banner left to sit on and the pull would drag it up behind the page furniture.
+
+   48x24 rather than something daintier because 24x24 CSS pixels is the WCAG 2.2 minimum target
+   size, and a control whose whole job is to be clickable should not be the one that fails it. */
+body.format-aicourse .aicourse-hero-collapse {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: 48px;
+    block-size: 24px;
+    margin-inline: auto;
+    /* Pulled up by exactly its own height, so the handle costs the expanded band nothing. */
+    margin-block-start: -24px;
+    padding: 0;
+    border: 1px solid var(--acf-hero-border, rgba(2, 6, 23, 0.18));
+    border-radius: var(--acf-radius-pill, 999px);
+    /* One appearance in both states, not two. The handle sits on a light page when the band is
+       shut and on the banner -- which may be a dark photograph -- when it is open, so it carries
+       its own opaque surface and border rather than borrowing either background. Styling the two
+       states differently was tried and read as two different controls. */
+    background: var(--acf-surface, #fff);
+    color: var(--acf-text-secondary, #475569);
+    box-shadow: var(--acf-elevation-1, 0 1px 2px rgba(2, 6, 23, 0.16));
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+body.format-aicourse .aicourse-hero-collapse:hover,
+body.format-aicourse .aicourse-hero-collapse:focus-visible {
+    background: var(--acf-surface-2, #f1f5f9);
+    color: var(--acf-text-primary, #0f172a);
+}
+
+body.format-aicourse .aicourse-hero-collapse-icon {
+    display: block;
+    transition: transform 0.18s ease;
+}
+
+/* Collapsed: back into the flow. The negative pull is undone -- there is no banner left to sit
+   on, and keeping it would drag the handle up under the site navigation -- and a few pixels of
+   clearance stop the pill reading as something clipped by the top of the page. */
+body.format-aicourse.aicourse-hero-collapsed .aicourse-hero-collapse {
+    margin-block-start: var(--acf-space-1, 4px);
+}
+
+/* The chevron points the way the band will move: up to close it, down to bring it back. */
+body.format-aicourse.aicourse-hero-collapsed .aicourse-hero-collapse-icon {
+    transform: rotate(180deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    body.format-aicourse .aicourse-hero-collapse,
+    body.format-aicourse .aicourse-hero-collapse-icon {
+        transition: none;
+    }
+}
