@@ -111,6 +111,7 @@ class generate_card_image extends generate_banner_image {
             'targettype' => $params['targettype'],
             'targetid' => (int) $target->id,
             'prompt' => $prompttext,
+            'requestid' => \core\uuid::generate(),
         ]);
         $task->set_component('format_aicourse');
         cardimage::set_status((int) $course->id, $params['targettype'], (int) $target->id, 'queued');
@@ -131,6 +132,9 @@ class generate_card_image extends generate_banner_image {
      *  - sectionName / activityName / activityType say what the card is about.
      *  - extraDetail carries the teacher's own words, exactly as the banner dialogue does, so a
      *    service that knows nothing of cards still receives the teacher's direction.
+     *  - prompt, negativePrompt and promptVersion (2.6.0) are the complete prompt the plugin wrote,
+     *    see {@see \format_aicourse\local\cardprompt}. An updated service uses it verbatim; an
+     *    older one ignores the fields and composes from the ones above, as before.
      *
      * Everything is plain text. Names go through format_string() with filters applied and are
      * then flattened, so multilang markup reaches the service as the text a reader would see.
@@ -179,6 +183,10 @@ class generate_card_image extends generate_banner_image {
             $payload['extraDetail'] = \core_text::substr($prompt, 0, self::PROMPT_MAX);
         }
 
+        // 2.6.0: the complete prompt, written by the plugin, for the service to use verbatim. The
+        // fields above stay for services not yet updated, for their logs and for moderation.
+        $payload += \format_aicourse\local\cardprompt::compose($course, $type, $target, $prompt);
+
         return $payload;
     }
 
@@ -189,9 +197,16 @@ class generate_card_image extends generate_banner_image {
      * @param string $type section or cm.
      * @param int $id course_sections.id or course_modules.id.
      * @param string $prompt Teacher's description.
+     * @param string $requestid Idempotency key made when the job was queued; '' makes a new one.
      * @return string URL of the stored image.
      */
-    public static function generate_card(\stdClass $course, string $type, int $id, string $prompt): string {
+    public static function generate_card(
+        \stdClass $course,
+        string $type,
+        int $id,
+        string $prompt,
+        string $requestid = ''
+    ): string {
         global $CFG;
 
         // Re-checked here: the section or activity may have been deleted since queueing.
@@ -199,6 +214,9 @@ class generate_card_image extends generate_banner_image {
         [$siteid, $apikey] = credentials::require_configured();
 
         $postdata = ['siteUrl' => $siteid, 'apiKey' => $apikey] + self::build_payload($course, $type, $target, $prompt);
+        // 2.6.0: one key per queued job, so the service never charges twice for the same card if a
+        // request is repeated after its response was lost.
+        $postdata['requestId'] = $requestid !== '' ? $requestid : \core\uuid::generate();
 
         \core_php_time_limit::raise(300);
         require_once($CFG->libdir . '/filelib.php');

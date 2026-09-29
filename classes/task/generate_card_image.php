@@ -67,9 +67,17 @@ class generate_card_image extends \core\task\adhoc_task {
             return;
         }
 
+        // One cron process runs many jobs; a colour a teacher changed since the last one must count.
+        cardimage::reset_cache();
         cardimage::set_status($courseid, $type, $id, 'running');
         try {
-            $url = generator::generate_card($course, $type, $id, (string) ($data->prompt ?? ''));
+            $url = generator::generate_card(
+                $course,
+                $type,
+                $id,
+                (string) ($data->prompt ?? ''),
+                (string) ($data->requestid ?? '')
+            );
             cardimage::set_status($courseid, $type, $id, 'done', $url);
         } catch (\Throwable $e) {
             cardimage::set_status($courseid, $type, $id, 'failed', $e->getMessage());

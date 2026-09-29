@@ -151,6 +151,7 @@ class generate_all_card_images extends external_api {
                 'targettype' => $type,
                 'targetid' => $id,
                 'prompt' => '',
+                'requestid' => \core\uuid::generate(),
             ]);
             $task->set_component('format_aicourse');
             cardimage::set_status((int) $course->id, $type, $id, 'queued');

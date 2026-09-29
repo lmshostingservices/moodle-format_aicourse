@@ -248,6 +248,10 @@ final class card_image_test extends external_testcase {
         $this->assertSame('Recognition that works', $payload['activityName']);
         $this->assertSame('page', $payload['activityType']);
         $this->assertSame('warm light', $payload['extraDetail']);
+        $this->assertStringStartsWith('Subject: Recognition that works.', $payload['prompt']);
+        $this->assertStringEndsWith("Teacher's direction: warm light.", $payload['prompt']);
+        $this->assertSame(\format_aicourse\local\cardprompt::VERSION, $payload['promptVersion']);
+        $this->assertNotEmpty($payload['negativePrompt']);
 
         $payload = generate_card_image::build_payload(get_course($this->course->id), 'section', $this->section, '');
         $this->assertSame((int) $this->section->id, $payload['sectionId']);
@@ -327,5 +331,23 @@ final class card_image_test extends external_testcase {
             'format_aicourse_generate_all_card_images',
             ['courseid' => $this->course->id, 'scope' => 'all']
         );
+    }
+
+    /**
+     * Every queued job carries its own idempotency key, so a repeat is never charged twice.
+     */
+    public function test_queued_jobs_carry_a_request_id(): void {
+        $this->set_fake_credentials();
+        $this->setUser($this->teacher);
+        generate_card_image::execute($this->course->id, 'section', (int) $this->section->id, '');
+        generate_card_image::execute($this->course->id, 'cm', (int) $this->page->cmid, '');
+
+        $ids = [];
+        foreach (\core\task\manager::get_adhoc_tasks('\\format_aicourse\\task\\generate_card_image') as $task) {
+            $ids[] = (string) ($task->get_custom_data()->requestid ?? '');
+        }
+        $this->assertCount(2, $ids);
+        $this->assertMatchesRegularExpression('/^[0-9a-f-]{36}$/', $ids[0]);
+        $this->assertNotSame($ids[0], $ids[1]);
     }
 }

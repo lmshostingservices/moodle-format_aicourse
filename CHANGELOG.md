@@ -2,6 +2,33 @@
 
 All notable changes to this plugin will be documented in this file.
 
+## [2.6.0] - 2026-09-29
+
+### Improved - better AI card images
+
+- **The plugin now writes the full image prompt for every card.** Each prompt is built the same
+  way, so all the images in a course look like one set:
+  1. the card's title plus the opening of its summary or activity description;
+  2. the course it belongs to, with an instruction to show one concrete scene instead of stock
+     clichés;
+  3. the course's AI card image style, spelled out as art direction;
+  4. the card's own colour, or the course accent, named and given as a hex value;
+  5. a 16:9 composition with one focal point and nothing important near the edges the card crops;
+  6. the teacher's own words, last, so they refine the image rather than replace the brief.
+
+  A separate list of things that must never appear goes with it: text, logos, watermarks, UI,
+  distorted hands and the usual lightbulbs and graduation caps. Services not yet updated ignore
+  the new fields and keep working as before.
+
+- **No double charges.** Each queued card image carries its own request ID, so the image service
+  can recognise a repeated request and charge for it only once.
+
+### Fixed
+
+- Bold words in a summary or activity description no longer reach the image prompt in CAPITALS.
+- A card colour changed while a batch is running is now used by the cards still waiting to
+  generate.
+
 ## [2.5.0] - 2026-09-29
 
 ### Added - images on every card, and a new card design
