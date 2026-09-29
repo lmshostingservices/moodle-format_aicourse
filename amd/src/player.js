@@ -662,6 +662,12 @@ const decorate = (config, strings) => {
         if (!cmid || !config.activities[cmid]) {
             return;
         }
+        // 3.0.0: a subsection's row is not an activity row. Core draws its delegated section
+        // inside it, heading and all; an icon and a time pill added around that heading pushed it
+        // into a narrow band between them. Its activities are decorated as rows in their own right.
+        if (row.querySelector(':scope > .delegated-section')) {
+            return;
+        }
         decorateRow(row, config.activities[cmid], strings);
     });
 };

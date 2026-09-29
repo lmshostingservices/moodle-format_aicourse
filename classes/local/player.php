@@ -59,7 +59,6 @@ class player {
         $grades = $tracked ? self::get_user_grades($course, (int) $USER->id) : [];
 
         $activities = [];
-        $totalminutes = 0;
         $done = 0;
         $trackable = 0;
 
@@ -69,7 +68,6 @@ class player {
             }
 
             $minutes = progress::estimate_activity_minutes($cm);
-            $totalminutes += $minutes;
 
             $iscomplete = false;
             $hascompletion = false;
@@ -163,7 +161,8 @@ class player {
             'coursename' => text::plain($course->fullname, \context_course::instance($course->id)),
             'courseurl' => (new \moodle_url('/course/view.php', ['id' => $course->id]))->out(false),
             'percent' => $percent,
-            'totaltime' => progress::format_estimated_time($totalminutes),
+            // 3.0.0: the same total the course hero shows; see progress::course_totals().
+            'totaltime' => progress::format_estimated_time(progress::course_totals($modinfo)['minutes']),
             'logourl' => self::get_logo_url(),
             'activities' => $activities,
             'nav' => [

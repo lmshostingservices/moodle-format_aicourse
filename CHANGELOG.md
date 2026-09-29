@@ -2,7 +2,7 @@
 
 All notable changes to this plugin will be documented in this file.
 
-## [2.6.0] - 2026-09-29
+## [3.0.0] - 2026-09-29
 
 ### Improved - better AI card images
 
@@ -22,6 +22,28 @@ All notable changes to this plugin will be documented in this file.
 
 - **No double charges.** Each queued card image carries its own request ID, so the image service
   can recognise a repeated request and charge for it only once.
+
+### Changed - edit mode is Moodle's standard list again
+
+- **While editing, activities are shown exactly as Moodle shows them**, so moving and reordering
+  are as quick as on any other course. The image row added under every activity in 2.5.0 is gone.
+  Each activity's own menu now has a **Card image** item, straight after "Edit settings". It opens
+  a dialog with a preview of the card and the same four tools: Upload image, AI image, Card colour
+  and Remove image.
+
+### Fixed - course index
+
+- **Activities in the General section always show in the course index.** "Hide the General
+  section" is meant for a General that holds only Announcements. On a course that keeps real
+  activities there, it hid them from the index while the course page still showed them. General is
+  now hidden only when it holds nothing but Announcements.
+- A learner reading an announcement still sees the General section in the index, so they know
+  where they are.
+- **The course header and the sidebar now show the same totals.** The header left out activities
+  in General and inside subsections, so the two could disagree, for example "1 activity, 5 min"
+  above a sidebar saying "40 min". Both now count exactly what the course index lists.
+- A subsection no longer counts as an extra module in the header.
+- A subsection's heading in the index is no longer squeezed between an icon and a time pill.
 
 ### Fixed
 

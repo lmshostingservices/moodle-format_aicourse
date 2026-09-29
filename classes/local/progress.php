@@ -400,6 +400,35 @@ workshop=45";
     }
 
     /**
+     * The course's activity count and total estimated time, for the current user.
+     *
+     * 3.0.0. The course hero and the sidebar each added these up their own way. The hero walked
+     * the listed sections, so it missed the activities inside a subsection; the sidebar counted
+     * every activity the user could open, including stealth ones that are on neither the page nor
+     * the index. They showed different totals for the same course. Both now call this, and it
+     * counts exactly the activities the course index lists: cm_counts_as_content().
+     *
+     * @param \course_modinfo $modinfo Course modinfo for the current user.
+     * @return array{activities: int, minutes: int}
+     */
+    public static function course_totals($modinfo): array {
+        $activities = 0;
+        $minutes = 0;
+        foreach ($modinfo->get_cms() as $cm) {
+            if (!activityinfo::cm_counts_as_content($cm)) {
+                continue;
+            }
+            // A subsection's own card is not an activity; what is inside it is counted in its own
+            // right, since get_cms() includes the delegated section's activities.
+            if ($cm->modname !== 'subsection') {
+                $activities++;
+            }
+            $minutes += self::estimate_activity_minutes($cm);
+        }
+        return ['activities' => $activities, 'minutes' => $minutes];
+    }
+
+    /**
      * Format a duration in minutes for display.
      *
      * ACF-FIX-2.0: i18n — this was built by concatenation ("2" . " " . "hr" . " " . "30" . " " .

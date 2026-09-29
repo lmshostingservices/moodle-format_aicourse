@@ -231,7 +231,7 @@ $string['cardimage_all_button'] = 'Generate card images';
 $string['cardimage_all_capped'] = 'A batch is limited to {$a} cards. Run it again afterwards for the rest.';
 $string['cardimage_all_confirm'] = 'Generate {$a} images';
 $string['cardimage_all_counting'] = 'Counting cards…';
-$string['cardimage_all_desc'] = 'Each card gets its own AI image, based on its title and the course name, in this course\'s image style ({$a}).';
+$string['cardimage_all_desc'] = 'Each card gets its own AI image, based on its title, its description and the course, in this course\'s image style ({$a}).';
 $string['cardimage_all_none'] = 'Every card in this selection already has an image.';
 $string['cardimage_all_onlymissing'] = 'Only cards without an image';
 $string['cardimage_all_queued'] = '{$a} images are being generated. Each one appears on its card as soon as it is ready - you can keep working.';
@@ -249,11 +249,13 @@ $string['cardimage_colour_desc'] = 'Shown when the card has no image.';
 $string['cardimage_colour_saved'] = 'Card colour saved';
 $string['cardimage_colourfor'] = 'Choose a colour for {$a}';
 $string['cardimage_cost'] = 'Uses {$a} credits';
+$string['cardimage_dialogtitle'] = 'Card image: {$a}';
 $string['cardimage_failed'] = 'The image could not be generated: {$a}';
 $string['cardimage_generate'] = 'Generate image';
 $string['cardimage_generated'] = 'AI image added to {$a}';
 $string['cardimage_generating'] = 'Generating image…';
-$string['cardimage_prompthint'] = 'The image is based on the card title and the course name. Anything you add here steers it.';
+$string['cardimage_menu'] = 'Card image';
+$string['cardimage_prompthint'] = 'The image is based on the card\'s title, its description and the course. Anything you add here steers it.';
 $string['cardimage_promptlabel'] = 'Describe the image (optional)';
 $string['cardimage_promptph'] = 'e.g. a small team around a whiteboard, warm natural light, no text';
 $string['cardimage_remove'] = 'Remove image';
@@ -554,7 +556,7 @@ On a course page it is the last thing a learner needs and the first thing betwee
 The editing toolbar that appears at the bottom of the screen while you build a course is a different thing and is **never** hidden, so Move, Duplicate and Delete always stay available. The footer returns in Edit mode.';
 $string['hidefromothers'] = 'Hide section';
 $string['hidegeneral'] = 'Hide the General section (Moodle\'s \'Section 0\', usually just Announcements)';
-$string['hidegeneral_desc'] = '<strong>What the General section is:</strong> every Moodle course has a first section called \'General\' (Moodle calls it Section 0). Usually it holds nothing but the Announcements forum.<br /><br />On a course whose real content starts at Section 1, that empty section is one more thing a learner scrolls past before reaching what they came for.<br /><br /><strong>What this does:</strong> hides it from the course index and from the section cards.<br /><br /><em>It always comes back when editing is turned on</em>, so a teacher can still post announcements.';
+$string['hidegeneral_desc'] = '<strong>What the General section is:</strong> every Moodle course has a first section called \'General\' (Moodle calls it Section 0). Usually it holds nothing but the Announcements forum.<br /><br />On a course whose real content starts at Section 1, that empty section is one more thing a learner scrolls past before reaching what they came for.<br /><br /><strong>What this does:</strong> hides it from the course index and from the section cards.<br /><br /><em>It always comes back when editing is turned on</em>, so a teacher can still post announcements.<br /><br />If a course keeps activities in General besides Announcements, it is never hidden there, so learners can always find them.';
 $string['hidegeneral_help'] = 'Section 0 of a Moodle course is called "General". It usually holds only the Announcements forum, and on a course whose real content starts at Section 1 it is a heading learners read past before reaching anything they came for.
 
 * **Show** - leave it in the course index and the cards.
@@ -563,7 +565,9 @@ $string['hidegeneral_help'] = 'Section 0 of a Moodle course is called "General".
 
 This hides the section from view. It does not delete anything and does not stop announcements being posted or emailed - the forum still works exactly as before.
 
-It always comes back in edit mode, so a teacher can still reach it.';
+It always comes back in edit mode, so a teacher can still reach it.
+
+If General holds any activity besides Announcements, it is never hidden, so learners can always find that content in the course index.';
 $string['hidesecondarynav'] = 'Course tabs (Course, Settings, Participants, Grades, Reports)';
 $string['hidesecondarynav_all'] = 'Hide from everyone';
 $string['hidesecondarynav_desc'] = '<strong>What the course tabs are:</strong> the row reading <em>Course, Settings, Participants, Grades, Reports, More</em> that Moodle puts under the course name.<br /><br /><strong>What this does:</strong> hides that row.<br /><br /><em>Why you might:</em> almost none of it is for learners — Settings, Reports and Participants are teacher tools. \'Hide from students\' keeps the tabs for course staff — teachers, non-editing teachers and managers alike — and clears them away for everyone else.<br /><br />A non-editing teacher needs this row as much as an editing one does: on an activity page it is the row carrying the assignment\'s <em>Submissions</em> tab.';

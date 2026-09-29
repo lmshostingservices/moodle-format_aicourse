@@ -84,6 +84,54 @@ class activityinfo {
     }
 
     /**
+     * Is this the course's Announcements forum?
+     *
+     * 3.0.0. Moodle creates one forum of type 'news' per course, in the General section. It is how
+     * the "Hide the General section" setting tells a General section that holds only announcements
+     * from one a teacher has filled with learning content.
+     *
+     * @param \cm_info $cm Course module.
+     * @return bool
+     */
+    public static function is_announcements($cm): bool {
+        global $DB;
+        static $newsforums = [];
+
+        if ($cm->modname !== 'forum') {
+            return false;
+        }
+        $courseid = (int) $cm->course;
+        if (!isset($newsforums[$courseid])) {
+            $newsforums[$courseid] = $DB->get_records_menu('forum', ['course' => $courseid, 'type' => 'news'], '', 'id, id AS fid');
+        }
+        return isset($newsforums[$courseid][(int) $cm->instance]);
+    }
+
+    /**
+     * Does the General section hold anything a learner came for?
+     *
+     * 3.0.0. "Hide the General section" exists because on most courses General holds only the
+     * Announcements forum. When a teacher has put real activities there, hiding it from the course
+     * index hid content the page itself was showing: the index and the page disagreed, and a
+     * learner on one of those activities could not find where they were in the index.
+     *
+     * So the setting applies only when there is nothing to hide: General is empty, or holds only
+     * the Announcements forum, for this user.
+     *
+     * @param \course_modinfo $modinfo Course modinfo for the current user.
+     * @return bool True when General holds at least one activity other than Announcements.
+     */
+    public static function general_has_content($modinfo): bool {
+        foreach ($modinfo->sections[0] ?? [] as $cmid) {
+            $cm = $modinfo->get_cm($cmid);
+            if (self::cm_counts_as_content($cm) && !self::is_announcements($cm)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * ACF-FIX-2.0: Resolve the section delegated to a mod_subsection course module, if any.
      *
      * @param \cm_info $cm Course module.

@@ -132,7 +132,7 @@ class generate_card_image extends generate_banner_image {
      *  - sectionName / activityName / activityType say what the card is about.
      *  - extraDetail carries the teacher's own words, exactly as the banner dialogue does, so a
      *    service that knows nothing of cards still receives the teacher's direction.
-     *  - prompt, negativePrompt and promptVersion (2.6.0) are the complete prompt the plugin wrote,
+     *  - prompt, negativePrompt and promptVersion (3.0.0) are the complete prompt the plugin wrote,
      *    see {@see \format_aicourse\local\cardprompt}. An updated service uses it verbatim; an
      *    older one ignores the fields and composes from the ones above, as before.
      *
@@ -183,7 +183,7 @@ class generate_card_image extends generate_banner_image {
             $payload['extraDetail'] = \core_text::substr($prompt, 0, self::PROMPT_MAX);
         }
 
-        // 2.6.0: the complete prompt, written by the plugin, for the service to use verbatim. The
+        // 3.0.0: the complete prompt, written by the plugin, for the service to use verbatim. The
         // fields above stay for services not yet updated, for their logs and for moderation.
         $payload += \format_aicourse\local\cardprompt::compose($course, $type, $target, $prompt);
 
@@ -214,7 +214,7 @@ class generate_card_image extends generate_banner_image {
         [$siteid, $apikey] = credentials::require_configured();
 
         $postdata = ['siteUrl' => $siteid, 'apiKey' => $apikey] + self::build_payload($course, $type, $target, $prompt);
-        // 2.6.0: one key per queued job, so the service never charges twice for the same card if a
+        // 3.0.0: one key per queued job, so the service never charges twice for the same card if a
         // request is repeated after its response was lost.
         $postdata['requestId'] = $requestid !== '' ? $requestid : \core\uuid::generate();
 

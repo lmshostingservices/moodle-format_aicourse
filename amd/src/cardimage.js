@@ -32,6 +32,7 @@
 import Ajax from 'core/ajax';
 import {getString, getStrings} from 'core/str';
 import Notification from 'core/notification';
+import Modal from 'core/modal';
 import ModalSaveCancel from 'core/modal_save_cancel';
 import ModalEvents from 'core/modal_events';
 import Pending from 'core/pending';
@@ -88,7 +89,8 @@ const STRING_KEYS = [
     'cardimage_colour_saved', 'cardimage_all_title', 'cardimage_all_scope',
     'cardimage_all_scope_all', 'cardimage_all_scope_sections', 'cardimage_all_scope_activities',
     'cardimage_all_onlymissing', 'cardimage_all_counting', 'cardimage_all_none',
-    'cardimage_all_desc', 'cardimage_all_capped', 'cardimage_all_queued', 'save', 'cancel',
+    'cardimage_all_desc', 'cardimage_all_capped', 'cardimage_all_queued', 'cardimage_menu',
+    'cardimage_dialogtitle', 'save', 'cancel',
 ];
 
 /**
@@ -715,33 +717,47 @@ const generateAll = async() => {
 };
 
 /**
- * Build the compact image row added to one of core's activity rows.
+ * Build the body of the card image dialog for one activity.
+ *
+ * 3.0.0. While editing, Moodle's own activity list is left exactly as Moodle draws it, so moving
+ * and reordering stay as quick as on any other course. The image tools live in a dialog opened
+ * from the activity's own menu instead of in a row under every activity.
+ *
+ * The dialog carries a preview drawn like the real card, and the same four tools the section
+ * cards have, each with its name written out.
  *
  * @param {Number} cmid Course module id.
  * @param {Object} data Its entry in the page data.
  * @returns {HTMLElement}
  */
-const buildCmRow = (cmid, data) => {
-    const tool = (action, label, title, svg, extra = '') => {
+const buildCmDialog = (cmid, data) => {
+    const svg = (paths) => '<svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="18" '
+        + 'height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" '
+        + 'stroke-linecap="round" stroke-linejoin="round">' + paths + '</svg>';
+    const tool = (action, label, text, hint, icon, extra = '') => {
         const button = el('button', {
             'type': 'button',
-            'class': 'acf-tools__btn' + extra,
+            'class': 'acf-tools__btn acf-cmdialog__tool' + extra,
             'data-action': action,
             'aria-label': label,
-            'title': title,
         });
-        button.innerHTML = svg;
+        button.innerHTML = icon;
+        const words = el('span', {'class': 'acf-cmdialog__words'}, [el('span', {'class': 'acf-cmdialog__label', 'text': text})]);
+        if (hint) {
+            words.appendChild(el('span', {'class': 'acf-cmdialog__hint', 'text': hint}));
+        }
+        button.appendChild(words);
         return button;
     };
-    const svg = (paths) => '<svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="16" '
-        + 'height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" '
-        + 'stroke-linecap="round" stroke-linejoin="round">' + paths + '</svg>';
 
     const top = el('div', {'class': 'acf-media__top'});
     if (data.iconurl) {
         top.appendChild(el('span', {'class': 'acf-media__icon'}, [el('img', {'src': data.iconurl, 'alt': ''})]));
     }
-    const panel = el('div', {'class': 'acf-media__panel', 'aria-hidden': 'true'}, [top]);
+    const panel = el('div', {'class': 'acf-media__panel', 'aria-hidden': 'true'}, [
+        top,
+        el('span', {'class': 'acf-media__title', 'text': data.name}),
+    ]);
     const thumb = el('div', {
         'class': 'acf-media' + (data.url ? ' acf-media--image' : '') + (isLight(data.colour) ? ' acf-media--light' : ''),
         'data-cardtype': 'cm',
@@ -752,32 +768,32 @@ const buildCmRow = (cmid, data) => {
         'data-colour': data.colour || '',
     }, [panel]);
     if (data.url) {
-        thumb.appendChild(el('img', {'class': 'acf-media__img', 'src': data.url, 'alt': '', 'loading': 'lazy'}));
+        thumb.appendChild(el('img', {'class': 'acf-media__img', 'src': data.url, 'alt': ''}));
     }
 
-    const tools = el('div', {'class': 'acf-tools'}, [
-        tool('upload', fill('cardimage_uploadfor', data.name), str.cardimage_upload,
+    const tools = el('div', {'class': 'acf-cmdialog__tools'}, [
+        tool('upload', fill('cardimage_uploadfor', data.name), str.cardimage_upload, '',
             svg('<rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/>'
                 + '<path d="m21 15-3.09-3.09a2 2 0 0 0-2.82 0L6 21"/>')),
-        tool('ai', fill('cardimage_aifor', data.name), str.cardimage_ai,
+        tool('ai', fill('cardimage_aifor', data.name), str.cardimage_ai, fill('cardimage_cost', config.cost),
             svg('<path d="M9.94 14.06 8 20l-1.94-5.94L0 12l6.06-1.94L8 4l1.94 6.06L16 12z" '
                 + 'transform="translate(2 0) scale(.9)"/><path d="M20 3v4"/><path d="M22 5h-4"/>'),
             ' acf-tools__btn--ai'),
-        tool('colour', fill('cardimage_colourfor', data.name), str.cardimage_colour,
+        tool('colour', fill('cardimage_colourfor', data.name), str.cardimage_colour, str.cardimage_colour_desc,
             svg('<circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" '
                 + 'fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" '
                 + 'cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.93 0 '
                 + '1.65-.75 1.65-1.69 0-.44-.18-.84-.44-1.13-.29-.29-.44-.65-.44-1.13a1.64 1.64 0 0 1 '
                 + '1.67-1.67h2c3.05 0 5.55-2.5 5.55-5.55C21.97 6.01 17.46 2 12 2z"/>')),
-        tool('remove', fill('cardimage_removefor', data.name), str.cardimage_remove,
+        tool('remove', fill('cardimage_removefor', data.name), str.cardimage_remove, '',
             svg('<path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>'
                 + '<path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>'),
             ' acf-tools__btn--remove'),
     ]);
 
-    const row = el('div', {'class': 'acf-cmrow', 'data-cmid': String(cmid)}, [thumb, tools]);
-    // The tools live beside the thumbnail rather than on it; mediaForTool() finds the thumbnail
-    // through the row.
+    // .acf-cmrow is what colourHost(), toolScope() and mediaForTool() look for, so every tool
+    // works on this preview exactly as it does on a card.
+    const row = el('div', {'class': 'acf-cmrow acf-cmdialog', 'data-cmid': String(cmid)}, [thumb, tools]);
     tools.querySelector('[data-action="remove"]').hidden = data.source !== 'card';
     if (data.colour) {
         row.style.setProperty('--acf-card-colour', data.colour);
@@ -786,21 +802,59 @@ const buildCmRow = (cmid, data) => {
 };
 
 /**
- * Add the image row to every activity row of core's editor that does not have one yet.
+ * Open the card image dialog for an activity.
+ *
+ * @param {Number} cmid Course module id.
  */
-const decorateCmItems = () => {
+const openCmDialog = async(cmid) => {
+    const data = config.cms[cmid];
+    if (!data) {
+        return;
+    }
+    const modal = await Modal.create({
+        title: fill('cardimage_dialogtitle', data.name),
+        body: buildCmDialog(cmid, data),
+        removeOnClose: true,
+        show: true,
+    });
+    modal.getRoot()[0].classList.add('aicourse-cardimage-dialog');
+};
+
+/**
+ * Add "Card image" to the menu of every activity in Moodle's editor that does not have it yet.
+ *
+ * Placed straight after "Edit settings", where a teacher looks for what they can change about an
+ * activity. The item has no data-action, so core's editor leaves its clicks alone.
+ */
+const decorateCmMenus = () => {
     document.querySelectorAll(SELECTORS.CMITEM).forEach((item) => {
         // Only core's rows: the plugin's own activity cards carry the same attributes.
         if (item.closest('.acf-grid')) {
             return;
         }
         const cmid = parseInt(item.dataset.id, 10);
-        const data = config.cms[cmid];
-        if (!data || item.querySelector(':scope .acf-cmrow')) {
+        // The activity's own edit menu, not the completion dropdown that some rows also carry.
+        const menu = [...item.querySelectorAll('.dropdown-menu')].find((m) => m.querySelector('.cm-edit-action'));
+        if (!config.cms[cmid] || !menu || menu.querySelector('[data-acf-action="cardimage"]')) {
             return;
         }
-        const host = item.querySelector('.activity-item') || item;
-        host.appendChild(buildCmRow(cmid, data));
+        const link = el('a', {
+            'href': '#',
+            'class': 'dropdown-item menu-action',
+            'role': 'menuitem',
+            'tabindex': '-1',
+            'data-acf-action': 'cardimage',
+            'data-id': String(cmid),
+        });
+        // The trailing space matches the whitespace core's own menu items carry between icon and text.
+        link.innerHTML = '<i class="icon fa fa-image fa-fw" aria-hidden="true"></i> ';
+        link.appendChild(el('span', {'class': 'menu-action-text', 'text': str.cardimage_menu}));
+        const first = menu.querySelector('[data-action="update"]') || menu.querySelector('.dropdown-item');
+        if (first) {
+            first.after(link);
+        } else {
+            menu.prepend(link);
+        }
     });
 };
 
@@ -851,6 +905,12 @@ export const init = async() => {
             generateAll();
             return;
         }
+        const menuitem = e.target.closest('[data-acf-action="cardimage"]');
+        if (menuitem) {
+            e.preventDefault();
+            openCmDialog(parseInt(menuitem.dataset.id, 10));
+            return;
+        }
         const tool = e.target.closest(SELECTORS.TOOL);
         if (!tool || tool.disabled) {
             return;
@@ -878,9 +938,9 @@ export const init = async() => {
         }
     }, true);
 
-    decorateCmItems();
+    decorateCmMenus();
     // Core re-renders an activity row after most edits, replacing the element. Watch for that and
-    // put the image row back. Cheap: it only looks at rows without one.
+    // put the menu item back. Cheap: it only looks at menus without one.
     const region = document.querySelector('#region-main') || document.body;
     let queued = false;
     new MutationObserver(() => {
@@ -890,7 +950,7 @@ export const init = async() => {
         queued = true;
         window.requestAnimationFrame(() => {
             queued = false;
-            decorateCmItems();
+            decorateCmMenus();
         });
     }).observe(region, {childList: true, subtree: true});
 

@@ -358,6 +358,12 @@ class format_aicourse extends format_topics {
             if ($forcegen !== false && $forcegen !== '' && (int) $forcegen >= 0) {
                 $gen = (int) $forcegen;
             }
+            // 3.0.0: never when General holds learning content. The setting is for a General
+            // that holds only Announcements; hiding real activities made the index disagree with
+            // the page, and left a learner on one of them with no place in the index.
+            if ($gen > 0 && \format_aicourse\local\activityinfo::general_has_content(get_fast_modinfo($this->get_course()))) {
+                $gen = 0;
+            }
             if ($gen === 1) {
                 $page->add_body_class('aicourse-hidegeneral-students');
             } else if ($gen === 2) {

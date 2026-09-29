@@ -19,7 +19,7 @@ namespace format_aicourse\local;
 /**
  * Writes the complete image prompt for one section or activity card.
  *
- * 2.6.0. Until now the plugin sent the card's fields and the image service wrote the prompt with
+ * 3.0.0. Until now the plugin sent the card's fields and the image service wrote the prompt with
  * its banner template, so the quality of every card image depended on wording the plugin did not
  * own. The plugin knows the card best: its title, its summary or activity description, the course's
  * chosen style and the card's colour. So the plugin writes the prompt, and the service is asked to

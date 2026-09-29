@@ -218,29 +218,21 @@ class hero implements named_templatable, renderable {
      */
     protected function export_meta($modinfo): array {
         $metaparts = [];
+        // Modules are the numbered sections. General is not one, and a subsection's delegated
+        // section belongs to its parent module.
         $sectioncount = 0;
-        $activitycount = 0;
-        $totalminutes = 0;
-
         foreach (activityinfo::get_listed_sections($modinfo) as $metasection) {
-            if ($metasection->section <= 0 || !$metasection->uservisible) {
-                continue;
-            }
-            $sectioncount++;
-            $metacmids = isset($modinfo->sections[$metasection->section])
-                ? $modinfo->sections[$metasection->section]
-                : [];
-            foreach ($metacmids as $metacmid) {
-                $metacm = $modinfo->get_cm($metacmid);
-                if (!$metacm->uservisible) {
-                    continue;
-                }
-                if (activityinfo::cm_counts_as_content($metacm)) {
-                    $activitycount++;
-                }
-                $totalminutes += progress::estimate_activity_minutes($metacm);
+            if ($metasection->uservisible && $metasection->section > 0 && empty($metasection->component)) {
+                $sectioncount++;
             }
         }
+
+        // 3.0.0: activities and time come from the same count the sidebar uses, so the two can never
+        // disagree. The hero used to leave out General, where some courses keep real activities,
+        // and whatever sat inside a subsection.
+        $totals = progress::course_totals($modinfo);
+        $activitycount = $totals['activities'];
+        $totalminutes = $totals['minutes'];
 
         if ($sectioncount > 0) {
             $metaparts[] = ['text' => get_string(
