@@ -72,18 +72,33 @@ class ai_chat extends external_api {
                 VALUE_DEFAULT,
                 0
             ),
-            'isfirstmessage' => new external_value(PARAM_BOOL, 'True for the first question of the '
-                . 'conversation', VALUE_DEFAULT, false),
+            'isfirstmessage' => new external_value(
+                PARAM_BOOL,
+                'True for the first question of the '
+                    . 'conversation',
+                VALUE_DEFAULT,
+                false
+            ),
             'questionslot' => new external_value(
                 PARAM_INT,
                 'Quiz question slot being attempted, or 0',
                 VALUE_DEFAULT,
                 0
             ),
-            'questiontext' => new external_value(PARAM_TEXT, 'Text of the quiz question being '
-                . 'attempted', VALUE_DEFAULT, ''),
-            'allquestions' => new external_value(PARAM_TEXT, 'Summary of every question in the '
-                . 'activity, for whole-activity awareness', VALUE_DEFAULT, ''),
+            'questiontext' => new external_value(
+                PARAM_TEXT,
+                'Text of the quiz question being '
+                    . 'attempted',
+                VALUE_DEFAULT,
+                ''
+            ),
+            'allquestions' => new external_value(
+                PARAM_TEXT,
+                'Summary of every question in the '
+                    . 'activity, for whole-activity awareness',
+                VALUE_DEFAULT,
+                ''
+            ),
         ]);
     }
 
@@ -304,8 +319,11 @@ class ai_chat extends external_api {
 
         if ((int) $httpcode !== 200) {
             // ACF-FIX-2.0: the remote error body is logged, never returned to the browser.
-            debugging('format_aicourse ai_chat HTTP ' . $httpcode . ' ' . $curl->error . ' '
-                . substr((string) $response, 0, 500), DEBUG_DEVELOPER);
+            debugging(
+                'format_aicourse ai_chat HTTP ' . $httpcode . ' ' . $curl->error . ' '
+                    . substr((string) $response, 0, 500),
+                DEBUG_DEVELOPER
+            );
             $key = self::error_key_for_status((int) $httpcode);
             throw new \moodle_exception($key ?? 'aiassistant_error', 'format_aicourse');
         }
@@ -394,8 +412,11 @@ class ai_chat extends external_api {
             // phpcs:disable moodle.Commenting.InlineComment.NotCapital -- Release pipeline marker.
             'answer' => new external_value(PARAM_RAW, 'Answer'), // pipeline-ignore: PARAM_RAW — prose, textContent.
             // phpcs:enable moodle.Commenting.InlineComment.NotCapital
-            'chatid' => new external_value(PARAM_INT, 'Id of the stored chat row, or 0 when it could '
-                . 'not be stored'),
+            'chatid' => new external_value(
+                PARAM_INT,
+                'Id of the stored chat row, or 0 when it could '
+                    . 'not be stored'
+            ),
             'warnings' => new external_warnings(),
         ]);
     }

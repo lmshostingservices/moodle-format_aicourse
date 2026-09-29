@@ -55,8 +55,13 @@ class get_activity_context extends external_api {
         return new external_function_parameters([
             'courseid' => new external_value(PARAM_INT, 'Id of the course the activity belongs to'),
             'activityid' => new external_value(PARAM_INT, 'Course module id of the activity'),
-            'questionslot' => new external_value(PARAM_INT, 'Question slot the learner is looking at, '
-                . 'or 0', VALUE_DEFAULT, 0),
+            'questionslot' => new external_value(
+                PARAM_INT,
+                'Question slot the learner is looking at, '
+                    . 'or 0',
+                VALUE_DEFAULT,
+                0
+            ),
         ]);
     }
 
@@ -135,8 +140,11 @@ class get_activity_context extends external_api {
             'context' => new external_single_structure([
                 'name' => new external_value(PARAM_TEXT, 'Name of the activity'),
                 'type' => new external_value(PARAM_PLUGIN, 'Module name of the activity'),
-                'intro' => new external_value(PARAM_TEXT, 'Public introduction text of the activity, '
-                    . 'tags stripped'),
+                'intro' => new external_value(
+                    PARAM_TEXT,
+                    'Public introduction text of the activity, '
+                        . 'tags stripped'
+                ),
                 'questions' => new external_multiple_structure(
                     self::question_structure(),
                     'Every question prompt in the activity, answer keys removed'

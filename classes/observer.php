@@ -80,8 +80,23 @@ class observer {
         try {
             $DB->delete_records('format_aicourse_actminutes', ['cmid' => $event->objectid]);
         } catch (\dml_exception $e) {
-            debugging('format_aicourse: could not remove activity duration override: '
-                . $e->getMessage(), DEBUG_DEVELOPER);
+            debugging(
+                'format_aicourse: could not remove activity duration override: '
+                    . $e->getMessage(),
+                DEBUG_DEVELOPER
+            );
+        }
+
+        // 2.5.0: the activity card's image, colour and generation state. The image is filed in
+        // the course context under the cm id, which outlives the module and is eventually reused.
+        try {
+            \format_aicourse\local\cardimage::purge_target(
+                (int) $event->courseid,
+                \format_aicourse\local\cardimage::TYPE_CM,
+                (int) $event->objectid
+            );
+        } catch (\Throwable $e) {
+            debugging('format_aicourse: could not remove activity card image: ' . $e->getMessage(), DEBUG_DEVELOPER);
         }
     }
 
@@ -125,6 +140,13 @@ class observer {
             \format_aicourse\local\banner::SECTION_AREA,
             (int) $event->objectid
         );
+
+        // 2.5.0: and the section card's image, colour and generation state.
+        \format_aicourse\local\cardimage::purge_target(
+            (int) $event->courseid,
+            \format_aicourse\local\cardimage::TYPE_SECTION,
+            (int) $event->objectid
+        );
     }
 
     /**
@@ -153,6 +175,8 @@ class observer {
             $DB->delete_records('format_aicourse_ai_memory', ['courseid' => $event->courseid]);
             // ACF-FIX-2.1.46: duration overrides are keyed by courseid for exactly this.
             $DB->delete_records('format_aicourse_actminutes', ['courseid' => $event->courseid]);
+            // 2.5.0: card colours and card generation state. The images go with the context.
+            \format_aicourse\local\cardimage::purge_course_status((int) $event->courseid);
         } catch (\dml_exception $e) {
             debugging(
                 'format_aicourse: could not purge course data on course deletion: ' . $e->getMessage(),

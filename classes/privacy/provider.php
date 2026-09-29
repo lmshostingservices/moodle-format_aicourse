@@ -124,6 +124,21 @@ class provider implements
             'privacy:metadata:format_aicourse_actminutes'
         );
 
+        // 2.5.0: card colours. As with duration overrides, usermodified is course-authoring
+        // metadata -- who last picked a card's colour -- and is declared because it is a user id.
+        $collection->add_database_table(
+            'format_aicourse_cardstyle',
+            [
+                'courseid' => 'privacy:metadata:format_aicourse_cardstyle:courseid',
+                'targettype' => 'privacy:metadata:format_aicourse_cardstyle:targettype',
+                'targetid' => 'privacy:metadata:format_aicourse_cardstyle:targetid',
+                'colour' => 'privacy:metadata:format_aicourse_cardstyle:colour',
+                'usermodified' => 'privacy:metadata:format_aicourse_cardstyle:usermodified',
+                'timemodified' => 'privacy:metadata:format_aicourse_cardstyle:timemodified',
+            ],
+            'privacy:metadata:format_aicourse_cardstyle'
+        );
+
         $collection->add_external_location_link(
             'lms_labs_ai',
             [
@@ -201,18 +216,30 @@ class provider implements
 
         $params = ['courseid' => $context->instanceid];
 
-        $userlist->add_from_sql('userid', "SELECT c.userid
+        $userlist->add_from_sql(
+            'userid',
+            "SELECT c.userid
                                              FROM {format_aicourse_chats} c
-                                            WHERE c.courseid = :courseid", $params);
+                                            WHERE c.courseid = :courseid",
+            $params
+        );
 
-        $userlist->add_from_sql('correctedby', "SELECT c.correctedby
+        $userlist->add_from_sql(
+            'correctedby',
+            "SELECT c.correctedby
                                                   FROM {format_aicourse_chats} c
                                                  WHERE c.courseid = :courseid
-                                                   AND c.correctedby IS NOT NULL", $params);
+                                                   AND c.correctedby IS NOT NULL",
+            $params
+        );
 
-        $userlist->add_from_sql('userid', "SELECT m.userid
+        $userlist->add_from_sql(
+            'userid',
+            "SELECT m.userid
                                              FROM {format_aicourse_ai_memory} m
-                                            WHERE m.courseid = :courseid", $params);
+                                            WHERE m.courseid = :courseid",
+            $params
+        );
     }
 
     /**

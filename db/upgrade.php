@@ -180,5 +180,24 @@ function xmldb_format_aicourse_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026082014, 'format', 'aicourse');
     }
 
+    if ($oldversion < 2026092900) {
+        // 2.5.0: per-card colour for section and activity cards without an image.
+        $table = new xmldb_table('format_aicourse_cardstyle');
+        if (!$dbman->table_exists($table)) {
+            $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+            $table->add_field('courseid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+            $table->add_field('targettype', XMLDB_TYPE_CHAR, '10', null, XMLDB_NOTNULL, null, null);
+            $table->add_field('targetid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+            $table->add_field('colour', XMLDB_TYPE_CHAR, '7', null, XMLDB_NOTNULL, null, null);
+            $table->add_field('usermodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+            $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+            $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+            $table->add_key('courseid', XMLDB_KEY_FOREIGN, ['courseid'], 'course', ['id']);
+            $table->add_index('targettype_targetid', XMLDB_INDEX_UNIQUE, ['targettype', 'targetid']);
+            $dbman->create_table($table);
+        }
+        upgrade_plugin_savepoint(true, 2026092900, 'format', 'aicourse');
+    }
+
     return true;
 }

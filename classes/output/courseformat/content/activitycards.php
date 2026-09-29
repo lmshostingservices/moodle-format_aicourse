@@ -20,6 +20,8 @@ use cm_info;
 use completion_info;
 use core\output\named_templatable;
 use format_aicourse\local\activityinfo;
+use format_aicourse\local\cardimage;
+use format_aicourse\output\courseformat\cardmedia;
 use format_aicourse\local\progress;
 use moodle_url;
 use renderable;
@@ -115,6 +117,10 @@ class activitycards implements named_templatable, renderable {
 
         $info = new completion_info($course);
         $completionenabled = $info->is_enabled();
+
+        // 2.5.0: every card image and colour in the course, one query each, before the loop.
+        cardimage::preload((int) $course->id, cardimage::TYPE_CM);
+        cardimage::preload_colours((int) $course->id);
 
         $sectionname = get_section_name($course, $section);
 
@@ -225,7 +231,16 @@ class activitycards implements named_templatable, renderable {
             ['id' => $this->course->id, 'section' => $delegated->section]
         );
 
+        $plain = html_to_text(format_string(get_section_name($this->course, $delegated), true, ['escape' => false]), 0, false);
+        $media = cardmedia::export((int) $this->course->id, cardimage::TYPE_CM, (int) $cm->id, $plain, false, [
+            'iconurl' => $cm->get_icon_url()->out(false),
+            'title' => format_string(get_section_name($this->course, $delegated)),
+        ]);
+        $media->hasstatus = false;
+
         return (object) [
+            'media' => $media,
+            'cardstyle' => cardmedia::style($media),
             'issubsection' => true,
             'cmid' => (int) $cm->id,
             'url' => $subsectionurl->out(false),
@@ -238,7 +253,6 @@ class activitycards implements named_templatable, renderable {
             'typename' => get_string('section', 'moodle'),
             'iscompleted' => false,
             'statuslabel' => '',
-            'badgeclass' => '',
         ];
     }
 
@@ -282,7 +296,28 @@ class activitycards implements named_templatable, renderable {
         // string and the pill is not rendered.
         $estimatedtime = progress::format_estimated_time(progress::estimate_activity_minutes($cm));
 
+        $media = cardmedia::export(
+            (int) $this->course->id,
+            cardimage::TYPE_CM,
+            (int) $cm->id,
+            html_to_text(format_string($cm->name, true, ['escape' => false]), 0, false),
+            false,
+            [
+                'iconurl' => $cm->get_icon_url()->out(false),
+                // No label on an activity's cover: its type is already in the card body.
+                'title' => format_string($cm->name),
+            ]
+        );
+        // The chip on the image appears only when it says something: in progress, or done.
+        $media->hasstatus = ($status !== 'not_started');
+        $media->status = ($status === 'completed') ? 'complete' : 'progress';
+        $media->iscomplete = ($status === 'completed');
+        $media->statuslabel = ($status === 'completed') ? get_string('completed', 'format_aicourse')
+            : get_string('cardstatus_progress', 'format_aicourse');
+
         return (object) [
+            'media' => $media,
+            'cardstyle' => cardmedia::style($media),
             'issubsection' => false,
             'hastime' => ($estimatedtime !== ''),
             'estimatedtime' => $estimatedtime,
@@ -300,7 +335,6 @@ class activitycards implements named_templatable, renderable {
             'typename' => activityinfo::get_activity_type_name($cm),
             'iscompleted' => ($status === 'completed'),
             'statuslabel' => $statuslabel,
-            'badgeclass' => 'aicourse-status-badge-' . $status,
         ];
     }
 

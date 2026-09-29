@@ -69,6 +69,14 @@ class backup_format_aicourse_plugin extends backup_format_plugin {
         // The file may still sit under itemid = courseid rather than 0.
         $banner->annotate_files('format_aicourse', 'bannerimage', null);
 
+        // 2.5.0: activity card images. They are filed in the COURSE context under the cm id, so
+        // they cannot be annotated from the module structure -- a module task annotates against
+        // the module's own context and would find nothing. They are collected here, all at once,
+        // and translated through core's 'course_module' mapping on restore (see
+        // restore_format_aicourse_plugin::after_restore_course()). An activity left out of the
+        // backup has no mapping, so its image is not restored against anything.
+        $banner->annotate_files('format_aicourse', 'cmcardimage', null);
+
         return $plugin;
     }
 
@@ -105,6 +113,41 @@ class backup_format_aicourse_plugin extends backup_format_plugin {
         // Third argument is the name of the element supplying the item id, not an item id: the
         // files collected are those whose itemid equals this element's 'sectionid' value.
         $banner->annotate_files('format_aicourse', 'sectionbannerimage', 'sectionid');
+
+        // 2.5.0: the section card's own image and colour. The image area is keyed by section id
+        // exactly like the section banner, so it is collected and mapped the same way.
+        $banner->annotate_files('format_aicourse', 'sectioncardimage', 'sectionid');
+
+        $card = new backup_nested_element('sectioncard', ['id'], ['colour']);
+        $pluginwrapper->add_child($card);
+        $card->set_source_table('format_aicourse_cardstyle', [
+            'targettype' => backup_helper::is_sqlparam('section'),
+            'targetid' => backup::VAR_SECTIONID,
+        ]);
+
+        return $plugin;
+    }
+
+    /**
+     * Define the plugin structure attached to each activity.
+     *
+     * 2.5.0: the activity card's colour. It travels with the activity, so it also survives
+     * duplicating one activity. The card IMAGE is not here; see define_course_plugin_structure().
+     *
+     * @return backup_plugin_element The plugin element.
+     */
+    protected function define_module_plugin_structure() {
+        $plugin = $this->get_plugin_element();
+
+        $pluginwrapper = new backup_nested_element($this->get_recommended_name());
+        $plugin->add_child($pluginwrapper);
+
+        $card = new backup_nested_element('cmcard', ['id'], ['colour']);
+        $pluginwrapper->add_child($card);
+        $card->set_source_table('format_aicourse_cardstyle', [
+            'targettype' => backup_helper::is_sqlparam('cm'),
+            'targetid' => backup::VAR_MODID,
+        ]);
 
         return $plugin;
     }

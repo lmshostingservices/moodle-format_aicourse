@@ -334,8 +334,11 @@ class generate_banner_image extends external_api {
             // Showing the detail is safe here: execute() already required
             // moodle/course:update, so the only people who can reach this line are course
             // editors. The remote body is truncated and stripped of tags before display.
-            debugging('format_aicourse generate_banner_image HTTP ' . $httpcode . ' ' . $curl->error . ' '
-                . substr((string) $response, 0, 500), DEBUG_DEVELOPER);
+            debugging(
+                'format_aicourse generate_banner_image HTTP ' . $httpcode . ' ' . $curl->error . ' '
+                    . substr((string) $response, 0, 500),
+                DEBUG_DEVELOPER
+            );
             throw new \moodle_exception(
                 'error_bannerfailed_detail',
                 'format_aicourse',
@@ -346,8 +349,11 @@ class generate_banner_image extends external_api {
 
         $result = json_decode($response, true);
         if (!$result || empty($result['success']) || empty($result['imageBase64'])) {
-            debugging('format_aicourse generate_banner_image no image in '
-                . substr((string) $response, 0, 500), DEBUG_DEVELOPER);
+            debugging(
+                'format_aicourse generate_banner_image no image in '
+                    . substr((string) $response, 0, 500),
+                DEBUG_DEVELOPER
+            );
             // A 200 with no image is the shape the service returns when it is out of credits
             // or every image provider it tried failed, and its own message says which.
             $remote = '';

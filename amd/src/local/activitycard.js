@@ -41,7 +41,7 @@ export default class extends DndCmItem {
         // selectors, which are merged in by BaseComponent, cannot shadow them.
         this.selectors = {
             CMDRAGICON: `.editing_move`,
-            CMNAME: `.aicourse-activity-card-name, [data-cm-name-for]`,
+            CMNAME: `.acf-card__title, [data-cm-name-for]`,
             CMBULKSELECT: `[data-for='cmBulkSelect']`,
             CMBULKCHECKBOX: `[data-bulkcheckbox]`,
             CMINPLACEEDITABLE: `[data-inplaceeditablelink]`,

@@ -774,6 +774,12 @@ class format_aicourse extends format_topics {
                 'default' => $d('cardlayout', 0),
                 'type' => PARAM_INT,
             ],
+            // 2.5.0: the art direction every AI card image in the course is generated in, so a
+            // course reads as one set rather than a mix of photos, cartoons and renders.
+            'cardimagestyle' => [
+                'default' => (string) $d('cardimagestyle', 'photo'),
+                'type' => PARAM_ALPHANUMEXT,
+            ],
             // ACF-FIX-2.1.23: per-course accent colour, '#rrggbb' or '' to follow the site
             // setting (which in turn falls back to the theme's primary). PARAM_TEXT rather
             // than an unfiltered type, because the value is written into a style attribute; it
@@ -1141,6 +1147,15 @@ class format_aicourse extends format_topics {
                     'help' => 'cardactivitylimit',
                     'help_component' => 'format_aicourse',
                     'element_type' => 'text',
+                ],
+                'cardimagestyle' => [
+                    'label' => get_string('cardimagestyle', 'format_aicourse'),
+                    'help' => 'cardimagestyle',
+                    'help_component' => 'format_aicourse',
+                    'element_type' => 'select',
+                    'element_attributes' => [
+                        \format_aicourse\local\cardimage::style_options(),
+                    ],
                 ],
                 'cardlayout' => [
                     'label' => get_string('cardlayout', 'format_aicourse'),

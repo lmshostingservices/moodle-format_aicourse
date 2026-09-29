@@ -6,7 +6,7 @@
  * @copyright  2025 Essay Grader AI
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, Str, Ajax, Notification) {
+define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function($, Str, Ajax, Notification) {
 
     'use strict';
 
@@ -154,17 +154,17 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
      * @returns {Promise} jQuery promise, always resolved.
      */
     function loadStrings() {
-        var requests = STRING_MAP.map(function (entry) {
+        var requests = STRING_MAP.map(function(entry) {
             return entry[1];
         });
         var deferred = $.Deferred();
-        Str.get_strings(requests).done(function (values) {
-            STRING_MAP.forEach(function (entry, index) {
+        Str.get_strings(requests).done(function(values) {
+            STRING_MAP.forEach(function(entry, index) {
                 if (typeof values[index] === 'string' && values[index].length) {
                     STR[entry[0]] = values[index];
                 }
             });
-        }).always(function () {
+        }).always(function() {
             deferred.resolve();
         });
         return deferred.promise();
@@ -184,7 +184,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
      */
     function schedule(callback, delay) {
         var handle = ++timerSeq;
-        timers[handle] = window.setTimeout(function () {
+        timers[handle] = window.setTimeout(function() {
             delete timers[handle];
             callback();
         }, delay);
@@ -195,11 +195,11 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
      * Cancel every pending timer and poll.
      */
     function clearTimers() {
-        Object.keys(timers).forEach(function (handle) {
+        Object.keys(timers).forEach(function(handle) {
             window.clearTimeout(timers[handle]);
             delete timers[handle];
         });
-        Object.keys(polls).forEach(function (name) {
+        Object.keys(polls).forEach(function(name) {
             stopPoll(name);
         });
     }
@@ -239,7 +239,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
         var poll = {cancelled: false, timer: null, count: 0};
         polls[name] = poll;
 
-        var tick = function () {
+        var tick = function() {
             poll.timer = null;
             if (poll.cancelled || polls[name] !== poll) {
                 return;
@@ -296,7 +296,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
         if (!url || !(/^(https?:\/\/|\/)/i).test(url)) {
             return '';
         }
-        return url.replace(/["'()\\\s<>]/g, function (character) {
+        return url.replace(/["'()\\\s<>]/g, function(character) {
             return encodeURIComponent(character);
         });
     }
@@ -407,7 +407,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
         var region = liveRegion();
         region.textContent = '';
         // Clearing then setting in a later tick forces AT to re-read identical messages.
-        schedule(function () {
+        schedule(function() {
             region.textContent = message;
         }, 60);
     }
@@ -463,7 +463,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
      */
     function bindActivate(ns, selector, handler) {
         bindDelegated(document, 'click' + ns, selector, handler);
-        bindDelegated(document, 'keydown' + ns, selector, function (e) {
+        bindDelegated(document, 'keydown' + ns, selector, function(e) {
             var tag = (this.tagName || '').toLowerCase();
             if (tag === 'button' || tag === 'a' || tag === 'input') {
                 // Native activation already dispatches a click.
@@ -473,32 +473,6 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
                     e.keyCode === 13 || e.keyCode === 32) {
                 e.preventDefault();
                 handler.call(this, e);
-            }
-        });
-    }
-
-    /**
-     * ACF-FIX-2.0 (a11y): give non-native activation targets button semantics. No-op when
-     * lib.php already emits a real <button> (preferred - see the report).
-     *
-     * @param {String} selector
-     * @param {String} [label] Accessible name to apply when the element has none.
-     */
-    function ensureActivatable(selector, label) {
-        $(selector).each(function () {
-            var tag = (this.tagName || '').toLowerCase();
-            if (tag === 'button' || tag === 'a') {
-                return;
-            }
-            var $el = $(this);
-            if (!$el.attr('role')) {
-                $el.attr('role', 'button');
-            }
-            if (typeof $el.attr('tabindex') === 'undefined') {
-                $el.attr('tabindex', '0');
-            }
-            if (label && !$el.attr('aria-label') && !$.trim($el.text())) {
-                $el.attr('aria-label', label);
             }
         });
     }
@@ -547,7 +521,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
         } else {
             $el.show();
         }
-        schedule(function () {
+        schedule(function() {
             var $target = options.initialFocus ?
                 $el.find(options.initialFocus).filter(':visible').first() : $();
             if (!$target.length) {
@@ -590,7 +564,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
      * One keydown handler serves Escape + the Tab focus trap for whichever dialog is on top.
      */
     function initDialogKeys() {
-        bindDirect(document, 'keydown.aicourse-dialog', function (e) {
+        bindDirect(document, 'keydown.aicourse-dialog', function(e) {
             if (!openDialogs.length) {
                 return;
             }
@@ -653,7 +627,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
      * Snapshot any server-rendered ring so the JS can re-use the exact same markup.
      */
     function cacheRingMarkup() {
-        $('.aicourse-completion-ring').each(function () {
+        $('.aicourse-completion-ring').each(function() {
             var key = $(this).hasClass('aicourse-completion-done') ? 'done' : 'pending';
             if (!ringMarkupCache[key]) {
                 ringMarkupCache[key] = this.outerHTML;
@@ -706,11 +680,11 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
         if (!document.body.classList.contains('editing')) {
             return;
         }
-        if (!document.querySelector('.aicourse-cards-container')) {
+        if (!document.querySelector('.acf-cards')) {
             return;
         }
-        require(['format_aicourse/local/cardcontent'], function (CardContent) {
-            CardContent.init('.aicourse-cards-container');
+        require(['format_aicourse/local/cardcontent'], function(CardContent) {
+            CardContent.init('.acf-cards');
         });
     }
 
@@ -720,7 +694,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
          * Entry point. Called from format.php, the footer hook and
          * format_aicourse_extend_navigation_course() - hence the guard.
          */
-        init: function () {
+        init: function() {
             var self = this;
 
             // BUG-ACF-SCROLL-DELAY (v1.7.40): scrollToTop() was called here on every page
@@ -741,7 +715,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
 
             // ACF-FIX-2.0 (i18n): build nothing until the strings are available; every
             // handler is delegated on document so the small async delay is harmless.
-            loadStrings().always(function () {
+            loadStrings().always(function() {
                 liveRegion();
                 cacheRingMarkup();
                 initDialogKeys();
@@ -760,12 +734,12 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
 
                 // Lets the inline chat script in lib.php announce its responses through the
                 // same live region: $(document).trigger('aicourse:announce', [message]).
-                bindDirect(document, 'aicourse:announce.aicourse-live', function (e, message) {
+                bindDirect(document, 'aicourse:announce.aicourse-live', function(e, message) {
                     announce(message);
                 });
 
                 // ACF-FIX-2.0 (bug 4): never leave a poll running past navigation.
-                bindDirect(window, 'pagehide.aicourse-teardown', function () {
+                bindDirect(window, 'pagehide.aicourse-teardown', function() {
                     clearTimers();
                 });
             });
@@ -775,7 +749,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
          * Remove every namespaced handler and cancel every timer this module owns.
          * Exposed so the module can be safely re-initialised (e.g. from tests).
          */
-        teardown: function () {
+        teardown: function() {
             clearTimers();
             openDialogs = [];
             $(document).off('.aicourse-keynav .aicourse-iconpicker .aicourse-completion ' +
@@ -794,7 +768,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
          * The hero HTML is exposed via window.AICOURSE_HERO_HTML from extend_navigation_course().
          * Uses a retry mechanism since extend_navigation_course() may run after DOMContentLoaded.
          */
-        injectHeroFallback: function () {
+        injectHeroFallback: function() {
             /**
              * Try once to inject the hero banner, and report whether it landed.
              *
@@ -857,7 +831,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
 
             // ACF-FIX-2.0 (bug 4): bounded (20 x 100ms), cancellable and non-overlapping -
             // calling injectHeroFallback() twice restarts one poll instead of running two.
-            var start = function () {
+            var start = function() {
                 startPoll('herofallback', attemptInjection, 20, 100, 0);
             };
 
@@ -870,7 +844,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
 
         lastPercentage: null,
 
-        animateProgress: function () {
+        animateProgress: function() {
             var self = this;
 
             /**
@@ -920,10 +894,10 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
 
                 // BUG-ACF-LISTENER-STACK (v1.7.40): namespaced so re-init doesn't stack
                 // multiple AJAX calls per completion event.
-                bindDirect(document, 'completionchange.aicourse-progress', function () {
+                bindDirect(document, 'completionchange.aicourse-progress', function() {
                     self.fetchAndUpdateProgress(courseid, $container);
                 });
-                bindDirect(document, 'aicourse:completion_updated.aicourse-progress', function () {
+                bindDirect(document, 'aicourse:completion_updated.aicourse-progress', function() {
                     self.fetchAndUpdateProgress(courseid, $container);
                 });
 
@@ -934,7 +908,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
                     var targetWidth = progressBar.data('percentage') + '%';
                     progressBar.css('width', '0%');
 
-                    schedule(function () {
+                    schedule(function() {
                         progressBar.css({
                             'transition': 'width 1.8s cubic-bezier(0.22, 1, 0.36, 1)',
                             'width': targetWidth
@@ -948,7 +922,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
             startPoll('progressring', attemptAnimate, 5, 200, 50);
         },
 
-        animateRing: function ($container, newPercentage, triggerPulse) {
+        animateRing: function($container, newPercentage, triggerPulse) {
             var self = this;
             var $circle = $container.find('.aicourse-progress-ring-fill');
             var $text = $container.find('.aicourse-progress-ring-text');
@@ -1012,7 +986,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
                     $text.text(newPercentage + '%');
                 } else {
                     var startedAt = null;
-                    var step = function (now) {
+                    var step = function(now) {
                         if (startedAt === null) {
                             startedAt = now;
                         }
@@ -1038,7 +1012,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
                 $container.addClass('pulse');
                 $circle.addClass('glow');
 
-                schedule(function () {
+                schedule(function() {
                     $container.removeClass('pulse');
                     $circle.removeClass('glow');
                 }, 900);
@@ -1090,12 +1064,12 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
             self.lastPercentage = newPercentage;
         },
 
-        fetchAndUpdateProgress: function (courseid, $container) {
+        fetchAndUpdateProgress: function(courseid, $container) {
             var self = this;
 
             callExternal('get_progress', {
                 courseid: parseInt(courseid, 10)
-            }).done(function (response) {
+            }).done(function(response) {
                 if (response && typeof response.percentage !== 'undefined') {
                     var previous = self.lastPercentage;
                     self.animateRing($container, response.percentage, true);
@@ -1104,18 +1078,18 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
                         announceString('js_progressannounce', 'format_aicourse', response.percentage);
                     }
                 }
-            }).fail(function () {
+            }).fail(function() {
                 // A failed progress poll is silent: the ring simply keeps its last value.
                 return null;
             });
         },
 
-        initKeyboardNav: function () {
+        initKeyboardNav: function() {
             // BUG-ACF-KEYNAV-STACK (v1.7.40): Added namespace so re-init doesn't stack handlers.
             // BUG-ACF-KEYNAV-DROPDOWN (v1.7.40): Added checks so arrow keys don't fire nav
             // when a Moodle dropdown/action-menu/modal is open or focus is in a focusable control.
             // ACF-FIX-2.0: also bail out while one of this module's dialogs is open.
-            bindDirect(document, 'keydown.aicourse-keynav', function (e) {
+            bindDirect(document, 'keydown.aicourse-keynav', function(e) {
                 if (openDialogs.length) {
                     return;
                 }
@@ -1150,14 +1124,14 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
          * URLs are now normalised to pathname + sorted query and compared for equality, with a
          * secondary same-path/same-id rule so extra params (forceview=1, &section=) still match.
          */
-        highlightCurrentActivity: function () {
+        highlightCurrentActivity: function() {
             var current = this.normaliseUrl(window.location.href);
             if (!current) {
                 return;
             }
             var self = this;
 
-            $('.courseindex-link, [data-for="cm"] a').each(function () {
+            $('.courseindex-link, [data-for="cm"] a').each(function() {
                 var $link = $(this);
                 var candidate = self.normaliseUrl($link.attr('href'));
                 var matches = false;
@@ -1192,7 +1166,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
          * @param {String} raw
          * @returns {Object|null} {path, key, id}
          */
-        normaliseUrl: function (raw) {
+        normaliseUrl: function(raw) {
             if (!raw || typeof raw !== 'string' || raw.charAt(0) === '#') {
                 return null;
             }
@@ -1208,7 +1182,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
             var path = parsed.pathname.replace(/\/+$/, '');
             var pairs = [];
             var id = '';
-            parsed.search.replace(/^\?/, '').split('&').forEach(function (pair) {
+            parsed.search.replace(/^\?/, '').split('&').forEach(function(pair) {
                 if (!pair) {
                     return;
                 }
@@ -1225,9 +1199,9 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
             };
         },
 
-        enhanceCourseIndex: function () {
+        enhanceCourseIndex: function() {
             // Add smooth transitions to all course index items.
-            $('.courseindex-item, [data-for="cm"]').each(function (index) {
+            $('.courseindex-item, [data-for="cm"]').each(function(index) {
                 $(this).css({
                     'animation-delay': (index * 20) + 'ms'
                 });
@@ -1236,11 +1210,11 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
             // ACF-FIX-2.0 (bug 1b): was a direct .on('focus'/'blur') on every link, re-bound on
             // every init. Now one namespaced delegated pair.
             bindDelegated(document, 'focusin.aicourse-courseindex', '.courseindex-link, [data-for="cm"] a',
-                function () {
+                function() {
                     $(this).addClass('focused');
                 });
             bindDelegated(document, 'focusout.aicourse-courseindex', '.courseindex-link, [data-for="cm"] a',
-                function () {
+                function() {
                     $(this).removeClass('focused');
                 });
 
@@ -1249,10 +1223,10 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
 
         /**
          * Initialize the icon picker modal using Moodle core/ajax.
-         * ICON-UX-v1.7.46: click target is the .aicourse-icon-col outer column wrapper
+         * ICON-UX-v1.7.46 (2.5.0: now the card's icon button, data-acf-action="section-icon")
          * (which carries data-courseid/data-sectionid) rather than the inner icon-wrap.
          */
-        initIconPicker: function () {
+        initIconPicker: function() {
             var iconPicker = $('#aicourse-icon-picker');
             var currentIconCol = null;
 
@@ -1268,16 +1242,16 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
                 $title.attr('id', 'aicourse-icon-picker-title');
             }
             // The search field has no visible <label>.
-            iconPicker.find('.aicourse-icon-search-input').each(function () {
+            iconPicker.find('.aicourse-icon-search-input').each(function() {
                 if (!$(this).attr('aria-label')) {
                     $(this).attr('aria-label', STR.searchicons);
                 }
             });
             iconPicker.find('.aicourse-icon-picker-backdrop').attr('aria-hidden', 'true');
 
-            var closeIconPicker = function () {
+            var closeIconPicker = function() {
                 closeDialog(pickerEl, {
-                    hide: function () {
+                    hide: function() {
                         iconPicker.css('display', 'none');
                         $('body').css('overflow', '');
                     }
@@ -1287,10 +1261,8 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
 
             // ACF-FIX-2.0 (a11y): works whether lib.php renders the trigger as a <div> or as a
             // real <button> (preferred). Non-native triggers get role/tabindex here.
-            ensureActivatable('.aicourse-icon-col.aicourse-card-icon-editable', STR.selecticon);
-
-            bindActivate('.aicourse-iconpicker', '.aicourse-icon-col.aicourse-card-icon-editable',
-                function (e) {
+            bindActivate('.aicourse-iconpicker', '[data-acf-action="section-icon"]',
+                function(e) {
                     e.preventDefault();
                     e.stopPropagation();
                     currentIconCol = $(this);
@@ -1305,7 +1277,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
                         trigger: this,
                         initialFocus: '.aicourse-icon-search-input',
                         close: closeIconPicker,
-                        show: function () {
+                        show: function() {
                             iconPicker.css('display', 'flex');
                             $('body').css('overflow', 'hidden');
                         }
@@ -1316,7 +1288,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
                 '.aicourse-icon-picker-close, .aicourse-icon-picker-backdrop', closeIconPicker);
 
             // Live search filter - show/hide icons and category headings.
-            bindDelegated(iconPicker, 'input.aicourse-iconpicker', '.aicourse-icon-search-input', function () {
+            bindDelegated(iconPicker, 'input.aicourse-iconpicker', '.aicourse-icon-search-input', function() {
                 var query = $(this).val().toLowerCase().trim();
                 if (!query) {
                     iconPicker.find('.aicourse-icon-picker-item').show();
@@ -1324,14 +1296,14 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
                     return;
                 }
                 var visibleCount = 0;
-                iconPicker.find('.aicourse-icon-picker-category').each(function () {
+                iconPicker.find('.aicourse-icon-picker-category').each(function() {
                     var $cat = $(this);
                     if ($cat.attr('data-category') === '__remove__') {
                         $cat.hide();
                         return;
                     }
                     var anyVisible = false;
-                    $cat.find('.aicourse-icon-picker-item').each(function () {
+                    $cat.find('.aicourse-icon-picker-item').each(function() {
                         var key = ($(this).attr('data-icon') || '').toLowerCase();
                         var label = $(this).find('.aicourse-icon-picker-label').text().toLowerCase();
                         var vis = key.indexOf(query) !== -1 || label.indexOf(query) !== -1;
@@ -1349,7 +1321,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
 
             // ACF-FIX-2.0 (a11y): arrow-key navigation across the icon grid.
             bindDelegated(iconPicker, 'keydown.aicourse-iconpicker', '.aicourse-icon-picker-item',
-                function (e) {
+                function(e) {
                     var keys = ['ArrowRight', 'ArrowLeft', 'ArrowDown', 'ArrowUp', 'Home', 'End'];
                     if (keys.indexOf(e.key) === -1) {
                         return;
@@ -1405,7 +1377,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
                 });
 
             // Handle icon selection.
-            bindDelegated(iconPicker, 'click.aicourse-iconpicker', '.aicourse-icon-picker-item', function () {
+            bindDelegated(iconPicker, 'click.aicourse-iconpicker', '.aicourse-icon-picker-item', function() {
                 if (!currentIconCol) {
                     return;
                 }
@@ -1414,27 +1386,19 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
                 var courseId = currentIconCol.attr('data-courseid');
                 var sectionId = currentIconCol.attr('data-sectionid');
 
-                var iconDiv = currentIconCol.find('.aicourse-card-icon');
-                var wrapDiv = currentIconCol.find('.aicourse-card-icon-wrap');
-                var labelEl = currentIconCol.find('.aicourse-icon-change-label');
+                // 2.5.0: the icon shows on the card's colour panel, beside the section label.
+                var $top = currentIconCol.closest('[data-for="section"]').find('.acf-media__top').first();
+                $top.find('.acf-media__icon').remove();
 
                 if (iconKey === '__clear__') {
-                    // Remove icon: show pencil placeholder, update state + label.
-                    // Markup matches lib.php:1799 (the edit-mode empty-state pencil).
-                    iconDiv.html('<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" ' +
-                        'viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" ' +
-                        'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">' +
-                        '<path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>');
-                    wrapDiv.removeClass('aicourse-icon-selected').addClass('aicourse-icon-empty');
-                    labelEl.text(STR.addicon);
+                    currentIconCol.attr('title', STR.addicon);
                     announce(STR.jsIconremoved);
                 } else {
-                    // Set icon: clone just the SVG element from the picker (server-rendered).
-                    var iconSvg = $(this).find('svg').prop('outerHTML') || '';
-                    iconDiv.html(iconSvg);
-                    iconDiv.find('svg').attr('aria-hidden', 'true').attr('focusable', 'false');
-                    wrapDiv.removeClass('aicourse-icon-empty').addClass('aicourse-icon-selected');
-                    labelEl.text(STR.changeicon);
+                    // Clone just the SVG element from the picker (server-rendered).
+                    var $svg = $($(this).find('svg').prop('outerHTML') || '<svg></svg>');
+                    $svg.attr({'aria-hidden': 'true', 'focusable': 'false'}).removeAttr('width height class');
+                    $top.prepend($('<span class="acf-media__icon"></span>').append($svg));
+                    currentIconCol.attr('title', STR.changeicon);
                     announce(STR.iconsaved);
                 }
 
@@ -1443,7 +1407,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
                     courseid: parseInt(courseId, 10),
                     sectionid: parseInt(sectionId, 10),
                     icon: iconKey === '__clear__' ? '' : iconKey
-                }).fail(function (error) {
+                }).fail(function(error) {
                     notify(errorMessage(error, STR.iconsaveerror), 'error');
                     announce(STR.iconsaveerror);
                 });
@@ -1452,9 +1416,9 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
             });
         },
 
-        initCompletionToggle: function () {
+        initCompletionToggle: function() {
             // Activity-card manual completion toggle.
-            bindActivate('.aicourse-completion', '.aicourse-completion-toggle', function (e) {
+            bindActivate('.aicourse-completion', '.aicourse-completion-toggle', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
 
@@ -1474,7 +1438,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
                         cmid: parseInt(cmid, 10),
                         completed: newState === 1
                     }
-                }])[0].done(function () {
+                }])[0].done(function() {
                     btn.removeClass('aicourse-loading').removeAttr('aria-busy');
                     btn.attr('data-completed', newState === 1 ? '1' : '0');
                     // ACF-FIX-2.0 (a11y): state is exposed as aria-pressed and as a text label,
@@ -1491,9 +1455,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
                             'focusable="false"><polyline points="20 6 9 17 4 12"></polyline></svg>');
                         btn.find('.aicourse-toggle-label').text(STR.completed);
                         btn.attr('title', STR.completed);
-                        btn.closest('.aicourse-activity-card')
-                            .removeClass('aicourse-activity-status-not_started aicourse-activity-status-in_progress')
-                            .addClass('aicourse-activity-status-completed');
+                        btn.closest('.acf-card--activity').attr('data-status', 'completed');
                         announce(STR.completed);
                     } else {
                         btn.removeClass('aicourse-completion-toggle-done')
@@ -1505,14 +1467,12 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
                             'focusable="false"><rect width="18" height="18" x="3" y="3" rx="2"/></svg>');
                         btn.find('.aicourse-toggle-label').text(STR.markasdone);
                         btn.attr('title', STR.markasdone);
-                        btn.closest('.aicourse-activity-card')
-                            .removeClass('aicourse-activity-status-completed')
-                            .addClass('aicourse-activity-status-not_started');
+                        btn.closest('.acf-card--activity').attr('data-status', 'not_started');
                         announce(STR.markasdone);
                     }
 
                     $(document).trigger('aicourse:completion_updated');
-                }).fail(function () {
+                }).fail(function() {
                     btn.removeClass('aicourse-loading').removeAttr('aria-busy');
                     notify(STR.jsCompletionerror, 'error');
                     announce(STR.jsCompletionerror);
@@ -1520,7 +1480,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
             });
 
             // Hero banner completion toggle.
-            bindActivate('.aicourse-completion', '.aicourse-hero-completion-toggle', function (e) {
+            bindActivate('.aicourse-completion', '.aicourse-hero-completion-toggle', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
 
@@ -1540,7 +1500,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
                         cmid: parseInt(cmid, 10),
                         completed: newState === 1
                     }
-                }])[0].done(function () {
+                }])[0].done(function() {
                     btn.removeClass('aicourse-loading').removeAttr('aria-busy');
                     btn.attr('data-completed', newState === 1 ? '1' : '0');
                     btn.attr('aria-pressed', newState === 1 ? 'true' : 'false');
@@ -1559,7 +1519,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
                     announce(labelText);
 
                     $(document).trigger('aicourse:completion_updated');
-                }).fail(function () {
+                }).fail(function() {
                     btn.removeClass('aicourse-loading').removeAttr('aria-busy');
                     notify(STR.jsCompletionerror, 'error');
                     announce(STR.jsCompletionerror);
@@ -1567,15 +1527,15 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
             });
 
             // Seed aria-pressed on first load so the control is not silent before interaction.
-            $('.aicourse-completion-toggle, .aicourse-hero-completion-toggle').each(function () {
+            $('.aicourse-completion-toggle, .aicourse-hero-completion-toggle').each(function() {
                 if (!$(this).attr('aria-pressed')) {
                     $(this).attr('aria-pressed', $(this).attr('data-completed') === '1' ? 'true' : 'false');
                 }
             });
         },
 
-        initSectionDuplicate: function () {
-            bindActivate('.aicourse-section', '.aicourse-card-duplicate', function (e) {
+        initSectionDuplicate: function() {
+            bindActivate('.aicourse-section', '[data-acf-action="duplicate-section"]', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
 
@@ -1585,8 +1545,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
                 }
                 var sectionId = btn.attr('data-sectionid');
                 var courseId = btn.attr('data-courseid') ||
-                               $('[data-courseid]').first().attr('data-courseid') ||
-                               $('.aicourse-card-icon-wrap').first().attr('data-courseid');
+                               $('[data-courseid]').first().attr('data-courseid');
 
                 btn.prop('disabled', true).attr('aria-busy', 'true');
                 btn.css('opacity', '0.5');
@@ -1594,16 +1553,16 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
                 callExternal('duplicate_section', {
                     courseid: parseInt(courseId, 10),
                     sectionid: parseInt(sectionId, 10)
-                }).done(function () {
+                }).done(function() {
                     btn.prop('disabled', false).removeAttr('aria-busy');
                     btn.css('opacity', '1');
                     notify(STR.jsSectionduplicated, 'success');
                     announce(STR.jsSectionduplicated);
                     // Brief delay to show the notification, then reload.
-                    schedule(function () {
+                    schedule(function() {
                         window.location.reload();
                     }, 500);
-                }).fail(function (error) {
+                }).fail(function(error) {
                     btn.prop('disabled', false).removeAttr('aria-busy');
                     btn.css('opacity', '1');
                     notify(errorMessage(error, STR.jsSectionduplicateerror), 'error');
@@ -1612,39 +1571,37 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
             });
         },
 
-        initAddSection: function () {
-            ensureActivatable('.aicourse-add-section-card', STR.addsection);
-
-            bindActivate('.aicourse-section', '.aicourse-add-section-card', function (e) {
+        initAddSection: function() {
+            bindActivate('.aicourse-section', '[data-acf-action="add-section"]', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
 
                 var btn = $(this);
-                if (btn.hasClass('aicourse-add-section-loading')) {
+                if (btn.is('[data-loading]')) {
                     return;
                 }
                 var courseId = btn.attr('data-courseid');
 
-                btn.addClass('aicourse-add-section-loading').attr('aria-busy', 'true');
+                btn.attr('data-loading', '1').attr('aria-busy', 'true');
 
                 callExternal('add_section', {
                     courseid: parseInt(courseId, 10)
-                }).done(function () {
+                }).done(function() {
                     notify(STR.jsSectionadded, 'success');
                     announce(STR.jsSectionadded);
-                    schedule(function () {
+                    schedule(function() {
                         window.location.reload();
                     }, 400);
-                }).fail(function (error) {
-                    btn.removeClass('aicourse-add-section-loading').removeAttr('aria-busy');
+                }).fail(function(error) {
+                    btn.removeAttr('data-loading aria-busy');
                     notify(errorMessage(error, STR.jsSectionadderror), 'error');
                     announce(STR.jsSectionadderror);
                 });
             });
         },
 
-        initSectionDelete: function () {
-            bindActivate('.aicourse-section', '.aicourse-card-delete', function (e) {
+        initSectionDelete: function() {
+            bindActivate('.aicourse-section', '[data-acf-action="delete-section"]', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
 
@@ -1652,7 +1609,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
                 if (btn.prop('disabled')) {
                     return;
                 }
-                var card = btn.closest('.aicourse-card');
+                var card = btn.closest('[data-for="section"]');
                 var sectionId = btn.attr('data-sectionid');
                 // ACF-FIX-2.1.188: read the BUTTON's own data-courseid first.
                 //
@@ -1670,8 +1627,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
                 // lookups stay as fallbacks for a cached page rendered before this change.
                 var courseId = btn.attr('data-courseid') ||
                                card.attr('data-courseid') ||
-                               $('[data-courseid]').first().attr('data-courseid') ||
-                               $('.aicourse-card-icon-wrap').first().attr('data-courseid');
+                               $('[data-courseid]').first().attr('data-courseid');
 
                 // ACF-FIX-2.0 (i18n): strings are already loaded, so the confirm opens
                 // synchronously - no second Str round trip, no chance of a duplicate dialog.
@@ -1680,7 +1636,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
                     STR.deletesectionconfirm,
                     STR.deletelabel,
                     STR.cancel,
-                    function () {
+                    function() {
                         // ACF-FIX-2.1.188: refuse to send a request that cannot succeed.
                         //
                         // Without this, a missing or unreadable course id produced NaN, the server
@@ -1705,26 +1661,26 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
                         callExternal('delete_section', {
                             courseid: cid,
                             sectionid: sid
-                        }).done(function () {
+                        }).done(function() {
                             // ACF-FIX-2.0 (a11y): move focus to a surviving neighbour before the
                             // focused button is destroyed, then announce the removal.
-                            var $next = card.nextAll('.aicourse-card').first();
+                            var $next = card.nextAll('[data-for="section"]').first();
                             if (!$next.length) {
-                                $next = card.prevAll('.aicourse-card').first();
+                                $next = card.prevAll('[data-for="section"]').first();
                             }
                             var $focus = $next.find(FOCUSABLE_SELECTOR).filter(':visible').first();
                             if (!$focus.length) {
-                                $focus = $('.aicourse-add-section-card').filter(':visible').first();
+                                $focus = $('[data-acf-action="add-section"]').filter(':visible').first();
                             }
                             if ($focus.length) {
                                 $focus.trigger('focus');
                             }
-                            card.animate({opacity: 0, height: 0}, 300, function () {
+                            card.animate({opacity: 0, height: 0}, 300, function() {
                                 card.remove();
                             });
                             notify(STR.jsSectiondeleted, 'success');
                             announce(STR.jsSectiondeleted);
-                        }).fail(function (error) {
+                        }).fail(function(error) {
                             card.css('opacity', '1');
                             btn.prop('disabled', false).removeAttr('aria-busy');
                             notify(errorMessage(error, STR.jsSectiondeleteerror), 'error');
@@ -1745,7 +1701,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
          * @param {String} imageUrl
          * @returns {Boolean} True when the page was updated in place.
          */
-        applyHeroBanner: function (imageUrl) {
+        applyHeroBanner: function(imageUrl) {
             var safe = safeImageUrl(imageUrl);
             if (!safe) {
                 return false;
@@ -1756,7 +1712,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
             }
             var cacheBusted = safe + (safe.indexOf('?') === -1 ? '?' : '&') + 't=' + Date.now();
 
-            $banner.each(function () {
+            $banner.each(function() {
                 var $b = $(this);
                 var $bg = $b.find('.aicourse-hero-bg-img').first();
                 if (!$bg.length) {
@@ -1777,7 +1733,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
          * AI Banner Image Generation
          * Shows a cost-confirmation modal then calls format_aicourse_generate_banner_image -> API -> file storage.
          */
-        initGenerateBanner: function () {
+        initGenerateBanner: function() {
             var self = this;
             var modalId = 'aicourse-banner-gen-modal';
             var titleId = 'aicourse-bgen-title';
@@ -1927,7 +1883,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
              */
             function closeModal() {
                 closeDialog(overlayEl, {
-                    hide: function () {
+                    hide: function() {
                         overlay.fadeOut(180);
                     }
                 });
@@ -1955,7 +1911,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
                     trigger: btn[0],
                     initialFocus: '.aicourse-bgen-btn-generate',
                     close: closeModal,
-                    show: function () {
+                    show: function() {
                         overlay.fadeIn(180);
                     }
                 });
@@ -1998,7 +1954,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
                 $('#aicourse-bgen-errmsg').text(message);
                 setState('error');
                 announce(STR.bannergenFailedtitle + '. ' + message);
-                schedule(function () {
+                schedule(function() {
                     overlay.find('.aicourse-bgen-btn-retry').filter(':visible').first().trigger('focus');
                 }, 80);
             }
@@ -2050,13 +2006,13 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
                 // still legitimately in progress behind a slow cron run.
                 var POLL_LIMIT = 180;
 
-                var succeed = function (imageurl) {
+                var succeed = function(imageurl) {
                     $generate.prop('disabled', false);
                     var safe = safeImageUrl(imageurl);
                     $('#aicourse-bgen-preview-img').attr('src', safe);
                     setState('success');
                     announce(STR.bannergenApplied);
-                    schedule(function () {
+                    schedule(function() {
                         overlay.find('.aicourse-bgen-btn-done').filter(':visible').first().trigger('focus');
                     }, 80);
                     // ACF-FIX-2.0 (bug 3): actually show the new banner in-page. If the hero
@@ -2065,7 +2021,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
                     self.applyHeroBanner(imageurl);
                 };
 
-                var poll = function () {
+                var poll = function() {
                     pollAttempts++;
                     if (pollAttempts > POLL_LIMIT) {
                         $generate.prop('disabled', false);
@@ -2077,7 +2033,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
                         // Must match the generate call: each target has its own status, so
                         // polling the course's while a section generates reports the wrong one.
                         sectionid: sectionid
-                    }).done(function (status) {
+                    }).done(function(status) {
                         if (!status) {
                             schedule(poll, POLL_EVERY);
                             return;
@@ -2090,7 +2046,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
                         } else {
                             schedule(poll, POLL_EVERY);
                         }
-                    }).fail(function () {
+                    }).fail(function() {
                         // A dropped poll is not a failed generation -- the task carries on
                         // regardless of whether this browser is listening. Try again.
                         schedule(poll, POLL_EVERY);
@@ -2107,14 +2063,14 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
                     courseid: parseInt(courseid, 10),
                     extraprompt: extra,
                     sectionid: sectionid
-                }).done(function (response) {
+                }).done(function(response) {
                     if (response && response.imageurl) {
                         // A server still running the synchronous version: use the image directly.
                         succeed(response.imageurl);
                         return;
                     }
                     schedule(poll, POLL_EVERY);
-                }).fail(function (error) {
+                }).fail(function(error) {
                     $generate.prop('disabled', false);
                     showError(extractBannerError(errorMessage(error, STR.bannergenFailed)));
                 });
@@ -2122,36 +2078,36 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
 
             // --- Event delegation (ACF-FIX-2.0 bug 1b: all namespaced, all .off() first) ---
 
-            bindActivate('.aicourse-banner', '.aicourse-ai-generate-banner', function (e) {
+            bindActivate('.aicourse-banner', '.aicourse-ai-generate-banner', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
                 openModal($(this));
             });
 
             bindDelegated(overlay, 'click.aicourse-banner',
-                '.aicourse-bgen-close, .aicourse-bgen-btn-cancel', function () {
+                '.aicourse-bgen-close, .aicourse-bgen-btn-cancel', function() {
                     closeModal();
                 });
 
             // Click outside the card to close. NOTE: a distinct namespace - a namespace-only
             // .off() on the overlay would otherwise also drop the delegated handlers above.
-            bindDirect(overlay, 'click.aicourse-banner-backdrop', function (e) {
+            bindDirect(overlay, 'click.aicourse-banner-backdrop', function(e) {
                 if ($(e.target).is(overlay)) {
                     closeModal();
                 }
             });
 
-            bindDelegated(overlay, 'click.aicourse-banner', '.aicourse-bgen-btn-generate', function () {
+            bindDelegated(overlay, 'click.aicourse-banner', '.aicourse-bgen-btn-generate', function() {
                 doGenerate();
             });
 
-            bindDelegated(overlay, 'click.aicourse-banner', '.aicourse-bgen-btn-retry', function () {
+            bindDelegated(overlay, 'click.aicourse-banner', '.aicourse-bgen-btn-retry', function() {
                 setState('confirm');
                 overlay.find('.aicourse-bgen-btn-generate').prop('disabled', false).trigger('focus');
             });
 
             // Done - refresh the page to fully update the banner.
-            bindDelegated(overlay, 'click.aicourse-banner', '.aicourse-bgen-btn-done', function () {
+            bindDelegated(overlay, 'click.aicourse-banner', '.aicourse-bgen-btn-done', function() {
                 closeModal();
                 window.location.reload();
             });
@@ -2163,7 +2119,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
          * Delete Banner Image
          * Confirms then calls format_aicourse_delete_banner_image, then updates the page in-place.
          */
-        initDeleteBanner: function () {
+        initDeleteBanner: function() {
             // Needed by the confirm handler, which now repaints the hero with whatever banner
             // applies after the removal. Without this, `self` would resolve to window.self --
             // the window object, which is defined -- so the failure would be a silent no-op at
@@ -2214,7 +2170,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
              */
             function closeDeleteModal() {
                 closeDialog(delOverlayEl, {
-                    hide: function () {
+                    hide: function() {
                         delOverlay.fadeOut(180);
                     }
                 });
@@ -2238,30 +2194,30 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
                     // Destructive action: start on Cancel, not on Remove.
                     initialFocus: '.aicourse-bdel-btn-cancel',
                     close: closeDeleteModal,
-                    show: function () {
+                    show: function() {
                         delOverlay.fadeIn(180);
                     }
                 });
             }
 
-            bindActivate('.aicourse-bannerdel', '.aicourse-ai-delete-banner', function (e) {
+            bindActivate('.aicourse-bannerdel', '.aicourse-ai-delete-banner', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
                 openDeleteModal($(this));
             });
 
-            bindDelegated(delOverlay, 'click.aicourse-bannerdel', '.aicourse-bdel-btn-cancel', function () {
+            bindDelegated(delOverlay, 'click.aicourse-bannerdel', '.aicourse-bdel-btn-cancel', function() {
                 closeDeleteModal();
             });
 
             // Distinct namespace - see the note in initGenerateBanner().
-            bindDirect(delOverlay, 'click.aicourse-bannerdel-backdrop', function (e) {
+            bindDirect(delOverlay, 'click.aicourse-bannerdel-backdrop', function(e) {
                 if ($(e.target).is(delOverlay)) {
                     closeDeleteModal();
                 }
             });
 
-            bindDelegated(delOverlay, 'click.aicourse-bannerdel', '.aicourse-bdel-btn-confirm', function () {
+            bindDelegated(delOverlay, 'click.aicourse-bannerdel', '.aicourse-bdel-btn-confirm', function() {
                 if (!currentDeleteBtn) {
                     return;
                 }
@@ -2278,7 +2234,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
                 callExternal('delete_banner_image', {
                     courseid: parseInt(courseid, 10),
                     sectionid: sectionid
-                }).done(function (response) {
+                }).done(function(response) {
                     // 2.2.0: removing a SECTION banner does not leave the page with no image --
                     // it leaves the section inheriting the course banner. The server says what
                     // applies now, so show that rather than assuming the hero goes blank.
@@ -2295,7 +2251,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function ($, St
                     $('.aicourse-ai-delete-banner').hide();
                     closeDeleteModal();
                     announce(STR.bannerdelRemoved);
-                }).fail(function (error) {
+                }).fail(function(error) {
                     // .text() - server-controlled content must never reach innerHTML.
                     var msg = errorMessage(error, STR.bannerdelError);
                     $('#aicourse-bdel-error').text(msg).show();

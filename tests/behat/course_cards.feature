@@ -69,25 +69,25 @@ Feature: Course home page rendering in the AI Course Format
 
   Scenario: A student never sees the section card edit controls
     Given I am on the "Course 1" course page logged in as student1
-    Then "//*[contains(@class, 'aicourse-card-edit-buttons')]" "xpath_element" should not exist
-    And "//*[contains(@class, 'aicourse-card-delete')]" "xpath_element" should not exist
-    And "//*[contains(@class, 'aicourse-card-duplicate')]" "xpath_element" should not exist
-    And "//*[contains(@class, 'aicourse-card-icon-editable')]" "xpath_element" should not exist
-    And "//*[contains(@class, 'aicourse-card-drag-handle')]" "xpath_element" should not exist
+    Then "//*[contains(@class, 'acf-card__admin')]" "xpath_element" should not exist
+    And "//*[@data-acf-action='delete-section']" "xpath_element" should not exist
+    And "//*[@data-acf-action='duplicate-section']" "xpath_element" should not exist
+    And "//*[@data-acf-action='section-icon']" "xpath_element" should not exist
+    And "//*[@data-drag-type='section']" "xpath_element" should not exist
 
   Scenario: A teacher sees the section card edit controls only in edit mode
     Given I am on the "Course 1" course page logged in as teacher1
-    Then "//*[contains(@class, 'aicourse-card-edit-buttons')]" "xpath_element" should not exist
+    Then "//*[contains(@class, 'acf-card__admin')]" "xpath_element" should not exist
     And I turn editing mode on
-    Then "//*[contains(@class, 'aicourse-card-edit-buttons')]" "xpath_element" should exist
-    And "//*[contains(@class, 'aicourse-card-drag-handle')]" "xpath_element" should exist
+    Then "//*[contains(@class, 'acf-card__admin')]" "xpath_element" should exist
+    And "//*[@data-drag-type='section']" "xpath_element" should exist
 
   Scenario: Section cards do not list their activities by default
     # "Show activities on cards" is off by default, so the only place "Week one assignment" can
     # appear on the course home page is the course index drawer -- never inside a card.
     Given I am on the "Course 1" course page logged in as student1
-    Then "//*[contains(@class, 'aicourse-card-activities')]" "xpath_element" should not exist
-    And "//*[contains(@class, 'aicourse-cards-grid')]//*[contains(text(), 'Week one assignment')]" "xpath_element" should not exist
+    Then "//*[contains(@class, 'acf-list')]" "xpath_element" should not exist
+    And "//*[contains(@class, 'acf-grid--sections')]//*[contains(text(), 'Week one assignment')]" "xpath_element" should not exist
 
   Scenario: Turning on "Show activities on cards" lists each section's activities on its card
     Given I am on the "Course 1" course page logged in as teacher1
@@ -96,12 +96,12 @@ Feature: Course home page rendering in the AI Course Format
       | Show activities on cards | Yes |
     And I press "Save and display"
     And I am on the "Course 1" course page logged in as student1
-    Then "//*[contains(@class, 'aicourse-card-activities')]" "xpath_element" should exist
-    And "//*[contains(@class, 'aicourse-cards-grid')]//*[contains(@class, 'aicourse-card-activity-name')][contains(text(), 'Week one assignment')]" "xpath_element" should exist
-    And "//*[contains(@class, 'aicourse-cards-grid')]//*[contains(@class, 'aicourse-card-activity-name')][contains(text(), 'Week two quiz')]" "xpath_element" should exist
+    Then "//*[contains(@class, 'acf-list')]" "xpath_element" should exist
+    And "//*[contains(@class, 'acf-grid--sections')]//*[contains(@class, 'acf-list__name')][contains(text(), 'Week one assignment')]" "xpath_element" should exist
+    And "//*[contains(@class, 'acf-grid--sections')]//*[contains(@class, 'acf-list__name')][contains(text(), 'Week two quiz')]" "xpath_element" should exist
 
   Scenario: Section pages list their activities
     # "Section 1" also appears in the course index drawer, so scope the click to the card grid.
     Given I am on the "Course 1" course page logged in as student1
-    When I click on "Section 1" "link" in the "//*[contains(@class, 'aicourse-cards-grid')]" "xpath_element"
+    When I click on "Section 1" "link" in the "//*[contains(@class, 'acf-grid--sections')]" "xpath_element"
     Then I should see "Week one assignment"

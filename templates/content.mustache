@@ -30,7 +30,7 @@
       reactive course editor; it is also the element core's action dispatcher delegates from, so
       every data-action inside it (including the core action menus the General section renders in
       edit mode) reaches the matching core mutation.
-    * aicourse-cards-grid - the reorderable section list.
+    * acf-grid--sections - the reorderable section list.
 
     Data attributes required for JS:
     * data-for="course_sectionlist" - lets core_courseformat's reactive state manager find the
@@ -75,40 +75,44 @@
                 "isediting": false,
                 "uselistroles": true,
                 "showeditbuttons": false,
-                "hasicon": false,
-                "iconsvg": "",
+                "sectionbulk": null,
+                "media": null,
+                "cardstyle": "",
+                "cardstate": "progress",
+                "eyebrow": "Module 1",
                 "hastime": true,
                 "estimatedtime": "25 min",
                 "cardlinklabel": "Module 1: Foundations, 3 activities, Estimated time 25 min, 33% complete",
                 "hassummary": true,
                 "summary": "What machine learning is and why it matters.",
-                "hasfooter": true,
                 "hascount": true,
                 "counttext": "3 activities",
                 "hasprogress": true,
-                "badgeclass": "aicourse-progress-badge",
-                "percenttext": "33%",
-                "hasdots": true,
-                "dots": [
-                    {
-                        "url": "https://example.org/mod/page/view.php?id=12",
-                        "statusclass": "aicourse-dot-completed",
-                        "label": "What is machine learning? (Completed)"
-                    }
-                ],
-                "moredots": null
+                "percentnum": 33,
+                "donetext": "1 of 3 done",
+                "statustext": "33% complete",
+                "ctastate": "continue",
+                "ctatext": "Continue",
+                "hasactivities": false,
+                "activities": [],
+                "moreactivities": null
             }
         ],
         "iconpicker": null,
         "bulkedittools": null
     }
 }}
-<div class="aicourse-cards-container" role="region" aria-label="{{regionlabel}}">
+<div class="acf-cards aicourse-cards-container" role="region" aria-label="{{regionlabel}}">
 {{#generalsection}}
 {{> format_aicourse/general_section }}
 {{/generalsection}}
-<h2 class="aicourse-cards-region-heading accesshide">{{regionlabel}}</h2>
-<div class="aicourse-cards-grid"{{#uselistroles}} role="list"{{/uselistroles}} data-for="course_sectionlist">
+<h2 class="accesshide">{{regionlabel}}</h2>
+{{#isediting}}
+<div class="acf-toolbar">
+<button type="button" class="acf-btn acf-btn--ai" data-action="aicourse-cardimage-all"><svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.94 14.06 8 20l-1.94-5.94L0 12l6.06-1.94L8 4l1.94 6.06L16 12z" transform="translate(2 0) scale(.9)"/><path d="M20 3v4"/><path d="M22 5h-4"/></svg>{{#str}} cardimage_all_button, format_aicourse {{/str}}</button>
+</div>
+{{/isediting}}
+<div class="acf-grid acf-grid--sections"{{#uselistroles}} role="list"{{/uselistroles}} data-for="course_sectionlist">
 {{#sections}}
 {{> format_aicourse/section_card }}
 {{/sections}}

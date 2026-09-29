@@ -84,6 +84,18 @@ class before_footer_html_generation {
         // the page, so requiring it unconditionally costs one cached AMD request.
         $PAGE->requires->js_call_amd('format_aicourse/herocollapse', 'init');
 
+        // 2.5.0: card image tools, on the course home page and on section pages, in edit mode,
+        // for someone who may change the course. Here rather than in format.php because the
+        // section page is course/section.php, which never includes format.php -- and that is the
+        // page where the activity rows the tools attach to are drawn. The course home page comes
+        // through here too, so this is the one place both are served from.
+        $pagetype = (string) $PAGE->pagetype;
+        if (strpos($pagetype, 'course-view') === 0 && $PAGE->user_is_editing()
+                && has_capability('moodle/course:update', \context_course::instance($COURSE->id))) {
+            $hook->add_html(\format_aicourse\output\courseformat\cardmedia::page_data_html($COURSE));
+            $PAGE->requires->js_call_amd('format_aicourse/cardimage', 'init');
+        }
+
         // ACF-FIX-2.1.26: lift the banner to the very top of the page.
         //
         // This runs before the hero-injection branch below and independently of it, because the

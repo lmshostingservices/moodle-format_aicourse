@@ -150,8 +150,10 @@ abstract class external_testcase extends \advanced_testcase {
             $this->assertSame($expectederrorcode, $e->errorcode);
             return;
         }
-        $this->fail('Expected a moodle_exception with errorcode ' . $expectederrorcode
-            . ', but nothing was thrown.');
+        $this->fail(
+            'Expected a moodle_exception with errorcode ' . $expectederrorcode
+                . ', but nothing was thrown.'
+        );
     }
 
     /**

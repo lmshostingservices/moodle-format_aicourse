@@ -160,4 +160,61 @@ $functions = [
         'ajax' => true,
         'capabilities' => 'moodle/course:update',
     ],
+
+    // 2.5.0: card images and colours.
+    'format_aicourse_upload_card_image' => [
+        'classname' => 'format_aicourse\\external\\upload_card_image',
+        'methodname' => 'execute',
+        'description' => 'Store an uploaded picture as a section or activity card image.',
+        'type' => 'write',
+        'ajax' => true,
+        'capabilities' => 'moodle/course:update',
+    ],
+
+    'format_aicourse_generate_card_image' => [
+        'classname' => 'format_aicourse\\external\\generate_card_image',
+        'methodname' => 'execute',
+        'description' => 'Queue an AI generated image for a section or activity card.',
+        'type' => 'write',
+        'ajax' => true,
+        'capabilities' => 'moodle/course:update',
+        'readonlysession' => true,
+    ],
+
+    'format_aicourse_get_card_image_status' => [
+        'classname' => 'format_aicourse\\external\\get_card_image_status',
+        'methodname' => 'execute',
+        'description' => 'Report the state of a queued card image generation.',
+        'type' => 'read',
+        'ajax' => true,
+        'capabilities' => 'moodle/course:update',
+        'readonlysession' => true,
+    ],
+
+    'format_aicourse_delete_card_image' => [
+        'classname' => 'format_aicourse\\external\\delete_card_image',
+        'methodname' => 'execute',
+        'description' => 'Remove a section or activity card image.',
+        'type' => 'write',
+        'ajax' => true,
+        'capabilities' => 'moodle/course:update',
+    ],
+
+    'format_aicourse_set_card_colour' => [
+        'classname' => 'format_aicourse\\external\\set_card_colour',
+        'methodname' => 'execute',
+        'description' => 'Set or clear the colour of a section or activity card.',
+        'type' => 'write',
+        'ajax' => true,
+        'capabilities' => 'moodle/course:update',
+    ],
+
+    'format_aicourse_generate_all_card_images' => [
+        'classname' => 'format_aicourse\\external\\generate_all_card_images',
+        'methodname' => 'execute',
+        'description' => 'Count, or queue, AI images for many section and activity cards at once.',
+        'type' => 'write',
+        'ajax' => true,
+        'capabilities' => 'moodle/course:update',
+    ],
 ];

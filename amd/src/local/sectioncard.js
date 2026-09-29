@@ -47,7 +47,7 @@ export default class extends DndSection {
         this.selectors = {
             CARDHANDLE: `[data-drag-type='section']`,
             CARDTITLE: `[data-for='section_title']`,
-            CARDLINK: `.aicourse-card-link`,
+            CARDLINK: `.acf-card__link`,
             CARDBULKSELECT: `[data-for='sectionBulkSelect']`,
             CARDBULKCHECKBOX: `[data-bulkcheckbox]`,
         };
@@ -57,7 +57,7 @@ export default class extends DndSection {
             LOCKED: 'editinprogress',
             // The core dimmed_text class gives an immediate, correct "hidden from
             // students" rendering.
-            CARDHIDDEN: 'aicourse-card-hidden',
+            CARDHIDDEN: 'is-hidden',
             DIMMED: 'dimmed_text',
             // Bootstrap's display utility and core's bulk selection marker, both used by
             // core_courseformat/local/content/section/header, which this mirrors.

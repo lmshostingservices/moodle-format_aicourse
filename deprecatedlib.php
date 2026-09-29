@@ -50,8 +50,11 @@ use format_aicourse\output\courseformat\iconpicker;
  * @return bool True if the current user should be treated as a grader/teacher.
  */
 function format_aicourse_is_grader($context, $diag = false) {
-    debugging('format_aicourse_is_grader() is deprecated, '
-        . 'use \format_aicourse\local\permissions::is_grader() instead.', DEBUG_DEVELOPER);
+    debugging(
+        'format_aicourse_is_grader() is deprecated, '
+            . 'use \format_aicourse\local\permissions::is_grader() instead.',
+        DEBUG_DEVELOPER
+    );
     return permissions::is_grader($context, $diag);
 }
 
@@ -62,8 +65,11 @@ function format_aicourse_is_grader($context, $diag = false) {
  * @return bool True when the AI Tutor should be offered to users.
  */
 function format_aicourse_is_tutor_enabled(): bool {
-    debugging('format_aicourse_is_tutor_enabled() is deprecated, '
-        . 'use \format_aicourse\local\permissions::is_tutor_enabled() instead.', DEBUG_DEVELOPER);
+    debugging(
+        'format_aicourse_is_tutor_enabled() is deprecated, '
+            . 'use \format_aicourse\local\permissions::is_tutor_enabled() instead.',
+        DEBUG_DEVELOPER
+    );
     return permissions::is_tutor_enabled();
 }
 
@@ -75,8 +81,11 @@ function format_aicourse_is_tutor_enabled(): bool {
  * @return string Localised label.
  */
 function format_aicourse_get_status_label($status) {
-    debugging('format_aicourse_get_status_label() is deprecated, '
-        . 'use \format_aicourse\local\activityinfo::get_status_label() instead.', DEBUG_DEVELOPER);
+    debugging(
+        'format_aicourse_get_status_label() is deprecated, '
+            . 'use \format_aicourse\local\activityinfo::get_status_label() instead.',
+        DEBUG_DEVELOPER
+    );
     return activityinfo::get_status_label($status);
 }
 
@@ -88,8 +97,11 @@ function format_aicourse_get_status_label($status) {
  * @return section_info[] Sections to list.
  */
 function format_aicourse_get_listed_sections($modinfo) {
-    debugging('format_aicourse_get_listed_sections() is deprecated, '
-        . 'use \format_aicourse\local\activityinfo::get_listed_sections() instead.', DEBUG_DEVELOPER);
+    debugging(
+        'format_aicourse_get_listed_sections() is deprecated, '
+            . 'use \format_aicourse\local\activityinfo::get_listed_sections() instead.',
+        DEBUG_DEVELOPER
+    );
     return activityinfo::get_listed_sections($modinfo);
 }
 
@@ -101,8 +113,11 @@ function format_aicourse_get_listed_sections($modinfo) {
  * @return bool True when the module should be both counted and rendered.
  */
 function format_aicourse_cm_counts_as_content($cm) {
-    debugging('format_aicourse_cm_counts_as_content() is deprecated, '
-        . 'use \format_aicourse\local\activityinfo::cm_counts_as_content() instead.', DEBUG_DEVELOPER);
+    debugging(
+        'format_aicourse_cm_counts_as_content() is deprecated, '
+            . 'use \format_aicourse\local\activityinfo::cm_counts_as_content() instead.',
+        DEBUG_DEVELOPER
+    );
     return activityinfo::cm_counts_as_content($cm);
 }
 
@@ -114,8 +129,11 @@ function format_aicourse_cm_counts_as_content($cm) {
  * @return section_info|null The delegated section, or null on older Moodle versions.
  */
 function format_aicourse_get_delegated_section($cm) {
-    debugging('format_aicourse_get_delegated_section() is deprecated, '
-        . 'use \format_aicourse\local\activityinfo::get_delegated_section() instead.', DEBUG_DEVELOPER);
+    debugging(
+        'format_aicourse_get_delegated_section() is deprecated, '
+            . 'use \format_aicourse\local\activityinfo::get_delegated_section() instead.',
+        DEBUG_DEVELOPER
+    );
     return activityinfo::get_delegated_section($cm);
 }
 
@@ -127,8 +145,11 @@ function format_aicourse_get_delegated_section($cm) {
  * @return string Localised type label.
  */
 function format_aicourse_get_activity_type_name($cm) {
-    debugging('format_aicourse_get_activity_type_name() is deprecated, '
-        . 'use \format_aicourse\local\activityinfo::get_activity_type_name() instead.', DEBUG_DEVELOPER);
+    debugging(
+        'format_aicourse_get_activity_type_name() is deprecated, '
+            . 'use \format_aicourse\local\activityinfo::get_activity_type_name() instead.',
+        DEBUG_DEVELOPER
+    );
     return activityinfo::get_activity_type_name($cm);
 }
 
@@ -142,8 +163,11 @@ function format_aicourse_get_activity_type_name($cm) {
  * @return array Completion detail.
  */
 function format_aicourse_get_activity_completion_info($course, $cm, $userid) {
-    debugging('format_aicourse_get_activity_completion_info() is deprecated, '
-        . 'use \format_aicourse\local\activityinfo::get_activity_completion_info() instead.', DEBUG_DEVELOPER);
+    debugging(
+        'format_aicourse_get_activity_completion_info() is deprecated, '
+            . 'use \format_aicourse\local\activityinfo::get_activity_completion_info() instead.',
+        DEBUG_DEVELOPER
+    );
     return activityinfo::get_activity_completion_info($course, $cm, $userid);
 }
 
@@ -155,8 +179,11 @@ function format_aicourse_get_activity_completion_info($course, $cm, $userid) {
  * @return int Minutes.
  */
 function format_aicourse_estimate_activity_minutes($cm) {
-    debugging('format_aicourse_estimate_activity_minutes() is deprecated, '
-        . 'use \format_aicourse\local\progress::estimate_activity_minutes() instead.', DEBUG_DEVELOPER);
+    debugging(
+        'format_aicourse_estimate_activity_minutes() is deprecated, '
+            . 'use \format_aicourse\local\progress::estimate_activity_minutes() instead.',
+        DEBUG_DEVELOPER
+    );
     return progress::estimate_activity_minutes($cm);
 }
 
@@ -168,8 +195,11 @@ function format_aicourse_estimate_activity_minutes($cm) {
  * @return string Empty string when there is nothing to show.
  */
 function format_aicourse_format_estimated_time($minutes) {
-    debugging('format_aicourse_format_estimated_time() is deprecated, '
-        . 'use \format_aicourse\local\progress::format_estimated_time() instead.', DEBUG_DEVELOPER);
+    debugging(
+        'format_aicourse_format_estimated_time() is deprecated, '
+            . 'use \format_aicourse\local\progress::format_estimated_time() instead.',
+        DEBUG_DEVELOPER
+    );
     return progress::format_estimated_time($minutes);
 }
 
@@ -184,8 +214,11 @@ function format_aicourse_format_estimated_time($minutes) {
  * @return array Progress data.
  */
 function format_aicourse_get_progress($course, $userid, $completioninfo = null, $needactivities = true) {
-    debugging('format_aicourse_get_progress() is deprecated, '
-        . 'use \format_aicourse\local\progress::get_progress() instead.', DEBUG_DEVELOPER);
+    debugging(
+        'format_aicourse_get_progress() is deprecated, '
+            . 'use \format_aicourse\local\progress::get_progress() instead.',
+        DEBUG_DEVELOPER
+    );
     return progress::get_progress($course, $userid, $completioninfo, $needactivities);
 }
 
@@ -200,8 +233,11 @@ function format_aicourse_get_progress($course, $userid, $completioninfo = null, 
  * @return array Progress data.
  */
 function format_aicourse_get_section_progress($course, $section, $userid, $completioninfo = null) {
-    debugging('format_aicourse_get_section_progress() is deprecated, '
-        . 'use \format_aicourse\local\progress::get_section_progress() instead.', DEBUG_DEVELOPER);
+    debugging(
+        'format_aicourse_get_section_progress() is deprecated, '
+            . 'use \format_aicourse\local\progress::get_section_progress() instead.',
+        DEBUG_DEVELOPER
+    );
     return progress::get_section_progress($course, $section, $userid, $completioninfo);
 }
 
@@ -213,8 +249,11 @@ function format_aicourse_get_section_progress($course, $section, $userid, $compl
  * @return string|null Absolute pluginfile URL, or null.
  */
 function format_aicourse_get_course_image($course) {
-    debugging('format_aicourse_get_course_image() is deprecated, '
-        . 'use \format_aicourse\local\banner::get_course_image() instead.', DEBUG_DEVELOPER);
+    debugging(
+        'format_aicourse_get_course_image() is deprecated, '
+            . 'use \format_aicourse\local\banner::get_course_image() instead.',
+        DEBUG_DEVELOPER
+    );
     return banner::get_course_image($course);
 }
 
@@ -226,8 +265,11 @@ function format_aicourse_get_course_image($course) {
  * @return string|null Absolute pluginfile URL, or null.
  */
 function format_aicourse_get_banner_image_url($course) {
-    debugging('format_aicourse_get_banner_image_url() is deprecated, '
-        . 'use \format_aicourse\local\banner::get_banner_image_url() instead.', DEBUG_DEVELOPER);
+    debugging(
+        'format_aicourse_get_banner_image_url() is deprecated, '
+            . 'use \format_aicourse\local\banner::get_banner_image_url() instead.',
+        DEBUG_DEVELOPER
+    );
     return banner::get_banner_image_url($course);
 }
 
@@ -240,8 +282,11 @@ function format_aicourse_get_banner_image_url($course) {
  * @return array|null Array with 'num' and 'name', or null.
  */
 function format_aicourse_get_current_section($course, $userid) {
-    debugging('format_aicourse_get_current_section() is deprecated, '
-        . 'use \format_aicourse\local\navigation::get_current_section() instead.', DEBUG_DEVELOPER);
+    debugging(
+        'format_aicourse_get_current_section() is deprecated, '
+            . 'use \format_aicourse\local\navigation::get_current_section() instead.',
+        DEBUG_DEVELOPER
+    );
     return navigation::get_current_section($course, $userid);
 }
 
@@ -254,8 +299,11 @@ function format_aicourse_get_current_section($course, $userid) {
  * @return array Array with 'prev' and 'next' keys.
  */
 function format_aicourse_get_nav_links($course, $userid) {
-    debugging('format_aicourse_get_nav_links() is deprecated, '
-        . 'use \format_aicourse\local\navigation::get_nav_links() instead.', DEBUG_DEVELOPER);
+    debugging(
+        'format_aicourse_get_nav_links() is deprecated, '
+            . 'use \format_aicourse\local\navigation::get_nav_links() instead.',
+        DEBUG_DEVELOPER
+    );
     return navigation::get_nav_links($course, $userid);
 }
 
@@ -269,8 +317,11 @@ function format_aicourse_get_nav_links($course, $userid) {
  * @return array Array with 'prev' and 'next' keys.
  */
 function format_aicourse_get_section_nav_links($course, $currentsectionnum, $modinfo = null) {
-    debugging('format_aicourse_get_section_nav_links() is deprecated, '
-        . 'use \format_aicourse\local\navigation::get_section_nav_links() instead.', DEBUG_DEVELOPER);
+    debugging(
+        'format_aicourse_get_section_nav_links() is deprecated, '
+            . 'use \format_aicourse\local\navigation::get_section_nav_links() instead.',
+        DEBUG_DEVELOPER
+    );
     return navigation::get_section_nav_links($course, $currentsectionnum, $modinfo);
 }
 
@@ -281,8 +332,11 @@ function format_aicourse_get_section_nav_links($course, $currentsectionnum, $mod
  * @return array Icon key => inline SVG body.
  */
 function format_aicourse_get_icon_library() {
-    debugging('format_aicourse_get_icon_library() is deprecated, '
-        . 'use \format_aicourse\local\icons::get_library() instead.', DEBUG_DEVELOPER);
+    debugging(
+        'format_aicourse_get_icon_library() is deprecated, '
+            . 'use \format_aicourse\local\icons::get_library() instead.',
+        DEBUG_DEVELOPER
+    );
     return icons::get_library();
 }
 
@@ -293,8 +347,11 @@ function format_aicourse_get_icon_library() {
  * @return array Category slug => ordered list of icon keys.
  */
 function format_aicourse_get_icon_categories() {
-    debugging('format_aicourse_get_icon_categories() is deprecated, '
-        . 'use \format_aicourse\local\icons::get_categories() instead.', DEBUG_DEVELOPER);
+    debugging(
+        'format_aicourse_get_icon_categories() is deprecated, '
+            . 'use \format_aicourse\local\icons::get_categories() instead.',
+        DEBUG_DEVELOPER
+    );
     return icons::get_categories();
 }
 
@@ -306,8 +363,11 @@ function format_aicourse_get_icon_categories() {
  * @return string Localised label.
  */
 function format_aicourse_get_icon_label($key) {
-    debugging('format_aicourse_get_icon_label() is deprecated, '
-        . 'use \format_aicourse\local\icons::get_label() instead.', DEBUG_DEVELOPER);
+    debugging(
+        'format_aicourse_get_icon_label() is deprecated, '
+            . 'use \format_aicourse\local\icons::get_label() instead.',
+        DEBUG_DEVELOPER
+    );
     return icons::get_label($key);
 }
 
@@ -320,8 +380,11 @@ function format_aicourse_get_icon_label($key) {
  * @return void
  */
 function format_aicourse_preload_section_icons($courseid, array $sectionids) {
-    debugging('format_aicourse_preload_section_icons() is deprecated, '
-        . 'use \format_aicourse\local\icons::preload_section_icons() instead.', DEBUG_DEVELOPER);
+    debugging(
+        'format_aicourse_preload_section_icons() is deprecated, '
+            . 'use \format_aicourse\local\icons::preload_section_icons() instead.',
+        DEBUG_DEVELOPER
+    );
     icons::preload_section_icons($courseid, $sectionids);
 }
 
@@ -334,8 +397,11 @@ function format_aicourse_preload_section_icons($courseid, array $sectionids) {
  * @return string Icon key, or '' when the section has no icon.
  */
 function format_aicourse_get_section_icon($courseid, $sectionid) {
-    debugging('format_aicourse_get_section_icon() is deprecated, '
-        . 'use \format_aicourse\local\icons::get_section_icon() instead.', DEBUG_DEVELOPER);
+    debugging(
+        'format_aicourse_get_section_icon() is deprecated, '
+            . 'use \format_aicourse\local\icons::get_section_icon() instead.',
+        DEBUG_DEVELOPER
+    );
     return icons::get_section_icon($courseid, $sectionid);
 }
 
@@ -349,8 +415,11 @@ function format_aicourse_get_section_icon($courseid, $sectionid) {
  * @return bool True on success.
  */
 function format_aicourse_set_section_icon($courseid, $sectionid, $icon) {
-    debugging('format_aicourse_set_section_icon() is deprecated, '
-        . 'use \format_aicourse\local\icons::set_section_icon() instead.', DEBUG_DEVELOPER);
+    debugging(
+        'format_aicourse_set_section_icon() is deprecated, '
+            . 'use \format_aicourse\local\icons::set_section_icon() instead.',
+        DEBUG_DEVELOPER
+    );
     return icons::set_section_icon($courseid, $sectionid, $icon);
 }
 
@@ -362,8 +431,11 @@ function format_aicourse_set_section_icon($courseid, $sectionid, $icon) {
  * @return array Index of the course content.
  */
 function format_aicourse_get_course_content_for_ai($course) {
-    debugging('format_aicourse_get_course_content_for_ai() is deprecated, '
-        . 'use \format_aicourse\local\contentindex::get_course_content_for_ai() instead.', DEBUG_DEVELOPER);
+    debugging(
+        'format_aicourse_get_course_content_for_ai() is deprecated, '
+            . 'use \format_aicourse\local\contentindex::get_course_content_for_ai() instead.',
+        DEBUG_DEVELOPER
+    );
     return contentindex::get_course_content_for_ai($course);
 }
 
@@ -375,8 +447,11 @@ function format_aicourse_get_course_content_for_ai($course) {
  * @return void
  */
 function format_aicourse_purge_content_cache($courseid) {
-    debugging('format_aicourse_purge_content_cache() is deprecated, '
-        . 'use \format_aicourse\local\contentindex::purge_content_cache() instead.', DEBUG_DEVELOPER);
+    debugging(
+        'format_aicourse_purge_content_cache() is deprecated, '
+            . 'use \format_aicourse\local\contentindex::purge_content_cache() instead.',
+        DEBUG_DEVELOPER
+    );
     contentindex::purge_content_cache($courseid);
 }
 
@@ -390,8 +465,11 @@ function format_aicourse_purge_content_cache($courseid) {
  * @return string HTML.
  */
 function format_aicourse_render_hero_banner($course, $options, $sectionnum = null) {
-    debugging('format_aicourse_render_hero_banner() is deprecated, '
-        . 'use \format_aicourse\output\courseformat\hero instead.', DEBUG_DEVELOPER);
+    debugging(
+        'format_aicourse_render_hero_banner() is deprecated, '
+            . 'use \format_aicourse\output\courseformat\hero instead.',
+        DEBUG_DEVELOPER
+    );
     return (new hero($course, $options, $sectionnum))->out();
 }
 
@@ -405,8 +483,11 @@ function format_aicourse_render_hero_banner($course, $options, $sectionnum = nul
  * @return string HTML.
  */
 function format_aicourse_render_activity_hero_banner($course, $options, $cm) {
-    debugging('format_aicourse_render_activity_hero_banner() is deprecated, '
-        . 'use \format_aicourse\output\courseformat\activityhero instead.', DEBUG_DEVELOPER);
+    debugging(
+        'format_aicourse_render_activity_hero_banner() is deprecated, '
+            . 'use \format_aicourse\output\courseformat\activityhero instead.',
+        DEBUG_DEVELOPER
+    );
     return (new activityhero($course, $options, $cm))->out();
 }
 
@@ -422,8 +503,11 @@ function format_aicourse_render_activity_hero_banner($course, $options, $cm) {
  * @return string HTML, or '' when there is nothing to show.
  */
 function format_aicourse_render_general_section($course, $section0, $options, $modinfo, $coursecontext) {
-    debugging('format_aicourse_render_general_section() is deprecated, '
-        . 'use \format_aicourse\output\courseformat\content\generalsection instead.', DEBUG_DEVELOPER);
+    debugging(
+        'format_aicourse_render_general_section() is deprecated, '
+            . 'use \format_aicourse\output\courseformat\content\generalsection instead.',
+        DEBUG_DEVELOPER
+    );
     return (new generalsection($course, $section0, $options, $modinfo, $coursecontext))->out();
 }
 
@@ -439,8 +523,11 @@ function format_aicourse_render_general_section($course, $section0, $options, $m
  * @return string HTML.
  */
 function format_aicourse_render_section_cards($course, $options) {
-    debugging('format_aicourse_render_section_cards() is deprecated, '
-        . 'use \format_aicourse\output\courseformat\content instead.', DEBUG_DEVELOPER);
+    debugging(
+        'format_aicourse_render_section_cards() is deprecated, '
+            . 'use \format_aicourse\output\courseformat\content instead.',
+        DEBUG_DEVELOPER
+    );
     unset($options);
     return (new content(course_get_format($course)))->out();
 }
@@ -456,8 +543,11 @@ function format_aicourse_render_section_cards($course, $options) {
  * @return string HTML.
  */
 function format_aicourse_render_activity_cards($course, $sectionnum, $options, $showheading = true) {
-    debugging('format_aicourse_render_activity_cards() is deprecated, '
-        . 'use \format_aicourse\output\courseformat\content\activitycards instead.', DEBUG_DEVELOPER);
+    debugging(
+        'format_aicourse_render_activity_cards() is deprecated, '
+            . 'use \format_aicourse\output\courseformat\content\activitycards instead.',
+        DEBUG_DEVELOPER
+    );
     return (new activitycards($course, $sectionnum, $options, $showheading))->out();
 }
 
@@ -469,8 +559,11 @@ function format_aicourse_render_activity_cards($course, $sectionnum, $options, $
  * @return string HTML.
  */
 function format_aicourse_render_icon_picker($iconlibrary) {
-    debugging('format_aicourse_render_icon_picker() is deprecated, '
-        . 'use \format_aicourse\output\courseformat\iconpicker instead.', DEBUG_DEVELOPER);
+    debugging(
+        'format_aicourse_render_icon_picker() is deprecated, '
+            . 'use \format_aicourse\output\courseformat\iconpicker instead.',
+        DEBUG_DEVELOPER
+    );
     return (new iconpicker($iconlibrary))->out();
 }
 
@@ -481,8 +574,11 @@ function format_aicourse_render_icon_picker($iconlibrary) {
  * @return string HTML, or '' when the AI Tutor is disabled site-wide.
  */
 function format_aicourse_render_ai_chatbox_html() {
-    debugging('format_aicourse_render_ai_chatbox_html() is deprecated, '
-        . 'use \format_aicourse\output\courseformat\chatbox::out() instead.', DEBUG_DEVELOPER);
+    debugging(
+        'format_aicourse_render_ai_chatbox_html() is deprecated, '
+            . 'use \format_aicourse\output\courseformat\chatbox::out() instead.',
+        DEBUG_DEVELOPER
+    );
     return (new chatbox())->out();
 }
 
@@ -494,7 +590,10 @@ function format_aicourse_render_ai_chatbox_html() {
  * @return string A script block, or '' when the AI Tutor is disabled site-wide.
  */
 function format_aicourse_render_ai_chatbox_script($course) {
-    debugging('format_aicourse_render_ai_chatbox_script() is deprecated, '
-        . 'use \format_aicourse\output\courseformat\chatbox::script() instead.', DEBUG_DEVELOPER);
+    debugging(
+        'format_aicourse_render_ai_chatbox_script() is deprecated, '
+            . 'use \format_aicourse\output\courseformat\chatbox::script() instead.',
+        DEBUG_DEVELOPER
+    );
     return (new chatbox($course))->script();
 }

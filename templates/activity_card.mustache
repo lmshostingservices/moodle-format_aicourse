@@ -17,72 +17,44 @@
 {{!
     @template format_aicourse/activity_card
 
-    A single card in the activity grid. Two shapes share the same wrapper: a normal activity, which
-    shows the module icon and a completion status badge, and a mod_subsection card, which shows an
-    inline list glyph and navigates to the delegated child section.
+    One activity card on a section page (2.5.0 card component). The whole card is one link.
 
-    Completion status is never conveyed by colour alone: the link's accessible name repeats the
-    status in words, and the badge shows it as visible text. The module icon and the badge tick are
-    decorative and carry aria-hidden="true" focusable="false" (the <img> also has an empty alt).
-
-    Classes required for JS:
-    * aicourse-activity-card
+    Completion is never shown by colour alone: the link's accessible name says it in words, and the
+    status chip on the image says it visibly when there is something to say (In progress,
+    Completed). "Not started" is not printed on every card.
 
     Data attributes required for JS:
-    * data-cmid - read by amd/src/courseformat.js.
-    * data-for="cmitem" and data-id - the attributes core_courseformat's reactive state manager
-      binds to so activity move/visibility mutations can update the card.
+    * data-for="cmitem" and data-id - core_courseformat's reactive state manager.
+    * data-cmid, data-status - amd/src/courseformat.js.
 
     Context variables required for this template:
-    * issubsection bool True when this card links to a delegated mod_subsection section.
-    * cmid int Course module ID.
-    * url string Unescaped target URL.
-    * status string Completion status slug: completed, in_progress or not_started.
-    * haslabel bool True when the link should carry an aria-label.
-    * cardlabel string Accessible name of the link, combining activity name and status.
-    * iconurl string Unescaped module icon URL; unused for a subsection card.
-    * name string PRE-ESCAPED activity or section name (already through format_string()); rendered
-      with a triple mustache so the entities format_string() produced are not escaped twice.
-    * typename string Localised module type label.
-    * hastime bool Whether an estimated duration is known and non-zero.
-    * estimatedtime string Formatted duration, for example "10 min"; shown to sighted users.
-    * timelabel string The same duration phrased for a screen reader, for example
-    *     "Estimated time: 10 min", so the pill is not announced as a bare number.
-    * iscompleted bool True when the tick should be drawn in the status badge.
-    * statuslabel string Localised completion status; unused for a subsection card.
-    * badgeclass string CSS class of the status badge; unused for a subsection card.
+    * issubsection bool Links to a delegated mod_subsection section.
+    * cmid int. url string Unescaped. status string completed, in_progress or not_started.
+    * haslabel bool / cardlabel string Accessible name.
+    * name string PRE-ESCAPED (format_string()); triple mustache.
+    * typename string Localised module type. iconurl string Module icon.
+    * hastime bool / estimatedtime string / timelabel string.
+    * media object Context for format_aicourse/card_media. cardstyle string.
 
     Example context (json):
     {
-        "issubsection": false,
-        "cmid": 12,
-        "url": "https://example.org/mod/page/view.php?id=12",
-        "status": "completed",
-        "haslabel": true,
-        "cardlabel": "What is machine learning? (Completed)",
+        "issubsection": false, "cmid": 12, "url": "https://example.org/mod/page/view.php?id=12",
+        "status": "completed", "haslabel": true, "cardlabel": "Recognition that works (Completed)",
+        "name": "Recognition that works", "typename": "Page",
         "iconurl": "https://example.org/theme/image.php/boost/page/1/monologo",
-        "name": "What is machine learning?",
-        "typename": "Page",
-        "hastime": true,
-        "estimatedtime": "10 min",
-        "timelabel": "Estimated time: 10 min",
-        "iscompleted": true,
-        "statuslabel": "Completed",
-        "badgeclass": "aicourse-status-badge-completed"
+        "hastime": true, "estimatedtime": "10 min", "timelabel": "Estimated time: 10 min",
+        "media": null, "cardstyle": ""
     }
 }}
-<a href="{{url}}" class="aicourse-activity-card aicourse-activity-status-{{status}}" data-cmid="{{cmid}}"{{#haslabel}} aria-label="{{cardlabel}}"{{/haslabel}} data-for="cmitem" data-id="{{cmid}}">
-<div class="aicourse-activity-card-icon">{{#issubsection}}<svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/><path d="M14 4h7"/><path d="M14 9h7"/><path d="M14 15h7"/><path d="M14 20h7"/></svg>{{/issubsection}}{{^issubsection}}<img src="{{iconurl}}" alt="" aria-hidden="true" />{{/issubsection}}</div>
-<div class="aicourse-activity-card-body">
-<h3 class="aicourse-activity-card-name">{{{name}}}</h3>
-<div class="aicourse-activity-card-footer">
-<span class="aicourse-activity-card-type">{{typename}}</span>
-{{#hastime}}
-<span class="aicourse-activity-card-time" title="{{timelabel}}"><svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg><span class="accesshide">{{timelabel}}</span><span aria-hidden="true">{{estimatedtime}}</span></span>
-{{/hastime}}
-{{^issubsection}}
-<span class="aicourse-status-badge {{badgeclass}}">{{#iscompleted}}<svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>{{/iscompleted}}{{statuslabel}}</span>
-{{/issubsection}}
-</div>
+<a href="{{url}}" class="acf-card acf-card--activity{{^media.hasimage}} acf-card--noimage{{/media.hasimage}}"{{#cardstyle}} style="{{cardstyle}}"{{/cardstyle}} data-status="{{status}}" data-cmid="{{cmid}}"{{#haslabel}} aria-label="{{cardlabel}}"{{/haslabel}} data-for="cmitem" data-id="{{cmid}}">
+{{#media}}
+{{> format_aicourse/card_media }}
+{{/media}}
+<div class="acf-card__body">
+<h3 class="acf-card__title">{{{name}}}</h3>
+<span class="acf-card__meta">{{!
+}}<span class="acf-card__metaitem">{{#issubsection}}<svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/><path d="M14 4h7"/><path d="M14 9h7"/><path d="M14 15h7"/><path d="M14 20h7"/></svg>{{/issubsection}}{{^issubsection}}<img class="acf-card__typeicon" src="{{iconurl}}" alt="" aria-hidden="true">{{/issubsection}}{{typename}}</span>{{!
+}}{{#hastime}}<span class="acf-card__metaitem acf-card__time" title="{{timelabel}}"><svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span class="accesshide">{{timelabel}}</span><span aria-hidden="true">{{estimatedtime}}</span></span>{{/hastime}}{{!
+}}</span>
 </div>
 </a>

@@ -89,8 +89,11 @@ if (!isset($map[$action])) {
 
 [$function, $paramtypes] = $map[$action];
 
-debugging('format_aicourse/ajax.php is deprecated. Call the external function ' . $function
-    . ' instead.', DEBUG_DEVELOPER);
+debugging(
+    'format_aicourse/ajax.php is deprecated. Call the external function ' . $function
+        . ' instead.',
+    DEBUG_DEVELOPER
+);
 
 $args = ['courseid' => $courseid];
 foreach ($paramtypes as $name => $type) {

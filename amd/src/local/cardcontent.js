@@ -57,13 +57,13 @@ export default class Component extends BaseComponent {
         this.name = 'aicourse_card_content';
         // Default query selectors.
         this.selectors = {
-            SECTIONLIST: `.aicourse-cards-grid`,
-            SECTIONCARD: `.aicourse-cards-grid > [data-for='section']`,
+            SECTIONLIST: `.acf-grid--sections`,
+            SECTIONCARD: `.acf-grid--sections > [data-for='section']`,
             GENERALSECTION: `.aicourse-general-section [data-for='section']`,
             SECTION: `[data-for='section']`,
             CM: `[data-for='cmitem']`,
             CMLIST: `[data-for='cmlist']`,
-            ADDSECTIONCARD: `.aicourse-add-section-card`,
+            ADDSECTIONCARD: `[data-acf-action='add-section']`,
         };
         this.classes = {
             STATEREADY: 'stateready',

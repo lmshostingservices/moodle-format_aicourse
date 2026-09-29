@@ -161,8 +161,11 @@ class generalsection implements named_templatable, renderable {
                 // card/summary rendering below instead.
                 $data->usecoresection = false;
                 $data->corecontent = '';
-                debugging('format_aicourse: core section renderer failed for section 0: '
-                    . $e->getMessage(), DEBUG_DEVELOPER);
+                debugging(
+                    'format_aicourse: core section renderer failed for section 0: '
+                        . $e->getMessage(),
+                    DEBUG_DEVELOPER
+                );
             }
         }
 

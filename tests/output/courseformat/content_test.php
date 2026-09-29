@@ -171,7 +171,7 @@ final class content_test extends \advanced_testcase {
         $this->assertStringContainsString((string) $module->cmid, $item->url);
         // Completion is tracked and untouched, so the marker is "not started" -- and the state is
         // in the accessible name too, so it is never carried by colour alone.
-        $this->assertSame('aicourse-actstate-not_started', $item->stateclass);
+        $this->assertSame('not_started', $item->state);
         $this->assertStringContainsString('Reading one', $item->label);
         $this->assertStringContainsString('Section 1', $item->label);
     }

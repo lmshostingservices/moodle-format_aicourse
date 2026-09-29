@@ -961,20 +961,6 @@ body.aicourse-force-dark :is(.aicadmin-wrap, .aitutor-report-index) {
         --acf-surface-hover: rgba(255, 255, 255, 0.16);
     }
 
-    /* Any element whose only affordance was a tint now gets a real edge.
-       The two progress badges paint their pill on ::before (44px target, 27px
-       visual — section 11), so the edge has to land there too. */
-    body.format-aicourse .aicourse-card,
-    body.format-aicourse .aicourse-activity-card,
-    body.format-aicourse .aicourse-status-badge {
-        border: 1px solid var(--acf-border-strong);
-    }
-
-    body.format-aicourse .aicourse-progress-badge::before,
-    body.format-aicourse .aicourse-progress-badge-complete::before,
-    body.format-aicourse .aicourse-card-time::before {
-        border: 1px solid var(--acf-border-strong);
-    }
 }
 
 /* High contrast AND an OS dark preference. Separate from the block above
@@ -1061,30 +1047,14 @@ body.format-aicourse .format-aicourse-section-summary > :last-child {
    has `overflow: hidden`; both are listed so the ring is never lost.
    -------------------------------------------------------------------------- */
 body.format-aicourse :is(
-.aicourse-card-link, .aicourse-card-time, .aicourse-card-settings,
-.aicourse-card-duplicate, .aicourse-card-delete, .aicourse-card-drag-handle,
-.aicourse-card-dot, .aicourse-card-activity-link, .aicourse-card-activities-more,
-.aicourse-card-dots-more, .aicourse-activity-count, .aicourse-progress-badge,
-.aicourse-progress-badge-complete, .aicourse-icon-col, .aicourse-card-icon-editable,
-.aicourse-activity-card, .aicourse-activity-number, .aicourse-completion-toggle,
+.aicourse-activity-count, .aicourse-activity-number, .aicourse-completion-toggle,
 .aicourse-hero-completion-toggle, .aicourse-hero-nav, .aicourse-hero-home,
 .aicourse-hero-grades, .aicourse-hero-back, .aicourse-hero-ai-btn,
-.aicourse-add-section-card, .aicourse-icon-picker-item, .aicourse-icon-picker-close,
+.aicourse-icon-picker-item, .aicourse-icon-picker-close,
 .aicourse-icon-search-input, .aicourse-ai-quick-btn, .aicourse-ai-send-btn,
 .aicourse-ai-rate-btn, .aicourse-ai-chatbox-close, .aicourse-bgen-btn,
 .aicourse-bgen-close, .aicourse-tab, .aicourse-rating-btn, .aicourse-correction-btn,
-.aicourse-filter-input, .aicourse-filter-select):focus-visible,
-/* 2.1.197: the bulk-select checkbox is a SIBLING selector here, not a branch of the :is() above.
-   Inside the :is() it was the most specific argument -- a class plus an attribute plus an element,
-   (0,2,1), where every other branch is a bare class (0,1,0) -- and :is() takes the specificity of
-   its most specific argument and applies it to ALL of them. That lifted this whole rule from
-   (0,3,1) to (0,4,2), which is how it came to beat the "controls on imagery" rule below it at
-   (0,4,1). The inverted focus halo on the hero banner never rendered: a keyboard user tabbing
-   across a photographic banner got the brand-blue ring meant for a white page.
-
-   Comma-separated selectors each carry their OWN specificity, so moving this one branch out to its
-   own line fixes the inflation without duplicating a single declaration. */
-body.format-aicourse .aicourse-card-bulkselect input[type="checkbox"]:focus-visible {
+.aicourse-filter-input, .aicourse-filter-select):focus-visible {
     outline: var(--acf-focus-width) solid var(--acf-focus-color);
     outline-offset: var(--acf-focus-offset);
     box-shadow: var(--acf-focus-ring);
@@ -1103,23 +1073,12 @@ body.format-aicourse .aicourse-bgen-btn:focus-visible {
     box-shadow: var(--acf-focus-ring-media);
 }
 
-/* Hover-revealed card chrome must also appear on keyboard focus, otherwise a
-   keyboard user can focus a control they can never see (SC 2.4.7). */
-body.format-aicourse .aicourse-card:hover .aicourse-card-edit-buttons,
-body.format-aicourse .aicourse-card:focus-within .aicourse-card-edit-buttons {
-    opacity: 1;
-    pointer-events: auto;
-    transform: none;
-}
-
 /* Shared touch-target floor. Applied to every control the plugin owns.
    WCAG 2.2 SC 2.5.8 requires 24px; 44px is the premium bar. */
 body.format-aicourse :is(
 .aicourse-hero-nav, .aicourse-hero-home, .aicourse-hero-grades, .aicourse-hero-back,
 .aicourse-hero-ai-btn, .aicourse-hero-completion-toggle, .aicourse-icon-picker-close,
-.aicourse-ai-chatbox-close, .aicourse-ai-send-btn, .aicourse-bgen-close,
-.aicourse-card-settings, .aicourse-card-duplicate, .aicourse-card-delete,
-.aicourse-card-drag-handle) {
+.aicourse-ai-chatbox-close, .aicourse-ai-send-btn, .aicourse-bgen-close) {
     min-inline-size: var(--acf-target-min);
     min-block-size: var(--acf-target-min);
 }
@@ -1282,12 +1241,12 @@ body.format-aicourse.aicourse-is-grader:not(.aicourse-can-edit) .aicourse-hero-s
    the direct-child scope loses no coverage.
 
    ACF-FIX-2.1: the card grid now carries `data-for="course_sectionlist"` itself, so that
-   core_courseformat's reactive state manager can find it. The `:not(.aicourse-cards-grid)`
-   guard keeps this rule pointed at CORE's section list and stops it hiding our own grid —
+   core_courseformat's reactive state manager can find it. The `:not(.acf-grid)`
+   guard (2.5.0; previously `.aicourse-cards-grid`) keeps this rule pointed at CORE's list and stops it hiding our own grid —
    without it the entire card layout computes to `display: none`. */
 body.format-aicourse.aicourse-cardview :is(
 .course-content > ul.aicourse, .course-content > ul.topics, .course-content > ul.sections,
-.course-content > .topics, .course-content > .sections, [data-for="course_sectionlist"]:not(.aicourse-cards-grid),
+.course-content > .topics, .course-content > .sections, [data-for="course_sectionlist"]:not(.acf-grid),
 .course-content > .section-summary, .course-content > .course-section) {
     /* stylelint-disable-next-line declaration-no-important -- deliberate; see the numbered note above. */
     display: none !important;
@@ -1295,7 +1254,7 @@ body.format-aicourse.aicourse-cardview :is(
 
 body.format-aicourse.aicourse-activitycards :is(
 .course-content > ul.aicourse, .course-content > ul.topics, .course-content > ul.sections,
-[data-for="course_sectionlist"]:not(.aicourse-cards-grid), .course-content > .section-summary,
+[data-for="course_sectionlist"]:not(.acf-grid), .course-content > .section-summary,
 .course-content > .course-section) {
     /* stylelint-disable-next-line declaration-no-important -- deliberate; see the numbered note above. */
     display: none !important;
@@ -1921,11 +1880,6 @@ body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-her
     backdrop-filter: blur(var(--acf-blur-md));
     -webkit-backdrop-filter: blur(var(--acf-blur-md));
     box-shadow: var(--acf-elevation-2);
-}
-/* ACF-FIX-2.1.15: clear the absolutely positioned icon pill. 13rem is its measured width
-   (198px) plus a gutter of breathing room. Applied to the title and the meta line, which are
-   the two elements that reach the banner's top-right corner. */
-@media (min-width: 600px) {
 }
 
 /* Below 600px there is not enough width to reserve for the pill, so it leaves the corner and
@@ -2586,7 +2540,6 @@ body.format-aicourse .aicourse-grade-display {
     padding-inline: 0.35rem;
 }
 
-
 body.format-aicourse .aicourse-grade-text {
     font-size: var(--acf-font-size-sm);
     font-weight: var(--acf-weight-semibold);
@@ -2614,461 +2567,9 @@ body.format-aicourse .aicourse-cards-container {
     container-name: acf-cards;
 }
 
-body.format-aicourse .aicourse-cards-grid {
-    display: grid;
-    /* ACF-FIX-2.1.14: auto-fit, not auto-fill. auto-fill keeps empty phantom tracks, so a course
-       with three sections in a wide container left a ragged gap to the right of the last card
-       while the hero above ran the full width. auto-fit collapses the empty tracks and lets the
-       real cards share the space. */
-    /* ACF-FIX-2.1.177: an explicit column count, not auto-fit.
-       auto-fit was chosen in 2.1.14 to stop a course with three sections leaving a ragged gap to
-       the right of the last card. It does that by collapsing the empty tracks and letting the real
-       cards share the whole row -- which is fine at five sections and wrong at two, where each card
-       inflated to ~700px and a section with four activities in it rendered as a mostly empty slab.
-       Reported as "the section cards are too big - do 3 cards across not 2".
-       A card is a summary. Its width should come from the layout, not from how many of them the
-       course happens to have. Three across on a desktop, two on a tablet, one on a phone. */
-    grid-template-columns: minmax(0, 1fr);
-    gap: var(--acf-space-4);
-    /* ACF-FIX-2.1.38: start, not stretch.
-       Stretch gives every card in a row the height of the tallest, which is right when their
-       contents are comparable. Since 2.1.25 the activity list is uncapped by default, so a
-       section with 13 activities sits beside one with none and the shorter cards are padded out
-       to match: measured 589px tall around 78px of content, leaving 511px of empty card. Sizing
-       each card to its own content trades a level bottom edge for cards that are actually the
-       size of what is in them. The footer keeps its `margin-block-start: auto`, so on the cards
-       that DO still share a row height it stays pinned to the bottom. */
-    align-items: start;
-}
-
-@media (min-width: 768px) {
-    body.format-aicourse .aicourse-cards-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-}
-
-@media (min-width: 1400px) {
-    body.format-aicourse .aicourse-cards-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-}
-
-/* The viewport tiers above are the floor. Where container queries are supported the count is
-   driven by the space the grid ACTUALLY has, which is the honest measurement: opening the course
-   index takes 342px off the content column without changing the viewport by a pixel, so a
-   viewport-only rule keeps three columns in a space that now only fits two. The container is
-   already declared on .aicourse-cards-container (container-type: inline-size, name acf-cards);
-   this is the first thing to use it. */
-@supports (container-type: inline-size) {
-    body.format-aicourse .aicourse-cards-grid {
-        grid-template-columns: minmax(0, 1fr);
-    }
-
-    /* 560px, not 700: at a 1024px viewport with the course index open the grid has 634px, which a
-       700px threshold pushed to a SINGLE 634px card -- the exact "too big" complaint, reproduced by
-       the fix meant to solve it. 560 is two 264px cards plus the gap, which is the narrowest a
-       two-up row can be while each card still reads as a card. */
-    @container acf-cards (min-width: 560px) {
-        body.format-aicourse .aicourse-cards-grid {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-    }
-
-    @container acf-cards (min-width: 1080px) {
-        body.format-aicourse .aicourse-cards-grid {
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-        }
-    }
-}
-
-@media (min-width: 992px) {
-    body.format-aicourse .aicourse-cards-grid {
-        gap: var(--acf-space-5);
-    }
-}
-
-@media (min-width: 1280px) {
-    body.format-aicourse .aicourse-cards-grid {
-        gap: var(--acf-space-6);
-    }
-}
-
-body.format-aicourse .aicourse-card {
-    /* ACF-FIX-2.1.16: establish the text colour on the surface itself.
-       The card's BACKGROUND comes from --acf-surface-raised, which flips with colour mode, but
-       its text colour was inherited from the host theme -- Boost hands down rgb(29, 33, 37).
-       In dark mode that is near-black text on a #1e293b card: measured 1.1:1 against a 4.5:1
-       requirement. Nothing is visibly broken today only because every text element inside sets
-       its own colour explicitly; the moment anything is added that does not, it disappears.
-       Setting it here makes the surface and its contents flip together, which is the invariant
-       that was missing. */
-    color: var(--acf-text-primary);
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    min-inline-size: 0;
-    background: var(--acf-surface-card);
-    border: 1px solid var(--acf-brand-tint-strong);
-    border-radius: var(--acf-radius-xl);
-    box-shadow: var(--acf-elevation-2);
-    /* `overflow: hidden` was removed deliberately: it clipped the focus ring of
-       the inner link AND clipped Moodle's edit-mode action menus, which is what
-       the old `body.editing .aicourse-card { overflow: visible !important }`
-       hack existed to undo. The ::before accent bar carries its own radius. */
-    isolation: isolate;
-    -webkit-font-smoothing: antialiased;
-    transition:
-        transform var(--acf-duration-slow) var(--acf-ease-spring),
-        box-shadow var(--acf-duration-slow) var(--acf-ease-standard),
-        border-color var(--acf-duration-slow) var(--acf-ease-standard);
-}
-
-/* Brand accent rail along the top edge. */
-body.format-aicourse .aicourse-card::before {
-    content: "";
-    position: absolute;
-    inset-block-start: 0;
-    inset-inline: 0;
-    block-size: 3px;
-    border-start-start-radius: var(--acf-radius-xl);
-    border-start-end-radius: var(--acf-radius-xl);
-    background:
-        linear-gradient(
-            to right,
-            var(--acf-brand) 0%,
-            var(--acf-brand-tint-strong) 100%
-        );
-    opacity: 0.7;
-    z-index: var(--acf-z-content);
-    transition: opacity var(--acf-duration-slow) var(--acf-ease-standard);
-    pointer-events: none;
-}
-
-/* ACF-FIX-2.1.98: hover lifts the card and deepens its shadow. It no longer changes the border
-   colour -- the accent belongs on the card at rest, and moving it on hover was what made the
-   colour read as a hover effect rather than the course's own. */
-body.format-aicourse .aicourse-card:hover {
-    transform: translateY(-6px);
-    box-shadow: var(--acf-elevation-4);
-}
-
-body.format-aicourse .aicourse-card:hover::before {
-    opacity: 1;
-}
-
-body.format-aicourse .aicourse-card:active {
-    transform: translateY(-2px);
-    box-shadow: var(--acf-elevation-2);
-    transition-duration: var(--acf-duration-instant);
-}
-
-/* The inner <a> carries the focus ring (see section 6); the card only echoes
-   the state with elevation and a border tint, so the user sees ONE ring, not
-   two nested ones. The ring is no longer clipped because .aicourse-card
-   dropped `overflow: hidden`. */
-body.format-aicourse .aicourse-card:focus-within {
-    box-shadow: var(--acf-elevation-4);
-    border-color: var(--acf-focus-color);
-}
-
 /* --- Header: icon column + time badge ------------------------------------- */
-body.format-aicourse .aicourse-card .aicourse-card-header {
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    gap: var(--acf-space-3);
-    padding: var(--acf-space-4) var(--acf-space-4) 0;
-    margin-block-end: var(--acf-space-3);
-}
-
-/* In edit mode lib.php promotes this to a real <button>, so it inherits the
-   theme's button chrome (a grey filled box round the icon + label). Reset it
-   back to a bare cluster — the affordance is the icon's own hover ring. */
-body.format-aicourse .aicourse-icon-col {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--acf-space-1);
-    flex-shrink: 0;
-    padding: 0;
-    border: none;
-    background: transparent;
-    border-radius: var(--acf-radius-md);
-}
-
-body.format-aicourse .aicourse-card-icon-editable {
-    position: relative;
-    cursor: pointer;
-}
-
-body.format-aicourse .aicourse-card-icon-wrap {
-    position: relative;
-    z-index: var(--acf-z-raised);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    inline-size: 2.875rem;   /* 46px */
-    block-size: 2.875rem;
-    flex-shrink: 0;
-    box-sizing: border-box;
-    padding: var(--acf-space-2);
-    border: 1px solid transparent;
-    border-radius: var(--acf-radius-lg);
-    background: var(--acf-brand-tint);
-    color: var(--acf-text-brand);
-    transition:
-        transform var(--acf-duration-slow) var(--acf-ease-spring),
-        background var(--acf-duration-slow) var(--acf-ease-standard),
-        border-color var(--acf-duration-fast) var(--acf-ease-standard);
-}
-
-body.format-aicourse .aicourse-card-icon-wrap.aicourse-icon-selected {
-    background: var(--acf-brand-tint);
-    border-color: transparent;
-    color: var(--acf-text-brand);
-}
-
-body.format-aicourse .aicourse-card-icon-wrap.aicourse-icon-empty {
-    background: var(--acf-surface-hover);
-    border: 2px dashed var(--acf-border-strong);
-    color: var(--acf-text-tertiary);
-}
-
-/* ACF-FIX-2.1.14: a dashed outline means "drop something here". That is an editing affordance,
-   and it was being shown to students: on a course whose teacher never picked section icons --
-   the common case -- every card carried a dashed box with a question mark, which reads as
-   broken rather than as merely un-styled. In view mode the placeholder is now solid and quiet,
-   so an un-iconed course looks deliberate. Edit mode keeps the dashed invitation. */
-body.format-aicourse:not(.editing):not(.editingon):not(.editing-mode)
-.aicourse-card-icon-wrap.aicourse-icon-empty {
-    background: var(--acf-surface-muted);
-    border: 1px solid var(--acf-border-subtle);
-    /* ACF-FIX-2.1.19: --acf-text-tertiary measured 4.34:1 in light and 2.34:1 in dark against
-       this surface, both short of the 4.5:1 AA floor. The glyph is small rendered text, not a
-       decorative shape, so it has to clear it. --acf-text-secondary does. */
-    color: var(--acf-text-secondary);
-}
-
-/* ACF-FIX-2.1.61: hover lifts the icon, it no longer recolours it. The tint is already the
-   accent at rest; deepening it on hover was what made the colour feel like a hover effect rather
-   than the course's own. */
-body.format-aicourse .aicourse-card:hover .aicourse-card-icon-wrap {
-    transform: scale(1.08) rotate(-4deg);
-}
-
-body.format-aicourse .aicourse-card:hover .aicourse-card-icon-wrap.aicourse-icon-empty {
-    background: var(--acf-surface-active);
-    border-color: var(--acf-border-brand);
-    color: var(--acf-text-secondary);
-}
-
-body.format-aicourse .aicourse-card-icon-editable:hover .aicourse-card-icon-wrap {
-    border-color: var(--acf-border-brand);
-    box-shadow: 0 0 0 3px var(--acf-brand-tint);
-}
-
-body.format-aicourse .aicourse-card .aicourse-card-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    inline-size: var(--acf-icon-lg);
-    block-size: var(--acf-icon-lg);
-    color: inherit;
-    background: transparent;
-    transition: transform var(--acf-duration-slow) var(--acf-ease-spring);
-}
-
-/* Themes ship `img, svg { max-width: 100% }` at specificity (0,0,1); this rule
-   is (0,4,1) and wins on merit, so the six `!important` size locks the previous
-   sheet used here are gone. `flex: none` prevents any flex reflow of the glyph. */
-body.format-aicourse .aicourse-card .aicourse-card-icon svg {
-    inline-size: var(--acf-icon-lg);
-    block-size: var(--acf-icon-lg);
-    max-inline-size: none;
-    flex: none;
-    stroke: currentColor;
-}
-
-body.format-aicourse .aicourse-card-icon-editable:hover .aicourse-card-icon {
-    transform: scale(1.1);
-}
-
-/* "Add icon" / "Change icon" affordance. Was 9px at 60% opacity = 3.31:1.
-   Now 11px at full opacity on the brand colour = 9.72:1. */
-body.format-aicourse .aicourse-icon-change-label {
-    display: block;
-    font-size: var(--acf-font-size-2xs);
-    font-weight: var(--acf-weight-semibold);
-    line-height: var(--acf-leading-tight);
-    letter-spacing: var(--acf-tracking-wide);
-    text-transform: uppercase;
-    color: var(--acf-text-brand);
-    white-space: nowrap;
-    pointer-events: none;
-}
-
-/* Was a bare 84x32 link — under the 44px bar on its block axis. The ELEMENT is
-   now 44px tall (so it measures as a compliant target, not just a padded one)
-   while the visible pill stays 32px, drawn by ::before inset 6px on the block
-   axis. Same technique as the card edit chrome above. */
-body.format-aicourse .aicourse-card .aicourse-card-time {
-    /* ACF-FIX-2.1.151: an explicit stacking context, so the ::before pill is always drawn against
-       THIS element -- above its own background box, below its icon and text. Without it the -1
-       child lands in whichever ancestor happens to be positioned, which is exactly how 2.1.145
-       sent it to .aicourse-card-header and turned it into a slab across the whole card top. */
-    isolation: isolate;
-    display: inline-flex;
-    align-items: center;
-    gap: var(--acf-space-2);
-    margin-inline-start: auto;
-    padding: var(--acf-space-1) var(--acf-space-3);
-    min-block-size: var(--acf-target-min);
-    box-sizing: border-box;
-    /* ACF-FIX-2.1.94: the same treatment the section icon gets -- a tinted background of the
-       accent with the accent itself as the text, so the duration reads as part of the course's
-       palette rather than a grey chip stuck to the corner of the card. The tint is the weak step,
-       not the full colour: this sits behind small text, and anything stronger costs legibility for
-       no gain.
-       ACF-FIX-2.1.151: the tint belongs on the ::before pill, not on the element. The element is
-       44px tall so it MEASURES as a compliant target; only the 32px pill is meant to be visible. A
-       background HERE paints the full 44px box, square-cornered, which is the grey slab that
-       replaced the pill. The colour stays; the fill moved down to ::before. */
-    border: none;
-    background: transparent;
-    color: var(--acf-text-brand);
-    font-size: var(--acf-font-size-xs);
-    font-weight: var(--acf-weight-medium);
-    font-variant-numeric: tabular-nums;
-    white-space: nowrap;
-    text-decoration: none;
-    transition: color var(--acf-duration-fast) var(--acf-ease-standard);
-}
-
-body.format-aicourse .aicourse-card .aicourse-card-time::before {
-    content: "";
-    position: absolute;
-    inset-block: 6px;
-    inset-inline: 0;
-    z-index: -1;
-    /* ACF-FIX-2.1.151: this is where 2.1.94's tinted treatment belongs -- on the pill itself, so
-       the duration reads in the course's accent and still looks like a pill. */
-    border: 1px solid var(--acf-brand-tint);
-    border-radius: var(--acf-radius-pill);
-    background: var(--acf-brand-tint-weak);
-    transition:
-        background var(--acf-duration-fast) var(--acf-ease-standard),
-        border-color var(--acf-duration-fast) var(--acf-ease-standard);
-}
-
-body.format-aicourse .aicourse-card .aicourse-card-time:hover {
-    color: var(--acf-text-primary);
-    text-decoration: none;
-}
-
-body.format-aicourse .aicourse-card .aicourse-card-time:hover::before {
-    background: var(--acf-surface-active);
-    border-color: var(--acf-border-default);
-}
-
-body.format-aicourse .aicourse-card .aicourse-card-time svg {
-    inline-size: var(--acf-icon-xs);
-    block-size: var(--acf-icon-xs);
-    flex: none;
-    stroke: currentColor;
-    opacity: 0.8;
-}
 
 /* --- Body ----------------------------------------------------------------- */
-/* THE card-rhythm bug. `flex: 1 1 auto` made this link absorb every spare
-   pixel in the column, and because the <h3> sits at the TOP of the link the
-   free space piled up UNDER the title — pushing the summary away from the
-   heading it belongs to, by a different amount in every card. The spacer is
-   now explicit and lives in exactly one place: `margin-block-start: auto` on
-   .aicourse-card-footer. The link hugs its heading. */
-body.format-aicourse .aicourse-card .aicourse-card-link {
-    display: block;
-    flex: 0 0 auto;
-    padding: 0 var(--acf-space-4);
-    color: inherit;
-    text-decoration: none;
-    border-radius: var(--acf-radius-sm);
-}
-
-/* Hit-area expansion (WCAG 2.2 SC 2.5.5 / 2.5.8). Pinning the title link's
-   ::after to the whole card turns the ONE named link into a card-sized target
-   instead of a 19px line of text, without moving a single pixel of layout —
-   note that `getBoundingClientRect()` on the <a> still reports the text box, so
-   a naive target-size audit will keep reporting 281x19; the real hit area is
-   the card. The containing block is .aicourse-card, which is `position:
-   relative`; .aicourse-card-link itself is deliberately left static.
-   Everything that must stay independently clickable — the header (icon picker
-   in edit mode, time badge), the footer (activity dots) and the edit chrome —
-   is lifted above it below. */
-/* ACF-FIX-2.1.145: the whole card is the link, not just its title.
-   Hit-testing six points across a card found only the title reaching it: the icon hit nothing, and
-   the activity rows, the "N activities" count and the time pill each sat above the overlay and
-   captured their own area. The overlay existed but was beneath everything.
-
-   Raised above the card's contents so any point on the card opens the section. The elements that
-   have their OWN destination are lifted back above it below -- an activity row must still open that
-   activity, not the section. */
-body.format-aicourse .aicourse-card .aicourse-card-link::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-    border-radius: var(--acf-radius-xl);
-}
-
-/* Anything on the card that leads somewhere else keeps its own click target. */
-body.format-aicourse .aicourse-card
-:is(.aicourse-card-activity-link, .aicourse-activity-count, .aicourse-card-activities-more,
-.aicourse-card-dots-more, .aicourse-card-settings, .aicourse-card-duplicate,
-.aicourse-card-delete, .aicourse-card-icon-editable, .aicourse-card-dot, .dropdown,
-[data-action]) {
-    position: relative;
-    z-index: 2;
-}
-
-/* The time pill is not a link, so it is left below the overlay: clicking it should open the
-   section like the rest of the card rather than doing nothing.
-   ACF-FIX-2.1.151: `position: static` was how that was done, and it is what broke the card. The
-   pill is drawn by an absolutely positioned ::before; taking the element out of the positioned
-   flow re-parented that ::before to .aicourse-card-header and stretched it across the whole top
-   of the card as a grey slab. Position is not the lever here -- z-index is. The element stays
-   relative (it must, for its own ::before) and is pinned BELOW the overlay's z-index: 1, which is
-   what actually makes the click fall through to the section link. */
-body.format-aicourse .aicourse-card .aicourse-card-time {
-    position: relative;
-    z-index: 0;
-}
-
-/* The card's header and body sat at --acf-z-content, which outranks the overlay -- which is why the
-   icon reached nothing and the title only worked because it IS the link. They drop below it; the
-   elements inside them that lead somewhere else were already lifted above, so nothing that should
-   be clickable loses its target. */
-body.format-aicourse .aicourse-card
-:is(.aicourse-card-header, .aicourse-card-body, .aicourse-card-icon-wrap, .aicourse-card-summary) {
-    z-index: auto;
-}
-
-/* ACF-FIX-2.1.165: the header and the footer drop BELOW the card's link overlay.
-   `--acf-z-content` is 2 and the overlay is 1, so this rule -- ten lines after another that sets
-   these same elements to `z-index: auto` and loses to it -- put both bands above the thing that
-   makes the card clickable. Hit-testing five points on a card proved it: the icon corner and the
-   footer's empty space reached no link at all, which is the "card icon corner is not clickable"
-   report that has been open since 2.1.145.
-   Everything inside them with its own destination is lifted back above the overlay by the rule
-   further up; a dot, a count or a settings cog still goes where it should. */
-body.format-aicourse .aicourse-card .aicourse-card-header,
-body.format-aicourse .aicourse-card .aicourse-card-footer {
-    position: relative;
-    z-index: auto;
-}
-
-body.format-aicourse .aicourse-card .aicourse-card-link:hover {
-    text-decoration: none;
-}
 
 /* ACF-FIX-2.1.5: font-size and line-height are forced so the course's own
    "Card title size" setting is authoritative.
@@ -3079,49 +2580,6 @@ body.format-aicourse .aicourse-card .aicourse-card-link:hover {
    and depends entirely on the theme not reaching for an id or !important of its own. Pinning
    these two declarations removes the question. Only these two are forced; colour, weight and
    spacing still yield to the theme. */
-/* --aicourse-card-title-size is the px value format.php injects inline. */
-body.format-aicourse .aicourse-card .aicourse-card-title {
-    margin: 0;
-    /* The old `min-block-size: 2.375rem` reserved a second line even for
-       one-line titles, so a single-line card showed ~19px of empty box between
-       the heading and its summary. Card heights are aligned by the grid's
-       `align-items: stretch` plus the footer's auto margin, not by padding the
-       title, so the reservation only ever cost rhythm. */
-    /* stylelint-disable-next-line declaration-no-important -- deliberate; see the note above. */
-    font-size: var(--aicourse-card-title-size, var(--acf-font-size-md)) !important;
-    font-weight: var(--acf-weight-semibold);
-    /* stylelint-disable-next-line declaration-no-important -- must travel with the font-size. */
-    line-height: var(--acf-leading-snug) !important;
-    letter-spacing: var(--acf-tracking-tight);
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    overflow-wrap: anywhere;
-}
-
-/* ACF-FIX-2.1.61: the accent belongs on the title at REST, not on hover.
-   Applying it only on hover meant a course with a chosen colour looked identical to one without
-   until the mouse moved -- and on a touch screen, never. The card heading is a heading, so it
-   takes the course's colour the way the section headings in the sidebar do. */
-body.format-aicourse .aicourse-card .aicourse-card-title {
-    color: var(--acf-text-brand);
-}
-
-/* Sits immediately under the title it describes: one fixed 8px step, never a
-   share of the card's leftover height. */
-body.format-aicourse .aicourse-card-summary {
-    margin: var(--acf-space-2) var(--acf-space-4) 0;
-    font-size: var(--acf-font-size-sm);
-    line-height: var(--acf-leading-normal);
-    color: var(--acf-text-secondary);
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-}
 
 /* --- Compact activity list ------------------------------------------------
    Rendered only when the course turns "Show activities on cards" on; with the
@@ -3134,108 +2592,6 @@ body.format-aicourse .aicourse-card-summary {
    footer, so .aicourse-card-footer's `margin-block-start: auto` still pins the
    footer to the bottom edge of a stretched card and a row of cards still ends
    level. */
-body.format-aicourse .aicourse-card-activities {
-    /* Lifted above .aicourse-card-link::after, the card-sized overlay that
-       makes the whole card a target for the title link — otherwise the overlay
-       would swallow every click meant for an activity. Same treatment the
-       header and the footer already get. */
-    position: relative;
-    z-index: var(--acf-z-content);
-    display: flex;
-    flex-direction: column;
-    gap: var(--acf-space-1);
-    margin: var(--acf-space-3) var(--acf-space-4) 0;
-    padding: 0;
-    list-style: none;
-}
-
-body.format-aicourse .aicourse-card .aicourse-card-activity {
-    min-inline-size: 0;
-}
-
-body.format-aicourse .aicourse-card .aicourse-card-activity-link {
-    display: flex;
-    align-items: center;
-    gap: var(--acf-space-2);
-    /* 28px rather than the 44px premium floor: these are full-width rows in a
-       vertical list, so the target is wide, adjacent rows never overlap, and
-       four 44px rows would add 176px to every card and destroy the density the
-       grid exists for. Comfortably over WCAG 2.2 SC 2.5.8's 24px. */
-    min-block-size: 28px;
-    /* Negative inline margin lets the hover tint bleed towards the card's edge
-       while the text stays on the same 16px rhythm as the summary above it. */
-    margin-inline: calc(-1 * var(--acf-space-2));
-    padding: var(--acf-space-1) var(--acf-space-2);
-    border-radius: var(--acf-radius-md);
-    font-size: var(--acf-font-size-sm);
-    line-height: var(--acf-leading-snug);
-    color: var(--acf-text-secondary);
-    text-decoration: none;
-    transition:
-        background-color var(--acf-duration-fast) var(--acf-ease-standard),
-        color var(--acf-duration-fast) var(--acf-ease-standard);
-}
-
-/* ACF-FIX-2.1.93: hover adds the underline; the colour is not changed here, because whatever the
-   link's resting colour is, changing it on hover is what made the accent read as a hover effect
-   rather than the course's own colour. */
-body.format-aicourse .aicourse-card .aicourse-card-activity-link:hover {
-    background: var(--acf-surface-hover);
-    color: var(--acf-text-brand);
-    text-decoration: none;
-}
-
-/* One line each, so N activities always cost the same height and cards in a row
-   stay level. A mod_label's name is generated from its intro text and can be a
-   whole paragraph, which is exactly why this clamps rather than wraps. */
-body.format-aicourse .aicourse-card .aicourse-card-activity-name {
-    flex: 1 1 auto;
-    min-inline-size: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-/* Completion state marker. Shape as well as colour (SC 1.4.1): complete is a
-   solid disc, in-progress is a disc inside a halo, not-started is a hollow 2px
-   outline and an untracked activity is a flat dash — the same vocabulary the
-   footer progress dots already use. The state is ALSO in the link's accessible
-   name, so nothing depends on seeing it. */
-body.format-aicourse .aicourse-card .aicourse-card-activity-state {
-    flex: 0 0 auto;
-    box-sizing: border-box;
-    inline-size: 8px;
-    block-size: 8px;
-    border: 1px solid transparent;
-    border-radius: var(--acf-radius-full);
-}
-
-body.format-aicourse .aicourse-card-activity-state.aicourse-actstate-completed {
-    background: var(--acf-status-done-line);
-    border-color: var(--acf-status-done-line);
-}
-
-body.format-aicourse .aicourse-card-activity-state.aicourse-actstate-in_progress {
-    background: var(--acf-status-doing-solid);
-    border-color: var(--acf-status-doing-solid);
-    box-shadow: 0 0 0 2px var(--acf-status-doing-bg);
-}
-
-body.format-aicourse .aicourse-card-activity-state.aicourse-actstate-not_started {
-    background: transparent;
-    border-color: var(--acf-border-strong);
-    border-width: 2px;
-}
-
-/* No completion tracking: a dash, not a third circle, so it cannot be mistaken
-   for "not started". It keeps the marker's box so the names still line up. */
-body.format-aicourse .aicourse-card-activity-state.aicourse-actstate-none {
-    block-size: 2px;
-    border: 0;
-    border-radius: 0;
-    background: var(--acf-border-strong);
-}
-
 
 /* ==========================================================================
    SECTION CARD ROWS, BROUGHT LEVEL WITH THE COURSE INDEX (ACF-FIX-2.1.178)
@@ -3255,565 +2611,19 @@ body.format-aicourse .aicourse-card-activity-state.aicourse-actstate-none {
    forms if the item is at a fixed edge.
    ========================================================================== */
 
-body.format-aicourse .aicourse-card .aicourse-card-activity-icon {
-    flex: 0 0 auto;
-    inline-size: 18px;
-    block-size: 18px;
-    object-fit: contain;
-    /* Module icons are supplied at wildly different weights and a few are nearly
-       black. A slight lift stops the icon column out-shouting the names beside
-       it without washing out the ones that are already pale. */
-    opacity: 0.9;
-}
-
-/* The estimated time. Pushed to the inline-end by its own auto margin rather
-   than by a spacer on the name, so a row with no time still puts the state
-   marker in exactly the same place -- the column stays a column. */
-body.format-aicourse .aicourse-card .aicourse-card-activity-time {
-    flex: 0 0 auto;
-    margin-inline-start: auto;
-    padding-inline: 6px;
-    padding-block: 1px;
-    border-radius: var(--acf-radius-full);
-    background: var(--acf-surface-sunken);
-    font-size: var(--acf-font-size-2xs);
-    font-variant-numeric: tabular-nums;
-    color: var(--acf-text-tertiary);
-    white-space: nowrap;
-}
-
-/* The state marker becomes the index's tick: a 17px ring that fills green when
-   the activity is done. `:where()` keeps this at (0,2,0) so the per-state rules
-   above still win on colour. */
-body.format-aicourse .aicourse-card .aicourse-card-activity-state {
-    /* A row with no time has no auto margin ahead of this, so it carries its
-       own -- otherwise the marker would sit against the name on those rows and
-       break the column it is meant to form. */
-    margin-inline-start: auto;
-}
-
-body.format-aicourse .aicourse-card :is(
-.aicourse-card-activity-state.aicourse-actstate-completed,
-.aicourse-card-activity-state.aicourse-actstate-not_started,
-.aicourse-card-activity-state.aicourse-actstate-in_progress) {
-    position: relative;
-    inline-size: 17px;
-    block-size: 17px;
-    border-width: 2px;
-    border-style: solid;
-    border-radius: var(--acf-radius-full);
-    background: transparent;
-    border-color: var(--acf-border-strong);
-    box-shadow: none;
-}
-
-body.format-aicourse .aicourse-card .aicourse-card-activity-state.aicourse-actstate-completed {
-    border-color: var(--acf-status-done-line);
-    background: var(--acf-status-done-line);
-}
-
-/* The check is drawn rather than marked up: two borders of an empty box, rotated.
-   The alternative is an inline SVG in every row of every card, which is a lot of
-   bytes for a tick -- and the row already carries its state in the link's
-   accessible name, so this glyph is decoration either way. */
-body.format-aicourse .aicourse-card .aicourse-card-activity-state.aicourse-actstate-completed::after {
-    content: "";
-    position: absolute;
-    inset-block-start: 2px;
-    inset-inline-start: 4.5px;
-    inline-size: 4px;
-    block-size: 7px;
-    border: solid var(--acf-surface-raised);
-    border-width: 0 2px 2px 0;
-    transform: rotate(45deg);
-}
-
-body.format-aicourse .aicourse-card .aicourse-card-activity-state.aicourse-actstate-in_progress {
-    border-color: var(--acf-status-doing-solid);
-}
-
-body.format-aicourse .aicourse-card .aicourse-card-activity-state.aicourse-actstate-in_progress::after {
-    content: "";
-    position: absolute;
-    inset: 3px;
-    border-radius: var(--acf-radius-full);
-    background: var(--acf-status-doing-solid);
-}
-
-/* Hovering the icon or the tick must not change what the row means, so the whole
-   row keeps one hover treatment and these two just come up to full strength. */
-body.format-aicourse .aicourse-card .aicourse-card-activity-link:hover .aicourse-card-activity-icon {
-    opacity: 1;
-}
-
-
 /* --- The card's progress: the hero's indicator, at card scale ---------------
    The footer showed a flat "33%" pill. The hero shows a ring that fills and a
    number that counts up, and the card is reporting the same quantity -- so it
    now uses the same instrument. A learner reads one thing in two places rather
    than learning two notations for progress in one product. */
-body.format-aicourse .aicourse-card .aicourse-card-progress {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--acf-space-2);
-    text-decoration: none;
-    padding: 0;
-    background: none;
-    border: 0;
-}
-
-/* ACF-FIX-2.1.178: the .aicourse-progress-badge class is deliberately NOT on this element.
-   That class draws a filled pill via ::before, and with the ring and bar inside it the pill
-   rendered as a rounded slab BEHIND both of them -- which read as the ring overlapping the bar.
-   The ring is the indicator now; a badge around a badge is two states for one fact. Anything
-   still carrying .aicourse-progress-badge elsewhere is unaffected. */
-
-body.format-aicourse .aicourse-card .aicourse-card-progress-bar {
-    display: block;
-    inline-size: 76px;
-    /* ACF-FIX-2.1.178b: the hero bar's own numbers, declaration for declaration.
-       --acf-radius-pill (999px) and NOT --acf-radius-full, which is `50%` -- a percentage radius
-       resolves against the box's own dimensions, so on a 34x5 fill it drew a 17x2.5 ellipse. That
-       is the pointed lens shape that did not look like a progress bar, because it was not one.
-       999px clamps to a true capsule at any width, which is why the hero uses it.
-       6px and --acf-track match the hero as well: the card is reporting the same quantity with the
-       same instrument, so the instrument is the same declarations rather than similar ones. */
-    block-size: 6px;
-    border-radius: var(--acf-radius-pill);
-    background: var(--acf-track);
-    overflow: hidden;
-}
-
-body.format-aicourse .aicourse-card .aicourse-card-progress-bar-fill {
-    display: block;
-    block-size: 100%;
-    /* inherit, so the fill's caps match the trough's -- and the trough is now a real pill. */
-    border-radius: inherit;
-    background: var(--acf-status-done-line);
-    /* Matches the hero bar's own fill duration so the two animate as one system.
-       The width is written server-side, so this animates from the 0 set below. */
-    transition: inline-size 1.8s cubic-bezier(0.22, 1, 0.36, 1),
-        width 1.8s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-body.format-aicourse .aicourse-card-ring {
-    position: relative;
-    display: grid;
-    place-items: center;
-    /* ACF-FIX-2.1.178: 40px, not 34. The figure sits INSIDE the ring, and the widest it gets is
-       "100%" -- which at 34px with a 3.5 stroke leaves 27px of usable middle and pushed the text
-       out past the arc. 40px leaves 33px, which fits it with room to spare at every locale's
-       percent notation. */
-    inline-size: 42px;
-    block-size: 42px;
-    flex: none;
-}
-
-body.format-aicourse .aicourse-card-ring-svg {
-    position: absolute;
-    inset: 0;
-    inline-size: 100%;
-    block-size: 100%;
-    /* 12 o'clock start, clockwise -- the hero ring's orientation. A ring that
-       starts at 3 o'clock reads as a different control. */
-    transform: rotate(-90deg);
-}
-
-body.format-aicourse .aicourse-card-ring-track,
-body.format-aicourse .aicourse-card-ring-fill {
-    fill: none;
-    stroke-width: 3.5;
-}
-
-body.format-aicourse .aicourse-card-ring-track {
-    /* The hero ring's track token, for the same reason the bar uses the hero bar's. */
-    stroke: var(--acf-track);
-}
-
-body.format-aicourse .aicourse-card-ring-fill {
-    stroke: var(--acf-status-done-line);
-    stroke-linecap: round;
-    transition: stroke-dasharray 1.8s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-body.format-aicourse .aicourse-card-ring-text {
-    position: relative;
-    /* Stated in px, not a token: this has to fit a fixed 33px aperture, so it must not move when
-       a token is retuned for body copy. */
-    font-size: 10px;
-    letter-spacing: -0.01em;
-    font-weight: var(--acf-weight-bold);
-    font-variant-numeric: tabular-nums;
-    color: var(--acf-text-primary);
-    line-height: 1;
-}
-
-/* Nothing moves for a reader who has asked for that. The end state is written
-   directly, which is the information; the sweep was never the information. */
-@media (prefers-reduced-motion: reduce) {
-    body.format-aicourse .aicourse-card-ring-fill,
-    body.format-aicourse .aicourse-card .aicourse-card-progress-bar-fill {
-        transition: none;
-    }
-}
-
-/* Below the two-column breakpoint the bar is the first thing to go: the ring
-   carries the same figure in a quarter of the width. */
-@media (max-width: 480px) {
-    body.format-aicourse .aicourse-card .aicourse-card-progress-bar {
-        display: none;
-    }
-}
-
-/* The "+N" overflow chip, the same idiom the footer progress dots already use
-   for the same purpose. The extra inline-start padding is the state marker's
-   8px box plus its 8px gap, so the "+N" lines up with the activity NAMES above
-   it and reads as the last row of the list rather than as a stray token. */
-body.format-aicourse .aicourse-card .aicourse-card-activities-more {
-    display: inline-flex;
-    align-items: center;
-    min-block-size: 28px;
-    margin-inline: calc(-1 * var(--acf-space-2));
-    padding: var(--acf-space-1) var(--acf-space-2);
-    padding-inline-start: calc(var(--acf-space-2) + 8px + var(--acf-space-2));
-    border-radius: var(--acf-radius-md);
-    font-size: var(--acf-font-size-xs);
-    font-weight: var(--acf-weight-medium);
-    color: var(--acf-text-brand);
-    text-decoration: none;
-    transition: color var(--acf-duration-fast) var(--acf-ease-standard);
-}
-
-body.format-aicourse .aicourse-card .aicourse-card-activities-more:hover {
-    text-decoration: underline;
-    text-underline-offset: 2px;
-}
-
-/* A card without a footer (no activities, no progress) still needs its bottom
-   edge. `margin-block-end` rather than padding on .aicourse-card so the footer
-   variant keeps its full-bleed top border. */
-body.format-aicourse .aicourse-card > :last-child:not(.aicourse-card-footer) {
-    margin-block-end: var(--acf-space-5);
-}
 
 /* --- Footer --------------------------------------------------------------- */
-body.format-aicourse .aicourse-card-footer {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--acf-space-2) var(--acf-space-3);
-    /* THE spacer. Everything above this is natural flow; this one declaration
-       pushes the footer to the bottom edge of a stretched card. */
-    margin-block-start: auto;
-    /* Block padding trimmed from 12/16 to 4/8 because every control inside the
-       footer grew from ~27px to a 44px target (section 11, touch targets):
-       12 + 27 + 16 = 55px before, 4 + 44 + 8 = 56px now. Same density, WCAG
-       2.5.5 targets. */
-    padding: var(--acf-space-1) var(--acf-space-4) var(--acf-space-2);
-    border-block-start: 1px solid var(--acf-border-subtle);
-}
-
-body.format-aicourse .aicourse-card-footer-left {
-    display: flex;
-    align-items: center;
-    gap: var(--acf-space-3);
-    flex: 1 1 auto;
-    min-inline-size: 0;
-}
-
-/* Text-only link — nothing is painted, so the 44px floor is free: the label
-   keeps its exact visual size and only the hit area grows. */
-/* ACF-FIX-2.1.93: the accent belongs here at REST, not on hover -- the same correction made to
-   the card title and the section icon in 2.1.61. "3 activities" is a link into the section, and a
-   link that only shows it is one when the pointer is over it is invisible on a touch screen and
-   easy to miss on a desktop. Hover now adds the underline alone. */
-body.format-aicourse .aicourse-card .aicourse-activity-count {
-    display: inline-flex;
-    align-items: center;
-    min-block-size: var(--acf-target-min);
-    font-size: var(--acf-font-size-sm);
-    font-weight: var(--acf-weight-medium);
-    color: var(--acf-text-brand);
-    text-decoration: none;
-    white-space: nowrap;
-    transition: color var(--acf-duration-fast) var(--acf-ease-standard);
-}
-
-body.format-aicourse .aicourse-card .aicourse-activity-count:hover {
-    text-decoration: underline;
-    text-underline-offset: 2px;
-}
-
-/* Progress dots. Visual size stays 10px; a ::after pad lifts the touch target
-   to 24x44, which clears WCAG 2.2 SC 2.5.8 without overlapping neighbours
-   (12px gap + 10px dot = 22px pitch, so 24px targets are adjacent, not
-   stacked). Previously these were bare 12x12 <a> elements. */
-body.format-aicourse .aicourse-card .aicourse-card-dots {
-    display: flex;
-    align-items: center;
-    /* The 24px target boxes carry the pitch themselves — see the dot rule. */
-    gap: 0;
-    margin-inline-start: calc(-1 * var(--acf-space-1));
-}
-
-/* Progress dots. The previous version kept the <a> at 10x10 and expanded the
-   hit area with an ::after pad — which works for a pointer but still MEASURES
-   as a 10x10 target, and is what the mobile audit was flagging. The element is
-   now a real 24x44 target and the 10px visual disc is painted by ::before, so
-   the dot looks identical and the target is genuine. Pitch is unchanged: the
-   dots row switches to `gap: 0` because the 24px boxes already carry the
-   spacing (24px pitch vs the old 10px dot + 12px gap = 22px). */
-body.format-aicourse .aicourse-card .aicourse-card-dot {
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    inline-size: 24px;
-    block-size: var(--acf-target-min);
-    flex-shrink: 0;
-    text-decoration: none;
-    transition: transform var(--acf-duration-fast) var(--acf-ease-spring);
-}
-
-body.format-aicourse .aicourse-card .aicourse-card-dot::before {
-    content: "";
-    inline-size: 10px;
-    block-size: 10px;
-    box-sizing: border-box;
-    border: 1px solid transparent;
-    border-radius: var(--acf-radius-full);
-    transition: box-shadow var(--acf-duration-fast) var(--acf-ease-standard);
-}
-
-body.format-aicourse .aicourse-card .aicourse-card-dot:hover {
-    transform: scale(1.25);
-}
-
-body.format-aicourse .aicourse-card .aicourse-card-dot:hover::before {
-    box-shadow: 0 0 0 3px var(--acf-surface-hover);
-}
-
-/* Shape as well as colour: complete is a solid disc, in-progress is a ring,
-   not-started is a hollow outline (SC 1.4.1). */
-body.format-aicourse .aicourse-card-dot.aicourse-dot-completed::before {
-    background: var(--acf-status-done-line);
-    border-color: var(--acf-status-done-line);
-}
-
-body.format-aicourse .aicourse-card-dot.aicourse-dot-in_progress::before {
-    background: var(--acf-status-doing-solid);
-    border-color: var(--acf-status-doing-solid);
-    box-shadow: 0 0 0 2px var(--acf-status-doing-bg);
-}
-
-body.format-aicourse .aicourse-card-dot.aicourse-dot-not_started::before {
-    background: transparent;
-    border-color: var(--acf-border-strong);
-    border-width: 2px;
-}
-
-body.format-aicourse .aicourse-card .aicourse-card-dots-more {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-inline-size: var(--acf-target-min);
-    min-block-size: var(--acf-target-min);
-    margin-inline-start: var(--acf-space-1);
-    font-size: var(--acf-font-size-xs);
-    font-weight: var(--acf-weight-medium);
-    color: var(--acf-text-brand);
-    text-decoration: none;
-    white-space: nowrap;
-}
-
-body.format-aicourse .aicourse-card .aicourse-card-dots-more:hover {
-    text-decoration: underline;
-    text-underline-offset: 2px;
-}
-
-/* Progress badge. Was #6b7280 on rgba(0,0,0,.05) = 4.32:1; now 6.91:1. */
-/* Was 43x27 — under the bar on BOTH axes. Element is 44x44, the visible pill
-   is drawn by ::before at the original height. The tint/border/text pairs are
-   unchanged, so no contrast ratio moves. */
-body.format-aicourse :is(.aicourse-progress-badge, .aicourse-progress-badge-complete) {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    box-sizing: border-box;
-    min-inline-size: var(--acf-target-min);
-    min-block-size: var(--acf-target-min);
-    padding-inline: var(--acf-space-3);
-    border: none;
-    background: transparent;
-    font-size: var(--acf-font-size-2xs);
-    font-weight: var(--acf-weight-semibold);
-    font-variant-numeric: tabular-nums;
-    letter-spacing: var(--acf-tracking-wide);
-    text-decoration: none;
-    transition: transform var(--acf-duration-fast) var(--acf-ease-spring);
-}
-
-body.format-aicourse :is(.aicourse-progress-badge, .aicourse-progress-badge-complete)::before {
-    content: "";
-    position: absolute;
-    inset-block: 8px;
-    inset-inline: 0;
-    z-index: -1;
-    border: 1px solid transparent;
-    border-radius: var(--acf-radius-pill);
-    transition: box-shadow var(--acf-duration-fast) var(--acf-ease-standard);
-}
-
-body.format-aicourse .aicourse-progress-badge {
-    color: var(--acf-status-todo-fg);   /* 6.91:1 on --acf-status-todo-bg */
-}
-
-body.format-aicourse .aicourse-progress-badge::before {
-    background: var(--acf-status-todo-bg);
-    border-color: var(--acf-status-todo-border);
-}
-
-body.format-aicourse .aicourse-progress-badge-complete {
-    color: var(--acf-status-done-fg);   /* 6.17:1 on --acf-status-done-bg */
-}
-
-body.format-aicourse .aicourse-progress-badge-complete::before {
-    background: var(--acf-status-done-bg);
-    border-color: var(--acf-status-done-border);
-}
-
-body.format-aicourse :is(.aicourse-progress-badge, .aicourse-progress-badge-complete):hover {
-    transform: translateY(-1px);
-    text-decoration: none;
-}
-
-body.format-aicourse :is(.aicourse-progress-badge, .aicourse-progress-badge-complete):hover::before {
-    box-shadow: var(--acf-elevation-1);
-}
 
 /* --- Card edit chrome ------------------------------------------------------
    Was three bare 20x20 controls — below even the WCAG 2.2 24px floor — hidden
    at opacity 0 and revealed only on hover, so keyboard users could focus
    invisible buttons. Now a 44x44 toolbar revealed on hover OR focus-within,
    with a 32px visual chip drawn by ::before so the layout stays compact. */
-body.format-aicourse .aicourse-card-edit-buttons {
-    position: absolute;
-    inset-block-start: var(--acf-space-2);
-    inset-inline-end: var(--acf-space-2);
-    z-index: var(--acf-z-floating);
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 0;
-    padding: 2px;
-    border: 1px solid var(--acf-border-subtle);
-    border-radius: var(--acf-radius-pill);
-    background: var(--acf-surface-overlay);
-    box-shadow: var(--acf-elevation-2);
-    opacity: 0;
-    pointer-events: none;
-    transform: translateY(-4px);
-    transition:
-        opacity var(--acf-duration-fast) var(--acf-ease-standard),
-        transform var(--acf-duration-fast) var(--acf-ease-out);
-}
-
-body.format-aicourse :is(.aicourse-card-settings, .aicourse-card-duplicate, .aicourse-card-delete,
-.aicourse-card-drag-handle) {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0;
-    border: none;
-    border-radius: var(--acf-radius-full);
-    background: transparent;
-    color: var(--acf-text-secondary);
-    cursor: pointer;
-    text-decoration: none;
-    transition:
-        color var(--acf-duration-fast) var(--acf-ease-standard),
-        transform var(--acf-duration-fast) var(--acf-ease-spring);
-}
-
-/* 32px visual chip inside the 44px target. */
-body.format-aicourse :is(.aicourse-card-settings, .aicourse-card-duplicate, .aicourse-card-delete,
-.aicourse-card-drag-handle)::before {
-    content: "";
-    position: absolute;
-    inset: 6px;
-    border-radius: inherit;
-    background: transparent;
-    transition: background var(--acf-duration-fast) var(--acf-ease-standard);
-}
-
-body.format-aicourse :is(.aicourse-card-settings, .aicourse-card-duplicate, .aicourse-card-delete,
-.aicourse-card-drag-handle) svg {
-    position: relative;
-    z-index: var(--acf-z-raised);
-    inline-size: var(--acf-icon-sm);
-    block-size: var(--acf-icon-sm);
-    flex: none;
-    stroke: currentColor;
-}
-
-body.format-aicourse .aicourse-card-settings:hover {
-    color: var(--acf-status-done-fg);
-}
-
-body.format-aicourse .aicourse-card-settings:hover::before {
-    background: var(--acf-status-done-bg);
-}
-
-body.format-aicourse .aicourse-card-duplicate:hover {
-    color: var(--acf-status-info-fg);
-}
-
-body.format-aicourse .aicourse-card-duplicate:hover::before {
-    background: var(--acf-status-info-bg);
-}
-
-body.format-aicourse .aicourse-card-delete:hover {
-    color: var(--acf-status-danger-fg);
-}
-
-body.format-aicourse .aicourse-card-delete:hover::before {
-    background: var(--acf-status-danger-bg);
-}
-
-body.format-aicourse :is(.aicourse-card-settings, .aicourse-card-duplicate, .aicourse-card-delete,
-.aicourse-card-drag-handle):active {
-    transform: scale(0.92);
-}
-
-/* The drag grab handle, which is also the keyboard "move section" control
-   (data-action="moveSection"). It is a real <button>, so
-   without these it renders with user-agent chrome next to three flat icon controls, and below
-   the WCAG 2.2 SC 2.5.8 target floor on a phone. The drag STATE classes (dragging, dropready,
-   drop-zone, drop-down, drop-up) are core's and are deliberately not touched. */
-body.format-aicourse .aicourse-card-drag-handle {
-    cursor: move;
-}
-
-body.format-aicourse .aicourse-card-drag-handle:hover {
-    color: var(--acf-text-primary);
-}
-
-body.format-aicourse .aicourse-card-drag-handle:hover::before {
-    background: var(--acf-surface-sunken);
-}
-
-/* A section the teacher has hidden from students. Toggled at runtime by
-   amd/src/local/sectioncard.js, which also toggles core's dimmed_text — this only adds the
-   edge, and deliberately keeps the card fully visible to the teacher. Contrast is untouched:
-   nothing here changes a text or background colour. */
-body.format-aicourse .aicourse-card.aicourse-card-hidden {
-    border-style: dashed;
-    border-color: var(--acf-border-strong);
-}
 
 /* --- Bulk selection --------------------------------------------------------
    Moodle's "Bulk actions" header button turns core's per-section checkboxes on. Core emits the
@@ -3826,37 +2636,6 @@ body.format-aicourse .aicourse-card.aicourse-card-hidden {
    is off the inner .bulkselect is display:none, so the wrapper is zero-height and the card is
    pixel-identical to before; while it is on, the row pushes the card header down instead of
    sitting on top of the section icon. No new colour pair is introduced. */
-body.format-aicourse .aicourse-card-bulkselect {
-    display: flex;
-    align-items: center;
-    padding-inline: var(--acf-space-2);
-    /* Lifted above .aicourse-card-link::after, the card-sized hit area, in the same way and with
-       the same token as .aicourse-card-header and .aicourse-card-footer. */
-    position: relative;
-    z-index: var(--acf-z-content);
-}
-
-body.format-aicourse .aicourse-card-bulkselect .bulkselect {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-inline-size: var(--acf-target-min);
-    min-block-size: var(--acf-target-min);
-}
-
-body.format-aicourse .aicourse-card-bulkselect input[type="checkbox"] {
-    inline-size: var(--acf-icon-sm);
-    block-size: var(--acf-icon-sm);
-    margin: 0;
-    accent-color: var(--acf-brand);
-    cursor: pointer;
-}
-
-/* Core adds .selected to every element of the current bulk selection. */
-body.format-aicourse .aicourse-card.selected {
-    border-color: var(--acf-brand);
-    box-shadow: var(--acf-elevation-4);
-}
 
 /* ==========================================================================
    12. GENERAL SECTION (section 0, rendered inline above the card grid)
@@ -4175,30 +2954,6 @@ body.format-aicourse .aicourse-activity-cards-container {
     margin-block-start: var(--acf-space-6);
 }
 
-/* `auto-fit` rather than `auto-fill`: with fewer items than tracks, auto-fill
-   leaves phantom empty columns and the row reads as a fragment (3 cards
-   floating in a 4-column region on a section page). auto-fit collapses the
-   empty tracks so the items share the full measure. Behaviour is identical
-   once the grid is full, so nothing changes on a busy section. */
-body.format-aicourse .aicourse-activity-cards-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--acf-activity-min)), 1fr));
-    gap: var(--acf-space-3);
-    align-items: stretch;
-}
-
-@media (min-width: 992px) {
-    body.format-aicourse .aicourse-activity-cards-grid {
-        gap: var(--acf-space-4);
-    }
-}
-
-@media (min-width: 1280px) {
-    body.format-aicourse .aicourse-activity-cards-grid {
-        gap: var(--acf-space-5);
-    }
-}
-
 /* --- Sparse grids: one or two items ---------------------------------------
    A lone activity card in a 1205px region rendered as a 286px chip pinned to
    the inline-start corner with 900px of nothing beside it — it read as a
@@ -4211,135 +2966,6 @@ body.format-aicourse .aicourse-activity-cards-grid {
    `:has()` is the whole mechanism, so this degrades silently to the previous
    behaviour on engines without it (Firefox < 121) — no fallback needed, the
    grid layout is still correct there, just narrower. */
-body.format-aicourse .aicourse-activity-cards-grid:has(> .aicourse-activity-card:only-child) {
-    grid-template-columns: 1fr;
-}
-
-body.format-aicourse .aicourse-activity-cards-grid:has(> .aicourse-activity-card:nth-child(2):last-child) {
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
-}
-
-/* Row mode: the meta moves from under the name to the far inline-end edge, so
-   the extra width is used rather than merely occupied. */
-body.format-aicourse .aicourse-activity-cards-grid:has(> .aicourse-activity-card:only-child) .aicourse-activity-card,
-body.format-aicourse .aicourse-activity-cards-grid:has(> .aicourse-activity-card:nth-child(2):last-child) .aicourse-activity-card {
-    padding-block: var(--acf-space-4);
-}
-
-@container acf-activities (min-width: 30rem) {
-    body.format-aicourse .aicourse-activity-cards-grid:has(> .aicourse-activity-card:only-child) .aicourse-activity-card-body,
-    body.format-aicourse .aicourse-activity-cards-grid:has(> .aicourse-activity-card:nth-child(2):last-child)
-    .aicourse-activity-card-body {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: baseline;
-        justify-content: space-between;
-        gap: var(--acf-space-2) var(--acf-space-4);
-    }
-
-    body.format-aicourse .aicourse-activity-cards-grid:has(> .aicourse-activity-card:only-child) .aicourse-activity-card-name,
-    body.format-aicourse .aicourse-activity-cards-grid:has(> .aicourse-activity-card:nth-child(2):last-child)
-    .aicourse-activity-card-name {
-        margin-block-end: 0;
-        flex: 1 1 auto;
-    }
-
-    body.format-aicourse .aicourse-activity-cards-grid:has(> .aicourse-activity-card:only-child) .aicourse-activity-card-footer,
-    body.format-aicourse .aicourse-activity-cards-grid:has(> .aicourse-activity-card:nth-child(2):last-child)
-    .aicourse-activity-card-footer {
-        flex: 0 0 auto;
-    }
-}
-
-body.format-aicourse .aicourse-activity-card {
-    display: flex;
-    align-items: center;
-    gap: var(--acf-space-3);
-    min-inline-size: 0;
-    padding: var(--acf-space-3) var(--acf-space-4);
-    background: var(--acf-surface-card);
-    border: 1px solid var(--acf-brand-tint-strong);
-    border-radius: var(--acf-radius-lg);
-    box-shadow: var(--acf-elevation-1);
-    color: var(--acf-text-primary);
-    text-decoration: none;
-    -webkit-font-smoothing: antialiased;
-    transition:
-        transform var(--acf-duration-slow) var(--acf-ease-spring),
-        box-shadow var(--acf-duration-slow) var(--acf-ease-standard),
-        border-color var(--acf-duration-slow) var(--acf-ease-standard);
-}
-
-body.format-aicourse .aicourse-activity-card:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--acf-elevation-3);
-    color: var(--acf-text-primary);
-    text-decoration: none;
-}
-
-body.format-aicourse .aicourse-activity-card:active {
-    transform: translateY(-1px);
-    transition-duration: var(--acf-duration-instant);
-}
-
-body.format-aicourse .aicourse-activity-card-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    inline-size: 2.5rem;   /* 40px */
-    block-size: 2.5rem;
-    flex-shrink: 0;
-    border-radius: var(--acf-radius-md);
-    background: var(--acf-brand-tint-weak);
-    color: var(--acf-text-brand);
-    transition:
-        transform var(--acf-duration-slow) var(--acf-ease-spring),
-        background var(--acf-duration-slow) var(--acf-ease-standard);
-}
-
-body.format-aicourse .aicourse-activity-card:hover .aicourse-activity-card-icon {
-    transform: scale(1.1) rotate(-5deg);
-    background: var(--acf-brand-tint);
-}
-
-body.format-aicourse .aicourse-activity-card-icon :is(img, svg) {
-    inline-size: 22px;
-    block-size: 22px;
-    max-inline-size: none;
-    flex: none;
-    object-fit: contain;
-    stroke: currentColor;
-}
-
-body.format-aicourse .aicourse-activity-card-body {
-    flex: 1 1 auto;
-    min-inline-size: 0;
-}
-
-/* ACF-FIX-2.1.5: forced for the same reason as .aicourse-card-title above. */
-body.format-aicourse .aicourse-activity-card .aicourse-activity-card-name {
-    margin: 0 0 var(--acf-space-1);
-    /* stylelint-disable-next-line declaration-no-important -- deliberate; see the note above. */
-    font-size: var(--aicourse-card-title-size, var(--acf-font-size-md)) !important;
-    font-weight: var(--acf-weight-semibold);
-    /* stylelint-disable-next-line declaration-no-important -- must travel with the font-size. */
-    line-height: var(--acf-leading-snug) !important;
-    letter-spacing: var(--acf-tracking-tight);
-    color: var(--acf-text-primary);
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    overflow-wrap: anywhere;
-}
-
-body.format-aicourse .aicourse-activity-card-footer {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: var(--acf-space-2);
-}
 
 /* Was #9ca3af on white = 2.54:1. Tertiary token = 4.76:1, at 12px not 11px. */
 /* --- Estimated duration pill on an activity card ---------------------------
@@ -4351,72 +2977,6 @@ body.format-aicourse .aicourse-activity-card-footer {
    made the row read as two competing claims, so the duration takes the same muted treatment as
    the type label it sits next to, with a pill outline to mark it as a distinct fact rather than
    more of the type name. */
-body.format-aicourse .aicourse-activity-card-time {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    flex: none;
-    padding: 1px var(--acf-space-2);
-    border: 1px solid transparent;
-    border-radius: var(--acf-radius-pill);
-    /* ACF-FIX-2.1.94: matched to the section card's pill, so the same fact looks the same
-       wherever it appears. The border goes with the fill -- a tint and an outline together read
-       as two decisions on one small object. */
-    background: var(--acf-brand-tint-weak);
-    font-size: var(--acf-font-size-2xs);
-    font-weight: var(--acf-weight-medium);
-    line-height: var(--acf-leading-snug);
-    color: var(--acf-text-brand);
-    white-space: nowrap;
-}
-
-body.format-aicourse .aicourse-activity-card-time svg {
-    flex: none;
-    opacity: 0.75;
-}
-
-body.format-aicourse .aicourse-activity-card-type {
-    font-size: var(--acf-font-size-xs);
-    color: var(--acf-text-tertiary);
-    text-transform: capitalize;
-    min-inline-size: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-/* Status treatment on the card itself. `not_started` previously had no rule
-   at all even though lib.php emits the class. */
-/* ACF-FIX-2.1.153: not-started takes the course's own accent, not a neutral.
-   --acf-status-todo-border is --acf-neutral-300, a pale blue-grey, which is why an orange course
-   still showed light blue down the edge of every card a learner had not opened yet -- the one
-   state most cards are in. In-progress is amber and completed is green because those are status
-   colours with an agreed meaning; "not started" carries no such meaning, so it should read in the
-   course's colour rather than inventing a fourth one.
-
-   --acf-brand is the same token the section headings and the index icons read, so a site that
-   changes its primary, or a course that sets its own accent, moves all of them together. */
-body.format-aicourse .aicourse-activity-status-not_started {
-    border-inline-start: 3px solid var(--acf-brand);
-}
-
-body.format-aicourse .aicourse-activity-status-in_progress {
-    border-inline-start: 3px solid var(--acf-status-doing-solid);
-}
-
-body.format-aicourse .aicourse-activity-status-in_progress .aicourse-activity-card-icon {
-    background: var(--acf-status-doing-bg);
-    color: var(--acf-status-doing-fg);
-}
-
-body.format-aicourse .aicourse-activity-status-completed {
-    border-inline-start: 3px solid var(--acf-status-done-line);
-}
-
-body.format-aicourse .aicourse-activity-status-completed .aicourse-activity-card-icon {
-    background: var(--acf-status-done-bg);
-    color: var(--acf-status-done-fg);
-}
 
 /* URL-less content modules (mod_label, "Text and media area"). lib.php renders
    these as full-width rows AFTER .aicourse-activity-cards-grid, inside
@@ -4492,9 +3052,6 @@ body.format-aicourse .aicourse-activity-content :is(table, pre) {
    heading carries it only while the section still has its default name — so
    these rules must never fight .accesshide, which is why nothing here sets
    `position`, `clip-path` or `display`. */
-body.format-aicourse :is(.aicourse-cards-region-heading, .aicourse-activity-cards-heading) {
-    margin: 0;
-}
 
 body.format-aicourse .aicourse-general-heading {
     margin: 0 0 var(--acf-space-3);
@@ -4519,47 +3076,6 @@ body.format-aicourse .aicourse-general-heading.accesshide {
 /* ==========================================================================
    14. STATUS BADGES + COMPLETION TOGGLE
    ========================================================================== */
-
-body.format-aicourse .aicourse-status-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--acf-space-1);
-    padding: 2px var(--acf-space-2);
-    border: 1px solid transparent;
-    border-radius: var(--acf-radius-pill);
-    /* 10px was below the legible floor; 11px is the token minimum. */
-    font-size: var(--acf-font-size-2xs);
-    font-weight: var(--acf-weight-semibold);
-    line-height: var(--acf-leading-snug);
-    letter-spacing: var(--acf-tracking-wide);
-    text-transform: uppercase;
-    white-space: nowrap;
-}
-
-body.format-aicourse .aicourse-status-badge svg {
-    inline-size: 10px;
-    block-size: 10px;
-    flex: none;
-    stroke: currentColor;
-}
-
-body.format-aicourse .aicourse-status-badge-not_started {
-    background: var(--acf-status-todo-bg);
-    border-color: var(--acf-status-todo-border);
-    color: var(--acf-status-todo-fg);       /* 6.91:1 light / 7.24:1 dark */
-}
-
-body.format-aicourse .aicourse-status-badge-in_progress {
-    background: var(--acf-status-doing-bg);
-    border-color: var(--acf-status-doing-border);
-    color: var(--acf-status-doing-fg);
-}
-
-body.format-aicourse .aicourse-status-badge-completed {
-    background: var(--acf-status-done-bg);
-    border-color: var(--acf-status-done-border);
-    color: var(--acf-status-done-fg);
-}
 
 /* --- Manual completion toggle -------------------------------------------- */
 body.format-aicourse .aicourse-completion-toggle {
@@ -4647,73 +3163,6 @@ body.format-aicourse .aicourse-toggle-check svg {
 /* ==========================================================================
    15. ADD-SECTION CARD
    ========================================================================== */
-
-body.format-aicourse .aicourse-add-section-card {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: var(--acf-space-3);
-    inline-size: 100%;
-    /* Matches the natural height of a populated card so the grid row is even. */
-    min-block-size: 100%;
-    min-height: 11rem;
-    box-sizing: border-box;
-    padding: var(--acf-space-6) var(--acf-space-4);
-    border: 2px dashed var(--acf-border-strong);
-    border-radius: var(--acf-radius-xl);
-    background: transparent;
-    /* Was #9ca3af = 2.54:1. Tertiary token = 4.76:1, at 14px not 13px. */
-    color: var(--acf-text-tertiary);
-    font-family: var(--acf-font-family);
-    font-size: var(--acf-font-size-md);
-    font-weight: var(--acf-weight-medium);
-    cursor: pointer;
-    transition:
-        border-color var(--acf-duration-base) var(--acf-ease-standard),
-        color var(--acf-duration-base) var(--acf-ease-standard),
-        background var(--acf-duration-base) var(--acf-ease-standard),
-        transform var(--acf-duration-fast) var(--acf-ease-spring);
-}
-
-body.format-aicourse .aicourse-add-section-card:hover {
-    border-color: var(--acf-border-brand);
-    color: var(--acf-text-brand);
-    background: var(--acf-brand-tint-weak);
-}
-
-body.format-aicourse .aicourse-add-section-card:active {
-    transform: scale(0.98);
-    background: var(--acf-brand-tint);
-}
-
-body.format-aicourse .aicourse-add-section-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: transform var(--acf-duration-base) var(--acf-ease-spring);
-}
-
-body.format-aicourse .aicourse-add-section-icon svg {
-    inline-size: var(--acf-icon-xl);
-    block-size: var(--acf-icon-xl);
-    flex: none;
-    stroke: currentColor;
-}
-
-body.format-aicourse .aicourse-add-section-card:hover .aicourse-add-section-icon {
-    transform: scale(1.1) rotate(90deg);
-}
-
-body.format-aicourse .aicourse-add-section-label {
-    line-height: var(--acf-leading-tight);
-    text-align: center;
-}
-
-body.format-aicourse .aicourse-add-section-card.aicourse-add-section-loading {
-    opacity: 0.55;
-    pointer-events: none;
-}
 
 /* ==========================================================================
    16. EMPTY STATE
@@ -7213,48 +5662,6 @@ body.format-aicourse .aicourse-report-perpage select:focus-visible,
     }
 }
 
-/* Staggered grid entrance. Two rules replace the previous 18 hand-tuned
-   nth-child delay declarations, and the delay is capped so a 40-section course
-   does not wait two seconds for its last card. */
-body.format-aicourse .aicourse-cards-grid > * {
-    animation: acf-card-enter var(--acf-duration-slow) var(--acf-ease-out) both;
-    /* stylelint-disable-next-line time-min-milliseconds --
-       45ms is the per-card stagger STEP inside calc(), not a duration. */
-    animation-delay: calc(var(--acf-stagger, 0) * 45ms);
-}
-
-body.format-aicourse .aicourse-activity-cards-grid > * {
-    animation: acf-card-enter var(--acf-duration-base) var(--acf-ease-out) both;
-    /* stylelint-disable-next-line time-min-milliseconds --
-       35ms is the per-card stagger STEP inside calc(), not a duration. */
-    animation-delay: calc(var(--acf-stagger, 0) * 35ms);
-}
-
-body.format-aicourse :is(.aicourse-cards-grid, .aicourse-activity-cards-grid) > :nth-child(1) {
-    --acf-stagger: 0;
-}
-body.format-aicourse :is(.aicourse-cards-grid, .aicourse-activity-cards-grid) > :nth-child(2) {
-    --acf-stagger: 1;
-}
-body.format-aicourse :is(.aicourse-cards-grid, .aicourse-activity-cards-grid) > :nth-child(3) {
-    --acf-stagger: 2;
-}
-body.format-aicourse :is(.aicourse-cards-grid, .aicourse-activity-cards-grid) > :nth-child(4) {
-    --acf-stagger: 3;
-}
-body.format-aicourse :is(.aicourse-cards-grid, .aicourse-activity-cards-grid) > :nth-child(5) {
-    --acf-stagger: 4;
-}
-body.format-aicourse :is(.aicourse-cards-grid, .aicourse-activity-cards-grid) > :nth-child(6) {
-    --acf-stagger: 5;
-}
-body.format-aicourse :is(.aicourse-cards-grid, .aicourse-activity-cards-grid) > :nth-child(7) {
-    --acf-stagger: 6;
-}
-body.format-aicourse :is(.aicourse-cards-grid, .aicourse-activity-cards-grid) > :nth-child(n+8) {
-    --acf-stagger: 7;
-}
-
 /* --------------------------------------------------------------------------
    Reduced motion. The previous sheet covered 4 selectors and left every
    keyframe animation running, including four infinite ones (the AI-button
@@ -7295,12 +5702,8 @@ body.format-aicourse :is(.aicourse-cards-grid, .aicourse-activity-cards-grid) > 
     /* Hover transforms are the other half of the problem: they are not
        animations, so zeroing the duration is not enough — the element still
        jumps. Suppress the displacement itself. */
-    body.format-aicourse .aicourse-card:hover,
-    body.format-aicourse .aicourse-activity-card:hover,
-    body.format-aicourse .aicourse-card:hover .aicourse-card-icon-wrap,
-    body.format-aicourse .aicourse-activity-card:hover .aicourse-activity-card-icon,
+
     body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image:hover .aicourse-hero-bg-img,
-    body.format-aicourse .aicourse-add-section-card:hover .aicourse-add-section-icon,
     /* ACF-FIX-2.1.133: the course index row icon joins the list rather than carrying its own
        media query, so every hover displacement in the plugin is suppressed from one place. */
     body.aicourse-player-on .courseindex-item.aicourse-player-row:hover .aicourse-player-row-icon {
@@ -7368,9 +5771,8 @@ body.format-aicourse :is(.aicourse-cards-grid, .aicourse-activity-cards-grid) > 
        `!important` #24: several of these are toggled by inline `style`. */
     body.format-aicourse :is(
     .aicourse-ai-chatbox, .aicourse-icon-picker-modal, .aicourse-bgen-overlay,
-    .aicourse-bdel-overlay, .aicourse-card-edit-buttons, .aicourse-add-section-card,
-    .aicourse-hero-icons, .aicourse-hero-nav, .aicourse-hero-nav-spacer,
-    .aicourse-icon-change-label) {
+    .aicourse-bdel-overlay,
+    .aicourse-hero-icons, .aicourse-hero-nav, .aicourse-hero-nav-spacer) {
         /* stylelint-disable-next-line declaration-no-important -- deliberate; see the numbered note above. */
         display: none !important;
     }
@@ -7395,16 +5797,6 @@ body.format-aicourse :is(.aicourse-cards-grid, .aicourse-activity-cards-grid) > 
         text-shadow: none;
     }
 
-    body.format-aicourse .aicourse-cards-grid,
-    body.format-aicourse .aicourse-activity-cards-grid {
-        grid-template-columns: repeat(2, 1fr);
-        /* stylelint-disable-next-line unit-disallowed-list --
-           pt is the correct absolute unit inside @media print. */
-        gap: 8pt;
-    }
-
-    body.format-aicourse .aicourse-card,
-    body.format-aicourse .aicourse-activity-card,
     body.format-aicourse .aicourse-general-section {
         break-inside: avoid;
         page-break-inside: avoid;
@@ -7412,10 +5804,7 @@ body.format-aicourse :is(.aicourse-cards-grid, .aicourse-activity-cards-grid) > 
     }
 
     /* Line clamps hide content on paper; print the whole thing. */
-    body.format-aicourse .aicourse-card-title,
-    body.format-aicourse .aicourse-card-activity-name,
-    body.format-aicourse .aicourse-card-summary,
-    body.format-aicourse .aicourse-activity-card-name,
+
     body.format-aicourse .aicourse-hero-summary,
     body.format-aicourse .aicourse-hero-title {
         display: block;
@@ -7526,30 +5915,18 @@ body.format-aicourse :is(.aicourse-cards-grid, .aicourse-activity-cards-grid) > 
 
 @media (forced-colors: active) {
     body.format-aicourse :is(
-    .aicourse-card, .aicourse-activity-card, .aicourse-activity-content,
+    .aicourse-activity-content,
     .aicourse-hero-banner, .aicourse-icon-picker-content, .aicourse-ai-chatbox,
     .aicourse-bgen-card, .aicourse-bdel-card, .aicourse-stat-card, .aicourse-content-card,
     .aicourse-empty-state) {
         border: 1px solid CanvasText;
     }
 
-    /* The two progress badges and the time chip draw their pill on ::before now
-       (44px target, smaller visual — section 11), so the forced-colours edge has
-       to land there or it paints a 44px rectangle round a 27px pill. */
     body.format-aicourse :is(
-    .aicourse-progress-badge, .aicourse-progress-badge-complete, .aicourse-card-time)::before {
-        border: 1px solid ButtonBorder;
-        background: ButtonFace;
-        forced-color-adjust: none;
-    }
-
-    body.format-aicourse :is(
-    .aicourse-status-badge, .aicourse-progress-badge, .aicourse-progress-badge-complete,
     .aicourse-activity-number, .aicourse-completion-toggle, .aicourse-ai-quick-btn,
-    .aicourse-bgen-btn, .aicourse-icon-picker-item, .aicourse-add-section-card,
+    .aicourse-bgen-btn, .aicourse-icon-picker-item,
     .aicourse-hero-nav, .aicourse-hero-home, .aicourse-hero-grades, .aicourse-hero-back,
-    .aicourse-hero-ai-btn, .aicourse-card-settings, .aicourse-card-duplicate,
-    .aicourse-card-delete, .aicourse-ai-send-btn, .aicourse-ai-chatbox-close,
+    .aicourse-hero-ai-btn, .aicourse-ai-send-btn, .aicourse-ai-chatbox-close,
     .aicourse-icon-picker-close, .aicourse-bgen-close) {
         border: 1px solid ButtonBorder;
         background: ButtonFace;
@@ -7557,15 +5934,9 @@ body.format-aicourse :is(.aicourse-cards-grid, .aicourse-activity-cards-grid) > 
         forced-color-adjust: none;
     }
 
-    /* ...and then the element itself must NOT also draw one. */
-    body.format-aicourse :is(.aicourse-progress-badge, .aicourse-progress-badge-complete) {
-        border: none;
-        background: transparent;
-    }
-
     /* Gradients and image scrims carry no meaning here. */
     body.format-aicourse :is(
-    .aicourse-hero-overlay, .aicourse-hero-bg-img, .aicourse-card::before,
+    .aicourse-hero-overlay, .aicourse-hero-bg-img,
     .aicourse-hero-ai-btn::before) {
         display: none;
     }
@@ -7579,32 +5950,16 @@ body.format-aicourse :is(.aicourse-cards-grid, .aicourse-activity-cards-grid) > 
     }
 
     /* Status that was conveyed by tint alone gets a border style instead. */
-    body.format-aicourse .aicourse-card-dot.aicourse-dot-completed::before,
-    body.format-aicourse .aicourse-card-activity-state.aicourse-actstate-completed,
+
     body.format-aicourse .aicourse-activity-number.aicourse-number-completed {
         background: Highlight;
         border-color: Highlight;
         forced-color-adjust: none;
     }
 
-    body.format-aicourse .aicourse-card-dot.aicourse-dot-not_started::before,
-    body.format-aicourse .aicourse-card-activity-state.aicourse-actstate-not_started,
     body.format-aicourse .aicourse-activity-number.aicourse-number-no_completion {
         background: Canvas;
         border: 2px dashed CanvasText;
-    }
-
-    /* In-progress and untracked markers are tint-only too, and forced colours
-       drops both the tint and the halo box-shadow. */
-    body.format-aicourse .aicourse-card-activity-state.aicourse-actstate-in_progress {
-        background: CanvasText;
-        border-color: CanvasText;
-        forced-color-adjust: none;
-    }
-
-    body.format-aicourse .aicourse-card-activity-state.aicourse-actstate-none {
-        background: GrayText;
-        forced-color-adjust: none;
     }
 
     body.format-aicourse .aicourse-progress-bar-fill,
@@ -7939,76 +6294,6 @@ body.format-aicourse .aicourse-hero-banner:not(.aicourse-hero-has-image) .aicour
 }
 
 /* --- 12.5 Section cards as a stacked list --------------------------------- */
-/* One column. The card itself is told to run horizontally so a full-width row
-   does not become a 400px-tall poster. */
-body.format-aicourse.aicourse-cardlist .aicourse-cards-grid {
-    grid-template-columns: 1fr;
-    gap: var(--acf-space-3);
-}
-
-@media (min-width: 992px) {
-    body.format-aicourse.aicourse-cardlist .aicourse-cards-grid {
-        gap: var(--acf-space-3);
-    }
-}
-
-@media (min-width: 1280px) {
-    body.format-aicourse.aicourse-cardlist .aicourse-cards-grid {
-        gap: var(--acf-space-3);
-    }
-}
-
-/* A full-width card laid out as a column would be a 400px-tall poster, so the
-   card runs horizontally instead: icon + time, then the title taking the slack,
-   then the footer stats. Flex with per-region basis rather than fixed grid
-   tracks, because section_card.mustache emits between three and five children
-   depending on the summary and activity-list settings — a three-track grid
-   would silently put the footer in the wrong column the moment a summary
-   appeared. Regions that need their own line (summary, activity list) claim
-   100% basis and wrap. */
-@media (min-width: 700px) {
-    body.format-aicourse.aicourse-cardlist .aicourse-card {
-        display: flex;
-        flex-flow: row wrap;
-        align-items: center;
-        column-gap: var(--acf-space-4);
-        row-gap: var(--acf-space-2);
-    }
-
-    /* A fixed leading column, so the titles start on the same x across every
-       row. Without it the header is only as wide as its time badge and
-       "15 min" vs "1 hr 20 min" staggers the titles down the list. */
-    body.format-aicourse.aicourse-cardlist .aicourse-card .aicourse-card-header {
-        flex: 0 0 auto;
-        inline-size: 12.5rem;
-        justify-content: flex-start;
-        gap: var(--acf-space-3);
-        margin: 0;
-    }
-
-    body.format-aicourse.aicourse-cardlist .aicourse-card .aicourse-card-link {
-        flex: 1 1 14rem;
-        min-inline-size: 0;
-    }
-
-    body.format-aicourse.aicourse-cardlist .aicourse-card .aicourse-card-title {
-        margin: 0;
-    }
-
-    body.format-aicourse.aicourse-cardlist .aicourse-card .aicourse-card-footer {
-        flex: 0 0 auto;
-        margin: 0;
-        border-block-start: none;
-        padding-block-start: 0;
-    }
-
-    /* Prose and the activity list are never squeezed into the row. */
-    body.format-aicourse.aicourse-cardlist .aicourse-card
-    :is(.aicourse-card-summary, .aicourse-card-activities) {
-        flex: 1 1 100%;
-        min-inline-size: 0;
-    }
-}
 
 /* --- 12.6 Reclaim the top of the page ------------------------------------- */
 /* Boost renders an empty #page-header band above the secondary navigation on a
@@ -8057,15 +6342,6 @@ body.format-aicourse.aicourse-hidenav-all:not(.editing):not(.editingon):not(.edi
 }
 
 /* --- 12.7 Card top accent line -------------------------------------------- */
-/* The 3px brand gradient rule across the top of every section card. Removed by
-   request: at three cards abreast it read as three disconnected underlines
-   above the content rather than as card chrome. The card still has its border,
-   its elevation and its hover lift, so nothing is lost from the affordance.
-   The :hover rule that raised the accent's opacity is neutralised with it. */
-body.format-aicourse .aicourse-card::before,
-body.format-aicourse .aicourse-card:hover::before {
-    content: none;
-}
 
 /* --- 12.8 Compact row order: actions | title | progress -------------------
    Requested arrangement, and the conventional one: the home affordance sits at
@@ -8415,20 +6691,6 @@ body.format-aicourse .aicourse-hero-title {
     align-self: stretch;
 }
 
-/* In list mode the header is a fixed-width leading column in a centred row, so
-   its own contents must centre too — the grid-mode header aligns its icon and
-   time badge to the top of a tall card, which in a 60px row left them sitting
-   above the centre line of the title beside them. */
-@media (min-width: 700px) {
-    body.format-aicourse.aicourse-cardlist .aicourse-card .aicourse-card-header {
-        align-items: center;
-    }
-
-    body.format-aicourse.aicourse-cardlist .aicourse-card .aicourse-card-header > * {
-        align-self: center;
-    }
-}
-
 /* The bar container shrank to zero once the progress cluster stopped growing
    (12.11 set the cluster to `flex: 0 1 auto`, and the track's `inline-size:
    100%` contributes no max-content width to a shrink-to-fit parent). It gets an
@@ -8576,9 +6838,6 @@ body.format-aicourse .aicourse-hero-banner .aicourse-hero-title {
 
 body.format-aicourse .aicourse-hero-banner {
     block-size: auto;
-}
-
-@media (min-width: 700px) {
 }
 
 /* ==========================================================================
@@ -9770,11 +8029,6 @@ body.format-aicourse .format-aicourse-container {
     margin-block-start: 0;
 }
 
-body.format-aicourse
-:is(.aicourse-cards-grid, .aicourse-activity-cards-grid) {
-    gap: var(--acf-fw-gap);
-}
-
 body.format-aicourse .aicourse-hero-banner {
     border-radius: 0;
 }
@@ -9791,9 +8045,9 @@ body.format-aicourse .aicourse-hero-banner {
    Never in edit mode -- a teacher needs to reach it to manage announcements, and it returns the
    moment editing is switched on, like every other visibility rule here. */
 body.format-aicourse.aicourse-hidegeneral-all:not(.editing):not(.editingon):not(.editing-mode)
-:is(.courseindex-section[data-number="0"], .aicourse-card[data-section="0"]),
+:is(.courseindex-section[data-number="0"]),
 body.format-aicourse.aicourse-hidegeneral-students:not(.aicourse-is-grader):not(.editing):not(.editingon):not(.editing-mode)
-:is(.courseindex-section[data-number="0"], .aicourse-card[data-section="0"]) {
+:is(.courseindex-section[data-number="0"]) {
     display: none;
 }
 
@@ -10626,19 +8880,9 @@ body.format-aicourse.aicourse-notime-index .aicourse-player-row-time {
     display: none;
 }
 
-body.format-aicourse.aicourse-notime-sectioncards .aicourse-card .aicourse-card-time {
-    display: none;
-}
-
-body.format-aicourse.aicourse-notime-activitycards
-:is(.aicourse-activity-card-time, .aicourse-activity-card .aicourse-card-time) {
-    display: none;
-}
-
 body.format-aicourse.aicourse-notime-total .aicourse-player-meta {
     display: none;
 }
-
 
 /* --- Sticky banner (ACF-FIX-2.1.144) ---------------------------------------
    The banner follows the page, so the progress ring and the next/previous controls stay reachable
@@ -10671,7 +8915,6 @@ body.format-aicourse.aicourse-hero-sticky:not(.editing):not(.editingon):not(.edi
         position: relative;
     }
 }
-
 
 /* --- Hero variants brought into line (ACF-FIX-2.1.150) ---------------------
    Three heroes are rendered -- course, section and activity -- and they had drifted. Measured
@@ -10725,7 +8968,6 @@ body.format-aicourse .aicourse-hero-title:not([class*="aicourse-title-"]) {
     }
 }
 
-
 /* --- The course hero's ring gets the same glass (ACF-FIX-2.1.152) ----------
    2.1.150 gave the glass panel to `.aicourse-completion-ring-container` -- the ACTIVITY hero's
    tick. A probe of the live banner listed every circular element in it and that class was not
@@ -10763,7 +9005,6 @@ body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-pro
 
 /* The track is NOT restyled here: `--acf-track-media` already covers image mode at line 2131, and
    a second value would be one more pair that can drift. */
-
 
 /* --- Section bands, a quarter shorter (ACF-FIX-2.1.153) --------------------
    The bands were sized for a heading; at 46px each they read as buttons stacked in a column rather
@@ -10812,7 +9053,6 @@ body.aicourse-player-on .courseindex-item.courseindex-section-title .courseindex
     block-size: var(--acf-index-band-height) !important;
     min-block-size: var(--acf-index-band-height);
 }
-
 
 /* --- The completion tooltip (ACF-FIX-2.1.153) ------------------------------
    A learner hovering a tick is asking three things: what was required, did I pass, and when did I
@@ -10971,7 +9211,6 @@ body.aicourse-player-on .aicourse-player-tick:focus-visible {
         transform: none;
     }
 }
-
 
 /* --- The merged sidebar header (ACF-FIX-2.1.154) ---------------------------
    Three rows became two. Core's own 44px strip carried a close button and a collapse/expand
@@ -11259,7 +9498,6 @@ body.aicourse-index-merged .aicourse-player-drawerctl .dropdown-menu {
    quietly clamping every later attempt to widen it to 133px. Sixth instance in this sheet of a
    stale duplicate declaration beating the rule that was actually being edited. */
 
-
 /* --- The activity hero, brought level with the course hero (ACF-FIX-2.1.158) ----
    Rendered both banners side by side against this stylesheet and diffed every computed box. The
    banner height, the content grid, the padding and the alignment all matched exactly -- so the
@@ -11358,7 +9596,6 @@ body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-com
     backdrop-filter: blur(var(--acf-blur-md));
     -webkit-backdrop-filter: blur(var(--acf-blur-md));
 }
-
 
 /* ==========================================================================
    SETTINGS PAGE — one feature at a time (ACF-FIX-2.1.161)
@@ -11862,7 +10099,6 @@ svg:not([width]):not([height]) {
     }
 }
 
-
 /* --- The right-hand cluster gets the left-hand cluster's panel (ACF-FIX-2.1.161) ----
    The nav icons sit in a dark, blurred, rounded panel. The controls at the other end of the same
    banner -- the chevrons, the progress ring or completion tick, and the label beside it -- sat bare
@@ -11966,7 +10202,6 @@ body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-her
     }
 }
 
-
 /* ==========================================================================
    MOBILE (ACF-FIX-2.1.162)
    --------------------------------------------------------------------------
@@ -12017,13 +10252,6 @@ body.format-aicourse .aicourse-hero-banner
     overflow-wrap: anywhere;
 }
 
-/* Below 600px the one-line clamp is too harsh: an activity name that is three
-   words long on a desktop banner is three lines on a phone, and clipping it to
-   one leaves "Excavator Operations – A Day on…" as the entire heading. Two
-   lines, then ellipsis. */
-@media (max-width: 599px) {
-}
-
 /* --- 2. Text below the legibility floor -----------------------------------
    The percentage inside the progress ring measured 10px. This sheet's own type
    scale sets 11px as the absolute floor and says so; the ring was reading from a
@@ -12034,7 +10262,6 @@ body.format-aicourse .aicourse-progress-ring-text,
 body.format-aicourse .aicourse-player-ring-text {
     font-size: max(11px, var(--acf-font-size-2xs));
 }
-
 
 /* --- 3. The sidebar header clipped its own contents -----------------------
    `.aicourse-player-header` is given an exact `block-size` so the sidebar's top
@@ -12091,20 +10318,12 @@ body.aicourse-player-on .aicourse-player-meta a {
    somebody else's markup. */
 @media (max-width: 767px) {
     body.format-aicourse :is(.format-aicourse-container, .aicourse-cards-container,
-    .aicourse-activity-cards-container, .aicourse-hero-banner, .aicourse-card,
-    .aicourse-activity-card) {
+    .aicourse-activity-cards-container, .aicourse-hero-banner) {
         max-inline-size: 100%;
         overflow-x: clip;
     }
 
-    /* Cards go to one column well before they get narrow enough to break their
-       own contents. auto-fit with a 17rem floor would allow two 170px columns on
-       a 390px screen; an activity name does not fit in 170px. */
-    body.format-aicourse :is(.aicourse-cards-grid, .aicourse-activity-cards-grid) {
-        grid-template-columns: 1fr;
-    }
 }
-
 
 /* --- The introduction, and the save button (ACF-FIX-2.1.164) --------------- */
 .acfs-intro {
@@ -12172,7 +10391,6 @@ body#page-admin-setting-formatsettingaicourse #adminsettings .acfs-save {
     }
 }
 
-
 /* --- The sheen, on both panels (ACF-FIX-2.1.165) ---------------------------
    The light that sweeps left-to-right across the left-hand group is `acf-shine`, and it was on the
    AI button alone -- a 44px square, which is why it reads as a flash passing through the glass
@@ -12218,7 +10436,6 @@ body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image
         animation: none;
     }
 }
-
 
 /* ==========================================================================
    SETTINGS PAGE — beating Bootstrap's utilities (ACF-FIX-2.1.166)
@@ -12358,7 +10575,6 @@ body#page-admin-setting-formatsettingaicourse .acfs-head:focus-visible {
     }
 }
 
-
 /* --- Type scale (ACF-FIX-2.1.166) -----------------------------------------
    Reported as "very small writing", and correctly. The scale was 15px labels,
    13px descriptions, 12px default-info and 11px code names — sizes borrowed
@@ -12476,12 +10692,10 @@ body#page-admin-setting-formatsettingaicourse #adminsettings .acfs-intro h3 {
         max-inline-size: 100%;
     }
 
-
     .acfs-preview {
         max-inline-size: 100%;
     }
 }
-
 
 /* --- The drawer never exceeds the screen (ACF-FIX-2.1.166) ------------------
    Found by testing at 320 CSS pixels, which is the width WCAG 2.2 SC 1.4.10
@@ -12509,7 +10723,6 @@ body#page-admin-setting-formatsettingaicourse #adminsettings .acfs-intro h3 {
         max-inline-size: 60%;
     }
 }
-
 
 /* ==========================================================================
    SETTINGS PAGE — controls and rhythm (ACF-FIX-2.1.167)
@@ -12570,7 +10783,6 @@ textarea) {
     border: 1px solid var(--acfs-line-strong);
     border-radius: 10px;
 }
-
 
 [dir="rtl"] body#page-admin-setting-formatsettingaicourse #adminsettings select {
     background-position: left 0.85rem center;
@@ -12661,7 +10873,6 @@ body#page-admin-setting-formatsettingaicourse #adminsettings .defaultsnext {
         padding-block: 1.35rem;
     }
 }
-
 
 /* ==========================================================================
    SETTINGS PAGE — the two-column setting (ACF-FIX-2.1.167)
@@ -12856,7 +11067,6 @@ select:not([multiple]) {
     padding-inline-start: 2.75rem;
 }
 
-
 /* --- The course-index open button stays reachable (ACF-FIX-2.1.167) --------
    Making the banner span the full width when the course index is closed put it
    over the top-left corner of the page - which is exactly where the theme puts the
@@ -12923,7 +11133,6 @@ body.format-aicourse .drawer-toggles .btn {
 body.format-aicourse :is(.drawer-toggles, [data-region="drawer-toggle"]) {
     overflow: visible;
 }
-
 
 /* --- The activity banner's cluster matches the section banner's (ACF-FIX-2.1.167) ----
    Reported: the controls at the right of an activity banner look bigger than the
@@ -13014,7 +11223,6 @@ body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image
     min-block-size: calc(var(--acf-hero-ring-image) + var(--acf-space-2) + 4px);
     box-sizing: border-box;
 }
-
 
 /* ==========================================================================
    THE BANNER ON A PHONE (ACF-FIX-2.1.169)
@@ -13150,7 +11358,6 @@ body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image
         padding: 3px;
     }
 }
-
 
 /* Consistent vertical rhythm down the page: search, then the introduction, then the caption, then
    the list. Each was spaced by whichever rule happened to set it, which is why one gap read as
@@ -13580,4 +11787,1137 @@ body.format-aicourse.aicourse-hero-collapsed .aicourse-hero-collapse-icon {
     body.format-aicourse .aicourse-hero-collapse-icon {
         transition: none;
     }
+}
+
+/* ==========================================================================
+   2.5.0  THE CARD COMPONENT (.acf-card)
+   --------------------------------------------------------------------------
+   Section cards (course home) and activity cards (section pages) are one
+   component with two sizes. It replaces the card styles above: every class
+   here starts with "acf-", which no earlier rule selects, so nothing from
+   the previous twelve releases of card rules reaches it and nothing here
+   needs to out-bid them. Behaviour hooks are data attributes.
+
+   Anatomy
+     .acf-card            the surface: white, 1px hairline, 16px radius
+       .acf-media         16:9, inset 6px, 12px radius
+         .acf-media__img    the teacher's picture or the AI image
+         .acf-media__panel  no image: a field of the card colour carrying the
+                            label and title in large type (the approved "A")
+         .acf-status        on the image, only for In progress / Completed
+         .acf-tools         edit mode: upload, AI image, colour, remove
+       .acf-card__body    label, title, summary, meta, progress, action
+
+   The card colour is --acf-card-c: the teacher's choice (inline, validated
+   hex) or the course accent. No text is smaller than 13px.
+   ========================================================================== */
+
+body.format-aicourse .acf-cards {
+    container-type: inline-size;
+    container-name: acf-cardarea;
+}
+
+body.format-aicourse .acf-toolbar {
+    display: flex;
+    justify-content: flex-end;
+    margin-block-end: 16px;
+}
+
+/* --- Grids ------------------------------------------------------------------ */
+
+body.format-aicourse .acf-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+    align-items: stretch;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+@container acf-cardarea (min-width: 580px) {
+    body.format-aicourse .acf-grid--sections {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@container acf-cardarea (min-width: 960px) {
+    body.format-aicourse .acf-grid--sections {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 24px;
+    }
+}
+
+body.format-aicourse .acf-grid--activities {
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr));
+}
+
+body.format-aicourse.aicourse-cardlist .acf-grid--sections {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+/* --- The surface --------------------------------------------------------------- */
+
+body.format-aicourse .acf-card {
+    --acf-card-c: var(--acf-card-colour, var(--acf-brand));
+    --acf-card-radius: 16px;
+    --acf-card-inset: 6px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-inline-size: 0;
+    margin: 0;
+    padding: 0;
+    color: var(--acf-text-primary);
+    text-align: start;
+    text-decoration: none;
+    background: var(--acf-surface-card);
+    border: 1px solid var(--acf-border-default);
+    border-radius: var(--acf-card-radius);
+    box-shadow: 0 1px 2px rgba(14, 23, 38, .04), 0 1px 3px rgba(14, 23, 38, .06);
+    transition:
+        transform .3s cubic-bezier(.2, .8, .2, 1),
+        box-shadow .3s cubic-bezier(.2, .8, .2, 1),
+        border-color .3s ease;
+}
+
+body.format-aicourse .acf-card:hover {
+    transform: translateY(-2px);
+    border-color: color-mix(in srgb, var(--acf-card-c) 22%, var(--acf-border-default));
+    box-shadow: 0 2px 4px rgba(14, 23, 38, .04), 0 16px 32px -12px rgba(14, 23, 38, .20);
+    color: var(--acf-text-primary);
+    text-decoration: none;
+}
+
+body.format-aicourse .acf-card:focus-within,
+body.format-aicourse a.acf-card:focus-visible {
+    border-color: var(--acf-focus-color);
+    outline: none;
+}
+
+body.format-aicourse a.acf-card:focus-visible {
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--acf-focus-color) 35%, transparent);
+}
+
+body.format-aicourse.editing .acf-card:hover {
+    transform: none;
+}
+
+/* Hidden from students: dimmed, as core dims a hidden section. */
+body.format-aicourse .acf-card.is-hidden .acf-media,
+body.format-aicourse .acf-card.is-hidden .acf-card__body {
+    opacity: .55;
+}
+
+/* Core's drag and drop states. */
+body.format-aicourse .acf-card.dragging {
+    opacity: .5;
+}
+
+body.format-aicourse .acf-card.dropzone,
+body.format-aicourse .acf-card.drop-up,
+body.format-aicourse .acf-card.drop-down {
+    border-color: var(--acf-focus-color);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--acf-focus-color) 40%, transparent);
+}
+
+body.format-aicourse .acf-card.selected {
+    border-color: var(--acf-focus-color);
+    box-shadow: 0 0 0 2px var(--acf-focus-color);
+}
+
+/* --- Media ---------------------------------------------------------------------- */
+
+body.format-aicourse .acf-media {
+    position: relative;
+    flex: 0 0 auto;
+    aspect-ratio: 16 / 9;
+    margin: var(--acf-card-inset) var(--acf-card-inset) 0;
+    overflow: hidden;
+    border-radius: calc(var(--acf-card-radius) - 4px);
+    background: var(--acf-card-c);
+    isolation: isolate;
+}
+
+/* A hairline inside the edge, so a pale photograph keeps its shape on a white card. */
+body.format-aicourse .acf-media::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    border-radius: inherit;
+    box-shadow: inset 0 0 0 1px rgba(14, 23, 38, .08);
+    pointer-events: none;
+}
+
+body.format-aicourse .acf-media__img {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: block;
+    inline-size: 100%;
+    max-inline-size: none;
+    block-size: 100%;
+    object-fit: cover;
+    transition: transform .6s cubic-bezier(.2, .8, .2, 1);
+}
+
+body.format-aicourse .acf-card:hover .acf-media__img {
+    transform: scale(1.03);
+}
+
+/* The panel: a clean field of the card colour carrying the card's own label and title. It is
+   always in the markup and hidden while an image is shown, so edit mode switches in place. */
+body.format-aicourse .acf-media__panel {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 16px 18px 18px;
+    color: #fff;
+    background:
+        linear-gradient(
+            160deg,
+            color-mix(in srgb, var(--acf-card-c) 88%, #fff) 0%,
+            var(--acf-card-c) 55%,
+            color-mix(in srgb, var(--acf-card-c) 86%, #000) 100%
+        );
+}
+
+body.format-aicourse .acf-media--image .acf-media__panel {
+    display: none;
+}
+
+body.format-aicourse .acf-media__top {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-block-size: 34px;
+}
+
+body.format-aicourse .acf-media__icon {
+    display: grid;
+    flex: none;
+    place-items: center;
+    inline-size: 34px;
+    block-size: 34px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, .16);
+}
+
+body.format-aicourse .acf-media__icon svg,
+body.format-aicourse .acf-media__icon img {
+    inline-size: 18px;
+    block-size: 18px;
+}
+
+body.format-aicourse .acf-media__icon img {
+    filter: brightness(0) invert(1);
+}
+
+body.format-aicourse .acf-media__eyebrow {
+    font-size: .8125rem;
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    opacity: .85;
+}
+
+body.format-aicourse .acf-media__title {
+    display: -webkit-box;
+    overflow: hidden;
+    font-size: 1.4375rem;
+    font-weight: 650;
+    line-height: 1.2;
+    letter-spacing: -.018em;
+    text-wrap: balance;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+}
+
+body.format-aicourse .acf-card--activity .acf-media__title {
+    font-size: 1.25rem;
+}
+
+/* A light custom colour takes dark text, decided server side and by the colour picker. */
+body.format-aicourse .acf-media--light .acf-media__panel {
+    color: #0e1726;
+}
+
+body.format-aicourse .acf-media--light .acf-media__icon {
+    background: rgba(14, 23, 38, .08);
+}
+
+body.format-aicourse .acf-media--light .acf-media__icon img {
+    filter: brightness(0);
+}
+
+/* Status: on the image, top left; in the panel, top right. Only In progress and Completed. */
+body.format-aicourse .acf-status {
+    position: absolute;
+    inset-block-start: 10px;
+    inset-inline-start: 10px;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 10px 5px 8px;
+    border-radius: 999px;
+    font-size: .8125rem;
+    font-weight: 600;
+    line-height: 1.2;
+    color: #0e1726;
+    background: rgba(255, 255, 255, .92);
+    -webkit-backdrop-filter: blur(10px) saturate(150%);
+    backdrop-filter: blur(10px) saturate(150%);
+    box-shadow: 0 2px 8px -2px rgba(14, 23, 38, .2);
+}
+
+body.format-aicourse .acf-media:not(.acf-media--image) .acf-status {
+    inset-block-start: 16px;
+    inset-inline: auto 16px;
+}
+
+body.format-aicourse .acf-status svg {
+    inline-size: 14px;
+    block-size: 14px;
+    color: var(--acf-status-done-solid);
+}
+
+body.format-aicourse .acf-status__dot {
+    inline-size: 8px;
+    block-size: 8px;
+    border-radius: 50%;
+    background: var(--acf-brand);
+}
+
+/* --- Edit-mode tools on the image ----------------------------------------------- */
+
+body.format-aicourse .acf-tools {
+    position: absolute;
+    inset-block-end: 10px;
+    inset-inline-end: 10px;
+    z-index: 5;
+    display: flex;
+    gap: 2px;
+    padding: 3px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, .94);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 6px 18px -6px rgba(14, 23, 38, .35), 0 0 0 1px rgba(14, 23, 38, .06);
+}
+
+body.format-aicourse .acf-tools__btn {
+    display: grid;
+    place-items: center;
+    inline-size: 36px;
+    block-size: 36px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 9px;
+    color: #0e1726;
+    background: transparent;
+    cursor: pointer;
+    transition: background-color .15s ease;
+}
+
+body.format-aicourse .acf-tools__btn svg {
+    inline-size: 17px;
+    block-size: 17px;
+}
+
+body.format-aicourse .acf-tools__btn:hover {
+    background: rgba(14, 23, 38, .07);
+}
+
+body.format-aicourse .acf-tools__btn:focus-visible {
+    outline: 2px solid var(--acf-focus-color);
+    outline-offset: 1px;
+}
+
+body.format-aicourse .acf-tools__btn[hidden] {
+    display: none;
+}
+
+body.format-aicourse .acf-tools__btn:disabled {
+    opacity: .4;
+    cursor: default;
+}
+
+body.format-aicourse .acf-tools__btn--ai {
+    color: #6b3fd6;
+}
+
+body.format-aicourse .acf-tools__btn--remove:hover {
+    color: #b42318;
+    background: rgba(180, 35, 24, .08);
+}
+
+/* Keep the panel title clear of the tools while editing. */
+body.format-aicourse .acf-media:has(.acf-tools):not(.acf-media--image) .acf-media__title {
+    padding-inline-end: 150px;
+}
+
+body.format-aicourse .acf-media__busy {
+    position: absolute;
+    inset: 0;
+    z-index: 6;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 12px;
+    text-align: center;
+    font-size: .875rem;
+    font-weight: 600;
+    color: #fff;
+    background: rgba(14, 23, 38, .64);
+    -webkit-backdrop-filter: blur(3px);
+    backdrop-filter: blur(3px);
+}
+
+body.format-aicourse .acf-media__busy[hidden] {
+    display: none;
+}
+
+body.format-aicourse .acf-media__spinner {
+    inline-size: 26px;
+    block-size: 26px;
+    border: 3px solid rgba(255, 255, 255, .3);
+    border-block-start-color: #fff;
+    border-radius: 50%;
+    animation: acf-spin .9s linear infinite;
+}
+
+@keyframes acf-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* --- Section admin buttons (edit mode), over the image top right ---------------- */
+
+body.format-aicourse .acf-card__admin {
+    position: absolute;
+    inset-block-start: 16px;
+    inset-inline-end: 16px;
+    z-index: 6;
+    display: flex;
+    gap: 2px;
+    padding: 3px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, .94);
+    box-shadow: 0 6px 18px -6px rgba(14, 23, 38, .35), 0 0 0 1px rgba(14, 23, 38, .06);
+}
+
+body.format-aicourse .acf-card__adminbtn {
+    display: grid;
+    place-items: center;
+    inline-size: 32px;
+    block-size: 32px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 8px;
+    color: #3d4757;
+    background: transparent;
+    cursor: pointer;
+}
+
+body.format-aicourse .acf-card__adminbtn svg {
+    inline-size: 16px;
+    block-size: 16px;
+}
+
+body.format-aicourse .acf-card__adminbtn:hover {
+    color: #0e1726;
+    background: rgba(14, 23, 38, .07);
+}
+
+body.format-aicourse .acf-card__adminbtn--danger:hover {
+    color: #b42318;
+    background: rgba(180, 35, 24, .08);
+}
+
+body.format-aicourse .acf-card__adminbtn:focus-visible {
+    outline: 2px solid var(--acf-focus-color);
+    outline-offset: 1px;
+}
+
+body.format-aicourse .acf-card__adminbtn[data-action="moveSection"] {
+    cursor: grab;
+}
+
+/* The status chip moves down when the admin bar sits over the panel's top right. */
+body.format-aicourse .acf-card:has(.acf-card__admin) .acf-media:not(.acf-media--image) .acf-status {
+    inset-block-start: 56px;
+}
+
+body.format-aicourse .acf-card__bulk {
+    position: absolute;
+    inset-block-start: 16px;
+    inset-inline-start: 16px;
+    z-index: 6;
+}
+
+/* --- Body --------------------------------------------------------------------------- */
+
+body.format-aicourse .acf-card__body {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 6px;
+    min-inline-size: 0;
+    padding: 16px 18px 18px;
+}
+
+body.format-aicourse .acf-card--activity .acf-card__body {
+    padding: 14px 16px 16px;
+}
+
+body.format-aicourse .acf-card__eyebrow {
+    font-size: .8125rem;
+    font-weight: 600;
+    line-height: 1.3;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--acf-text-tertiary);
+}
+
+body.format-aicourse .acf-card__link,
+body.format-aicourse .acf-card__link:hover,
+body.format-aicourse .acf-card__link:focus {
+    display: block;
+    color: inherit;
+    text-decoration: none;
+}
+
+/* The title link covers the whole card, so the card is one click target. */
+body.format-aicourse .acf-card__link::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 4;
+    border-radius: var(--acf-card-radius);
+}
+
+body.format-aicourse .acf-card__link:focus-visible {
+    outline: none;
+}
+
+body.format-aicourse .acf-card__link:focus-visible::after {
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--acf-focus-color) 45%, transparent);
+}
+
+/* Anything else interactive inside a section card sits above that link. */
+body.format-aicourse .acf-card--section .acf-list {
+    position: relative;
+    z-index: 5;
+}
+
+body.format-aicourse .acf-card__title {
+    display: -webkit-box;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+    font-family: inherit;
+    font-size: 1.1875rem;
+    font-weight: 650;
+    line-height: 1.3;
+    letter-spacing: -.012em;
+    color: var(--acf-text-primary);
+    text-wrap: balance;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+}
+
+body.format-aicourse .acf-card--activity .acf-card__title {
+    font-size: 1.0625rem;
+}
+
+body.format-aicourse .acf-card:hover .acf-card__title {
+    color: color-mix(in srgb, var(--acf-card-c) 65%, var(--acf-text-primary));
+}
+
+body.format-aicourse .acf-card__summary {
+    display: -webkit-box;
+    overflow: hidden;
+    margin: 2px 0 0;
+    font-size: .9375rem;
+    line-height: 1.5;
+    color: var(--acf-text-secondary);
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+}
+
+body.format-aicourse .acf-card__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 14px;
+    margin-block-start: 6px;
+    font-size: .875rem;
+    line-height: 1.4;
+    color: var(--acf-text-tertiary);
+}
+
+body.format-aicourse .acf-card__metaitem {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+body.format-aicourse .acf-card__metaitem svg,
+body.format-aicourse .acf-card__typeicon {
+    flex: none;
+    inline-size: 16px;
+    block-size: 16px;
+}
+
+body.format-aicourse .acf-card__typeicon {
+    opacity: .75;
+}
+
+/* With no image the panel already carries the label and title: the body drops its copies from
+   view. The title stays in the page for assistive technology, and its link still covers the card. */
+body.format-aicourse .acf-card--noimage .acf-card__eyebrow {
+    display: none;
+}
+
+body.format-aicourse .acf-card--noimage .acf-card__title {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
+body.format-aicourse .acf-card--noimage .acf-card__summary,
+body.format-aicourse .acf-card--noimage .acf-card__meta {
+    margin-block-start: 0;
+}
+
+body.format-aicourse.aicourse-notime-sectioncards .acf-card--section .acf-card__time,
+body.format-aicourse.aicourse-notime-activitycards .acf-card--activity .acf-card__time {
+    display: none;
+}
+
+/* --- Optional activity list ("Show activities on cards") ---------------------- */
+
+body.format-aicourse .acf-list {
+    display: grid;
+    gap: 2px;
+    margin: 10px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+body.format-aicourse .acf-list__link,
+body.format-aicourse .acf-list__more {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-block-size: 36px;
+    padding: 6px 8px;
+    margin-inline: -8px;
+    border-radius: 8px;
+    font-size: .9375rem;
+    color: var(--acf-text-secondary);
+    text-decoration: none;
+}
+
+body.format-aicourse .acf-list__link:hover,
+body.format-aicourse .acf-list__more:hover {
+    color: var(--acf-text-primary);
+    background: var(--acf-surface-muted);
+    text-decoration: none;
+}
+
+body.format-aicourse .acf-list__icon {
+    flex: none;
+    inline-size: 18px;
+    block-size: 18px;
+}
+
+body.format-aicourse .acf-list__name {
+    flex: 1 1 auto;
+    min-inline-size: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+body.format-aicourse .acf-list__time {
+    flex: none;
+    font-size: .8125rem;
+    color: var(--acf-text-tertiary);
+    font-variant-numeric: tabular-nums;
+}
+
+body.format-aicourse .acf-list__state {
+    flex: none;
+    inline-size: 10px;
+    block-size: 10px;
+    border: 2px solid var(--acf-border-strong, #94a3b8);
+    border-radius: 50%;
+}
+
+body.format-aicourse .acf-list__state--in_progress {
+    border-color: var(--acf-brand);
+    background: linear-gradient(90deg, var(--acf-brand) 50%, transparent 50%);
+}
+
+body.format-aicourse .acf-list__state--completed {
+    border-color: var(--acf-status-done-solid);
+    background: var(--acf-status-done-solid);
+}
+
+/* --- Footer: progress and the one action ------------------------------------------ */
+
+body.format-aicourse .acf-card__foot {
+    display: grid;
+    gap: 12px;
+    margin-block-start: auto;
+    padding-block-start: 16px;
+}
+
+body.format-aicourse .acf-progress {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 12px;
+}
+
+body.format-aicourse .acf-progress__track {
+    display: block;
+    block-size: 6px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--acf-card-c) 10%, var(--acf-surface-muted));
+}
+
+body.format-aicourse .acf-progress__fill {
+    display: block;
+    block-size: 100%;
+    border-radius: inherit;
+    background: var(--acf-card-c);
+    transition: width 1.2s cubic-bezier(.2, .8, .2, 1);
+}
+
+body.format-aicourse .acf-card--complete .acf-progress__fill {
+    background: var(--acf-status-done-solid);
+}
+
+body.format-aicourse .acf-progress__count {
+    font-size: .875rem;
+    font-weight: 600;
+    color: var(--acf-text-secondary);
+    font-variant-numeric: tabular-nums;
+}
+
+body.format-aicourse .acf-card__cta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding-block-start: 12px;
+    border-block-start: 1px solid var(--acf-border-default);
+    font-size: .875rem;
+    color: var(--acf-text-tertiary);
+}
+
+body.format-aicourse .acf-card__action {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-inline-start: auto;
+    font-size: .9375rem;
+    font-weight: 600;
+    color: color-mix(in srgb, var(--acf-card-c) 80%, var(--acf-text-primary));
+}
+
+body.format-aicourse .acf-card__action svg {
+    inline-size: 16px;
+    block-size: 16px;
+    transition: transform .25s cubic-bezier(.2, .8, .2, 1);
+}
+
+body.format-aicourse .acf-card:hover .acf-card__action svg {
+    transform: translateX(3px);
+}
+
+body.format-aicourse .acf-card__action--review {
+    color: var(--acf-status-done-fg);
+}
+
+/* --- List layout: image on the left ------------------------------------------------- */
+
+@container acf-cardarea (min-width: 600px) {
+    body.format-aicourse.aicourse-cardlist .acf-card--section {
+        flex-direction: row;
+    }
+
+    body.format-aicourse.aicourse-cardlist .acf-card--section .acf-media {
+        inline-size: clamp(200px, 30%, 320px);
+        aspect-ratio: auto;
+        min-block-size: 170px;
+        margin: var(--acf-card-inset) 0 var(--acf-card-inset) var(--acf-card-inset);
+    }
+
+    body.format-aicourse.aicourse-cardlist .acf-card--section .acf-card__body {
+        padding: 18px 22px;
+    }
+}
+
+/* --- Add section ---------------------------------------------------------------------- */
+
+body.format-aicourse .acf-card--add {
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    min-block-size: 220px;
+    border: 1.5px dashed var(--acf-border-strong, #cbd5e1);
+    font-size: .9375rem;
+    font-weight: 600;
+    color: var(--acf-text-secondary);
+    background: transparent;
+    box-shadow: none;
+    cursor: pointer;
+}
+
+body.format-aicourse .acf-card--add:hover {
+    color: var(--acf-text-primary);
+    border-color: var(--acf-brand);
+    background: color-mix(in srgb, var(--acf-brand) 4%, transparent);
+    box-shadow: none;
+}
+
+body.format-aicourse .acf-card--add:focus-visible {
+    outline: 2px solid var(--acf-focus-color);
+    outline-offset: 2px;
+}
+
+body.format-aicourse .acf-card__addicon {
+    display: grid;
+    place-items: center;
+    inline-size: 40px;
+    block-size: 40px;
+    border-radius: 12px;
+    background: var(--acf-surface-muted);
+}
+
+body.format-aicourse .acf-card__addicon svg {
+    inline-size: 20px;
+    block-size: 20px;
+}
+
+body.format-aicourse .acf-card--add[data-loading] {
+    opacity: .6;
+    cursor: progress;
+}
+
+/* --- Empty section ---------------------------------------------------------------------- */
+
+body.format-aicourse .acf-empty {
+    display: grid;
+    justify-items: center;
+    gap: 10px;
+    padding: 48px 16px;
+    text-align: center;
+    font-size: .9375rem;
+    color: var(--acf-text-secondary);
+    border: 1.5px dashed var(--acf-border-default);
+    border-radius: 16px;
+}
+
+body.format-aicourse .acf-empty svg {
+    inline-size: 40px;
+    block-size: 40px;
+    opacity: .45;
+}
+
+body.format-aicourse .acf-contentrow {
+    margin-block-start: 20px;
+}
+
+/* --- Buttons used around the cards ------------------------------------------------------ */
+
+body.format-aicourse .acf-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-block-size: 40px;
+    padding: 0 16px;
+    border: 1px solid var(--acf-border-default);
+    border-radius: 10px;
+    font-size: .9375rem;
+    font-weight: 600;
+    color: var(--acf-text-primary);
+    background: var(--acf-surface-card);
+    cursor: pointer;
+}
+
+body.format-aicourse .acf-btn svg {
+    inline-size: 16px;
+    block-size: 16px;
+}
+
+body.format-aicourse .acf-btn--ai {
+    border-color: rgba(107, 63, 214, .3);
+    color: #5b2fc4;
+    background: #f3eefe;
+}
+
+body.format-aicourse .acf-btn--ai:hover {
+    background: #ebe3fd;
+}
+
+body.format-aicourse .acf-btn:focus-visible {
+    outline: 2px solid var(--acf-focus-color);
+    outline-offset: 2px;
+}
+
+/* --- Phone -------------------------------------------------------------------------------- */
+
+@media (max-width: 575.98px) {
+    body.format-aicourse .acf-grid {
+        gap: 16px;
+    }
+
+    body.format-aicourse .acf-grid--activities {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    body.format-aicourse .acf-tools__btn {
+        inline-size: 40px;
+        block-size: 40px;
+    }
+
+    body.format-aicourse .acf-card__adminbtn {
+        inline-size: 36px;
+        block-size: 36px;
+    }
+
+    body.format-aicourse .acf-toolbar .acf-btn {
+        inline-size: 100%;
+        justify-content: center;
+    }
+}
+
+/* --- Dark mode: the surfaces come from the plugin's tokens; only the shadows change ------- */
+
+body.format-aicourse[data-bs-theme="dark"] .acf-card,
+[data-bs-theme="dark"] body.format-aicourse .acf-card,
+body.format-aicourse.dark-mode .acf-card {
+    box-shadow: 0 1px 2px rgba(0, 0, 0, .4);
+}
+
+body.format-aicourse[data-bs-theme="dark"] .acf-btn--ai,
+[data-bs-theme="dark"] body.format-aicourse .acf-btn--ai,
+body.format-aicourse.dark-mode .acf-btn--ai {
+    color: #c9b6ff;
+    background: rgba(107, 63, 214, .22);
+}
+
+/* --- Motion and contrast preferences ------------------------------------------------------ */
+
+@media (prefers-reduced-motion: reduce) {
+    body.format-aicourse .acf-card,
+    body.format-aicourse .acf-card:hover,
+    body.format-aicourse .acf-media__img,
+    body.format-aicourse .acf-card:hover .acf-media__img,
+    body.format-aicourse .acf-card__action svg,
+    body.format-aicourse .acf-progress__fill {
+        transform: none;
+        transition: none;
+    }
+
+    body.format-aicourse .acf-media__spinner {
+        animation-duration: 2.4s;
+    }
+}
+
+@media (forced-colors: active) {
+    body.format-aicourse .acf-card {
+        border-color: CanvasText;
+    }
+
+    body.format-aicourse .acf-media__panel {
+        border: 1px solid CanvasText;
+    }
+}
+
+/* --- Edit-mode dialogues and the activity-row image strip (core modals, class-led) --------- */
+
+.aicourse-cardimage-dialog .aicourse-cardimage-for {
+    margin: 0 0 12px;
+    font-weight: 600;
+}
+
+.aicourse-cardimage-dialog .aicourse-cardimage-meta,
+.aicourse-cardimage-dialog .aicourse-cardimage-summary {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 8px;
+    margin: 14px 0 0;
+    padding: 10px 12px;
+    border-radius: 10px;
+    font-size: .875rem;
+    background: rgba(107, 63, 214, .08);
+}
+
+.aicourse-cardimage-dialog .aicourse-cardimage-cost,
+.aicourse-cardimage-dialog .aicourse-cardimage-summary {
+    font-weight: 700;
+    color: #5b2fc4;
+}
+
+.aicourse-cardimage-dialog .aicourse-cardcolour-grid {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 8px;
+    margin-block: 8px 14px;
+}
+
+.aicourse-cardimage-dialog .aicourse-cardcolour-option {
+    position: relative;
+    display: block;
+    margin: 0;
+    cursor: pointer;
+}
+
+.aicourse-cardimage-dialog .aicourse-cardcolour-input {
+    position: absolute;
+    inset: 0;
+    inline-size: 100%;
+    block-size: 100%;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.aicourse-cardimage-dialog .aicourse-cardcolour-swatch {
+    display: grid;
+    place-items: center;
+    aspect-ratio: 1;
+    border-radius: 10px;
+    font-size: .75rem;
+    font-weight: 600;
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .12);
+}
+
+.aicourse-cardimage-dialog .aicourse-cardcolour-default {
+    color: #475467;
+    background: #fff;
+    box-shadow: inset 0 0 0 1px #d0d5dd;
+}
+
+.aicourse-cardimage-dialog .aicourse-cardcolour-input:checked + .aicourse-cardcolour-swatch {
+    box-shadow: 0 0 0 2px #fff, 0 0 0 4px #0e1726;
+}
+
+.aicourse-cardimage-dialog .aicourse-cardcolour-input:focus-visible + .aicourse-cardcolour-swatch {
+    box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--bs-primary, #0f6cbf);
+}
+
+.aicourse-cardimage-dialog .aicourse-cardcolour-customrow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin: 0;
+    padding-block-start: 14px;
+    border-block-start: 1px solid #e4e7ec;
+    font-size: .9375rem;
+    font-weight: 600;
+}
+
+.aicourse-cardimage-dialog .aicourse-cardcolour-custom {
+    inline-size: 48px;
+    block-size: 34px;
+    padding: 0;
+    border: 1px solid #d0d5dd;
+    border-radius: 8px;
+    background: none;
+}
+
+.aicourse-cardimage-dialog .aicourse-cardimage-fieldset {
+    margin-block-end: 10px;
+}
+
+.aicourse-cardimage-dialog .aicourse-cardimage-fieldset legend {
+    float: none;
+    inline-size: auto;
+    margin-block-end: 6px;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.aicourse-cardimage-dialog .aicourse-cardimage-radio {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 6px;
+    font-size: .9375rem;
+}
+
+body.format-aicourse .acf-cmrow {
+    --acf-card-c: var(--acf-card-colour, var(--acf-brand));
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    inline-size: fit-content;
+    margin-block-start: 8px;
+}
+
+body.format-aicourse .acf-cmrow .acf-media {
+    inline-size: 112px;
+    margin: 0;
+    border-radius: 8px;
+}
+
+body.format-aicourse .acf-cmrow .acf-media__panel {
+    padding: 0;
+    justify-content: center;
+    align-items: center;
+}
+
+body.format-aicourse .acf-cmrow .acf-media__title,
+body.format-aicourse .acf-cmrow .acf-media__eyebrow,
+body.format-aicourse .acf-cmrow .acf-media__busytext {
+    display: none;
+}
+
+body.format-aicourse .acf-cmrow .acf-media__top {
+    min-block-size: 0;
+}
+
+body.format-aicourse .acf-cmrow .acf-media__spinner {
+    inline-size: 18px;
+    block-size: 18px;
+    border-width: 2px;
+}
+
+body.format-aicourse .acf-cmrow .acf-tools {
+    position: static;
+    box-shadow: none;
+    background: var(--acf-surface-muted);
+}
+
+body.format-aicourse .acf-cmrow .acf-tools__btn {
+    color: var(--acf-text-primary);
+}
+
+/* While editing, the image area rises above the card's stretched title link so its tools can be
+   clicked; the link still covers the body. */
+body.format-aicourse .acf-card--section .acf-media:has(.acf-tools) {
+    z-index: 5;
 }

@@ -53,7 +53,8 @@ class callbacks {
             send_file_not_found();
         }
 
-        if ($filearea !== banner::COURSE_AREA && $filearea !== banner::SECTION_AREA) {
+        $areas = [banner::COURSE_AREA, banner::SECTION_AREA, cardimage::SECTION_AREA, cardimage::CM_AREA];
+        if (!in_array($filearea, $areas, true)) {
             send_file_not_found();
         }
 
@@ -70,6 +71,20 @@ class callbacks {
             // still carries the old course id, and serving it from the canonical item id keeps
             // those links working.
             $itemid = banner::BANNER_ITEMID;
+        } else if ($filearea === cardimage::CM_AREA) {
+            // 2.5.0: an activity card image. Same reasoning as a section banner below: the file is
+            // in the course context, so require_login() says nothing about THIS activity, and
+            // the item id in the URL is a guessable integer. Refuse an activity the caller could
+            // not open -- hidden, in a hidden section, or behind restrictions -- unless they may
+            // see hidden activities.
+            $cms = get_fast_modinfo($course)->get_cms();
+            if (!isset($cms[$itemid])) {
+                send_file_not_found();
+            }
+            $mayseehidden = has_capability('moodle/course:viewhiddenactivities', $context);
+            if (!$cms[$itemid]->uservisible && !$mayseehidden) {
+                send_file_not_found();
+            }
         } else {
             // A section banner's item id IS meaningful -- it names the section -- so unlike the
             // course banner it has to be taken from the URL, and therefore has to be checked.

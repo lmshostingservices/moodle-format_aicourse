@@ -2,6 +2,105 @@
 
 All notable changes to this plugin will be documented in this file.
 
+## [2.5.0] - 2026-09-29
+
+### Added - images on every card, and a new card design
+
+- **Every section card and activity card has an image area.** Cards are now rectangles with a
+  16:9 picture on top, inset 6px inside the card with its own rounded corners, then the title,
+  summary, activity count and time, a progress bar with "1 of 3 done", and one call to action
+  (Start, Continue or Review).
+
+- **Teachers fill it from edit mode.** Every card shows four tools on its image while editing:
+  - **Upload image.** The browser scales the picture to 1600px before sending it; the server
+    checks it is a real JPG, PNG, GIF or WebP under 5 MB, by content rather than by name.
+  - **AI image.** A dialog with an optional prompt box to steer the picture, the course's image
+    style, and "Uses 5 credits" shown before anything is spent. Generation runs in the background,
+    as banners do, and the card updates itself when it is ready.
+  - **Card colour.** Twelve swatches, the course accent, or any custom colour, previewed live on
+    the card; Cancel puts it back.
+  - **Remove image.** Offered only when the card has its own image.
+
+  On section pages, where Moodle shows its editor instead of the cards while editing, each
+  activity row gets a thumbnail with the same four tools.
+
+- **Cards without an image have their own layout.** The image space becomes a clean panel in the
+  card's colour carrying the module label and title in large type, so a row mixing photographs and
+  colours still lines up. A light custom colour switches the panel to dark text.
+
+- **Generate card images.** One button on the course page generates images for every card, only
+  section cards or only activity cards, optionally only those without one. It counts first and
+  shows the total ("7 cards, 35 credits") before anything is queued. Batches are capped at 60 cards
+  and one per five minutes, so a double click cannot spend twice.
+
+- **AI card image style**, a course setting with a site default: Photographic, Illustration,
+  3D render or Flat illustration. Every card image in a course is generated in the same style so
+  the course reads as one set.
+
+- **Status on the image only when it says something**: "In progress" or "Completed". "Not
+  started" is no longer printed on every card; it is still in each card's accessible name.
+
+- No text on a card is smaller than 13px. On phones cards stack in one column and the edit tools
+  grow to 40px.
+
+### Changed - the card styles were replaced, not overridden
+
+- The cards are a new component (`.acf-card`, `.acf-media`, `acf-*`). None of the earlier card
+  rules select it, so nothing in it has to out-bid twelve releases of card CSS. Behaviour hooks
+  moved from classes to data attributes (`data-acf-action="duplicate-section"` and so on), so
+  styling and behaviour can change independently.
+- The old card rules were then removed: **191 rules and 19 media/container blocks** that could no
+  longer match anything, found by listing every class the plugin still emits and dropping only
+  selectors that need a class nothing emits. The pre-2.5.0 part of styles.css went from 13,583
+  lines to 11,790; the new card component is 1,133 lines, so the sheet is smaller overall. Section, activity and grades pages were
+  compared pixel for pixel before and after: identical.
+- `templates/section_icon.mustache` is gone; a section's icon now shows on its colour panel.
+
+### Storage, backup and privacy
+
+- Section card images: file area `sectioncardimage`, item id = section id. Activity card images:
+  `cmcardimage`, item id = course module id. Both in the course context.
+- A section card with no image of its own shows its **section banner** if it has one, never the
+  course banner (the same picture on every card is worse than a colour).
+- Colours: new table `format_aicourse_cardstyle` (upgrade step 2026092900), declared in the
+  privacy provider.
+- Backup and restore carry card images and colours to the right cards; duplicating an activity
+  keeps its colour. Activity images are annotated at course level and restored after the whole
+  restore through the `course_module` mapping. Core's `add_related_files()` could not be used:
+  it also matches each file on the mapping's context, which core only records for mappings created
+  to restore files, so every image silently failed to match. A test caught it.
+- Deleting an activity, a section or a course removes its card images, colours and generation
+  state.
+- Image files are served only to people who can see the section or activity they belong to.
+
+### For the lms-labs.com image service
+
+Card requests add `imageKind: "card"`, `aspectRatio: "16:9"`, `imageStyle` and the activity or
+section name. Until the service honours them, card images come back in the banner's wide shape and
+the card crops them to the centre.
+
+### Release pipeline fixes (build 2026092901)
+
+- No `PARAM_RAW` in the new web services: the card colour is `PARAM_TEXT` (then accepted only as
+  a hex colour), and uploaded images are `PARAM_BASE64`, sent by the browser in Moodle's
+  64-character-line layout.
+- Multi-line calls put their first argument on its own line (61 calls in 13 files).
+- `courseformat.js` uses `function(` with no space, as Moodle's JavaScript style requires.
+
+### Verification
+
+- PHPUnit on Moodle 4.5.14+ / PHP 8.3: **166 tests, 583 assertions**, all passing (was 141).
+  25 new tests: storage and fallback, image validation, cross-course refusal, colours, deletion
+  cleanup, backup/restore round trip, activity duplication, every web service, the AI task with a
+  mocked service response, the batch dry run, its cap and its throttle.
+- Mutation checks: removing the cross-course check, the deletion cleanup, the backup annotation or
+  the batch throttle each fails a test.
+- ESLint: 0 errors. stylelint: no new findings against 2.4.0.
+- axe (WCAG 2.1 AA + best practice) on the course and section pages: no violations in the cards.
+- Checked in the browser at 1440px and 390px, as teacher and student, in edit mode and out:
+  no horizontal overflow, smallest text 13px, drag and drop and the keyboard move dialogue still
+  work.
+
 ## [2.4.0] - 2026-09-25
 
 ### Added - the top band collapses

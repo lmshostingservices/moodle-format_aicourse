@@ -61,14 +61,14 @@ const reducedMotion = () => Boolean(window.matchMedia)
  * so a page of twelve cards costs twelve style changes rather than twelve animation loops. Only the
  * NUMBER needs a frame loop, because text cannot be interpolated.
  *
- * @param {Element} wrap The .aicourse-card-progress element, carrying data-acf-ring.
+ * @param {Element} wrap The .acf-progress element, carrying data-acf-ring.
  * @returns {void}
  */
 const animate = (wrap) => {
     const pct = Math.max(0, Math.min(100, parseInt(wrap.dataset.acfRing, 10) || 0));
-    const fill = wrap.querySelector('.aicourse-card-ring-fill');
-    const bar = wrap.querySelector('.aicourse-card-progress-bar-fill');
-    const text = wrap.querySelector('.aicourse-card-ring-text');
+    const fill = wrap.querySelector('.acf-progress__ring');
+    const bar = wrap.querySelector('.acf-progress__fill');
+    const text = wrap.querySelector('.acf-progress__ringtext');
     const target = (pct / 100) * CIRCUMFERENCE;
 
     // The template writes the final values server-side, so the card is correct with no JavaScript
@@ -157,8 +157,8 @@ const scheduleRings = (wraps) => {
  * @returns {Promise} Resolves once the ticks are bound.
  */
 const bindTicks = async(config) => {
-    const rows = [...document.querySelectorAll('.aicourse-card-activity[data-cmid]')]
-        .filter((row) => row.querySelector('.aicourse-card-activity-state'));
+    const rows = [...document.querySelectorAll('.acf-list__item[data-cmid]')]
+        .filter((row) => row.querySelector('.acf-list__state'));
     if (!rows.length) {
         return;
     }
@@ -192,8 +192,8 @@ const bindTicks = async(config) => {
         //
         // The link keeps its server-rendered `title` as the no-JavaScript fallback. bindTip stashes
         // and restores it around the panel, so the browser's own tooltip never appears underneath.
-        const link = row.querySelector('.aicourse-card-activity-link');
-        const mark = row.querySelector('.aicourse-card-activity-state');
+        const link = row.querySelector('.acf-list__link');
+        const mark = row.querySelector('.acf-list__state');
         if (link) {
             bindTip(link, data, strings);
         }
@@ -210,7 +210,7 @@ const bindTicks = async(config) => {
  */
 export const init = () => {
     const start = () => {
-        const wraps = [...document.querySelectorAll('.aicourse-card-progress[data-acf-ring]')]
+        const wraps = [...document.querySelectorAll('.acf-progress[data-acf-ring]')]
             .filter((w) => !w.hasAttribute(DONEATTR));
         wraps.forEach((w) => w.setAttribute(DONEATTR, '1'));
         if (wraps.length) {
@@ -238,11 +238,11 @@ export const init = () => {
         // Same diagnostic pattern as player.js, which settled the logo and the close button in one
         // round each instead of three.
         if (window.console && window.console.info) {
-            const first = document.querySelector('.aicourse-card-progress[data-acf-ring]');
+            const first = document.querySelector('.acf-progress[data-acf-ring]');
             window.console.info('[format_aicourse] cards:', JSON.stringify({
                 build: '2.1.182',
-                rings: document.querySelectorAll('.aicourse-card-progress[data-acf-ring]').length,
-                rows: document.querySelectorAll('.aicourse-card-activity[data-cmid]').length,
+                rings: document.querySelectorAll('.acf-progress[data-acf-ring]').length,
+                rows: document.querySelectorAll('.acf-list__item[data-cmid]').length,
                 animated: wraps.length,
                 pct: first ? first.dataset.acfRing : null,
                 reducedMotion: reducedMotion(),

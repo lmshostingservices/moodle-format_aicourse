@@ -41,8 +41,13 @@ class save_icon extends external_api {
         return new external_function_parameters([
             'courseid' => new external_value(PARAM_INT, 'Id of the course the section belongs to'),
             'sectionid' => new external_value(PARAM_INT, 'Id (not number) of the course section'),
-            'icon' => new external_value(PARAM_ALPHANUMEXT, 'Icon key from the icon library, or the '
-                . 'empty string to clear the icon', VALUE_DEFAULT, ''),
+            'icon' => new external_value(
+                PARAM_ALPHANUMEXT,
+                'Icon key from the icon library, or the '
+                    . 'empty string to clear the icon',
+                VALUE_DEFAULT,
+                ''
+            ),
         ]);
     }
 

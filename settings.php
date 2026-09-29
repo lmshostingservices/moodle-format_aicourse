@@ -720,6 +720,15 @@ if ($hassiteconfig) {
         ]
     ));
 
+    // 2.5.0: the site-wide starting point for the AI card image style.
+    $settings->add(new admin_setting_configselect(
+        'format_aicourse/defaultcardimagestyle',
+        get_string('cardimagestyle', 'format_aicourse'),
+        get_string('cardimagestyle_desc', 'format_aicourse'),
+        'photo',
+        \format_aicourse\local\cardimage::style_options()
+    ));
+
     $settings->add(new admin_setting_configselect(
         'format_aicourse/defaultactivitydisplaymode',
         get_string('activitydisplaymode', 'format_aicourse'),

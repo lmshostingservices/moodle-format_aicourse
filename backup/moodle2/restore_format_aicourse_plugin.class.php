@@ -75,6 +75,27 @@ class restore_format_aicourse_plugin extends restore_format_plugin {
      */
     public function after_restore_course() {
         $this->add_related_files('format_aicourse', 'bannerimage', null);
+        // 2.5.0: activity card images, whose item id is a course module id. This runs after the
+        // whole restore, when every restored activity has registered its 'course_module' mapping.
+        //
+        // add_related_files() cannot be used here. It matches each file against its mapping on
+        // BOTH the item id and the mapping's parentitemid, which core only fills with a context
+        // when the mapping was created with "restore files" -- and course_module mappings are not.
+        // Every image would silently fail to match (a test caught exactly that). Calling the
+        // restore helper directly with $skipparentitemidctxmatch = true matches on the item id
+        // alone, which is right: the files are in the course context, whose old id is known.
+        restore_dbops::send_files_to_pool(
+            $this->task->get_basepath(),
+            $this->get_restoreid(),
+            'format_aicourse',
+            'cmcardimage',
+            $this->task->get_old_contextid(),
+            $this->task->get_userid(),
+            'course_module',
+            null,
+            null,
+            true
+        );
     }
 
     /**
@@ -88,6 +109,7 @@ class restore_format_aicourse_plugin extends restore_format_plugin {
     protected function define_section_plugin_structure() {
         return [
             new restore_path_element('aicourse_sectionbanner', $this->get_pathfor('/sectionbanner')),
+            new restore_path_element('aicourse_sectioncard', $this->get_pathfor('/sectioncard')),
         ];
     }
 
@@ -118,5 +140,63 @@ class restore_format_aicourse_plugin extends restore_format_plugin {
      */
     public function after_restore_section() {
         $this->add_related_files('format_aicourse', 'sectionbannerimage', 'course_section');
+        $this->add_related_files('format_aicourse', 'sectioncardimage', 'course_section');
+    }
+
+    /**
+     * Restore a section card's colour against the restored section.
+     *
+     * @param array|stdClass $data The parsed element.
+     * @return void
+     */
+    public function process_aicourse_sectioncard($data) {
+        $this->restore_card_colour('section', (int) $this->task->get_sectionid(), (object) $data);
+    }
+
+    /**
+     * Define the paths this plugin handles inside each activity.
+     *
+     * @return array Array of restore_path_element.
+     */
+    protected function define_module_plugin_structure() {
+        return [
+            new restore_path_element('aicourse_cmcard', $this->get_pathfor('/cmcard')),
+        ];
+    }
+
+    /**
+     * Restore an activity card's colour against the restored activity.
+     *
+     * @param array|stdClass $data The parsed element.
+     * @return void
+     */
+    public function process_aicourse_cmcard($data) {
+        $this->restore_card_colour('cm', (int) $this->task->get_moduleid(), (object) $data);
+    }
+
+    /**
+     * Write one restored card colour, replacing any the target already has.
+     *
+     * @param string $type section or cm.
+     * @param int $targetid The NEW section or course module id.
+     * @param stdClass $data The parsed element.
+     * @return void
+     */
+    protected function restore_card_colour(string $type, int $targetid, stdClass $data): void {
+        global $DB;
+
+        $colour = \format_aicourse\local\cardimage::clean_colour((string) ($data->colour ?? ''));
+        if ($targetid <= 0 || $colour === '') {
+            return;
+        }
+        $DB->delete_records('format_aicourse_cardstyle', ['targettype' => $type, 'targetid' => $targetid]);
+        $DB->insert_record('format_aicourse_cardstyle', (object) [
+            'courseid' => (int) $this->task->get_courseid(),
+            'targettype' => $type,
+            'targetid' => $targetid,
+            'colour' => $colour,
+            'usermodified' => 0,
+            'timemodified' => time(),
+        ]);
     }
 }

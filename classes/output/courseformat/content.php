@@ -22,6 +22,7 @@ use core\output\named_templatable;
 use core_courseformat\base as course_format;
 use core_text;
 use format_aicourse\local\activityinfo;
+use format_aicourse\local\cardimage;
 use format_aicourse\local\icons;
 use format_aicourse\local\progress;
 use format_aicourse\output\courseformat\content\generalsection;
@@ -270,6 +271,10 @@ class content extends topics_content implements named_templatable, renderable {
             icons::preload_section_icons($course->id, $preloadsectionids);
         }
 
+        // 2.5.0: card images, section banners and card colours, one query each for the grid.
+        cardimage::preload((int) $course->id, cardimage::TYPE_SECTION);
+        cardimage::preload_colours((int) $course->id);
+
         foreach ($sections as $section) {
             if (!$section->uservisible) {
                 continue;
@@ -388,22 +393,15 @@ class content extends topics_content implements named_templatable, renderable {
             'cardlinklabel' => implode(get_string('labelseparator', 'format_aicourse'), $labelparts),
             'hassummary' => false,
             'summary' => '',
-            'hasfooter' => ($activitycount > 0 || $hasprogress),
             'hascount' => ($activitycount > 0),
             'counttext' => ($activitycount > 0) ? $this->get_activity_count_text($activitycount) : '',
             'hasprogress' => $hasprogress,
-            'badgeclass' => ($percentage == 100) ? 'aicourse-progress-badge-complete' : 'aicourse-progress-badge',
-            'percenttext' => get_string('percentvalue', 'format_aicourse', $percentage),
             // ACF-FIX-2.1.178: the raw number, for the ring. The badge shipped only the localised
             // string ("33%"), which cannot be turned back into a stroke length or a bar width
             // without parsing a translated string -- so the card had no way to draw the same
             // indicator the hero draws. The figure is emitted alongside the text rather than
             // instead of it: the text stays the accessible value.
             'percentnum' => $percentage,
-            'ringdash' => round(($percentage / 100) * 100.53, 2),
-            'hasdots' => false,
-            'dots' => [],
-            'moredots' => null,
             // The "Show activities on cards" option is off by default, and while it is off these
             // three keys keep exactly these values, so the template emits nothing and the card is
             // byte-identical to what it rendered before the option existed.
@@ -411,6 +409,46 @@ class content extends topics_content implements named_templatable, renderable {
             'activities' => [],
             'moreactivities' => null,
         ];
+
+        // 2.5.0: the image area, the card's own colour, and the call to action.
+        $card->media = cardmedia::export(
+            (int) $course->id,
+            cardimage::TYPE_SECTION,
+            (int) $section->id,
+            $plainname,
+            $isediting,
+            [
+                'iconsvg' => $hasicon ? $iconlibrary[$savedicon] : '',
+                'eyebrow' => get_string('cardeyebrow', 'format_aicourse', (int) $section->section),
+                'title' => $formattedname,
+            ]
+        );
+        $iscomplete = $hasprogress && $percentage >= 100;
+        $inprogress = $hasprogress && !$iscomplete && (int) $progressdata['completed'] > 0;
+        $card->cardstate = $iscomplete ? 'complete' : ($inprogress ? 'progress' : 'notstarted');
+        // The chip on the image says only what is worth saying: in progress, or done.
+        $card->media->hasstatus = $iscomplete || $inprogress;
+        $card->media->status = $iscomplete ? 'complete' : 'progress';
+        $card->media->iscomplete = $iscomplete;
+        $card->media->statuslabel = $iscomplete ? get_string('completed', 'format_aicourse')
+            : ($inprogress ? get_string('cardstatus_progress', 'format_aicourse') : '');
+        $card->cardstyle = cardmedia::style($card->media);
+        $card->eyebrow = get_string('cardeyebrow', 'format_aicourse', (int) $section->section);
+        if ($hasprogress) {
+            $card->donetext = get_string('carddone', 'format_aicourse', (object) [
+                'done' => (int) $progressdata['completed'],
+                'total' => (int) $progressdata['total'],
+            ]);
+            $card->ctastate = $iscomplete ? 'review' : ($inprogress ? 'continue' : 'start');
+            $card->statustext = $iscomplete ? get_string('completed', 'format_aicourse')
+                : ($inprogress ? get_string('percentcomplete', 'format_aicourse', $percentage)
+                    : get_string('cardstatus_notstarted', 'format_aicourse'));
+        } else {
+            $card->donetext = '';
+            $card->ctastate = 'view';
+            $card->statustext = '';
+        }
+        $card->ctatext = get_string('cardcta_' . $card->ctastate, 'format_aicourse');
 
         // ACF-FIX-2.0: a11y - every card previously produced an identically-named "Edit section" /
         // "Delete section" control. The accessible names now include the section name so a
@@ -429,6 +467,8 @@ class content extends topics_content implements named_templatable, renderable {
             // strings, so no new language string is introduced for this.
             $card->movelabel = get_string('movecontent', 'moodle', $plainname);
             $card->movetitle = get_string('movecoursesection', 'moodle');
+            $card->iconbuttontitle = $hasicon ? get_string('changeicon', 'format_aicourse')
+                : get_string('addicon', 'format_aicourse');
         }
 
         if ($isediting) {
@@ -454,9 +494,6 @@ class content extends topics_content implements named_templatable, renderable {
             }
         }
 
-        if ($hasprogress && !empty($progressdata['activities'])) {
-            $this->export_progress_dots($card, $progressdata['activities'], $sectionurl);
-        }
 
         if ($this->show_activities_on_cards()) {
             $this->export_card_activities($card, $course, $section, $plainname, $progressdata, $sectionurl);
@@ -589,7 +626,7 @@ class content extends topics_content implements named_templatable, renderable {
                 'url' => $cm->url ? $cm->url->out() : s($sectionurl),
                 'name' => format_string($cm->name),
                 'label' => $label,
-                'stateclass' => 'aicourse-actstate-' . ($status ?? 'none'),
+                'state' => ($status ?? 'none'),
                 // The cmid is what lets the browser match this row to the richer payload the
                 // player already ships (completion conditions, grade, completion date) instead of
                 // this exporter fetching and escaping all of it a second time.
@@ -629,45 +666,6 @@ class content extends topics_content implements named_templatable, renderable {
                 'label' => get_string('cardactivitiesmore', 'format_aicourse', $plainname),
             ];
         }
-    }
-
-    /**
-     * Add the compact progress dots (at most self::MAX_DOTS, plus a "+N" overflow link) to a card.
-     *
-     * ACF-FIX-2.0: a11y - the dots were EMPTY 12x12px <a> elements whose only information was their
-     * colour: no accessible name at all, and completion status conveyed by hue alone. Each now
-     * carries the activity name AND its status in the accessible name.
-     *
-     * @param stdClass $card The card context being built; modified in place.
-     * @param array $activities Activity rows from progress::get_section_progress().
-     * @param string $sectionurl Unescaped fallback URL for activities with no URL of their own.
-     * @return void
-     */
-    protected function export_progress_dots(stdClass $card, array $activities, string $sectionurl): void {
-        $dots = [];
-        foreach ($activities as $activity) {
-            if (count($dots) >= self::MAX_DOTS) {
-                $card->moredots = (object) [
-                    // ACF-FIX-2.1.4: s(), for the same reason as the dot URLs below.
-                    'url' => s($sectionurl),
-                    'remaining' => count($activities) - self::MAX_DOTS,
-                    'title' => get_string('viewallactivities', 'format_aicourse'),
-                ];
-                break;
-            }
-            $label = get_string('activitywithstatus', 'format_aicourse', (object) [
-                'name' => $activity['name'],
-                'status' => activityinfo::get_status_label($activity['status']),
-            ]);
-            $dots[] = (object) [
-                // Already escaped by moodle_url::out(); see the template PHPDoc.
-                'url' => !empty($activity['url']) ? $activity['url'] : s($sectionurl),
-                'statusclass' => 'aicourse-dot-' . $activity['status'],
-                'label' => $label,
-            ];
-        }
-        $card->hasdots = !empty($dots);
-        $card->dots = $dots;
     }
 
     /**

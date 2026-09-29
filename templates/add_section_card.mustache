@@ -22,8 +22,9 @@
     decorative plus icon carries aria-hidden="true" focusable="false"; the visible label is the
     button's accessible name.
 
-    Classes required for JS:
-    * aicourse-add-section-card - click handler in amd/src/courseformat.js.
+    Data attributes required for JS:
+    * data-acf-action="add-section" - click handler in amd/src/courseformat.js; also how
+      format_aicourse/local/cardcontent keeps it last in the grid.
 
     Data attributes required for JS:
     * data-courseid - the course the new section is added to.
@@ -36,7 +37,7 @@
         "courseid": 2
     }
 }}
-<button type="button" class="aicourse-add-section-card" data-courseid="{{courseid}}">
-<div class="aicourse-add-section-icon"><svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg></div>
-<span class="aicourse-add-section-label">{{#str}} addsection, format_aicourse {{/str}}</span>
+<button type="button" class="acf-card acf-card--add" data-acf-action="add-section" data-courseid="{{courseid}}">
+<span class="acf-card__addicon"><svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg></span>
+<span class="acf-card__addlabel">{{#str}} addsection, format_aicourse {{/str}}</span>
 </button>
