@@ -271,9 +271,9 @@ $string['cardimage_uploaderror'] = 'That file could not be used as an image.';
 $string['cardimage_uploadfor'] = 'Upload an image for {$a}';
 $string['cardimage_uploading'] = 'Uploading image…';
 $string['cardimagestyle'] = 'AI card image style';
-$string['cardimagestyle_desc'] = '<strong>What this does:</strong> sets the art style every AI card image in a course is generated in, so the cards look like one set.<br /><br />Each course can change it in its own settings; this is the starting point for new courses.';
+$string['cardimagestyle_desc'] = '<strong>What this does:</strong> sets the art style every AI card image and banner in a course is generated in, so they look like one set.<br /><br />Each course can change it in its own settings; this is the starting point for new courses.';
 $string['cardimagestyle_flat'] = 'Flat illustration';
-$string['cardimagestyle_help'] = 'The art style every AI card image in this course is generated in.
+$string['cardimagestyle_help'] = 'The art style every AI card image and banner in this course is generated in.
 
 Choosing one style for the whole course keeps the cards looking like one set rather than a mix of photos, drawings and renders. Images already generated are not changed; generate them again to switch style.';
 $string['cardimagestyle_illustration'] = 'Illustration';

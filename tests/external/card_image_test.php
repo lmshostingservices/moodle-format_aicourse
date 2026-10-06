@@ -248,8 +248,10 @@ final class card_image_test extends external_testcase {
         $this->assertSame('Recognition that works', $payload['activityName']);
         $this->assertSame('page', $payload['activityType']);
         $this->assertSame('warm light', $payload['extraDetail']);
-        $this->assertStringStartsWith('Subject: Recognition that works.', $payload['prompt']);
-        $this->assertStringEndsWith("Teacher's direction: warm light.", $payload['prompt']);
+        $this->assertStringContainsString('representing Recognition that works', $payload['prompt']);
+        $this->assertStringContainsString('The teacher asks for: warm light.', $payload['prompt']);
+        $this->assertStringEndsWith($payload['promptTail'], $payload['prompt']);
+        $this->assertSame('Recognition that works', $payload['brief']['topic']);
         $this->assertSame(\format_aicourse\local\cardprompt::VERSION, $payload['promptVersion']);
         $this->assertNotEmpty($payload['negativePrompt']);
 

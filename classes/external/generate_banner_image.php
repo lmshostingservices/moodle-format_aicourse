@@ -280,8 +280,9 @@ class generate_banner_image extends external_api {
                 $postdata['sectionName'] = \format_aicourse\local\text::plain($sectionname, $context);
             }
 
+            // 3.1.0: html_plain(), not html_to_text(), which writes bold text in UPPERCASE.
             $summary = \core_text::substr(
-                trim(html_to_text((string) $sectioninfo->summary, 0, false)),
+                \format_aicourse\local\cardprompt::html_plain((string) $sectioninfo->summary),
                 0,
                 600
             );
@@ -297,6 +298,16 @@ class generate_banner_image extends external_api {
         if ($extraprompt !== '') {
             $postdata['extraDetail'] = \core_text::substr($extraprompt, 0, 300);
         }
+
+        // 3.1.0: the plugin writes the banner prompt too, with the same composer as the cards, so a
+        // banner and its course's cards look like one set. Same contract as the card request: an
+        // updated service uses prompt (or rewrites the scene from brief and appends promptTail); an
+        // older one ignores these fields and composes from the ones above, as before.
+        $postdata['imageKind'] = 'banner';
+        $postdata['imageStyle'] = \format_aicourse\local\cardimage::clean_style(
+            course_get_format($course)->get_format_options()['cardimagestyle'] ?? ''
+        );
+        $postdata += \format_aicourse\local\cardprompt::compose_banner($course, $sectioninfo, $extraprompt);
 
         // ACF-FIX-2.1.10: 180 seconds, not 90.
         //

@@ -135,6 +135,9 @@ class generate_card_image extends generate_banner_image {
      *  - prompt, negativePrompt and promptVersion (3.0.0) are the complete prompt the plugin wrote,
      *    see {@see \format_aicourse\local\cardprompt}. An updated service uses it verbatim; an
      *    older one ignores the fields and composes from the ones above, as before.
+     *  - brief and promptTail (3.1.0) let a service with a scene writer rewrite the scene part of
+     *    the prompt from the facts in brief, then append promptTail (style, colour, composition and
+     *    the no-text rule) unchanged.
      *
      * Everything is plain text. Names go through format_string() with filters applied and are
      * then flattened, so multilang markup reaches the service as the text a reader would see.
@@ -164,7 +167,8 @@ class generate_card_image extends generate_banner_image {
             if ($name !== '') {
                 $payload['sectionName'] = \format_aicourse\local\text::plain($name, $context);
             }
-            $summary = \core_text::substr(trim(html_to_text((string) $target->summary, 0, false)), 0, 600);
+            // 3.1.0: html_plain(), not html_to_text(), which writes bold text in UPPERCASE.
+            $summary = \core_text::substr(\format_aicourse\local\cardprompt::html_plain((string) $target->summary), 0, 600);
             if ($summary !== '') {
                 $payload['sectionSummary'] = $summary;
             }

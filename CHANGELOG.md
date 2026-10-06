@@ -2,6 +2,41 @@
 
 All notable changes to this plugin will be documented in this file.
 
+## [3.1.0] - 2026-10-06
+
+### Improved - richer AI card and banner images
+
+- **Every AI image prompt now describes a full scene.** The 3.0.0 prompt gave the image model a
+  bare title ("Student Instructions") and asked it to invent a scene. Image models don't plan
+  scenes, so they drew a single object on an empty background. The prompt now says who is in the
+  picture, where they are, what they are doing and what is around them, as a short paragraph.
+- **Common sections and activities get a ready-written scene.** Welcome, Student Instructions,
+  Assessment, Quiz, Resources, Forum, Live session, Video, Workplace, Case study, Feedback,
+  Reflection, Glossary, Policies, Timetable, Support, Announcements and Certificate each have their
+  own. An activity with an uncommon title gets the scene for its type (quiz, assignment, forum,
+  Zoom, H5P and so on). Any other topic gets a scene built from the topic itself.
+- **Removed the rules that emptied the picture.** The bans on laptops, screens, charts and books
+  are gone, along with "single focal point", "calm uncluttered background" and shallow depth of
+  field. Screens and papers may now appear, showing only abstract shapes, so images still contain no
+  lettering. The list of things that must never appear is down to text, logos, watermarks, frames
+  and distorted faces and hands.
+- **Who the learners are.** Scenes show adult learners, or school students when the course name or
+  category says so (Year 10, Grade 8, HSC, VCE…).
+- **Course codes and numbering are dropped.** "BSB50420 Diploma of Leadership" is described as
+  "Diploma of Leadership", and "Module 3: Risk management" as "Risk management". A section named
+  only "Week 3" or "Topic 2" uses its summary instead.
+- **Banners use the same composer.** The plugin now writes the course and section banner prompt
+  too, in the course's card image style and colour, so the banner and the cards look like one set.
+  The banner composition keeps the left third quieter, because the course title sits over it.
+- **Ready for a scene writer on the image service.** Each request also carries a `brief` (every
+  fact used to write the prompt) and a `promptTail` (style, colour, composition and the no-text
+  rule). An updated LMS Labs service can have a language model write a better scene from the brief
+  and add the tail unchanged.
+
+### Fixed
+
+- Section summaries sent to the image service no longer turn bold text into UPPERCASE.
+
 ## [3.0.0] - 2026-09-29
 
 ### Improved - better AI card images
