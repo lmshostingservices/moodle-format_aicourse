@@ -81,6 +81,38 @@ class answertext {
     }
 
     /**
+     * Whether an answer visibly stops part-way: inside an unclosed code or quiz block, or in the
+     * middle of a sentence.
+     *
+     * Deliberately narrow, because a false alarm tells a learner a good answer is broken. Only
+     * a closing paragraph that ends on a letter, comma, semicolon or dash counts as cut off; a
+     * list item, table row, heading or anything ending in punctuation, a digit or an emoji does
+     * not.
+     *
+     * @param string $answer The answer (Markdown).
+     * @return bool True when the answer looks cut off.
+     */
+    public static function looks_cut_off(string $answer): bool {
+        $text = rtrim(str_replace(["\r\n", "\r"], "\n", $answer));
+        if ($text === '') {
+            return false;
+        }
+        $fence = str_repeat(chr(96), 3);
+        if (preg_match_all('/^\s{0,3}' . $fence . '/m', $text) % 2 === 1) {
+            return true;
+        }
+        $lines = explode("\n", $text);
+        $last = trim(end($lines));
+        // Lists, tables, headings and checklists end without a full stop by design.
+        if (preg_match('/^(?:[-*+•]\s|\d+[.)]\s|\||#{1,6}\s)/u', $last)) {
+            return false;
+        }
+        // Closing emphasis or quotes do not end a sentence; look at what is inside them.
+        $last = rtrim($last, "*_~" . chr(96) . "\"'”’ ");
+        return (bool) preg_match('/(?:\p{L}|[,;\-–—])$/u', $last);
+    }
+
+    /**
      * Whether the full answer shows more than the preview: it was shortened, or it has formatting.
      *
      * @param string $answer The stored answer.

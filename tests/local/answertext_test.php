@@ -95,4 +95,67 @@ final class answertext_test extends \advanced_testcase {
     public function test_markup_is_left_as_text(): void {
         $this->assertSame('<b>not html</b> & more', answertext::preview('<b>not html</b> & more'));
     }
+
+    /**
+     * Answers that stop part-way are recognised: the two from the live report (3.2.2), and an
+     * unclosed quiz block.
+     *
+     * @return array Answers that are cut off.
+     */
+    public static function cut_off_provider(): array {
+        $fence = str_repeat(chr(96), 3);
+        return [
+            'mid-sentence' => ["Hello there!\n\nHere are three multiple-choice practice questions, designed to test"],
+            'after bold term' => ["You'll find these settings by navigating to **Course settings**, and"],
+            'trailing comma' => ['The three statements are the balance sheet,'],
+            'inside emphasis' => ['Let me know if you have *any questions*'],
+            'unclosed quiz block' => ["Try these.\n\n{$fence}quiz\n[{\"question\": \"Wh"],
+        ];
+    }
+
+    /**
+     * An answer that stops part-way is reported as cut off.
+     *
+     * @dataProvider cut_off_provider
+     * @param string $answer The answer.
+     */
+    #[\PHPUnit\Framework\Attributes\DataProvider('cut_off_provider')]
+    public function test_cut_off_answers_are_recognised(string $answer): void {
+        $this->assertTrue(answertext::looks_cut_off($answer));
+    }
+
+    /**
+     * Complete answers are left alone, including the shapes that end without a full stop by
+     * design. A false alarm would tell a learner a good answer is broken.
+     *
+     * @return array Answers that are complete.
+     */
+    public static function complete_provider(): array {
+        $fence = str_repeat(chr(96), 3);
+        return [
+            'full stop' => ['Good luck!'],
+            'question' => ['Would you like to try a practice question?'],
+            'colon' => ['Ask me anything:'],
+            'bullet' => ["Steps:\n- Review slide 3"],
+            'numbered' => ["Steps:\n1. Identify the hazard"],
+            'checklist' => ["- [ ] Read the brief"],
+            'table row' => ["| Term | Meaning |"],
+            'heading' => ['## Summary'],
+            'number' => ['The answer is 42'],
+            'emoji' => ['Nice work 🎉'],
+            'closed quiz block' => ["{$fence}quiz\n[]\n{$fence}\n\nGood luck!"],
+            'empty' => [''],
+        ];
+    }
+
+    /**
+     * A complete answer is not reported as cut off.
+     *
+     * @dataProvider complete_provider
+     * @param string $answer The answer.
+     */
+    #[\PHPUnit\Framework\Attributes\DataProvider('complete_provider')]
+    public function test_complete_answers_are_not_flagged(string $answer): void {
+        $this->assertFalse(answertext::looks_cut_off($answer));
+    }
 }

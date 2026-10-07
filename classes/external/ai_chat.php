@@ -218,6 +218,7 @@ class ai_chat extends external_api {
             return [
                 'answer' => $lockedanswer,
                 'chatid' => $chatid,
+                'truncated' => false,
                 'warnings' => $warnings,
             ];
         }
@@ -367,6 +368,7 @@ class ai_chat extends external_api {
         return [
             'answer' => $answer,
             'chatid' => $chatid,
+            'truncated' => self::is_truncated($result, $answer),
             'warnings' => $warnings,
         ];
     }
@@ -419,8 +421,37 @@ class ai_chat extends external_api {
                 'Id of the stored chat row, or 0 when it could '
                     . 'not be stored'
             ),
+            'truncated' => new external_value(
+                PARAM_BOOL,
+                'True when the answer was cut off before it finished',
+                VALUE_DEFAULT,
+                false
+            ),
             'warnings' => new external_warnings(),
         ]);
+    }
+
+    /**
+     * Whether the service stopped the answer before it was finished.
+     *
+     * 3.2.2: a service output limit cut answers off mid-sentence, sometimes before a practice
+     * question block had even started, and the learner saw "Here are three questions" and then
+     * nothing. The service's own flag or stop reason is authoritative when it sends one; until
+     * it does, an answer that visibly stops part-way (see answertext::looks_cut_off()) counts.
+     *
+     * @param array $result The decoded service response.
+     * @param string $answer The answer text.
+     * @return bool True when the learner should be told the answer is incomplete.
+     */
+    protected static function is_truncated(array $result, string $answer): bool {
+        if (!empty($result['truncated'])) {
+            return true;
+        }
+        $reason = strtolower((string) ($result['finishReason'] ?? $result['stopReason'] ?? ''));
+        if (in_array($reason, ['max_tokens', 'length', 'max_output_tokens'], true)) {
+            return true;
+        }
+        return \format_aicourse\local\answertext::looks_cut_off($answer);
     }
 
     /**
@@ -692,6 +723,9 @@ class ai_chat extends external_api {
             // instructions the model answered in loose plain text, and a multiple-choice question
             // arrived as one run-on paragraph.
             'RESPONSE FORMAT (the student sees your answer rendered as Markdown):',
+            '- BE DIRECT. Do not greet the student, do not restate their request and do not announce '
+                . 'what you are about to do: start with the substance. Keep the whole answer under '
+                . '250 words unless the student asks for more.',
             '- Use GitHub-flavoured Markdown. Keep paragraphs short (1-3 sentences). Use ## or ### '
                 . 'headings only for answers with several distinct parts. Use **bold** for key terms.',
             '- Use numbered lists for steps or sequences and bulleted lists for unordered points.',
@@ -704,11 +738,12 @@ class ai_chat extends external_api {
                 . 'multiple-choice practice questions, put them in ONE fenced code block with the '
                 . 'language "quiz" containing a JSON array, and nothing else inside the block. Each '
                 . 'item: {"question": "...", "options": ["...", "...", "...", "..."], "answer": "B", '
-                . '"explanation": "why it is correct, in 1-2 sentences", "hint": "a nudge that does not '
+                . '"explanation": "why it is correct, in one sentence", "hint": "a nudge that does not '
                 . 'give the answer away"}. "answer" is the LETTER of the correct option: "A" for the first '
                 . 'option, "B" for the second, and so on. Do not put letters such as "A)" in the options. '
-                . 'Do not repeat the questions, options or answers outside the block; a one-line '
-                . 'introduction before it and a short encouraging line after it are fine. The student\'s '
+                . 'Do not repeat the questions, options or answers outside the block. Start your reply with '
+                . 'the quiz block itself, with no introduction; one short encouraging line after it is '
+                . 'fine. Keep each explanation to one sentence and each hint under 15 words. The student\'s '
                 . 'screen shows each question as an interactive card and reveals the answer and '
                 . 'explanation only after they choose, so always include "answer" and "explanation" for '
                 . 'practice questions you write. The rule against revealing answers applies to the '

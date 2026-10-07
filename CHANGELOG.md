@@ -2,6 +2,32 @@
 
 All notable changes to this plugin will be documented in this file.
 
+## [3.2.2] - 2026-10-07
+
+No database changes.
+
+### Fixed - AI Tutor answers that stop part-way
+
+The AI service can stop an answer before it is finished. When that happens before a set of
+practice questions begins, the learner sees "Here are three practice questions, designed to
+test" and then nothing.
+
+- **The learner is told.** An answer that stops part-way now ends with "This answer was cut off
+  before it finished." and an **Ask again** button that sends the same question again. It is
+  recognised from the service's own flag or stop reason when the service sends one
+  (`truncated`, or a `finishReason` / `stopReason` of `max_tokens` or `length`). Until then, the
+  plugin detects an answer that ends mid-sentence or inside an unclosed block. The detection is
+  deliberately narrow: lists, tables, headings and answers ending in punctuation are never
+  flagged.
+- **Answers are shorter and get to the point.** The tutor is asked not to greet the learner,
+  restate the request or announce what it is about to do, to keep answers under 250 words
+  unless asked for more, and to start a practice question set with the questions themselves.
+  Each explanation is one sentence and each hint is under 15 words.
+- The web service returns a new `truncated` field, which defaults to false.
+
+The cause is the service's output limit. This release makes the plugin handle it gracefully;
+raising the limit on the service is the fix (see the LMS Labs handover).
+
 ## [3.2.1] - 2026-10-07
 
 No database changes. Learners and teachers see no difference from 3.2.0.

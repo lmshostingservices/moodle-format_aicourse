@@ -118,6 +118,8 @@ const STRING_IDS = {
     quizanother: 'aiassistant_quiz_another',
     quizanotherprompt: 'aiassistant_quiz_another_prompt',
     quizincomplete: 'aiassistant_quiz_incomplete',
+    cutoff: 'aiassistant_cutoff',
+    askagain: 'aiassistant_askagain',
 };
 
 /**
@@ -490,6 +492,9 @@ const appendMessage = (content, isuser, chatid, restored, iserror, turn) => enqu
                 }
             }
             rawText.set(bubble, content);
+            if (body && turn && turn.cut) {
+                body.appendChild(cutOffNotice(turn.ask));
+            }
         }
         scrollToTurn(bubble, !!isuser || !!restored);
 
@@ -498,15 +503,38 @@ const appendMessage = (content, isuser, chatid, restored, iserror, turn) => enqu
 });
 
 /**
+ * The note under an answer the service cut off, with a button that asks the question again.
+ *
+ * 3.2.2: the service stopped answers part-way, sometimes right after "Here are three practice
+ * questions", and the learner was left with a sentence that went nowhere.
+ *
+ * @param {String} [question] The question that produced the answer.
+ * @returns {Element} The notice.
+ */
+const cutOffNotice = (question) => {
+    const notice = document.createElement('div');
+    notice.className = 'aicourse-ai-notice aicourse-ai-cutoff';
+    notice.setAttribute('role', 'status');
+    const text = document.createElement('span');
+    text.textContent = strings.cutoff;
+    notice.appendChild(text);
+    if (question) {
+        notice.appendChild(makeFollowup(strings.askagain, question, true));
+    }
+    return notice;
+};
+
+/**
  * Append a turn and remember it in the stored conversation.
  *
  * @param {String} content The message text.
  * @param {Boolean} isuser True for the learner's own message.
  * @param {String|Number} [chatid] Id of the stored message, when it can be rated.
  * @param {Boolean} [iserror] True when this is an error shown in place of an answer.
+ * @param {Object} [extra] cut: true when the answer was cut off; ask: the question asked.
  * @returns {Promise} Resolves once the turn is in the DOM.
  */
-const addMessage = (content, isuser, chatid, iserror) => {
+const addMessage = (content, isuser, chatid, iserror, extra) => {
     if (isuser) {
         hideQuickActions();
     }
@@ -515,6 +543,10 @@ const addMessage = (content, isuser, chatid, iserror) => {
     let turn = null;
     if (!iserror) {
         turn = {content: content, isUser: !!isuser, chatid: chatid};
+        if (extra && extra.cut) {
+            turn.cut = true;
+            turn.ask = extra.ask || '';
+        }
         history.push(turn);
         saveHistory();
     }
@@ -984,7 +1016,7 @@ const sendMessage = () => {
     callExternal('ai_chat', params).then((data) => {
         hideLoading();
         setBusy(false);
-        addMessage(data.answer, false, data.chatid);
+        addMessage(data.answer, false, data.chatid, false, {cut: !!data.truncated, ask: question});
 
         return data;
     }).catch((error) => {

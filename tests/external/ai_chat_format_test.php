@@ -102,4 +102,40 @@ final class ai_chat_format_test extends external_testcase {
         $this->assertSame($question, $logged->question);
         $this->assertStringContainsString('my answer is C) Balance sheet', $logged->question);
     }
+
+    /**
+     * The answer says whether it was cut off: from the service's own flag or stop reason when
+     * it sends one, otherwise from an answer that visibly stops part-way (3.2.2).
+     */
+    public function test_truncated_flag(): void {
+        $this->set_fake_credentials();
+        $this->setUser($this->student);
+        $cases = [
+            [['success' => true, 'answer' => 'Here are three questions, designed to test'], true],
+            [['success' => true, 'answer' => 'A complete answer.'], false],
+            [['success' => true, 'answer' => 'A complete answer.', 'truncated' => true], true],
+            [['success' => true, 'answer' => 'A complete answer.', 'finishReason' => 'max_tokens'], true],
+            [['success' => true, 'answer' => 'A complete answer.', 'stopReason' => 'end_turn'], false],
+        ];
+        foreach ($cases as $i => [$response, $expected]) {
+            \curl::mock_response(json_encode($response));
+            $result = ai_chat::execute($this->course->id, 'Question number ' . $i);
+            $result = external_api::clean_returnvalue(ai_chat::execute_returns(), $result);
+            $this->assertSame($expected, $result['truncated'], "case $i");
+        }
+    }
+
+    /**
+     * The format rules ask for a direct answer that starts with the practice questions, so a
+     * limited answer is spent on the questions rather than a greeting.
+     */
+    public function test_guidelines_ask_for_direct_answers(): void {
+        $method = new \ReflectionMethod(ai_chat::class, 'get_pedagogical_guidelines');
+        $method->setAccessible(true);
+        $guidelines = $method->invoke(null);
+
+        $this->assertStringContainsString('Do not greet the student', $guidelines);
+        $this->assertStringContainsString('Start your reply with the quiz block itself', $guidelines);
+        $this->assertStringNotContainsString('one-line introduction before it', $guidelines);
+    }
 }

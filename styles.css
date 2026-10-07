@@ -3905,6 +3905,15 @@ body.format-aicourse .aicourse-ai-rating-done {
     font-size: var(--acf-font-size-sm);
 }
 
+/* 3.2.2: an answer the service cut off, with "Ask again". */
+body.format-aicourse .aicourse-ai-cutoff {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--acf-space-2) var(--acf-space-3);
+    margin-block-start: var(--acf-space-3);
+}
+
 /* An answer that could not be rendered keeps the learner-visible line breaks. */
 body.format-aicourse .aicourse-ai-message-content.aicourse-ai-plain {
     white-space: pre-wrap;
