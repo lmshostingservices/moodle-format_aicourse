@@ -51,6 +51,14 @@ use format_aicourse\output\report\indexpage;
  * @covers     \format_aicourse\output\report\adminreport
  * @covers     \format_aicourse\output\report\indexpage
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse\output\report\chatfilter::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse\output\report\adminfilter::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse\output\report\csvexporter::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse\output\report\coursereport::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse\output\report\historytab::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse\output\report\contenttab::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse\output\report\adminreport::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse\output\report\indexpage::class)]
 final class report_test extends \advanced_testcase {
     /**
      * Request parameter values under test.

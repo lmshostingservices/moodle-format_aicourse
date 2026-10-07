@@ -47,6 +47,7 @@ require_once($CFG->dirroot . '/mod/quiz/locallib.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \format_aicourse\external\get_activity_context
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse\external\get_activity_context::class)]
 final class get_activity_context_test extends external_testcase {
     /**
      * Build a quiz in the fixture course with one multiple choice question.

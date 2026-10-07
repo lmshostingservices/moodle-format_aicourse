@@ -33,6 +33,7 @@ import Ajax from 'core/ajax';
 import Notification from 'core/notification';
 import Templates from 'core/templates';
 import {get_string as getString, get_strings as getStrings} from 'core/str';
+import {render as renderRich, plain as plainText} from 'format_aicourse/local/richtext';
 
 /**
  * Element ids and selectors the panel is built from.
@@ -62,7 +63,22 @@ const SELECTORS = {
     // aria-expanded, and setting that on the Generate banner button told a screen reader it
     // controlled the tutor panel, which it does not.
     herobtn: '.aicourse-ai-toggle',
+    backdrop: 'aicourse-ai-backdrop',
+    suggest: 'aicourse-ai-suggest',
+    expand: '.aicourse-ai-expand',
+    newchat: '.aicourse-ai-newchat',
+    copybtn: '.aicourse-ai-copy-btn',
+    quizoption: '.aicourse-ai-quiz-option',
+    quizhint: '.aicourse-ai-quiz-hintbtn',
+    followup: '.aicourse-ai-followup',
+    checkbox: '.aicourse-ai-checklist-box',
 };
+
+/** @type {String} localStorage key remembering whether the learner prefers the Study view. */
+const VIEW_KEY = 'format_aicourse_tutor_view';
+
+/** @type {String} Option letters, matching format_aicourse/local/richtext. */
+const LETTERS = 'ABCDEFGH';
 
 /**
  * Everything inside the panel that can hold focus, for the Tab trap.
@@ -92,6 +108,31 @@ const STRING_IDS = {
     promptworkplace: 'aiassistant_prompt_workplace',
     promptpractice: 'aiassistant_prompt_practice',
     promptchecklist: 'aiassistant_prompt_checklist',
+    copy: 'aiassistant_copy',
+    copied: 'aiassistant_copied',
+    quizlabel: 'aiassistant_quiz_label',
+    quizhint: 'aiassistant_quiz_hint',
+    quizcorrect: 'aiassistant_quiz_correct',
+    quizsent: 'aiassistant_quiz_sent',
+    quizexplain: 'aiassistant_quiz_explain',
+    quizanother: 'aiassistant_quiz_another',
+    quizanotherprompt: 'aiassistant_quiz_another_prompt',
+    quizincomplete: 'aiassistant_quiz_incomplete',
+};
+
+/**
+ * Language strings that take parameters. They are fetched once with {name} tokens in place of the
+ * values and filled in synchronously by fmt(), so a card can be labelled while it is being built.
+ *
+ * @type {Object}
+ */
+const PARAM_STRING_IDS = {
+    quizcounter: ['aiassistant_quiz_counter', {num: '{num}', total: '{total}'}],
+    quizincorrect: ['aiassistant_quiz_incorrect', '{answer}'],
+    quizscore: ['aiassistant_quiz_score', {score: '{score}', total: '{total}'}],
+    quizchoose: ['aiassistant_quiz_choose', {question: '{question}', letter: '{letter}', option: '{option}'}],
+    quizexplainprompt: ['aiassistant_quiz_explain_prompt', {question: '{question}', letter: '{letter}', option: '{option}'}],
+    checklistprogress: ['aiassistant_checklist_progress', {done: '{done}', total: '{total}'}],
 };
 
 /** @type {Number} How many characters of a question are quoted back in the greeting. */
@@ -248,7 +289,37 @@ const loadHistory = () => {
 };
 
 /**
- * Hide the quick action buttons once the conversation has started.
+ * Fill a parameterised string fetched with {name} tokens.
+ *
+ * @param {String} alias Key in PARAM_STRING_IDS.
+ * @param {Object} values Token values.
+ * @returns {String} The finished string.
+ */
+const fmt = (alias, values) => String(strings[alias] || '').replace(/\{(\w+)\}/g, (match, name) => (
+    values && values[name] !== undefined ? String(values[name]) : match
+));
+
+/**
+ * Shorten text for quoting back to the tutor.
+ *
+ * @param {String} text Text.
+ * @param {Number} length Maximum length.
+ * @returns {String} The text, with an ellipsis when cut.
+ */
+const truncate = (text, length) => {
+    const value = String(text || '').replace(/\s+/g, ' ').trim();
+    return value.length > length ? value.substring(0, length - 1) + '…' : value;
+};
+
+/** @type {WeakMap} The original answer text behind each rendered tutor turn, for Copy. */
+const rawText = new WeakMap();
+
+/** @type {WeakMap} The stored history entry behind each rendered tutor turn. */
+const turnOf = new WeakMap();
+
+/**
+ * Hide the welcome study tools once the conversation has started, and offer the compact
+ * suggestion chips above the composer instead.
  *
  * @returns {void}
  */
@@ -257,60 +328,198 @@ const hideQuickActions = () => {
     if (quickactions) {
         quickactions.style.display = 'none';
     }
+    const suggest = document.getElementById(SELECTORS.suggest);
+    if (suggest) {
+        suggest.hidden = false;
+    }
 };
 
 /**
- * Append one bubble to the conversation.
+ * Bring the welcome study tools back for a fresh conversation.
+ *
+ * @returns {void}
+ */
+const showQuickActions = () => {
+    const quickactions = document.getElementById(SELECTORS.quickactions);
+    if (quickactions) {
+        quickactions.style.display = '';
+    }
+    const suggest = document.getElementById(SELECTORS.suggest);
+    if (suggest) {
+        suggest.hidden = true;
+    }
+};
+
+/**
+ * Keep a checklist card's progress meter in step with its boxes.
+ *
+ * @param {Element} card The .aicourse-ai-checklist card.
+ * @returns {void}
+ */
+const updateChecklist = (card) => {
+    if (!card) {
+        return;
+    }
+    const boxes = card.querySelectorAll(SELECTORS.checkbox);
+    let done = 0;
+    boxes.forEach((box) => {
+        if (box.checked) {
+            done++;
+        }
+        const item = box.closest('.aicourse-ai-checklist-item');
+        if (item) {
+            item.classList.toggle('is-done', box.checked);
+        }
+    });
+    const total = boxes.length;
+    const bar = card.querySelector('.aicourse-ai-checklist-bar > span');
+    if (bar) {
+        bar.style.inlineSize = (total ? Math.round((done / total) * 100) : 0) + '%';
+    }
+    const count = card.querySelector('.aicourse-ai-checklist-count');
+    if (count) {
+        count.textContent = fmt('checklistprogress', {done: done, total: total});
+    }
+    card.classList.toggle('is-complete', total > 0 && done === total);
+};
+
+/**
+ * Finish a freshly rendered answer: number the quiz cards and prime the checklist meters.
+ *
+ * @param {Element} body The rendered .aicourse-ai-message-content.
+ * @returns {void}
+ */
+const decorate = (body) => {
+    body.querySelectorAll('.aicourse-ai-quizset').forEach((set) => {
+        const cards = set.querySelectorAll('.aicourse-ai-quiz');
+        if (cards.length < 2) {
+            return;
+        }
+        cards.forEach((card, index) => {
+            const badge = card.querySelector('.aicourse-ai-quiz-badge');
+            if (badge) {
+                badge.textContent = fmt('quizcounter', {num: index + 1, total: cards.length});
+            }
+        });
+    });
+    body.querySelectorAll('.aicourse-ai-checklist').forEach(updateChecklist);
+};
+
+/**
+ * Scroll the conversation after a turn is added. A learner's own message pins the view to the
+ * bottom; a tutor answer is scrolled to its START, because a long answer (a quiz, a checklist)
+ * would otherwise open on its last line and the learner would have to scroll back up to read it.
+ *
+ * @param {Element|null} bubble The turn just added.
+ * @param {Boolean} tobottom True to pin to the bottom.
+ * @returns {void}
+ */
+const scrollToTurn = (bubble, tobottom) => {
+    const messages = getMessages();
+    if (!messages) {
+        return;
+    }
+    if (tobottom || !bubble) {
+        messages.scrollTop = messages.scrollHeight;
+        return;
+    }
+    messages.scrollTop = Math.max(0, bubble.offsetTop - 12);
+};
+
+/**
+ * Append one turn to the conversation.
  *
  * SECURITY: content is untrusted (learner input, an AI answer, or something replayed out of
  * sessionStorage, which any script or the user via devtools can plant). It is handed to a
- * Mustache template that renders it with a double mustache, so any markup in it becomes text.
+ * Mustache template that renders it with a double mustache, so any markup in it becomes text. A
+ * tutor answer is then re-rendered by format_aicourse/local/richtext, which builds nodes with
+ * createElement / createTextNode and never parses HTML either.
  *
  * @param {String} content The message text.
  * @param {Boolean} isuser True for the learner's own message.
  * @param {String|Number} [chatid] Id of the stored message, when it can be rated.
  * @param {Boolean} [restored] True when replaying a stored conversation.
- * @returns {Promise} Resolves once the bubble is in the DOM.
+ * @param {Boolean} [iserror] True when this is an error shown in place of an answer.
+ * @param {Object} [turn] The stored history entry, so state inside the answer can be kept.
+ * @returns {Promise} Resolves once the turn is in the DOM.
  */
-const appendMessage = (content, isuser, chatid, restored) => enqueue(() => {
+const appendMessage = (content, isuser, chatid, restored, iserror, turn) => enqueue(() => {
     const messages = getMessages();
     if (!messages) {
         return null;
     }
+    const isbot = !isuser && !iserror;
 
     return Templates.render('format_aicourse/chatbox_message', {
         content: content,
         isuser: !!isuser,
-        rateable: !isuser && !!chatid && !restored,
+        iserror: !!iserror,
+        rateable: isbot && !!chatid && !restored,
         chatid: chatid ? String(chatid) : '',
         helpfullabel: strings.ratehelpful,
         nothelpfullabel: strings.ratenothelpful,
-        restored: !!restored && !isuser && !!chatid,
+        copylabel: strings.copy,
+        restored: !!restored && isbot && !!chatid,
         restoredlabel: strings.restored,
     }).then((html) => {
         Templates.appendNodeContents(messages, html, '');
-        messages.scrollTop = messages.scrollHeight;
+        const bubble = messages.lastElementChild;
+        if (isbot && bubble) {
+            const body = bubble.querySelector('.aicourse-ai-message-content');
+            if (body) {
+                // Build off-DOM first: if rendering ever throws on an unexpected answer, the
+                // escaped plain text the template already put there stays, with its line breaks,
+                // instead of an empty bubble and an exception dialog on every page that replays it.
+                try {
+                    const rendered = renderRich(content, {
+                        quizlabel: strings.quizlabel,
+                        hint: strings.quizhint,
+                        incomplete: strings.quizincomplete,
+                    });
+                    body.textContent = '';
+                    body.appendChild(rendered);
+                    body.classList.add('aicourse-ai-prose');
+                    decorate(body);
+                    if (turn) {
+                        turnOf.set(bubble, turn);
+                        replayTurnState(bubble, turn);
+                    }
+                } catch (error) {
+                    body.textContent = content;
+                    body.classList.add('aicourse-ai-plain');
+                }
+            }
+            rawText.set(bubble, content);
+        }
+        scrollToTurn(bubble, !!isuser || !!restored);
 
         return null;
     });
 });
 
 /**
- * Append a bubble and remember it in the stored conversation.
+ * Append a turn and remember it in the stored conversation.
  *
  * @param {String} content The message text.
  * @param {Boolean} isuser True for the learner's own message.
  * @param {String|Number} [chatid] Id of the stored message, when it can be rated.
- * @returns {Promise} Resolves once the bubble is in the DOM.
+ * @param {Boolean} [iserror] True when this is an error shown in place of an answer.
+ * @returns {Promise} Resolves once the turn is in the DOM.
  */
-const addMessage = (content, isuser, chatid) => {
+const addMessage = (content, isuser, chatid, iserror) => {
     if (isuser) {
         hideQuickActions();
     }
-    history.push({content: content, isUser: !!isuser, chatid: chatid});
-    saveHistory();
+    // Errors are shown once, where they happened; replaying "the service is down" on every page
+    // for the rest of the session would only mislead.
+    let turn = null;
+    if (!iserror) {
+        turn = {content: content, isUser: !!isuser, chatid: chatid};
+        history.push(turn);
+        saveHistory();
+    }
 
-    return appendMessage(content, isuser, chatid, false);
+    return appendMessage(content, isuser, chatid, false, iserror, turn);
 };
 
 /**
@@ -326,15 +535,51 @@ const restoreHistory = () => {
     history = stored;
     firstmessage = false;
     stored.forEach((message) => {
-        appendMessage(message.content, message.isUser, message.chatid, true);
+        if (message.isError) {
+            return;
+        }
+        appendMessage(message.content, message.isUser, message.chatid, true, false, message);
     });
     hideQuickActions();
 };
 
 /**
- * Show the "the tutor is composing an answer" bubble.
+ * Start a fresh conversation: forget the stored turns and bring the study tools back. The
+ * server-side tutor memory for the activity is deliberately left alone.
  *
- * @returns {Promise} Resolves once the bubble is in the DOM.
+ * @returns {void}
+ */
+const newConversation = () => {
+    if (loading) {
+        return;
+    }
+    history = [];
+    saveHistory();
+    firstmessage = true;
+    enqueue(() => {
+        const messages = getMessages();
+        if (messages) {
+            messages.querySelectorAll('.aicourse-ai-message').forEach((node) => {
+                if (node.id !== SELECTORS.welcome) {
+                    node.remove();
+                }
+            });
+            messages.scrollTop = 0;
+        }
+        showQuickActions();
+        const input = getInput();
+        if (input) {
+            input.focus();
+        }
+
+        return null;
+    });
+};
+
+/**
+ * Show the "the tutor is composing an answer" turn.
+ *
+ * @returns {Promise} Resolves once the turn is in the DOM.
  */
 const showLoading = () => enqueue(() => {
     const messages = getMessages();
@@ -353,9 +598,9 @@ const showLoading = () => enqueue(() => {
 });
 
 /**
- * Remove the "composing an answer" bubble.
+ * Remove the "composing an answer" turn.
  *
- * @returns {Promise} Resolves once the bubble is gone.
+ * @returns {Promise} Resolves once the turn is gone.
  */
 const hideLoading = () => enqueue(() => {
     const bubble = document.getElementById(SELECTORS.loading);
@@ -535,6 +780,82 @@ const updateQuizContext = () => {
 };
 
 /**
+ * Whether the learner last chose the Study view.
+ *
+ * @returns {Boolean} True for the Study view.
+ */
+const prefersExpanded = () => {
+    try {
+        return window.localStorage.getItem(VIEW_KEY) === 'expanded';
+    } catch (error) {
+        return false;
+    }
+};
+
+/**
+ * Whether the panel is showing the Study view.
+ *
+ * @returns {Boolean} True when expanded.
+ */
+const isExpanded = () => {
+    const panel = getPanel();
+    return !!panel && panel.getAttribute('data-view') === 'expanded';
+};
+
+/**
+ * Switch between the compact panel and the Study view.
+ *
+ * Only data-view changes; the conversation, focus and scroll position are untouched. The backdrop
+ * and the page scroll lock exist only while the Study view is open.
+ *
+ * @param {Boolean} expanded True for the Study view.
+ * @param {Boolean} remember True to remember the choice for the next time the tutor opens.
+ * @returns {void}
+ */
+const setView = (expanded, remember) => {
+    const panel = getPanel();
+    if (!panel) {
+        return;
+    }
+    const messages = getMessages();
+    let anchor = null;
+    let anchoroffset = 0;
+    if (messages && isOpen()) {
+        anchor = Array.prototype.find.call(messages.children,
+            (child) => child.offsetTop + child.offsetHeight > messages.scrollTop) || null;
+        anchoroffset = anchor ? anchor.offsetTop - messages.scrollTop : 0;
+    }
+    panel.setAttribute('data-view', expanded ? 'expanded' : 'compact');
+    // Only the Study view covers the page. The compact panel sits beside the course, so it is a
+    // non-modal dialog and Tab may leave it.
+    panel.setAttribute('aria-modal', expanded ? 'true' : 'false');
+    const showing = expanded && isOpen();
+    const backdrop = document.getElementById(SELECTORS.backdrop);
+    if (backdrop) {
+        backdrop.hidden = !showing;
+    }
+    document.documentElement.classList.toggle('aicourse-ai-locked', showing);
+    panel.querySelectorAll(SELECTORS.expand).forEach((button) => {
+        const label = button.getAttribute(expanded ? 'data-collapselabel' : 'data-expandlabel') || '';
+        button.setAttribute('aria-pressed', expanded ? 'true' : 'false');
+        button.setAttribute('aria-label', label);
+        button.setAttribute('title', label);
+    });
+    if (remember) {
+        try {
+            window.localStorage.setItem(VIEW_KEY, expanded ? 'expanded' : 'compact');
+        } catch (error) {
+            // Storage blocked: the choice simply is not remembered.
+        }
+    }
+    // Keep the turn the learner was reading in place: the column width changes, so a raw
+    // scrollTop would land somewhere else entirely.
+    if (anchor && messages) {
+        messages.scrollTop = Math.max(0, anchor.offsetTop - anchoroffset);
+    }
+};
+
+/**
  * Reflect the open state on every AI Tutor button in the hero banner.
  *
  * @param {Boolean} open True when the panel is open.
@@ -551,15 +872,21 @@ const updateButtonState = (open) => {
  * Open the panel and move focus into it.
  *
  * @param {Element|null} trigger The element that opened it, so focus can be restored later.
+ * @param {Boolean} [compact] True to open in the compact view whatever the saved preference.
  * @returns {void}
  */
-const openPanel = (trigger) => {
+const openPanel = (trigger, compact) => {
     const panel = getPanel();
     if (!panel) {
         return;
     }
     opener = trigger || document.activeElement;
     panel.style.display = 'flex';
+    // Lets the first-visit tour offer step aside instead of covering the composer.
+    document.body.classList.add('aicourse-ai-open');
+    // The first-visit introduction always uses the small panel: a full-screen overlay is not a
+    // fair surprise on someone's first look at a new course.
+    setView(compact ? false : prefersExpanded(), false);
     updateButtonState(true);
     const input = getInput();
     if (input) {
@@ -582,11 +909,33 @@ const closePanel = () => {
         return;
     }
     panel.style.display = 'none';
+    document.body.classList.remove('aicourse-ai-open');
+    const backdrop = document.getElementById(SELECTORS.backdrop);
+    if (backdrop) {
+        backdrop.hidden = true;
+    }
+    document.documentElement.classList.remove('aicourse-ai-locked');
     updateButtonState(false);
     if (opener && opener.nodeType === 1 && document.contains(opener)) {
         opener.focus();
     }
     opener = null;
+};
+
+/**
+ * Mark the panel busy while an answer is in flight, so controls that would send another question
+ * (follow-ups, study tools, unkeyed quiz options, New conversation) look and act unavailable
+ * instead of silently doing nothing.
+ *
+ * @param {Boolean} busy True while waiting for an answer.
+ * @returns {void}
+ */
+const setBusy = (busy) => {
+    loading = busy;
+    const panel = getPanel();
+    if (panel) {
+        panel.classList.toggle('aicourse-ai-busy', busy);
+    }
 };
 
 /**
@@ -608,7 +957,7 @@ const sendMessage = () => {
     addMessage(question, true);
     input.value = '';
     input.style.height = 'auto';
-    loading = true;
+    setBusy(true);
     showLoading();
 
     const params = {
@@ -634,7 +983,7 @@ const sendMessage = () => {
 
     callExternal('ai_chat', params).then((data) => {
         hideLoading();
-        loading = false;
+        setBusy(false);
         addMessage(data.answer, false, data.chatid);
 
         return data;
@@ -643,16 +992,292 @@ const sendMessage = () => {
         // refused. Say so inside the conversation, where the learner is looking, instead of
         // throwing at the console. Moodle exceptions carry a translated .message.
         hideLoading();
-        loading = false;
-        addMessage((error && error.message) || strings.error, false);
+        setBusy(false);
+        addMessage((error && error.message) || strings.error, false, null, true);
 
         return null;
     });
 };
 
 /**
+ * Send a prepared question as though the learner had typed it.
+ *
+ * @param {String} text The question.
+ * @returns {Boolean} False when nothing was sent because an answer is still in flight.
+ */
+const sendText = (text) => {
+    const input = getInput();
+    if (!input || loading || !text) {
+        return false;
+    }
+    input.value = text;
+    sendMessage();
+    return true;
+};
+
+/**
+ * Make a follow-up button for a quiz card.
+ *
+ * @param {String} label Visible label.
+ * @param {String} prompt The question it sends.
+ * @param {Boolean} primary True for the emphasised button.
+ * @returns {Element} The button.
+ */
+const makeFollowup = (label, prompt, primary) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'aicourse-ai-followup' + (primary ? ' is-primary' : '');
+    button.setAttribute('data-followup', prompt);
+    button.textContent = label;
+    return button;
+};
+
+/**
+ * Show the running score once every question in a set has been answered.
+ *
+ * @param {Element|null} set The .aicourse-ai-quizset.
+ * @returns {void}
+ */
+const updateScore = (set) => {
+    if (!set) {
+        return;
+    }
+    const cards = set.querySelectorAll('.aicourse-ai-quiz');
+    const score = set.querySelector('.aicourse-ai-quizset-score');
+    if (!score || cards.length < 2) {
+        return;
+    }
+    let answered = 0;
+    let right = 0;
+    cards.forEach((card) => {
+        const state = card.getAttribute('data-state');
+        if (state === 'correct' || state === 'incorrect') {
+            answered++;
+        }
+        if (state === 'correct') {
+            right++;
+        }
+    });
+    if (answered < cards.length) {
+        return;
+    }
+    score.textContent = fmt('quizscore', {score: right, total: cards.length});
+    score.setAttribute('data-perfect', right === cards.length ? 'true' : 'false');
+    score.hidden = false;
+};
+
+/**
+ * Move focus to a quiz card's feedback. The option the learner pressed has just been disabled,
+ * which would otherwise drop focus to the page body and send the next Tab back to the top.
+ *
+ * @param {Element} feedback The .aicourse-ai-quiz-feedback element.
+ * @returns {void}
+ */
+const focusFeedback = (feedback) => {
+    feedback.setAttribute('tabindex', '-1');
+    feedback.focus({preventScroll: true});
+};
+
+/**
+ * Put a practice question card into its answered state.
+ *
+ * Used when the learner answers, and silently when a stored conversation is replayed, so a card
+ * answered on one page is still answered on the next.
+ *
+ * @param {Element} card The .aicourse-ai-quiz card.
+ * @param {Number} chosen Index of the option chosen.
+ * @param {Boolean} silent True when replaying: no focus move, no message sent.
+ * @returns {void}
+ */
+const markQuiz = (card, chosen, silent) => {
+    const answer = parseInt(card.getAttribute('data-answer'), 10);
+    const options = card.querySelectorAll(SELECTORS.quizoption);
+    const button = options[chosen];
+    if (!button) {
+        return;
+    }
+    const optiontext = (index) => {
+        const text = options[index] && options[index].querySelector('.aicourse-ai-quiz-text');
+        return text ? text.textContent.trim() : '';
+    };
+    const questionnode = card.querySelector('.aicourse-ai-quiz-question');
+    const question = truncate(plainText(questionnode ? questionnode.textContent : ''), 180);
+
+    options.forEach((option) => {
+        option.disabled = true;
+    });
+    button.classList.add('is-chosen');
+    button.setAttribute('aria-pressed', 'true');
+
+    const feedback = card.querySelector('.aicourse-ai-quiz-feedback');
+    const verdict = card.querySelector('.aicourse-ai-quiz-verdict');
+    const actions = card.querySelector('.aicourse-ai-quiz-actions');
+    const hintwrap = card.querySelector('.aicourse-ai-quiz-hintwrap');
+    if (hintwrap) {
+        hintwrap.hidden = true;
+    }
+
+    if (isNaN(answer) || answer < 0 || answer >= options.length) {
+        card.setAttribute('data-state', 'sent');
+        verdict.textContent = strings.quizsent;
+        feedback.hidden = false;
+        if (!silent) {
+            focusFeedback(feedback);
+            sendText(fmt('quizchoose', {question: question, letter: LETTERS[chosen], option: optiontext(chosen)}));
+        }
+        return;
+    }
+
+    const correct = chosen === answer;
+    card.setAttribute('data-state', correct ? 'correct' : 'incorrect');
+    options[answer].classList.add('is-answer');
+    if (!correct) {
+        button.classList.add('is-wrong');
+    }
+    verdict.textContent = correct ? strings.quizcorrect : fmt('quizincorrect', {answer: LETTERS[answer]});
+    while (actions.firstChild) {
+        actions.removeChild(actions.firstChild);
+    }
+    actions.appendChild(makeFollowup(strings.quizexplain, fmt('quizexplainprompt', {
+        question: question,
+        letter: LETTERS[answer],
+        option: optiontext(answer),
+    }), false));
+    const set = card.closest('.aicourse-ai-quizset');
+    const cards = set ? set.querySelectorAll('.aicourse-ai-quiz') : [];
+    if (!cards.length || cards[cards.length - 1] === card) {
+        actions.appendChild(makeFollowup(strings.quizanother, strings.quizanotherprompt, true));
+    }
+    feedback.hidden = false;
+    if (!silent) {
+        focusFeedback(feedback);
+    }
+    updateScore(set);
+};
+
+/**
+ * The learner picked an option on a practice question.
+ *
+ * When the tutor supplied the answer (a fenced "quiz" block, or "Answer: B" after plain-text
+ * options) the card marks itself and reveals the explanation at once. When it did not, the choice
+ * is sent to the tutor as the next message so the tutor can mark it. Either way the choice is kept
+ * in the stored conversation.
+ *
+ * @param {Element} button The option pressed.
+ * @returns {void}
+ */
+const answerQuiz = (button) => {
+    const card = button.closest('.aicourse-ai-quiz');
+    if (!card || card.getAttribute('data-state') !== 'open') {
+        return;
+    }
+    const answer = parseInt(card.getAttribute('data-answer'), 10);
+    if (answer < 0 && loading) {
+        return;
+    }
+    const chosen = parseInt(button.getAttribute('data-index'), 10);
+    rememberInTurn(card, (turn, bubble) => {
+        const index = Array.prototype.indexOf.call(bubble.querySelectorAll('.aicourse-ai-quiz'), card);
+        turn.quiz = turn.quiz || {};
+        turn.quiz[index] = chosen;
+    });
+    markQuiz(card, chosen, false);
+};
+
+/**
+ * Record something the learner did inside a tutor answer on that answer's stored turn.
+ *
+ * @param {Element} element An element inside the answer.
+ * @param {Function} change Called with (turn, bubble) to update the stored turn.
+ * @returns {void}
+ */
+const rememberInTurn = (element, change) => {
+    const bubble = element.closest('.aicourse-ai-message');
+    const turn = bubble ? turnOf.get(bubble) : null;
+    if (!turn) {
+        return;
+    }
+    change(turn, bubble);
+    saveHistory();
+};
+
+/**
+ * Replay what the learner had done inside a stored answer: answered questions, ticked boxes.
+ *
+ * @param {Element} bubble The answer's .aicourse-ai-message.
+ * @param {Object} turn The stored turn.
+ * @returns {void}
+ */
+const replayTurnState = (bubble, turn) => {
+    if (turn.quiz && typeof turn.quiz === 'object') {
+        const cards = bubble.querySelectorAll('.aicourse-ai-quiz');
+        Object.keys(turn.quiz).forEach((index) => {
+            const card = cards[parseInt(index, 10)];
+            const chosen = parseInt(turn.quiz[index], 10);
+            if (card && !isNaN(chosen)) {
+                markQuiz(card, chosen, true);
+            }
+        });
+    }
+    if (Array.isArray(turn.checks)) {
+        const boxes = bubble.querySelectorAll(SELECTORS.checkbox);
+        turn.checks.forEach((checked, index) => {
+            if (boxes[index]) {
+                boxes[index].checked = !!checked;
+            }
+        });
+        bubble.querySelectorAll('.aicourse-ai-checklist').forEach(updateChecklist);
+    }
+};
+
+/**
+ * Copy a tutor answer's original text.
+ *
+ * @param {Element} button The copy button.
+ * @returns {void}
+ */
+const copyAnswer = (button) => {
+    const bubble = button.closest('.aicourse-ai-message');
+    const content = bubble && bubble.querySelector('.aicourse-ai-message-content');
+    const text = (bubble && rawText.get(bubble)) || (content ? content.innerText : '');
+    const label = button.querySelector('.aicourse-ai-copy-text');
+    const done = () => {
+        button.classList.add('is-copied');
+        if (label) {
+            label.textContent = strings.copied;
+        }
+        window.setTimeout(() => {
+            button.classList.remove('is-copied');
+            if (label) {
+                label.textContent = strings.copy;
+            }
+        }, 1800);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done).catch(() => null);
+        return;
+    }
+    const scratch = document.createElement('textarea');
+    scratch.value = text;
+    scratch.setAttribute('readonly', '');
+    scratch.style.position = 'fixed';
+    scratch.style.opacity = '0';
+    document.body.appendChild(scratch);
+    scratch.select();
+    try {
+        if (document.execCommand('copy')) {
+            done();
+        }
+    } catch (error) {
+        // Clipboard unavailable; nothing else to do.
+    }
+    scratch.remove();
+    button.focus();
+};
+
+/**
  * Handle a click anywhere in the page. Delegation is required because the panel is injected into
- * the page after load on activity and section pages.
+ * the page after load on activity and section pages, and answers are added after that.
  *
  * @param {Event} event The click event.
  * @returns {void}
@@ -663,11 +1288,9 @@ const handleClick = (event) => {
         return;
     }
 
-    const closeTarget = target.closest(SELECTORS.close);
-    if (closeTarget) {
+    if (target.closest(SELECTORS.close)) {
         event.preventDefault();
         closePanel();
-
         return;
     }
 
@@ -679,15 +1302,30 @@ const handleClick = (event) => {
         } else {
             openPanel(toggleTarget);
         }
-
         return;
     }
 
-    const sendTarget = target.closest(SELECTORS.sendbtn);
-    if (sendTarget) {
+    if (target.id === SELECTORS.backdrop) {
+        event.preventDefault();
+        setView(false, true);
+        return;
+    }
+
+    if (target.closest(SELECTORS.expand)) {
+        event.preventDefault();
+        setView(!isExpanded(), true);
+        return;
+    }
+
+    if (target.closest(SELECTORS.newchat)) {
+        event.preventDefault();
+        newConversation();
+        return;
+    }
+
+    if (target.closest(SELECTORS.sendbtn)) {
         event.preventDefault();
         sendMessage();
-
         return;
     }
 
@@ -696,12 +1334,44 @@ const handleClick = (event) => {
         event.preventDefault();
         const key = quickTarget.getAttribute('data-prompt');
         const prompt = key ? strings['prompt' + key] : '';
-        const input = getInput();
-        if (prompt && input) {
-            input.value = prompt.replace('{activity}', config.activityname || strings.thisactivity);
-            sendMessage();
+        if (prompt) {
+            // A function replacement, so "$&" or "$1" in an activity name is not interpreted.
+            const activity = config.activityname || strings.thisactivity;
+            sendText(prompt.replace('{activity}', () => activity));
         }
+        return;
+    }
 
+    const optionTarget = target.closest(SELECTORS.quizoption);
+    if (optionTarget) {
+        event.preventDefault();
+        answerQuiz(optionTarget);
+        return;
+    }
+
+    const hintTarget = target.closest(SELECTORS.quizhint);
+    if (hintTarget) {
+        event.preventDefault();
+        const hint = hintTarget.parentNode.querySelector('.aicourse-ai-quiz-hint');
+        const open = hintTarget.getAttribute('aria-expanded') === 'true';
+        hintTarget.setAttribute('aria-expanded', open ? 'false' : 'true');
+        if (hint) {
+            hint.hidden = open;
+        }
+        return;
+    }
+
+    const followTarget = target.closest(SELECTORS.followup);
+    if (followTarget) {
+        event.preventDefault();
+        sendText(followTarget.getAttribute('data-followup'));
+        return;
+    }
+
+    const copyTarget = target.closest(SELECTORS.copybtn);
+    if (copyTarget) {
+        event.preventDefault();
+        copyAnswer(copyTarget);
         return;
     }
 
@@ -754,12 +1424,20 @@ const handleDialogKeys = (event) => {
 
     if (event.key === 'Escape' || event.keyCode === 27) {
         event.preventDefault();
+        // Escape steps out of the Study view first, then closes, as full-screen views do.
+        if (isExpanded()) {
+            setView(false, true);
+            return;
+        }
         closePanel();
 
         return;
     }
 
     if (event.key !== 'Tab' && event.keyCode !== 9) {
+        return;
+    }
+    if (!isExpanded()) {
         return;
     }
 
@@ -801,10 +1479,19 @@ const registerInputHandlers = () => {
         }
     });
 
+    document.addEventListener('change', (event) => {
+        if (event.target && event.target.matches && event.target.matches(SELECTORS.checkbox)) {
+            updateChecklist(event.target.closest('.aicourse-ai-checklist'));
+            rememberInTurn(event.target, (turn, bubble) => {
+                turn.checks = Array.prototype.map.call(bubble.querySelectorAll(SELECTORS.checkbox), (box) => box.checked);
+            });
+        }
+    });
+
     document.addEventListener('input', (event) => {
         if (event.target && event.target.id === SELECTORS.input) {
             event.target.style.height = 'auto';
-            event.target.style.height = Math.min(event.target.scrollHeight, 100) + 'px';
+            event.target.style.height = Math.min(event.target.scrollHeight, 180) + 'px';
         }
     });
 };
@@ -861,10 +1548,16 @@ const whenPanelReady = (callback, attempts) => {
  */
 const loadStrings = () => {
     const aliases = Object.keys(STRING_IDS);
-    const request = aliases.map((alias) => ({key: STRING_IDS[alias], component: 'format_aicourse'}));
+    const paramaliases = Object.keys(PARAM_STRING_IDS);
+    const request = aliases.map((alias) => ({key: STRING_IDS[alias], component: 'format_aicourse'}))
+        .concat(paramaliases.map((alias) => ({
+            key: PARAM_STRING_IDS[alias][0],
+            component: 'format_aicourse',
+            param: PARAM_STRING_IDS[alias][1],
+        })));
 
     return getStrings(request).then((values) => {
-        aliases.forEach((alias, index) => {
+        aliases.concat(paramaliases).forEach((alias, index) => {
             strings[alias] = values[index];
         });
 
@@ -938,7 +1631,7 @@ export const init = (initconfig) => {
                 return;
             }
             const toggle = document.querySelector(SELECTORS.toggle);
-            openPanel(toggle);
+            openPanel(toggle, true);
             Ajax.call([{
                 methodname: 'core_user_update_user_preferences',
                 args: {

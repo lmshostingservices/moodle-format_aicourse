@@ -376,7 +376,10 @@ class player {
             unset($e);
         }
 
-        if (empty($PAGE->theme)) {
+        // 3.2.0: was empty($PAGE->theme), which is always true because moodle_page has no
+        // __isset(), so this theme-logo fallback never ran.
+        $theme = $PAGE->theme;
+        if (!$theme) {
             return '';
         }
 

@@ -41,6 +41,7 @@ require_once($CFG->dirroot . '/course/format/aicourse/tests/external/external_te
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \format_aicourse\external\get_progress
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse\external\get_progress::class)]
 final class get_progress_test extends external_testcase {
     /**
      * A learner gets their own progress figures back.

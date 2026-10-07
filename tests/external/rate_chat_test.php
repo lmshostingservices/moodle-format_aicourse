@@ -41,6 +41,7 @@ require_once($CFG->dirroot . '/course/format/aicourse/tests/external/external_te
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \format_aicourse\external\rate_chat
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse\external\rate_chat::class)]
 final class rate_chat_test extends external_testcase {
     /**
      * Store one chat row.

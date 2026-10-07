@@ -141,8 +141,10 @@ class cardmedia {
         );
         foreach ($rows as $row) {
             $state = json_decode((string) $row->value, true);
-            if (!is_array($state) || !in_array($state['state'] ?? '', ['queued', 'running'], true)
-                    || (int) ($state['time'] ?? 0) < time() - 600) {
+            if (
+                !is_array($state) || !in_array($state['state'] ?? '', ['queued', 'running'], true)
+                    || (int) ($state['time'] ?? 0) < time() - 600
+            ) {
                 continue;
             }
             if (preg_match('/_(s|c)(\d+)$/', $row->name, $m)) {

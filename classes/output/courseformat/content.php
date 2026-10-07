@@ -494,7 +494,6 @@ class content extends topics_content implements named_templatable, renderable {
             }
         }
 
-
         if ($this->show_activities_on_cards()) {
             $this->export_card_activities($card, $course, $section, $plainname, $progressdata, $sectionurl);
         }

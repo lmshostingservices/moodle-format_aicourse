@@ -2,6 +2,86 @@
 
 All notable changes to this plugin will be documented in this file.
 
+## [3.2.1] - 2026-10-07
+
+No database changes. Learners and teachers see no difference from 3.2.0.
+
+### Compatibility and quality
+
+- The plugin's automated tests no longer use course functions that Moodle 5.2 deprecated
+  (`course_delete_module`, `duplicate_module`, `set_section_visible`). They use the new course
+  format actions where Moodle provides them and the older functions on Moodle 4.4 to 5.1.
+- Test classes declare what they cover with PHPUnit attributes as well as `@covers` tags, so the
+  suite runs without deprecation notices on PHPUnit 11 (Moodle 5.x) and is unchanged on PHPUnit 9.
+- The whole plugin passes Moodle's code checker (`moodle-extra`) with no errors or warnings.
+- The course index focus reads the section from the page URL that Moodle has already built and
+  checked, rather than from the request. Its tests no longer write to `$_GET`, so nothing in the
+  plugin, tests included, touches a request superglobal.
+- Multi-line calls that continued an argument onto the next line now open with the first
+  argument on its own line.
+- Known core issue, not caused by this plugin: with developer debugging on, an administrator's
+  browser console may show "Reactive components needs a main DOM element to dispatch events" on
+  any page. Boost prints the page's JavaScript before its own debug panel, so the panel's script
+  can run before the panel exists. It appears only with developer debugging on.
+
+## [3.2.0] - 2026-10-07
+
+### Improved - AI Tutor answers and Study view
+
+- **Answers are formatted.** The tutor used to show every answer as one block of plain text, so a
+  multiple-choice question arrived as a single run-on paragraph with Markdown symbols showing.
+  Answers now show headings, numbered steps, bullet lists, tables, code and tip / key idea /
+  warning / example boxes. Answer text is still never treated as HTML.
+- **Practice questions are interactive cards.** The learner picks an option and sees straight
+  away whether it is right, with the explanation, an optional hint, "Explain this" and "Another
+  question". A set of questions ends with a score. Plain-text questions ("A) ... B) ...") become
+  cards too, including a question written on a single line; when the tutor gave no answer key, the
+  learner's choice is sent to the tutor to mark. Lettered lists, role-play transcripts and
+  explanations that are not questions stay ordinary formatted text. If an answer is cut off part
+  way through a set of questions, the complete questions still appear with a short note.
+- **Checklists have tick boxes** and a progress bar.
+- **Answers keep their state.** A practice question the learner has answered, and the boxes they
+  have ticked, stay that way when they reload the page or move to another page of the course.
+- **Study view.** A new header button opens the tutor as a large panel over the course (full
+  screen on phones), with the learner's current activity or section, the study tools and an
+  academic-integrity note beside a wide, card-based conversation. Escape returns to the small
+  panel; the choice is remembered.
+- **Smaller panel improvements.** Larger panel, Copy on every answer, "New conversation", study
+  tools as chips above the composer once a conversation has started, clearer thumbs up / down.
+- **The tutor is told how to format answers.** The request now carries Markdown and practice
+  question rules, and a `responseFormat` field. Practice questions must be newly written, never
+  taken from the course's own assessments. "Practice questions" now asks for three questions.
+  The LMS Labs service needs a matching update (see the 3.2.0 handover).
+
+### Improved - AI Tutor reports
+
+- **Readable answers in the course AI report and the site-wide admin report.** The tables used to
+  show the first 300 characters of the raw answer, which for a practice question was mostly code.
+  They now show a plain-language preview (practice questions are summarised, for example
+  "[Practice questions: 3]"), and "Show full answer" displays the answer exactly as the learner
+  saw it, with each practice question showing its correct answer and explanation.
+
+### Improved - course index follows the learner
+
+- **Moving to another section collapses the one you left.** On a section page or an activity
+  page, the course index now collapses every other section and opens the current one (and, for
+  a subsection, its parent). It uses Moodle's own collapse, so the state is saved like a manual
+  click. It works however the learner moves on: the course index, the banner arrows, an activity
+  link or the browser's back button. A section the learner opens by hand stays open until they
+  move on. Edit mode is left alone, so teachers can keep several sections open while arranging
+  them, and so are pages where the index is hidden.
+
+### Compatibility
+
+- Tested on Moodle 4.4 and Moodle 5.2, including Moodle 5 subsections: opening an activity inside
+  a subsection keeps both the subsection and its parent section open in the course index.
+
+### Fixed
+
+- **The sidebar logo fallback for themes that keep their logo in a theme setting (such as
+  Academi) never ran.** A check on the page's theme always reported "no theme". It now runs, so
+  those themes' logos can appear where they were always meant to.
+
 ## [3.1.0] - 2026-10-06
 
 ### Improved - richer AI card and banner images

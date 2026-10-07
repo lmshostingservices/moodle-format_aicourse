@@ -41,6 +41,7 @@ require_once($CFG->dirroot . '/course/format/aicourse/tests/external/external_te
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \format_aicourse\external\add_section
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse\external\add_section::class)]
 final class add_section_test extends external_testcase {
     /**
      * A new section is appended after the last existing one, never at slot 0.

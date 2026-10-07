@@ -42,6 +42,7 @@ require_once($CFG->dirroot . '/course/format/aicourse/tests/external/external_te
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \format_aicourse\external\generate_banner_image
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse\external\generate_banner_image::class)]
 final class generate_banner_image_test extends external_testcase {
     /**
      * A student cannot spend the course's image credits.

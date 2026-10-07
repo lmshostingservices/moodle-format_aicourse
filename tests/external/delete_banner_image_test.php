@@ -42,6 +42,7 @@ require_once($CFG->dirroot . '/course/format/aicourse/tests/external/external_te
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \format_aicourse\external\delete_banner_image
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse\external\delete_banner_image::class)]
 final class delete_banner_image_test extends external_testcase {
     /**
      * Put one file in the course's banner file area.

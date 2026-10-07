@@ -37,6 +37,7 @@ namespace format_aicourse\local;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \format_aicourse\local\contentindex
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse\local\contentindex::class)]
 final class contentindex_test extends \advanced_testcase {
     /**
      * Empty the in-request index cache before every test.

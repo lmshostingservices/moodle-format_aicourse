@@ -17,26 +17,23 @@
 {{!
     @template format_aicourse/chatbox_loading
 
-    The "the tutor is composing an answer" bubble in the AI Tutor conversation. Rendered
+    The "the tutor is composing an answer" turn in the AI Tutor conversation. Rendered
     client-side by format_aicourse/chatbox while a question is in flight and removed again when
     the answer (or an error) arrives.
 
-    The animated dots are purely decorative and are hidden from assistive technology; a visually
-    hidden role="status" text carries the same information to screen-reader users. The message
-    list itself is switched to aria-busy="true" for the duration by format_aicourse/chatbox.
+    The animated dots are purely decorative and are hidden from assistive technology; the
+    role="status" text carries the same information to screen-reader users and is also shown.
+    The message list itself is switched to aria-busy="true" for the duration.
 
     Classes required for JS:
-    * aicourse-ai-loading - marks this bubble as the transient loading state.
-
-    Data attributes required for JS:
-    * None. The bubble is located by its id, aicourse-ai-loading.
+    * aicourse-ai-loading - marks this turn as the transient loading state.
 
     Context variables required for this template:
-    * thinkinglabel string The visually hidden status text, e.g. "Thinking…".
+    * thinkinglabel string The status text, e.g. "Thinking…".
 
     Example context (json):
     {
         "thinkinglabel": "Thinking…"
     }
 }}
-<div class="aicourse-ai-message aicourse-ai-message-bot aicourse-ai-loading" id="aicourse-ai-loading"><div class="aicourse-ai-message-content"><span class="aicourse-ai-dots" aria-hidden="true"><span></span><span></span><span></span></span></div><span class="accesshide" role="status">{{thinkinglabel}}</span></div>
+<div class="aicourse-ai-message aicourse-ai-message-bot aicourse-ai-loading" id="aicourse-ai-loading"><span class="aicourse-ai-avatar aicourse-ai-avatar-pulse" aria-hidden="true"><svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2M20 14h2M15 13v2M9 13v2"/></svg></span><div class="aicourse-ai-message-body"><div class="aicourse-ai-message-content"><span class="aicourse-ai-dots" aria-hidden="true"><span></span><span></span><span></span></span><span class="aicourse-ai-thinking" role="status">{{thinkinglabel}}</span></div></div></div>

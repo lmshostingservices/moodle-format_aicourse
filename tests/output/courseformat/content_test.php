@@ -50,6 +50,7 @@ use stdClass;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \format_aicourse\output\courseformat\content
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse\output\courseformat\content::class)]
 final class content_test extends \advanced_testcase {
     /**
      * Export the card context for one section of a course.

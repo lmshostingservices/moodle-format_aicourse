@@ -13,6 +13,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
 /**
  * Tests for the card image and card colour external functions (2.5.0).
  *
@@ -51,6 +52,13 @@ require_once($CFG->dirroot . '/course/format/aicourse/tests/local/cardimage_test
  * @covers     \format_aicourse\external\generate_all_card_images
  * @covers     \format_aicourse\task\generate_card_image
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse\external\upload_card_image::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse\external\delete_card_image::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse\external\set_card_colour::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse\external\generate_card_image::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse\external\get_card_image_status::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse\external\generate_all_card_images::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse\task\generate_card_image::class)]
 final class card_image_test extends external_testcase {
     /** @var \stdClass A page in section 1. */
     private $page;
@@ -165,9 +173,11 @@ final class card_image_test extends external_testcase {
     public function test_delete_reports_what_the_card_shows_now(): void {
         $this->setUser($this->teacher);
         $this->call_function('format_aicourse_upload_card_image', $this->upload_args('section', (int) $this->section->id));
-        get_file_storage()->create_file_from_string(['contextid' => $this->context->id, 'component' => 'format_aicourse',
+        get_file_storage()->create_file_from_string(
+            ['contextid' => $this->context->id, 'component' => 'format_aicourse',
             'filearea' => 'sectionbannerimage', 'itemid' => (int) $this->section->id, 'filepath' => '/', 'filename' => 'b.png'],
-            cardimage_test::png());
+            cardimage_test::png()
+        );
 
         $result = $this->call_function(
             'format_aicourse_delete_card_image',

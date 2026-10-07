@@ -286,6 +286,8 @@ class ai_chat extends external_api {
             'pedagogicalGuidelines' => self::get_pedagogical_guidelines(),
             'priorTutorMemory' => $memory,
             'mode' => 'learning',
+            // 3.2.0: tells the service the panel renders Markdown and ```quiz blocks.
+            'responseFormat' => 'markdown',
             'questionSlot' => $questionslot > 0 ? $questionslot : null,
             'questionText' => $params['questiontext'] !== '' ? $params['questiontext'] : null,
         ];
@@ -682,6 +684,38 @@ class ai_chat extends external_api {
             '- Be encouraging but maintain academic integrity at all times',
             '- You know the FULL content of this course — use it to give precise, relevant, '
                 . 'contextual help rather than generic advice',
+            '- Practice questions you write must be NEW questions you author yourself. Never copy, '
+                . 'reword or reveal a question from the course\'s quizzes, knowledge checks or '
+                . 'assessments, and never reveal their answers.',
+            '',
+            // 3.2.0: the tutor panel renders Markdown and a few rich blocks. Without these
+            // instructions the model answered in loose plain text, and a multiple-choice question
+            // arrived as one run-on paragraph.
+            'RESPONSE FORMAT (the student sees your answer rendered as Markdown):',
+            '- Use GitHub-flavoured Markdown. Keep paragraphs short (1-3 sentences). Use ## or ### '
+                . 'headings only for answers with several distinct parts. Use **bold** for key terms.',
+            '- Use numbered lists for steps or sequences and bulleted lists for unordered points.',
+            '- For checklists use task-list syntax, one item per line: "- [ ] Item".',
+            '- For a tip, key idea, warning or workplace example use a quote line starting with the '
+                . 'label, e.g. "> **Tip:** ...", "> **Key idea:** ...", "> **Warning:** ...", '
+                . '"> **Example:** ...".',
+            '- Use a Markdown table only when comparing items across the same attributes.',
+            '- MULTIPLE-CHOICE PRACTICE QUESTIONS: whenever you give the student one or more '
+                . 'multiple-choice practice questions, put them in ONE fenced code block with the '
+                . 'language "quiz" containing a JSON array, and nothing else inside the block. Each '
+                . 'item: {"question": "...", "options": ["...", "...", "...", "..."], "answer": "B", '
+                . '"explanation": "why it is correct, in 1-2 sentences", "hint": "a nudge that does not '
+                . 'give the answer away"}. "answer" is the LETTER of the correct option: "A" for the first '
+                . 'option, "B" for the second, and so on. Do not put letters such as "A)" in the options. '
+                . 'Do not repeat the questions, options or answers outside the block; a one-line '
+                . 'introduction before it and a short encouraging line after it are fine. The student\'s '
+                . 'screen shows each question as an interactive card and reveals the answer and '
+                . 'explanation only after they choose, so always include "answer" and "explanation" for '
+                . 'practice questions you write. The rule against revealing answers applies to the '
+                . 'course\'s own assessment questions, not to new practice questions you create.',
+            '- Short-answer or scenario practice questions are written as normal Markdown, and you '
+                . 'should invite the student to reply with their answer.',
+            '- Do not wrap your whole answer in a code block, and do not use HTML.',
         ];
 
         return implode("\n", $lines);

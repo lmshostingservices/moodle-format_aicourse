@@ -520,9 +520,12 @@ class cardprompt {
      */
     private static function general_scene(string $topic, string $coursetopic, bool $school): string {
         $within = $topic === $coursetopic ? '' : ' (part of ' . $coursetopic . ')';
-        return self::people('{one} actively engaged in ' . $topic . $within . ' in a realistic, modern '
-            . 'setting that clearly belongs to this subject, surrounded by the tools, materials and details someone '
-            . 'working on it would really use; focused, capable and absorbed in the task', $school);
+        return self::people(
+            '{one} actively engaged in ' . $topic . $within . ' in a realistic, modern '
+                . 'setting that clearly belongs to this subject, surrounded by the tools, materials and details someone '
+                . 'working on it would really use; focused, capable and absorbed in the task',
+            $school
+        );
     }
 
     /**
@@ -533,9 +536,12 @@ class cardprompt {
      * @return string
      */
     private static function general_course_scene(string $coursetopic, bool $school): string {
-        return self::people('{many} putting what they learn in ' . $coursetopic . ' into practice in a '
-            . 'realistic, modern setting that clearly belongs to this field, with the tools, equipment and details '
-            . 'of the subject around them, one of them in the foreground engaged and confident', $school);
+        return self::people(
+            '{many} putting what they learn in ' . $coursetopic . ' into practice in a '
+                . 'realistic, modern setting that clearly belongs to this field, with the tools, equipment and details '
+                . 'of the subject around them, one of them in the foreground engaged and confident',
+            $school
+        );
     }
 
     /**

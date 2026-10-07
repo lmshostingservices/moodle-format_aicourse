@@ -103,9 +103,61 @@ class chatbox implements named_templatable, renderable {
         $data->inputlabel = get_string('aiassistant_input_label', 'format_aicourse');
         $data->placeholder = get_string('aiassistant_placeholder', 'format_aicourse');
         $data->sendlabel = get_string('aiassistant_send', 'format_aicourse');
-        $data->welcome = $this->get_welcome_message($this->resolve_activity_context());
+        $activity = $this->resolve_activity_context();
+        $data->welcome = $this->get_welcome_message($activity);
+
+        // 3.2.0: the Study view's rail shows what the learner is studying and the study tools.
+        $course = $this->get_course();
+        // These go through a double mustache, which escapes them, so they must be PLAIN text.
+        // format_string() returns already-escaped HTML: "Health & Safety" would otherwise show as
+        // "Health &amp; Safety".
+        $coursecontext = \context_course::instance($course->id);
+        $coursename = self::plain(format_string($course->fullname, true, ['context' => $coursecontext]));
+        if ($activity->activityname !== '') {
+            $data->contextkind = get_string('aiassistant_context_activity', 'format_aicourse');
+            $data->contexttitle = self::plain($activity->activityname);
+            $data->coursename = $coursename;
+        } else if ($activity->sectionname !== '') {
+            $data->contextkind = get_string('aiassistant_context_section', 'format_aicourse');
+            $data->contexttitle = self::plain($activity->sectionname);
+            $data->coursename = $coursename;
+        } else {
+            $data->contextkind = get_string('aiassistant_context_course', 'format_aicourse');
+            $data->contexttitle = $coursename;
+            $data->coursename = '';
+        }
+        $data->tools = self::get_tools();
 
         return $data;
+    }
+
+    /**
+     * Turn format_string() output into plain text for a context that escapes it again.
+     *
+     * @param string $html Filtered, escaped HTML from format_string().
+     * @return string Plain text.
+     */
+    protected static function plain(string $html): string {
+        return html_entity_decode(strip_tags($html), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    }
+
+    /**
+     * The study tools offered as quick actions: in the welcome grid, the Study view rail and the
+     * suggestion chips above the composer.
+     *
+     * @return array Template context for each tool.
+     */
+    protected static function get_tools(): array {
+        $tools = [];
+        foreach (['practice', 'concepts', 'structure', 'workplace', 'checklist'] as $key) {
+            $tools[] = [
+                'key' => $key,
+                'label' => get_string('aiassistant_quick_' . $key, 'format_aicourse'),
+                'desc' => get_string('aiassistant_quick_' . $key . '_desc', 'format_aicourse'),
+                'is' . $key => true,
+            ];
+        }
+        return $tools;
     }
 
     /**
@@ -187,7 +239,8 @@ class chatbox implements named_templatable, renderable {
             'sesskey' => sesskey(),
             'endpoint' => $endpoint->out(false),
             'activityid' => $context->activityid,
-            'activityname' => $context->activityname,
+            // Plain text: it is substituted into the question the learner sends.
+            'activityname' => self::plain($context->activityname),
             'activitytype' => $context->activitytype,
             'sectionid' => $context->sectionid,
             'contextaware' => in_array($context->activitytype, self::CONTEXT_AWARE_MODULES, true),

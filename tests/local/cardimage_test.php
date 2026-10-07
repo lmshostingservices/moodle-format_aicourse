@@ -13,6 +13,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
 namespace format_aicourse\local;
 
 defined('MOODLE_INTERNAL') || die();
@@ -34,6 +35,10 @@ require_once($CFG->dirroot . '/backup/util/includes/restore_includes.php');
  * @covers     \backup_format_aicourse_plugin
  * @covers     \restore_format_aicourse_plugin
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse\local\cardimage::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse\observer::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\backup_format_aicourse_plugin::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\restore_format_aicourse_plugin::class)]
 final class cardimage_test extends \advanced_testcase {
     /**
      * A real, tiny PNG.
@@ -91,7 +96,13 @@ final class cardimage_test extends \advanced_testcase {
         cardimage::store((int) $course->id, 'section', (int) $s1->id, self::png(1));
         cardimage::store((int) $course->id, 'section', (int) $s1->id, self::png(2));
         $files = get_file_storage()->get_area_files(
-            \context_course::instance($course->id)->id, 'format_aicourse', 'sectioncardimage', (int) $s1->id, 'id', false);
+            \context_course::instance($course->id)->id,
+            'format_aicourse',
+            'sectioncardimage',
+            (int) $s1->id,
+            'id',
+            false
+        );
         $this->assertCount(1, $files);
     }
 
@@ -103,10 +114,28 @@ final class cardimage_test extends \advanced_testcase {
         [$course, $s1, $s2] = $this->fixture();
         $ctx = \context_course::instance($course->id);
         $fs = get_file_storage();
-        $fs->create_file_from_string(['contextid' => $ctx->id, 'component' => 'format_aicourse',
-            'filearea' => banner::SECTION_AREA, 'itemid' => (int) $s1->id, 'filepath' => '/', 'filename' => 'b.png'], self::png());
-        $fs->create_file_from_string(['contextid' => $ctx->id, 'component' => 'format_aicourse',
-            'filearea' => banner::COURSE_AREA, 'itemid' => 0, 'filepath' => '/', 'filename' => 'c.png'], self::png());
+        $fs->create_file_from_string(
+            [
+                'contextid' => $ctx->id,
+                'component' => 'format_aicourse',
+                'filearea' => banner::SECTION_AREA,
+                'itemid' => (int) $s1->id,
+                'filepath' => '/',
+                'filename' => 'b.png',
+            ],
+            self::png()
+        );
+        $fs->create_file_from_string(
+            [
+                'contextid' => $ctx->id,
+                'component' => 'format_aicourse',
+                'filearea' => banner::COURSE_AREA,
+                'itemid' => 0,
+                'filepath' => '/',
+                'filename' => 'c.png',
+            ],
+            self::png()
+        );
         cardimage::reset_cache();
 
         $this->assertSame('banner', cardimage::resolve((int) $course->id, 'section', (int) $s1->id)['source']);
@@ -145,9 +174,11 @@ final class cardimage_test extends \advanced_testcase {
         [, $other1, , $othercm] = $this->fixture('B');
 
         $this->assertSame((int) $s1->id, (int) cardimage::require_target($course, 'section', (int) $s1->id)->id);
-        foreach ([['section', (int) $other1->id, 'error_sectionnotincourse'], ['cm', (int) $othercm->cmid, 'error_cmnotincourse'],
+        foreach (
+            [['section', (int) $other1->id, 'error_sectionnotincourse'], ['cm', (int) $othercm->cmid, 'error_cmnotincourse'],
                 ['section', (int) get_fast_modinfo($course)->get_section_info(0)->id, 'error_sectionnotincourse'],
-                ['banana', 1, 'error_cardimagetype']] as [$type, $id, $code]) {
+                ['banana', 1, 'error_cardimagetype']] as [$type, $id, $code]
+        ) {
             try {
                 cardimage::require_target($course, $type, $id);
                 $this->fail("$type $id accepted");
@@ -193,7 +224,7 @@ final class cardimage_test extends \advanced_testcase {
             cardimage::set_status((int) $course->id, 'cm', (int) $cm->cmid, 'done', 'x');
         }
 
-        course_delete_module((int) $cm1->cmid);
+        self::delete_cm($course, (int) $cm1->cmid);
         cardimage::reset_cache();
 
         $this->assertNull(cardimage::get_url((int) $course->id, 'cm', (int) $cm1->cmid));
@@ -286,7 +317,7 @@ final class cardimage_test extends \advanced_testcase {
         [$course, , , $cm1] = $this->fixture();
         cardimage::set_colour((int) $course->id, 'cm', (int) $cm1->cmid, '#be185d');
 
-        $newcm = duplicate_module($course, get_fast_modinfo($course)->get_cm($cm1->cmid));
+        $newcm = self::duplicate_cm($course, (int) $cm1->cmid);
         cardimage::reset_cache();
 
         $this->assertSame('#be185d', cardimage::get_colour((int) $course->id, 'cm', (int) $newcm->id));
@@ -327,5 +358,44 @@ final class cardimage_test extends \advanced_testcase {
         $rc->execute_plan();
         $rc->destroy();
         return (int) $newid;
+    }
+
+    /**
+     * Delete an activity through the API the running Moodle provides.
+     *
+     * Moodle 5.2 deprecated course_delete_module() in favour of cmactions::delete() (MDL-86856);
+     * Moodle 4.4 to 5.1 only have the global function.
+     *
+     * @param \stdClass $course The course.
+     * @param int $cmid The course module id.
+     */
+    private static function delete_cm(\stdClass $course, int $cmid): void {
+        global $CFG;
+        $actions = \core_courseformat\formatactions::cm($course);
+        if (method_exists($actions, 'delete')) {
+            $actions->delete($cmid);
+            return;
+        }
+        require_once($CFG->dirroot . '/course/lib.php');
+        course_delete_module($cmid);
+    }
+
+    /**
+     * Duplicate an activity through the API the running Moodle provides.
+     *
+     * Moodle 5.2 deprecated duplicate_module() in favour of cmactions::duplicate() (MDL-86858).
+     *
+     * @param \stdClass $course The course.
+     * @param int $cmid The course module id.
+     * @return \cm_info The new activity.
+     */
+    private static function duplicate_cm(\stdClass $course, int $cmid): \cm_info {
+        global $CFG;
+        $actions = \core_courseformat\formatactions::cm($course);
+        if (method_exists($actions, 'duplicate')) {
+            return $actions->duplicate($cmid);
+        }
+        require_once($CFG->dirroot . '/course/lib.php');
+        return duplicate_module($course, get_fast_modinfo($course)->get_cm($cmid));
     }
 }

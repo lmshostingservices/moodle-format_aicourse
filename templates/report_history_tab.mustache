@@ -19,7 +19,7 @@
 
     The "Chat History" tab of the per-course AI Tutor report.
 
-    SECURITY: rows[].question, rows[].response and rows[].correction are raw student and AI
+    SECURITY: rows[].question, rows[].response, rows[].responsefull and rows[].correction are raw student and AI
     generated text. They are rendered with a DOUBLE mustache, which is what escapes them. Changing
     any of them to a triple mustache would be a stored cross-site scripting hole, because a student
     can put arbitrary markup in a question.
@@ -64,7 +64,10 @@
       isdescending, sorturl and sortlabel.
     * hasrows bool True when the current page has at least one row.
     * rows array One entry per chat record: id, avatar (PRE-ESCAPED core user_picture markup),
-      hasavatar, fullname, question, response, hascorrection, correction, correctionshort, date,
+      hasavatar, fullname, question, response (a plain-text preview of the answer), responsefull
+      (the stored answer, Markdown; rendered in the browser by format_aicourse/report from the
+      element with data-aicourse-rich), hasfullresponse (bool, true when the full answer shows
+      more than the preview), hascorrection, correction, correctionshort, date,
       cancorrect (bool, true when the viewer holds format/aicourse:correctresponses; when false the
       correction controls are replaced by the read-only correction text),
       ishelpful, isnothelpful, canrate.
@@ -119,6 +122,8 @@
                 "fullname": "Alice Adams",
                 "question": "What is a light year?",
                 "response": "A light year is the distance light travels in one year.",
+                "responsefull": "A **light year** is the distance light travels in one year.",
+                "hasfullresponse": true,
                 "hascorrection": false,
                 "correction": "",
                 "correctionshort": "",
@@ -229,6 +234,12 @@
             <td class="aicourse-chat-question">{{question}}</td>
             <td class="aicourse-chat-response">
                 <div>{{response}}</div>
+                {{#hasfullresponse}}
+                <details class="aicourse-chat-full">
+                    <summary>{{#str}} aireport_fullanswer, format_aicourse {{/str}}</summary>
+                    <div class="aicourse-report-answer" data-aicourse-rich="1">{{responsefull}}</div>
+                </details>
+                {{/hasfullresponse}}
                 {{#hascorrection}}
                 <div class="aicourse-chat-correction">
                     <strong>{{#str}} aireport_correction, format_aicourse {{/str}}</strong>

@@ -35,6 +35,7 @@ namespace format_aicourse;
  * @copyright  2026 LMS-Labs
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse::class)]
 final class lang_strings_test extends \advanced_testcase {
     /**
      * Every string referenced in the plugin's PHP is defined in the language file.

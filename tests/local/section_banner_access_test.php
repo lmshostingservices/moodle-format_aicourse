@@ -43,6 +43,7 @@ require_once($CFG->dirroot . '/course/lib.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \format_aicourse\local\callbacks::pluginfile
  */
+#[\PHPUnit\Framework\Attributes\CoversMethod(\format_aicourse\local\callbacks::class, 'pluginfile')]
 final class section_banner_access_test extends \advanced_testcase {
     /**
      * A learner must not be able to fetch a hidden section's banner by its URL.
@@ -70,7 +71,7 @@ final class section_banner_access_test extends \advanced_testcase {
             'filename' => 'secret.png',
         ], 'not really a png');
 
-        set_section_visible($course->id, 2, 0);
+        self::hide_section($course, 2);
 
         $this->setUser($student);
         $modinfo = get_fast_modinfo($course, $student->id);
@@ -95,7 +96,7 @@ final class section_banner_access_test extends \advanced_testcase {
         $teacher = $this->getDataGenerator()->create_and_enrol($course, 'editingteacher');
         $context = \context_course::instance($course->id);
 
-        set_section_visible($course->id, 2, 0);
+        self::hide_section($course, 2);
 
         $this->setUser($teacher);
         $this->assertTrue(has_capability('moodle/course:viewhiddensections', $context));
@@ -120,5 +121,25 @@ final class section_banner_access_test extends \advanced_testcase {
         $visible = get_fast_modinfo($course, $student->id)->get_section_info_by_id((int) $section->id);
 
         $this->assertTrue((bool) $visible->uservisible);
+    }
+
+    /**
+     * Hide a section through the API the running Moodle provides.
+     *
+     * Moodle 5.2 deprecated set_section_visible() in favour of sectionactions::set_visibility()
+     * (MDL-86861); Moodle 4.4 to 5.1 only have the global function.
+     *
+     * @param \stdClass $course The course.
+     * @param int $sectionnum The section number.
+     */
+    private static function hide_section(\stdClass $course, int $sectionnum): void {
+        global $CFG;
+        $actions = \core_courseformat\formatactions::section($course);
+        if (method_exists($actions, 'set_visibility')) {
+            $actions->set_visibility(get_fast_modinfo($course)->get_section_info($sectionnum), false);
+            return;
+        }
+        require_once($CFG->dirroot . '/course/lib.php');
+        set_section_visible($course->id, $sectionnum, 0);
     }
 }

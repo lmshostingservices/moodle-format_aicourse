@@ -20,6 +20,7 @@ use context_course;
 use core\output\named_templatable;
 use core\output\notification;
 use core_user\fields;
+use format_aicourse\local\answertext;
 use moodle_url;
 use renderable;
 use renderer_base;
@@ -433,13 +434,18 @@ class historytab implements named_templatable, renderable {
             }
 
             $correction = (string) ($chat->correction ?? '');
+            $preview = answertext::preview((string) $chat->response, self::RESPONSE_LENGTH);
             $rows[] = (object) [
                 'id' => (int) $chat->id,
                 'avatar' => $avatar,
                 'hasavatar' => ($avatar !== ''),
                 'fullname' => $user ? fullname($user) : $unknown,
                 'question' => shorten_text((string) $chat->question, self::QUESTION_LENGTH),
-                'response' => shorten_text((string) $chat->response, self::RESPONSE_LENGTH),
+                // 3.2.0: a readable preview instead of the first 300 raw characters of Markdown
+                // and quiz JSON; the full answer is rendered in the browser on demand.
+                'response' => $preview,
+                'responsefull' => (string) $chat->response,
+                'hasfullresponse' => answertext::has_more((string) $chat->response, $preview),
                 'hascorrection' => ($correction !== ''),
                 'correction' => $correction,
                 'correctionshort' => shorten_text($correction, self::CORRECTION_LENGTH),

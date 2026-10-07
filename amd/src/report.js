@@ -41,6 +41,7 @@ import Ajax from 'core/ajax';
 import Notification from 'core/notification';
 import Pending from 'core/pending';
 import {get_strings as getStrings} from 'core/str';
+import {render as renderRich} from 'format_aicourse/local/richtext';
 
 /** @type {Object} The DOM contract, as emitted by format_aicourse/report_history_tab. */
 const SELECTORS = {
@@ -328,6 +329,91 @@ const handleClick = (event) => {
     }
 };
 
+/** @type {String} Option letters, matching format_aicourse/local/richtext. */
+const LETTERS = 'ABCDEFGH';
+
+/**
+ * Show a rendered practice question the way a teacher needs it: the correct option marked, the
+ * explanation and hint open, nothing clickable.
+ *
+ * @param {Element} card A .aicourse-ai-quiz card.
+ * @param {String} reviewlabel "Correct answer: {answer}".
+ * @returns {void}
+ */
+const reviewQuiz = (card, reviewlabel) => {
+    const answer = parseInt(card.getAttribute('data-answer'), 10);
+    card.setAttribute('data-state', 'review');
+    const options = card.querySelectorAll('.aicourse-ai-quiz-option');
+    options.forEach((option) => {
+        option.disabled = true;
+    });
+    const feedback = card.querySelector('.aicourse-ai-quiz-feedback');
+    const verdict = card.querySelector('.aicourse-ai-quiz-verdict');
+    if (answer >= 0 && options[answer]) {
+        options[answer].classList.add('is-answer');
+        if (verdict) {
+            verdict.textContent = reviewlabel.replace('{answer}', LETTERS.charAt(answer));
+        }
+        if (feedback) {
+            feedback.hidden = false;
+        }
+    } else if (feedback && feedback.querySelector('.aicourse-ai-quiz-explanation')) {
+        feedback.hidden = false;
+    }
+    const hintbutton = card.querySelector('.aicourse-ai-quiz-hintbtn');
+    const hint = card.querySelector('.aicourse-ai-quiz-hint');
+    if (hintbutton && hint) {
+        hintbutton.remove();
+        hint.hidden = false;
+    }
+};
+
+/**
+ * Render every full tutor answer on the page (elements with data-aicourse-rich), exactly as the
+ * learner saw it, with practice questions in review mode.
+ *
+ * SECURITY: the element holds the stored answer as escaped text. It is read with textContent and
+ * rendered by format_aicourse/local/richtext, which builds DOM nodes and never parses HTML.
+ *
+ * Used by the course report (from init) and by the site admin report.
+ *
+ * @returns {Promise} Resolves once every answer is rendered.
+ */
+export const renderAnswers = () => {
+    const targets = document.querySelectorAll('[data-aicourse-rich]');
+    if (!targets.length) {
+        return Promise.resolve();
+    }
+    return getStrings([
+        {key: 'aiassistant_quiz_label', component: 'format_aicourse'},
+        {key: 'aiassistant_quiz_hint', component: 'format_aicourse'},
+        {key: 'aiassistant_quiz_incomplete', component: 'format_aicourse'},
+        {key: 'aiassistant_quiz_review', component: 'format_aicourse', param: '{answer}'},
+    ]).then(([quizlabel, hint, incomplete, review]) => {
+        targets.forEach((target) => {
+            if (target.getAttribute('data-aicourse-rich') === 'done') {
+                return;
+            }
+            const source = target.textContent;
+            try {
+                const rendered = renderRich(source, {quizlabel: quizlabel, hint: hint, incomplete: incomplete});
+                target.textContent = '';
+                target.appendChild(rendered);
+                target.classList.add('aicourse-ai-prose');
+                target.querySelectorAll('.aicourse-ai-quiz').forEach((card) => reviewQuiz(card, review));
+                target.querySelectorAll('.aicourse-ai-checklist-box').forEach((box) => {
+                    box.disabled = true;
+                });
+            } catch (error) {
+                // Leave the escaped text in place; it is still readable.
+                target.textContent = source;
+            }
+            target.setAttribute('data-aicourse-rich', 'done');
+        });
+        return null;
+    }).catch(Notification.exception);
+};
+
 /**
  * Wire up the chat history table.
  *
@@ -342,6 +428,7 @@ export const init = (courseid) => {
     if (!table) {
         return;
     }
+    renderAnswers();
 
     courseId = parseInt(courseid, 10);
     liveRegion = createLiveRegion(table);

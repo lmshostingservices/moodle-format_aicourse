@@ -53,6 +53,9 @@ $PAGE->set_pagelayout('admin');
 
 $report = new adminreport($filter);
 
+// 3.2.0: renders the full tutor answers behind each "Show full answer", as the learner saw them.
+$PAGE->requires->js_call_amd('format_aicourse/report', 'renderAnswers');
+
 echo $OUTPUT->header();
 echo $OUTPUT->render($report);
 echo $OUTPUT->footer();

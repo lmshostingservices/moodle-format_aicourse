@@ -17,31 +17,45 @@
 {{!
     @template format_aicourse/chatbox
 
-    The AI Tutor chat panel. Rendered once per page inside the hero banner and hidden until the
-    AI Tutor button in the hero is pressed.
+    The AI Tutor panel. Rendered once per page inside the hero banner and hidden until the AI
+    Tutor button in the hero is pressed.
 
-    It is an ARIA dialog: role="dialog" aria-modal="true" and aria-labelledby pointing at its own
-    title. The message list is a role="log" aria-live="polite" region so replies, errors and the
+    3.2.0: the panel has two views, switched by data-view on the root.
+    * compact  - the floating panel (a bottom sheet on phones).
+    * expanded - the Study view: a large centred workspace over a backdrop (full screen on phones)
+                 with a rail holding the learner's context and the study tools, and a wider,
+                 card-based conversation column.
+    Both views are the same DOM; only CSS changes, so nothing is re-rendered and the conversation,
+    focus and scroll position survive the switch.
+
+    It is an ARIA dialog: role="dialog", aria-labelledby pointing at its own title, and aria-modal
+    "false" in the compact view (it sits beside the page) or "true" in the Study view, which covers
+    the page and traps Tab. The JavaScript keeps aria-modal in step with data-view. The message list is a role="log" aria-live="polite" region so replies, errors and the
     "Thinking…" state are announced, and it carries dir="auto" so a reply in a different script
     keeps its base direction. Opening, closing, the Tab focus trap, Escape and focus restoration
     are provided by format_aicourse/chatbox. Every SVG in here is decorative and therefore carries
-    aria-hidden="true" focusable="false"; the icon-only close and send buttons have aria-labels.
+    aria-hidden="true" focusable="false"; every icon-only button has an aria-label.
 
     Classes required for JS:
     * aicourse-ai-chatbox - the panel root; shown/hidden by format_aicourse/chatbox.
+    * aicourse-ai-backdrop - the Study view backdrop; clicking it returns to the compact view.
     * aicourse-ai-chatbox-close - closes the panel.
-    * aicourse-ai-quick-btn - fills the textarea with a canned prompt and sends it.
+    * aicourse-ai-expand - switches between the compact and Study views.
+    * aicourse-ai-newchat - clears the conversation.
+    * aicourse-ai-quick-btn - sends the canned prompt named by data-prompt.
     * aicourse-ai-send-btn - sends the current textarea contents.
     * aicourse-ai-message, aicourse-ai-message-bot, aicourse-ai-message-content - matched by
       format_aicourse/chatbox when it updates the welcome message.
 
     Data attributes required for JS:
+    * data-view - on the panel root, compact or expanded.
     * data-prompt - on each quick action button, the key of the canned prompt to send. One of
       structure, concepts, workplace, practice, checklist.
 
     Element ids required for JS:
-    * aicourse-ai-chatbox, aicourse-ai-close, aicourse-ai-messages, aicourse-ai-welcome,
-      aicourse-ai-quick-actions, aicourse-ai-input, aicourse-ai-send.
+    * aicourse-ai-chatbox, aicourse-ai-backdrop, aicourse-ai-close, aicourse-ai-messages,
+      aicourse-ai-welcome, aicourse-ai-quick-actions, aicourse-ai-suggest, aicourse-ai-input,
+      aicourse-ai-send.
 
     Context variables required for this template:
     * closelabel string Accessible name of the close button.
@@ -52,6 +66,10 @@
       aiassistant_welcome_section / aiassistant_welcome_activity language string, which
       legitimately contains <strong>, resolved with $a values that have already been through
       format_string(). It is therefore rendered with a triple mustache.
+    * coursename string The course's name, already through format_string().
+    * contextkind string "Activity", "Section" or "Course".
+    * contexttitle string Name of the activity or section being studied, or the course name.
+    * tools array The five study tools: key, label, desc and one is<key> icon flag each.
 
     Example context (json):
     {
@@ -59,32 +77,79 @@
         "inputlabel": "Your question for the AI Tutor",
         "placeholder": "Ask a question about the course...",
         "sendlabel": "Send message",
-        "welcome": "Hi Sam! I see you're working on <strong>Week 1 quiz</strong>. What would you like help with?"
+        "welcome": "Hi Sam! I see you're working on <strong>Week 1 quiz</strong>. What would you like help with?",
+        "coursename": "Work Health and Safety",
+        "contextkind": "Activity",
+        "contexttitle": "Week 1 quiz",
+        "tools": [
+            {"key": "practice", "label": "Practice questions", "desc": "Test yourself", "ispractice": true}
+        ]
     }
 }}
-<div id="aicourse-ai-chatbox" class="aicourse-ai-chatbox" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="aicourse-ai-chatbox-title">
+<div class="aicourse-ai-backdrop" id="aicourse-ai-backdrop" hidden></div>
+<div id="aicourse-ai-chatbox" class="aicourse-ai-chatbox" style="display:none;" data-view="compact" role="dialog" aria-modal="false" aria-labelledby="aicourse-ai-chatbox-title">
 <div class="aicourse-ai-chatbox-header">
-<div class="aicourse-ai-chatbox-title" id="aicourse-ai-chatbox-title"><svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="m9 15 2 2 4-4"/></svg><span>{{#str}} aiassistant, format_aicourse {{/str}}</span></div>
+<div class="aicourse-ai-chatbox-heading">
+<span class="aicourse-ai-avatar aicourse-ai-avatar-head" aria-hidden="true"><svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2M20 14h2M15 13v2M9 13v2"/></svg></span>
+<div class="aicourse-ai-chatbox-titles">
+<div class="aicourse-ai-chatbox-title" id="aicourse-ai-chatbox-title">{{#str}} aiassistant, format_aicourse {{/str}}</div>
+{{#contexttitle}}<div class="aicourse-ai-chatbox-subtitle" dir="auto">{{contexttitle}}</div>{{/contexttitle}}
+</div>
+</div>
+<div class="aicourse-ai-chatbox-actions">
+<button type="button" class="aicourse-ai-headbtn aicourse-ai-newchat" aria-label="{{#cleanstr}} aiassistant_newchat, format_aicourse {{/cleanstr}}" title="{{#cleanstr}} aiassistant_newchat, format_aicourse {{/cleanstr}}"><svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
+<button type="button" class="aicourse-ai-headbtn aicourse-ai-expand" aria-pressed="false" aria-label="{{#cleanstr}} aiassistant_expand, format_aicourse {{/cleanstr}}" title="{{#cleanstr}} aiassistant_expand, format_aicourse {{/cleanstr}}" data-expandlabel="{{#cleanstr}} aiassistant_expand, format_aicourse {{/cleanstr}}" data-collapselabel="{{#cleanstr}} aiassistant_collapse, format_aicourse {{/cleanstr}}"><svg class="aicourse-ai-icon-expand" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg><svg class="aicourse-ai-icon-collapse" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7"/></svg><span class="aicourse-ai-headbtn-text">{{#str}} aiassistant_studyview, format_aicourse {{/str}}</span></button>
 <button type="button" class="aicourse-ai-chatbox-close" id="aicourse-ai-close" aria-label="{{closelabel}}"><span aria-hidden="true">&times;</span></button>
 </div>
+</div>
+<div class="aicourse-ai-chatbox-body">
+<aside class="aicourse-ai-rail" aria-label="{{#cleanstr}} aiassistant_tools_heading, format_aicourse {{/cleanstr}}">
+<div class="aicourse-ai-rail-section">
+<div class="aicourse-ai-rail-label">{{#str}} aiassistant_context_heading, format_aicourse {{/str}}</div>
+<div class="aicourse-ai-context-card">
+<span class="aicourse-ai-context-kind">{{contextkind}}</span>
+<span class="aicourse-ai-context-title" dir="auto">{{contexttitle}}</span>
+{{#coursename}}<span class="aicourse-ai-context-course" dir="auto">{{coursename}}</span>{{/coursename}}
+</div>
+</div>
+<div class="aicourse-ai-rail-section">
+<div class="aicourse-ai-rail-label">{{#str}} aiassistant_tools_heading, format_aicourse {{/str}}</div>
+<div class="aicourse-ai-rail-tools">
+{{#tools}}
+<button type="button" class="aicourse-ai-quick-btn aicourse-ai-tool aicourse-ai-tool-rail" data-prompt="{{key}}"><span class="aicourse-ai-tool-icon">{{> format_aicourse/chatbox_icon }}</span><span class="aicourse-ai-tool-text"><span class="aicourse-ai-tool-label">{{label}}</span><span class="aicourse-ai-tool-desc">{{desc}}</span></span></button>
+{{/tools}}
+</div>
+</div>
+<div class="aicourse-ai-rail-foot">{{#str}} aiassistant_integrity_note, format_aicourse {{/str}}</div>
+</aside>
+<div class="aicourse-ai-main">
 <div class="aicourse-ai-chatbox-messages" id="aicourse-ai-messages" role="log" aria-live="polite" aria-relevant="additions" dir="auto">
-<div class="aicourse-ai-message aicourse-ai-message-bot" id="aicourse-ai-welcome">
-<div class="aicourse-ai-message-content">{{{welcome}}}</div>
+<div class="aicourse-ai-message aicourse-ai-message-bot aicourse-ai-message-welcome" id="aicourse-ai-welcome">
+<span class="aicourse-ai-avatar" aria-hidden="true"><svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2M20 14h2M15 13v2M9 13v2"/></svg></span>
+<div class="aicourse-ai-message-body"><div class="aicourse-ai-message-content">{{{welcome}}}</div></div>
 </div>
 <div class="aicourse-ai-quick-actions" id="aicourse-ai-quick-actions">
 <div class="aicourse-ai-quick-label">{{#str}} aiassistant_quick_label, format_aicourse {{/str}}</div>
 <div class="aicourse-ai-quick-buttons">
-<button type="button" class="aicourse-ai-quick-btn" data-prompt="structure"><svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18M3 12h18"/></svg>{{#str}} aiassistant_quick_structure, format_aicourse {{/str}}</button>
-<button type="button" class="aicourse-ai-quick-btn" data-prompt="concepts"><svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>{{#str}} aiassistant_quick_concepts, format_aicourse {{/str}}</button>
-<button type="button" class="aicourse-ai-quick-btn" data-prompt="workplace"><svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7h-9M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/></svg>{{#str}} aiassistant_quick_workplace, format_aicourse {{/str}}</button>
-<button type="button" class="aicourse-ai-quick-btn" data-prompt="practice"><svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>{{#str}} aiassistant_quick_practice, format_aicourse {{/str}}</button>
-<button type="button" class="aicourse-ai-quick-btn" data-prompt="checklist"><svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="m9 14 2 2 4-4"/></svg>{{#str}} aiassistant_quick_checklist, format_aicourse {{/str}}</button>
+{{#tools}}
+<button type="button" class="aicourse-ai-quick-btn aicourse-ai-tool aicourse-ai-tool-card" data-prompt="{{key}}"><span class="aicourse-ai-tool-icon">{{> format_aicourse/chatbox_icon }}</span><span class="aicourse-ai-tool-text"><span class="aicourse-ai-tool-label">{{label}}</span><span class="aicourse-ai-tool-desc">{{desc}}</span></span></button>
+{{/tools}}
 </div>
 </div>
+</div>
+<div class="aicourse-ai-suggest" id="aicourse-ai-suggest" hidden>
+{{#tools}}
+<button type="button" class="aicourse-ai-quick-btn aicourse-ai-chip" data-prompt="{{key}}">{{> format_aicourse/chatbox_icon }}<span>{{label}}</span></button>
+{{/tools}}
 </div>
 <div class="aicourse-ai-chatbox-input">
+<div class="aicourse-ai-composer">
 <label class="accesshide" for="aicourse-ai-input">{{inputlabel}}</label>
 <textarea id="aicourse-ai-input" dir="auto" rows="1" placeholder="{{placeholder}}"></textarea>
-<button type="button" id="aicourse-ai-send" class="aicourse-ai-send-btn" aria-label="{{sendlabel}}" title="{{sendlabel}}"><svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg></button>
+<button type="button" id="aicourse-ai-send" class="aicourse-ai-send-btn" aria-label="{{sendlabel}}" title="{{sendlabel}}"><svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
+</div>
+<div class="aicourse-ai-composer-hint" aria-hidden="true">{{#str}} aiassistant_composer_hint, format_aicourse {{/str}}</div>
+</div>
+</div>
 </div>
 </div>

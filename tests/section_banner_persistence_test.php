@@ -45,6 +45,9 @@ require_once($CFG->dirroot . '/backup/util/includes/restore_includes.php');
  * @covers     \backup_format_aicourse_plugin
  * @covers     \restore_format_aicourse_plugin
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\backup_format_aicourse_plugin::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\restore_format_aicourse_plugin::class)]
 final class section_banner_persistence_test extends \advanced_testcase {
     /**
      * Store an image against a section.

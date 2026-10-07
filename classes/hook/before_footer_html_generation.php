@@ -84,14 +84,53 @@ class before_footer_html_generation {
         // the page, so requiring it unconditionally costs one cached AMD request.
         $PAGE->requires->js_call_amd('format_aicourse/herocollapse', 'init');
 
+        // 3.2.0: keep the course index on the section being viewed. Without this the index kept
+        // every section the learner had ever opened expanded, so moving on to the next section
+        // left the previous one open above it. See amd/src/indexfocus.js.
+        try {
+            $focussection = 0;
+            // Read $PAGE->cm directly: moodle_page has no __isset(), so empty($PAGE->cm) is
+            // always true and would skip every activity page.
+            $focuscm = $PAGE->cm;
+            if (strpos($pagetype, 'mod-') === 0 && $focuscm) {
+                $focussection = (int) $focuscm->section;
+            } else if (\format_aicourse\local\callbacks::is_section_php_request()) {
+                // The course/section.php?id=<section id> page, which editors still reach in edit mode.
+                $focusinfo = get_fast_modinfo($COURSE)->get_section_info_by_id((int) $PAGE->url->param('id'));
+                $focussection = $focusinfo ? (int) $focusinfo->id : 0;
+            } else if (strpos($pagetype, 'course-view') === 0) {
+                // Single-section view, by number (view.php?section=N) or by id (?sectionid=N).
+                // Read from the page URL that course/view.php built, not from the request: core
+                // has already validated the parameters there and turned a sectionid into its
+                // section number. Section 0 is the course home, left alone.
+                $focusnum = (int) $PAGE->url->param('section');
+                $focusid = (int) $PAGE->url->param('sectionid');
+                $focusmodinfo = get_fast_modinfo($COURSE);
+                $focusinfo = null;
+                if ($focusnum > 0) {
+                    $focusinfo = $focusmodinfo->get_section_info($focusnum);
+                } else if ($focusid > 0) {
+                    $focusinfo = $focusmodinfo->get_section_info_by_id($focusid);
+                }
+                $focussection = ($focusinfo && $focusinfo->section > 0) ? (int) $focusinfo->id : 0;
+            }
+            if ($focussection > 0) {
+                $PAGE->requires->js_call_amd('format_aicourse/indexfocus', 'init', [$focussection]);
+            }
+        } catch (\Throwable $e) {
+            unset($e);
+        }
+
         // 2.5.0: card image tools, on the course home page and on section pages, in edit mode,
         // for someone who may change the course. Here rather than in format.php because the
         // section page is course/section.php, which never includes format.php -- and that is the
         // page where the activity rows the tools attach to are drawn. The course home page comes
         // through here too, so this is the one place both are served from.
         $pagetype = (string) $PAGE->pagetype;
-        if (strpos($pagetype, 'course-view') === 0 && $PAGE->user_is_editing()
-                && has_capability('moodle/course:update', \context_course::instance($COURSE->id))) {
+        if (
+            strpos($pagetype, 'course-view') === 0 && $PAGE->user_is_editing()
+                && has_capability('moodle/course:update', \context_course::instance($COURSE->id))
+        ) {
             $hook->add_html(\format_aicourse\output\courseformat\cardmedia::page_data_html($COURSE));
             $PAGE->requires->js_call_amd('format_aicourse/cardimage', 'init');
         }

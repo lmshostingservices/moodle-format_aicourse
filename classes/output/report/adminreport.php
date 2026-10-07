@@ -18,6 +18,7 @@ namespace format_aicourse\output\report;
 
 use core\output\named_templatable;
 use core\output\notification;
+use format_aicourse\local\answertext;
 use html_table;
 use html_table_cell;
 use html_table_row;
@@ -367,7 +368,7 @@ class adminreport implements named_templatable, renderable {
                     'aicadmin-text-truncated'
                 ),
                 $this->cell(
-                    $this->format_expandable((string) $chat->response, self::RESPONSE_LENGTH),
+                    $this->format_answer((string) $chat->response, self::RESPONSE_LENGTH),
                     'aicadmin-text-truncated'
                 ),
                 $this->cell($this->format_rating((int) $chat->rating)),
@@ -483,6 +484,36 @@ class adminreport implements named_templatable, renderable {
                     s(get_string('admin_report_show_more', 'format_aicourse')),
                     ['class' => 'aicadmin-toggle-link']
                 ) . html_writer::span(s($text), 'aicadmin-text-full'),
+                ['class' => 'aicadmin-text-expandable']
+            );
+        }
+
+        return $output;
+    }
+
+    /**
+     * A tutor answer: a readable preview, and the full answer behind a disclosure.
+     *
+     * 3.2.0: answers are Markdown with fenced "quiz" JSON blocks. The preview has the markers
+     * removed (see answertext::preview()); the full answer is output as escaped TEXT in an element
+     * format_aicourse/report renders, in the browser, exactly as the learner saw it.
+     *
+     * @param string $answer The stored answer.
+     * @param int $length Characters shown before the disclosure.
+     * @return string Escaped markup.
+     */
+    protected function format_answer(string $answer, int $length): string {
+        $preview = answertext::preview($answer, $length);
+        $output = html_writer::span(s($preview), 'aicadmin-text-short');
+
+        if (answertext::has_more($answer, $preview)) {
+            $output .= html_writer::tag(
+                'details',
+                html_writer::tag(
+                    'summary',
+                    s(get_string('aireport_fullanswer', 'format_aicourse')),
+                    ['class' => 'aicadmin-toggle-link']
+                ) . html_writer::div(s($answer), 'aicourse-report-answer', ['data-aicourse-rich' => '1']),
                 ['class' => 'aicadmin-text-expandable']
             );
         }

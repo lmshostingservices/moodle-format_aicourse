@@ -1052,7 +1052,8 @@ body.format-aicourse :is(
 .aicourse-hero-grades, .aicourse-hero-back, .aicourse-hero-ai-btn,
 .aicourse-icon-picker-item, .aicourse-icon-picker-close,
 .aicourse-icon-search-input, .aicourse-ai-quick-btn, .aicourse-ai-send-btn,
-.aicourse-ai-rate-btn, .aicourse-ai-chatbox-close, .aicourse-bgen-btn,
+.aicourse-ai-rate-btn, .aicourse-ai-chatbox-close, .aicourse-ai-headbtn, .aicourse-ai-tool-btn,
+.aicourse-ai-quiz-option, .aicourse-ai-quiz-hintbtn, .aicourse-ai-followup, .aicourse-bgen-btn,
 .aicourse-bgen-close, .aicourse-tab, .aicourse-rating-btn, .aicourse-correction-btn,
 .aicourse-filter-input, .aicourse-filter-select):focus-visible {
     outline: var(--acf-focus-width) solid var(--acf-focus-color);
@@ -1067,6 +1068,7 @@ body.format-aicourse .aicourse-hero-has-image :is(
 .aicourse-hero-nav, .aicourse-hero-home, .aicourse-hero-grades, .aicourse-hero-back,
 .aicourse-hero-ai-btn, .aicourse-activity-number, .aicourse-hero-completion-toggle):focus-visible,
 body.format-aicourse .aicourse-ai-chatbox-close:focus-visible,
+body.format-aicourse .aicourse-ai-headbtn:focus-visible,
 body.format-aicourse .aicourse-bgen-close:focus-visible,
 body.format-aicourse .aicourse-bgen-btn:focus-visible {
     outline-color: var(--acf-neutral-0);
@@ -3464,9 +3466,46 @@ body.format-aicourse .aicourse-icon-remove-btn .aicourse-icon-picker-label {
 }
 
 /* ==========================================================================
-   18. AI CHATBOX
+   18. AI TUTOR
+   --------------------------------------------------------------------------
+   3.2.0: rebuilt from scratch rather than patched. The old panel rendered every answer as one
+   escaped text node with no line handling, so a multiple-choice question arrived as a single run-on
+   paragraph. Answers are now rendered by amd/src/local/richtext.js into real structure (headings,
+   step lists, checklists, callouts, tables, code, interactive question cards), and the panel has
+   two views on the same DOM:
+     [data-view="compact"]  the floating panel; a bottom sheet below the sm breakpoint
+     [data-view="expanded"] the Study view: a large centred workspace over a blurred backdrop with
+                            a context + tools rail and a centred reading column; full screen on
+                            phones
+   Corners follow the format's square system (radius tokens sm-xl are 0); only the panel shell
+   (2xl), avatars and chips are rounded.
    ========================================================================== */
 
+html.aicourse-ai-locked,
+html.aicourse-ai-locked body.format-aicourse {
+    overflow: hidden;
+}
+
+/* The first-visit tour offer is a corner toast in the same place as the tutor. While the learner
+   is using the tutor it steps aside rather than covering the composer; it returns on close. */
+body.format-aicourse.aicourse-ai-open .aicourse-tour-offer {
+    visibility: hidden;
+}
+
+body.format-aicourse .aicourse-ai-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: calc(var(--acf-z-chatbox) - 1);
+    background: var(--acf-surface-scrim);
+    backdrop-filter: blur(6px);
+    animation: acf-tutor-fade var(--acf-duration-base) var(--acf-ease-out);
+}
+
+body.format-aicourse .aicourse-ai-backdrop[hidden] {
+    display: none;
+}
+
+/* --- Panel shell ----------------------------------------------------------- */
 body.format-aicourse .aicourse-ai-chatbox {
     position: fixed;
     inset-block-end: var(--acf-space-5);
@@ -3474,19 +3513,17 @@ body.format-aicourse .aicourse-ai-chatbox {
     z-index: var(--acf-z-chatbox);
     display: flex;
     flex-direction: column;
-    inline-size: 24rem;
+    inline-size: 28rem;
     max-inline-size: calc(100vw - (2 * var(--acf-space-5)));
-    block-size: 32rem;
-    /* dvh, not vh: on iOS the shrinking URL bar previously pushed the input row
-       and send button below the visible viewport. */
+    block-size: 42rem;
     max-block-size: calc(100vh - 6rem);
-    /* stylelint-disable-next-line declaration-block-no-duplicate-properties --
-       deliberate progressive enhancement; see the note on the chat panel above. */
+    /* stylelint-disable-next-line declaration-block-no-duplicate-properties -- dvh progressive enhancement. */
     max-block-size: calc(100dvh - 6rem);
     overflow: hidden;
     border: 1px solid var(--acf-border-subtle);
     border-radius: var(--acf-radius-2xl);
     background: var(--acf-surface-overlay);
+    color: var(--acf-text-primary);
     box-shadow: var(--acf-elevation-5);
     animation: acf-slide-up var(--acf-duration-slow) var(--acf-ease-out);
 }
@@ -3497,25 +3534,88 @@ body.format-aicourse .aicourse-ai-chatbox-header {
     justify-content: space-between;
     gap: var(--acf-space-3);
     flex-shrink: 0;
-    padding: var(--acf-space-3) var(--acf-space-4);
-    /* White on this gradient: 6.29:1 -> 5.70:1. The old #6366f1 -> #8b5cf6
-       gradient bottomed out at 4.40:1. */
+    padding-block: var(--acf-space-3) var(--acf-space-3);
+    padding-inline: var(--acf-space-4) var(--acf-space-3);
     background: var(--acf-ai-gradient);
     color: var(--acf-text-inverse);
 }
 
-body.format-aicourse .aicourse-ai-chatbox-title {
+body.format-aicourse .aicourse-ai-chatbox-heading {
     display: flex;
     align-items: center;
-    gap: var(--acf-space-2);
+    gap: var(--acf-space-3);
     min-inline-size: 0;
-    font-size: var(--acf-font-size-base);
-    font-weight: var(--acf-weight-semibold);
 }
 
-body.format-aicourse .aicourse-ai-chatbox-title svg {
+body.format-aicourse .aicourse-ai-chatbox-titles {
+    display: flex;
+    flex-direction: column;
+    min-inline-size: 0;
+}
+
+body.format-aicourse .aicourse-ai-chatbox-title {
+    font-size: var(--acf-font-size-base);
+    font-weight: var(--acf-weight-bold);
+    line-height: var(--acf-leading-tight);
+}
+
+body.format-aicourse .aicourse-ai-chatbox-subtitle {
+    overflow: hidden;
+    font-size: var(--acf-font-size-xs);
+    line-height: var(--acf-leading-snug);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    opacity: 0.88;
+}
+
+body.format-aicourse .aicourse-ai-chatbox-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--acf-space-1);
+    flex-shrink: 0;
+}
+
+body.format-aicourse .aicourse-ai-headbtn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--acf-space-2);
+    min-inline-size: 2.5rem;
+    min-block-size: 2.5rem;
+    padding: 0 var(--acf-space-2);
+    border: 1px solid transparent;
+    border-radius: var(--acf-radius-pill);
+    background: transparent;
+    color: var(--acf-text-inverse);
+    font-family: var(--acf-font-family);
+    font-size: var(--acf-font-size-sm);
+    font-weight: var(--acf-weight-semibold);
+    cursor: pointer;
+    transition: background var(--acf-duration-fast) var(--acf-ease-standard);
+}
+
+body.format-aicourse .aicourse-ai-headbtn:hover {
+    background: var(--acf-media-hover-strong);
+}
+
+body.format-aicourse .aicourse-ai-expand {
+    padding-inline: var(--acf-space-3);
+    border-color: rgba(255, 255, 255, 0.34);
+    background: var(--acf-media-hover);
+}
+
+body.format-aicourse .aicourse-ai-headbtn svg {
     flex: none;
-    stroke: currentColor;
+}
+
+body.format-aicourse .aicourse-ai-icon-collapse,
+body.format-aicourse .aicourse-ai-chatbox[data-view="expanded"] .aicourse-ai-icon-expand,
+body.format-aicourse .aicourse-ai-chatbox[data-view="expanded"] .aicourse-ai-headbtn-text {
+    display: none;
+}
+
+body.format-aicourse .aicourse-ai-chatbox[data-view="expanded"] .aicourse-ai-icon-collapse {
+    display: block;
 }
 
 body.format-aicourse .aicourse-ai-chatbox-close {
@@ -3534,11 +3634,10 @@ body.format-aicourse .aicourse-ai-chatbox-close {
     cursor: pointer;
 }
 
-/* 32px visual chip inside the 44px target. */
 body.format-aicourse .aicourse-ai-chatbox-close::before {
     content: "";
     position: absolute;
-    inset: 6px;
+    inset: 4px;
     border-radius: inherit;
     background: var(--acf-media-hover);
     transition: background var(--acf-duration-fast) var(--acf-ease-standard);
@@ -3553,106 +3652,1013 @@ body.format-aicourse .aicourse-ai-chatbox-close > * {
     z-index: var(--acf-z-raised);
 }
 
-body.format-aicourse .aicourse-ai-chatbox-messages {
-    flex: 1 1 auto;
+body.format-aicourse .aicourse-ai-chatbox-body {
     display: flex;
+    flex: 1 1 auto;
+    min-block-size: 0;
+}
+
+body.format-aicourse .aicourse-ai-main {
+    display: flex;
+    flex: 1 1 auto;
     flex-direction: column;
-    gap: var(--acf-space-3);
-    padding: var(--acf-space-4);
+    min-inline-size: 0;
+}
+
+/* --- Avatars ---------------------------------------------------------------- */
+body.format-aicourse .aicourse-ai-avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    inline-size: 2rem;
+    block-size: 2rem;
+    border-radius: var(--acf-radius-full);
+    background: var(--acf-ai-gradient);
+    color: var(--acf-text-inverse);
+    box-shadow: var(--acf-elevation-1);
+}
+
+body.format-aicourse .aicourse-ai-avatar-head {
+    inline-size: 2.5rem;
+    block-size: 2.5rem;
+    background: var(--acf-media-hover-strong);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.28);
+}
+
+body.format-aicourse .aicourse-ai-avatar-pulse {
+    animation: acf-tutor-pulse 1.6s var(--acf-ease-standard) infinite;
+}
+
+/* --- Conversation ----------------------------------------------------------- */
+body.format-aicourse .aicourse-ai-chatbox-messages {
+    position: relative;
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: var(--acf-space-5);
+    padding: var(--acf-space-5) var(--acf-space-4);
     overflow-y: auto;
     overscroll-behavior: contain;
+    scroll-behavior: smooth;
     background: var(--acf-surface-sunken);
-    /* ACF-FIX-2.1.18: same invariant the section card was missing. This surface takes its
-       background from --acf-surface-sunken, which flips with colour mode, but message text was
-       inheriting the host theme's colour -- Boost hands down rgb(29, 33, 37). In dark mode that
-       is near-black text on a rgb(15, 23, 42) panel: measured 1.1:1 where AA needs 4.5:1, i.e.
-       the tutor's answers were unreadable. Anchoring the colour here makes background and text
-       flip together for every message bubble, present and future. */
     color: var(--acf-text-primary);
 }
 
 body.format-aicourse .aicourse-ai-message {
-    max-inline-size: 85%;
+    display: flex;
+    align-items: flex-start;
+    gap: var(--acf-space-3);
+    max-inline-size: 100%;
     animation: acf-fade-in var(--acf-duration-base) var(--acf-ease-out);
 }
 
 body.format-aicourse .aicourse-ai-message-user {
-    align-self: flex-end;
+    justify-content: flex-end;
 }
 
-body.format-aicourse .aicourse-ai-message-bot {
-    align-self: flex-start;
+body.format-aicourse .aicourse-ai-message-body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--acf-space-1);
+    min-inline-size: 0;
+}
+
+body.format-aicourse .aicourse-ai-message-bot .aicourse-ai-message-body {
+    flex: 1 1 auto;
+}
+
+body.format-aicourse .aicourse-ai-message-user .aicourse-ai-message-body {
+    max-inline-size: 85%;
 }
 
 body.format-aicourse .aicourse-ai-message-content {
     padding: var(--acf-space-3) var(--acf-space-4);
-    border-radius: var(--acf-radius-xl);
     font-size: var(--acf-font-size-md);
-    line-height: var(--acf-leading-normal);
+    line-height: var(--acf-leading-relaxed);
     overflow-wrap: anywhere;
 }
 
-/* Logical corner properties: the bubble "tails" point the right way in RTL. */
+/* The learner's own text keeps its line breaks exactly as typed. */
 body.format-aicourse .aicourse-ai-message-user .aicourse-ai-message-content {
     background: var(--acf-ai-gradient);
     color: var(--acf-text-inverse);
-    border-end-end-radius: var(--acf-radius-xs);
+    white-space: pre-wrap;
+    box-shadow: var(--acf-elevation-2);
 }
 
 body.format-aicourse .aicourse-ai-message-bot .aicourse-ai-message-content {
+    border: 1px solid var(--acf-border-subtle);
     background: var(--acf-surface-raised);
     color: var(--acf-text-primary);
-    border: 1px solid var(--acf-border-subtle);
-    border-end-start-radius: var(--acf-radius-xs);
     box-shadow: var(--acf-elevation-1);
 }
 
-body.format-aicourse .aicourse-ai-chatbox-input {
+body.format-aicourse .aicourse-ai-message-error .aicourse-ai-message-content {
+    border-color: var(--acf-status-danger-border);
+    background: var(--acf-status-danger-bg);
+    color: var(--acf-status-danger-fg);
+}
+
+body.format-aicourse .aicourse-ai-message-error .aicourse-ai-avatar {
+    background: var(--acf-status-danger-solid);
+}
+
+body.format-aicourse .aicourse-ai-thinking {
+    margin-inline-start: var(--acf-space-2);
+    color: var(--acf-text-secondary);
+    font-size: var(--acf-font-size-sm);
+}
+
+body.format-aicourse .aicourse-ai-loading .aicourse-ai-message-body {
+    flex: 0 1 auto;
+}
+
+/* --- Answer tools: copy + rating ------------------------------------------- */
+body.format-aicourse .aicourse-ai-message-tools {
     display: flex;
-    align-items: flex-end;
-    gap: var(--acf-space-2);
-    flex-shrink: 0;
-    padding: var(--acf-space-3) var(--acf-space-4);
-    border-block-start: 1px solid var(--acf-border-subtle);
-    background: var(--acf-surface-raised);
-    /* ACF-FIX-2.1.19: the same invariant missed on the section card and the message list. The
-       <label> for the textarea was inheriting the theme's colour against this mode-aware
-       background: measured 1.11:1 in dark mode. Third occurrence of the pattern. */
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--acf-space-1);
+}
+
+body.format-aicourse .aicourse-ai-rating {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--acf-space-1);
+}
+
+body.format-aicourse .aicourse-ai-tool-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--acf-space-1);
+    min-inline-size: 2.25rem;
+    min-block-size: 2.25rem;
+    padding: 0 var(--acf-space-2);
+    border: none;
+    border-radius: var(--acf-radius-pill);
+    background: transparent;
+    color: var(--acf-text-secondary);
+    font-family: var(--acf-font-family);
+    font-size: var(--acf-font-size-xs);
+    font-weight: var(--acf-weight-medium);
+    cursor: pointer;
+    transition:
+        background var(--acf-duration-fast) var(--acf-ease-standard),
+        color var(--acf-duration-fast) var(--acf-ease-standard);
+}
+
+body.format-aicourse .aicourse-ai-tool-btn:hover {
+    background: var(--acf-ai-bg);
+    color: var(--acf-ai-fg);
+}
+
+body.format-aicourse .aicourse-ai-copy-btn.is-copied {
+    color: var(--acf-status-done-fg);
+}
+
+body.format-aicourse .aicourse-ai-rating-done {
+    padding: 0 var(--acf-space-2);
+    font-size: var(--acf-font-size-xs);
+    color: var(--acf-ai-fg);
+}
+
+/* --- Rich answer typography ------------------------------------------------- */
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-prose > * {
+    margin: 0;
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-prose > * + * {
+    margin-block-start: var(--acf-space-3);
+}
+
+/* Cards get more air than running text so each reads as its own unit. */
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-prose > :is(.aicourse-ai-quizset, .aicourse-ai-checklist,
+.aicourse-ai-callout, .aicourse-ai-table-wrap, .aicourse-ai-codeblock) + *,
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-prose > * + :is(.aicourse-ai-quizset, .aicourse-ai-checklist,
+.aicourse-ai-callout, .aicourse-ai-table-wrap, .aicourse-ai-codeblock) {
+    margin-block-start: var(--acf-space-5);
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-prose strong {
+    font-weight: var(--acf-weight-semibold);
     color: var(--acf-text-primary);
 }
 
-body.format-aicourse .aicourse-ai-chatbox-input textarea {
-    flex: 1 1 auto;
-    min-inline-size: 0;
-    min-block-size: var(--acf-target-min);
-    max-block-size: 7rem;
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-prose a {
+    color: var(--acf-ai-fg);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-prose .aicourse-ai-h {
+    margin: 0;
+    color: var(--acf-text-primary);
+    font-weight: var(--acf-weight-bold);
+    line-height: var(--acf-leading-snug);
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-prose > .aicourse-ai-h:not(:first-child) {
+    margin-block-start: var(--acf-space-5);
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-prose .aicourse-ai-h1 {
+    font-size: var(--acf-font-size-lg);
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-prose .aicourse-ai-h2 {
+    font-size: var(--acf-font-size-base);
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-prose .aicourse-ai-h3 {
+    font-size: var(--acf-font-size-sm);
+    letter-spacing: var(--acf-tracking-wide);
+    text-transform: uppercase;
+    color: var(--acf-ai-fg);
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-prose .aicourse-ai-rule {
+    border: 0;
+    border-block-start: 1px solid var(--acf-border-default);
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-list {
+    margin: 0;
+    padding-inline-start: var(--acf-space-5);
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-list > li + li {
+    margin-block-start: var(--acf-space-1);
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-list > li::marker {
+    color: var(--acf-ai-fg);
+}
+
+/* "Some practice questions were cut off." */
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-notice {
+    padding: var(--acf-space-2) var(--acf-space-3);
+    border-inline-start: 3px solid var(--acf-status-doing-solid);
+    background: var(--acf-status-doing-bg);
+    color: var(--acf-status-doing-fg);
+    font-size: var(--acf-font-size-sm);
+}
+
+/* An answer that could not be rendered keeps the learner-visible line breaks. */
+body.format-aicourse .aicourse-ai-message-content.aicourse-ai-plain {
+    white-space: pre-wrap;
+}
+
+/* Lettered lists ("a) physical  b) chemical") that are not a question. */
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-letters {
+    padding-inline-start: var(--acf-space-6);
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-letters > li::marker {
+    font-weight: var(--acf-weight-semibold);
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-quiz-feedback:focus {
+    outline: none;
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-quiz-feedback:focus-visible {
+    outline: var(--acf-focus-width) solid var(--acf-focus-color);
+    outline-offset: 2px;
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-li-body + :is(.aicourse-ai-list, .aicourse-ai-steps) {
+    margin-block-start: var(--acf-space-1);
+}
+
+/* Numbered lists are steps: numbered discs joined by a rail. */
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-steps {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: acf-step;
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-steps > li {
+    position: relative;
+    padding-block-end: var(--acf-space-3);
+    padding-inline-start: 2.5rem;
+    counter-increment: acf-step;
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-steps > li:last-child {
+    padding-block-end: 0;
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-steps > li::before {
+    content: counter(acf-step);
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline-start: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: 1.75rem;
+    block-size: 1.75rem;
+    border-radius: var(--acf-radius-full);
+    background: var(--acf-ai-gradient);
+    color: var(--acf-text-inverse);
+    font-size: var(--acf-font-size-xs);
+    font-weight: var(--acf-weight-bold);
+    line-height: 1;
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-steps > li:not(:last-child)::after {
+    content: "";
+    position: absolute;
+    inset-block: 1.95rem 0.2rem;
+    inset-inline-start: calc(0.875rem - 1px);
+    inline-size: 2px;
+    background: var(--acf-ai-border);
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-steps > li > .aicourse-ai-li-body {
+    padding-block-start: 0.15rem;
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-code-inline {
+    padding: 0.1em 0.35em;
+    background: var(--acf-surface-muted);
+    color: var(--acf-text-primary);
+    font-size: 0.9em;
+    overflow-wrap: anywhere;
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-codeblock {
+    background: var(--acf-neutral-900);
+    color: var(--acf-neutral-100);
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-codeblock-lang {
+    padding: var(--acf-space-1) var(--acf-space-3);
+    border-block-end: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--acf-neutral-300);
+    font-size: var(--acf-font-size-2xs);
+    letter-spacing: var(--acf-tracking-wider);
+    text-transform: uppercase;
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-codeblock pre {
+    margin: 0;
     padding: var(--acf-space-3);
+    overflow-x: auto;
+    color: inherit;
+    font-size: var(--acf-font-size-sm);
+    line-height: var(--acf-leading-normal);
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-table-wrap {
+    max-inline-size: 100%;
+    overflow-x: auto;
     border: 1px solid var(--acf-border-default);
-    border-radius: var(--acf-radius-lg);
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-table {
+    inline-size: 100%;
+    border-collapse: collapse;
+    font-size: var(--acf-font-size-sm);
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-table :is(th, td) {
+    padding: var(--acf-space-2) var(--acf-space-3);
+    border-block-end: 1px solid var(--acf-border-subtle);
+    text-align: start;
+    vertical-align: top;
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-table th {
+    background: var(--acf-surface-muted);
+    font-weight: var(--acf-weight-semibold);
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-table tbody tr:nth-child(even) td {
+    background: var(--acf-surface-sunken);
+}
+
+/* --- Callouts --------------------------------------------------------------- */
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-callout {
+    --acf-callout-fg: var(--acf-status-info-fg);
+    --acf-callout-bg: var(--acf-status-info-bg);
+    padding: var(--acf-space-3) var(--acf-space-4);
+    border-inline-start: 3px solid var(--acf-callout-fg);
+    background: var(--acf-callout-bg);
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-callout[data-tone="tip"] {
+    --acf-callout-fg: var(--acf-status-done-fg);
+    --acf-callout-bg: var(--acf-status-done-bg);
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-callout[data-tone="key"],
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-callout[data-tone="example"] {
+    --acf-callout-fg: var(--acf-ai-fg);
+    --acf-callout-bg: var(--acf-ai-bg);
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-callout[data-tone="warning"] {
+    --acf-callout-fg: var(--acf-status-doing-fg);
+    --acf-callout-bg: var(--acf-status-doing-bg);
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-callout-title {
+    margin-block-end: var(--acf-space-1);
+    color: var(--acf-callout-fg);
+    font-size: var(--acf-font-size-xs);
+    font-weight: var(--acf-weight-bold);
+    letter-spacing: var(--acf-tracking-wider);
+    text-transform: uppercase;
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-callout-body > * {
+    margin: 0;
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-callout-body > * + * {
+    margin-block-start: var(--acf-space-2);
+}
+
+/* --- Checklist card --------------------------------------------------------- */
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-checklist {
+    border: 1px solid var(--acf-border-default);
+    background: var(--acf-surface-raised);
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-checklist-meter {
+    display: flex;
+    align-items: center;
+    gap: var(--acf-space-3);
+    padding: var(--acf-space-3) var(--acf-space-4);
+    border-block-end: 1px solid var(--acf-border-subtle);
+    background: var(--acf-surface-sunken);
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-checklist-bar {
+    flex: 1 1 auto;
+    block-size: 6px;
+    overflow: hidden;
+    border-radius: var(--acf-radius-pill);
+    background: var(--acf-status-todo-bg);
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-checklist-bar > span {
+    display: block;
+    block-size: 100%;
+    inline-size: 0;
+    border-radius: inherit;
+    background: var(--acf-ai-gradient);
+    transition: inline-size var(--acf-duration-slow) var(--acf-ease-out);
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-checklist.is-complete .aicourse-ai-checklist-bar > span {
+    background: var(--acf-status-done-line);
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-checklist-count {
+    flex: none;
+    color: var(--acf-text-secondary);
+    font-size: var(--acf-font-size-xs);
+    font-weight: var(--acf-weight-semibold);
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-checklist-items {
+    margin: 0;
+    padding: var(--acf-space-1) 0;
+    list-style: none;
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-checklist-item label {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--acf-space-3);
+    margin: 0;
+    padding: var(--acf-space-2) var(--acf-space-4);
+    font-weight: var(--acf-weight-regular);
+    cursor: pointer;
+    transition: background var(--acf-duration-fast) var(--acf-ease-standard);
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-checklist-item label:hover {
+    background: var(--acf-surface-hover);
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-checklist-box {
+    flex: none;
+    inline-size: 1.15rem;
+    block-size: 1.15rem;
+    margin: 0.2rem 0 0;
+    accent-color: var(--acf-ai-fg);
+    cursor: pointer;
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-checklist-item.is-done .aicourse-ai-checklist-text {
+    color: var(--acf-text-tertiary);
+    text-decoration: line-through;
+}
+
+/* --- Practice question cards ------------------------------------------------ */
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-quizset {
+    display: grid;
+    gap: var(--acf-space-4);
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-quiz {
+    padding: var(--acf-space-4);
+    border: 1px solid var(--acf-border-default);
+    border-block-start: 3px solid var(--acf-ai-fg);
+    background: var(--acf-surface-raised);
+    box-shadow: var(--acf-elevation-2);
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-quiz[data-state="correct"] {
+    border-block-start-color: var(--acf-status-done-line);
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-quiz[data-state="incorrect"] {
+    border-block-start-color: var(--acf-status-danger-solid);
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-quiz-badge {
+    display: inline-flex;
+    padding: 0.2rem var(--acf-space-3);
+    border-radius: var(--acf-radius-pill);
+    background: var(--acf-ai-bg);
+    color: var(--acf-ai-fg);
+    font-size: var(--acf-font-size-2xs);
+    font-weight: var(--acf-weight-bold);
+    letter-spacing: var(--acf-tracking-wider);
+    text-transform: uppercase;
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-quiz-question {
+    margin: var(--acf-space-3) 0 var(--acf-space-4);
+    color: var(--acf-text-primary);
+    font-size: var(--acf-font-size-base);
+    font-weight: var(--acf-weight-semibold);
+    line-height: var(--acf-leading-snug);
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-quiz-options {
+    display: grid;
+    gap: var(--acf-space-2);
+}
+
+/* Two columns when the card is wide enough for two 15rem options, otherwise one. No container
+   query needed, so it behaves the same in every panel width and every browser. */
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-quiz-options {
+    /* stylelint-disable-next-line csstree/validator -- min() inside minmax() is valid CSS (all current
+       browsers); the bundled validator predates it. It stops a 320px phone overflowing. */
+    grid-template-columns: repeat(auto-fit, minmax(min(15rem, 100%), 1fr));
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-quiz-option {
+    display: flex;
+    align-items: center;
+    gap: var(--acf-space-3);
+    inline-size: 100%;
+    min-block-size: 3rem;
+    padding: var(--acf-space-2) var(--acf-space-3);
+    border: 1.5px solid var(--acf-border-default);
     background: var(--acf-surface-raised);
     color: var(--acf-text-primary);
     font-family: var(--acf-font-family);
     font-size: var(--acf-font-size-md);
     line-height: var(--acf-leading-snug);
-    resize: none;
+    text-align: start;
+    cursor: pointer;
+    transition:
+        border-color var(--acf-duration-fast) var(--acf-ease-standard),
+        background var(--acf-duration-fast) var(--acf-ease-standard),
+        transform var(--acf-duration-fast) var(--acf-ease-spring),
+        box-shadow var(--acf-duration-fast) var(--acf-ease-standard);
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-quiz-option:not(:disabled):hover {
+    border-color: var(--acf-ai-fg);
+    background: var(--acf-ai-bg);
+    box-shadow: var(--acf-elevation-2);
+    transform: translateY(-1px);
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-quiz-option:disabled {
+    cursor: default;
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-quiz-letter {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    inline-size: 1.85rem;
+    block-size: 1.85rem;
+    border: 1.5px solid var(--acf-ai-border);
+    border-radius: var(--acf-radius-full);
+    background: var(--acf-ai-bg);
+    color: var(--acf-ai-fg);
+    font-size: var(--acf-font-size-sm);
+    font-weight: var(--acf-weight-bold);
+    transition:
+        background var(--acf-duration-fast) var(--acf-ease-standard),
+        color var(--acf-duration-fast) var(--acf-ease-standard);
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-quiz-text {
+    flex: 1 1 auto;
+    min-inline-size: 0;
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-quiz-mark {
+    flex: none;
+    font-weight: var(--acf-weight-bold);
+}
+
+/* Answered: fade the bystanders, light up the answer and the learner's choice. */
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-quiz:not([data-state="open"])
+.aicourse-ai-quiz-option:not(.is-answer):not(.is-chosen) {
+    opacity: 0.55;
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-quiz-option.is-chosen {
+    border-color: var(--acf-ai-fg);
+    background: var(--acf-ai-bg);
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-quiz-option.is-chosen .aicourse-ai-quiz-letter {
+    border-color: transparent;
+    background: var(--acf-ai-gradient);
+    color: var(--acf-text-inverse);
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-quiz-option.is-answer {
+    border-color: var(--acf-status-done-line);
+    background: var(--acf-status-done-bg);
+    animation: acf-tutor-pop var(--acf-duration-slow) var(--acf-ease-spring);
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-quiz-option.is-answer .aicourse-ai-quiz-letter {
+    border-color: transparent;
+    background: var(--acf-status-done-solid);
+    color: var(--acf-neutral-0);
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-quiz-option.is-answer .aicourse-ai-quiz-mark::before {
+    content: "\2713";
+    color: var(--acf-status-done-fg);
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-quiz-option.is-wrong {
+    border-color: var(--acf-status-danger-solid);
+    background: var(--acf-status-danger-bg);
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-quiz-option.is-wrong .aicourse-ai-quiz-letter {
+    border-color: transparent;
+    background: var(--acf-status-danger-solid);
+    color: var(--acf-neutral-0);
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-quiz-option.is-wrong .aicourse-ai-quiz-mark::before {
+    content: "\2715";
+    color: var(--acf-status-danger-fg);
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-quiz-hintwrap {
+    margin-block-start: var(--acf-space-3);
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-quiz-hintwrap[hidden] {
+    display: none;
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-quiz-hintbtn {
+    padding: var(--acf-space-1) 0;
+    border: none;
+    background: none;
+    color: var(--acf-ai-fg);
+    font-family: var(--acf-font-family);
+    font-size: var(--acf-font-size-sm);
+    font-weight: var(--acf-weight-semibold);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-quiz-hint {
+    margin-block-start: var(--acf-space-2);
+    padding: var(--acf-space-2) var(--acf-space-3);
+    border: 1px dashed var(--acf-ai-border);
+    background: var(--acf-ai-bg);
+    font-size: var(--acf-font-size-sm);
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-quiz-feedback {
+    margin-block-start: var(--acf-space-4);
+    padding: var(--acf-space-3) var(--acf-space-4);
+    border-inline-start: 3px solid var(--acf-ai-fg);
+    background: var(--acf-ai-bg);
+    animation: acf-fade-in var(--acf-duration-base) var(--acf-ease-out);
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-quiz-feedback[hidden] {
+    display: none;
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-quiz[data-state="correct"] .aicourse-ai-quiz-feedback {
+    border-inline-start-color: var(--acf-status-done-line);
+    background: var(--acf-status-done-bg);
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-quiz[data-state="incorrect"] .aicourse-ai-quiz-feedback {
+    border-inline-start-color: var(--acf-status-danger-solid);
+    background: var(--acf-status-danger-bg);
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-quiz-verdict {
+    font-size: var(--acf-font-size-md);
+    font-weight: var(--acf-weight-bold);
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-quiz[data-state="correct"] .aicourse-ai-quiz-verdict {
+    color: var(--acf-status-done-fg);
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-quiz[data-state="incorrect"] .aicourse-ai-quiz-verdict {
+    color: var(--acf-status-danger-fg);
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-quiz-explanation {
+    margin-block-start: var(--acf-space-1);
+    color: var(--acf-text-primary);
+    font-size: var(--acf-font-size-md);
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-quiz-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--acf-space-2);
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-quiz-actions:not(:empty) {
+    margin-block-start: var(--acf-space-3);
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-followup {
+    min-block-size: 2.25rem;
+    padding: var(--acf-space-1) var(--acf-space-4);
+    border: 1px solid var(--acf-ai-border);
+    border-radius: var(--acf-radius-pill);
+    background: var(--acf-surface-raised);
+    color: var(--acf-ai-fg);
+    font-family: var(--acf-font-family);
+    font-size: var(--acf-font-size-sm);
+    font-weight: var(--acf-weight-semibold);
+    cursor: pointer;
+    transition:
+        transform var(--acf-duration-fast) var(--acf-ease-spring),
+        box-shadow var(--acf-duration-fast) var(--acf-ease-standard);
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-followup:hover {
+    box-shadow: var(--acf-elevation-2);
+    transform: translateY(-1px);
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-followup.is-primary {
+    border-color: transparent;
+    background: var(--acf-ai-gradient);
+    color: var(--acf-text-inverse);
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-quizset-score {
+    padding: var(--acf-space-3) var(--acf-space-4);
+    background: var(--acf-ai-gradient);
+    color: var(--acf-text-inverse);
+    font-size: var(--acf-font-size-base);
+    font-weight: var(--acf-weight-bold);
+    text-align: center;
+    animation: acf-tutor-pop var(--acf-duration-slow) var(--acf-ease-spring);
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-quizset-score[hidden] {
+    display: none;
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-quizset-score[data-perfect="true"] {
+    background: var(--acf-status-done-solid);
+}
+
+/* --- Loading dots ----------------------------------------------------------- */
+body.format-aicourse .aicourse-ai-dots {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--acf-space-1);
+    vertical-align: middle;
+}
+
+body.format-aicourse .aicourse-ai-dots span {
+    inline-size: 7px;
+    block-size: 7px;
+    border-radius: var(--acf-radius-full);
+    background: var(--acf-ai-fg);
+    animation: acf-dots-bounce 1.4s var(--acf-ease-standard) infinite both;
+}
+
+body.format-aicourse .aicourse-ai-dots span:nth-child(1) {
+    animation-delay: -0.32s;
+}
+
+body.format-aicourse .aicourse-ai-dots span:nth-child(2) {
+    animation-delay: -0.16s;
+}
+
+/* --- Study tools: welcome grid, rail list, chips ---------------------------- */
+body.format-aicourse .aicourse-ai-quick-actions {
+    padding-inline-start: calc(2rem + var(--acf-space-3));
+}
+
+body.format-aicourse .aicourse-ai-quick-label {
+    margin-block-end: var(--acf-space-2);
+    color: var(--acf-text-secondary);
+    font-size: var(--acf-font-size-xs);
+    font-weight: var(--acf-weight-semibold);
+}
+
+body.format-aicourse .aicourse-ai-quick-buttons {
+    display: grid;
+    gap: var(--acf-space-2);
+}
+
+body.format-aicourse .aicourse-ai-tool {
+    display: flex;
+    align-items: center;
+    gap: var(--acf-space-3);
+    inline-size: 100%;
+    padding: var(--acf-space-2) var(--acf-space-3);
+    border: 1px solid var(--acf-border-subtle);
+    background: var(--acf-surface-raised);
+    color: var(--acf-text-primary);
+    font-family: var(--acf-font-family);
+    text-align: start;
+    cursor: pointer;
+    transition:
+        border-color var(--acf-duration-fast) var(--acf-ease-standard),
+        background var(--acf-duration-fast) var(--acf-ease-standard),
+        box-shadow var(--acf-duration-fast) var(--acf-ease-standard),
+        transform var(--acf-duration-fast) var(--acf-ease-spring);
+}
+
+body.format-aicourse .aicourse-ai-tool:hover {
+    border-color: var(--acf-ai-border);
+    box-shadow: var(--acf-elevation-2);
+    transform: translateY(-1px);
+}
+
+body.format-aicourse .aicourse-ai-tool-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    inline-size: 2.25rem;
+    block-size: 2.25rem;
+    background: var(--acf-ai-bg);
+    color: var(--acf-ai-fg);
+}
+
+body.format-aicourse .aicourse-ai-tool-text {
+    display: flex;
+    flex-direction: column;
+    min-inline-size: 0;
+}
+
+body.format-aicourse .aicourse-ai-tool-label {
+    font-size: var(--acf-font-size-sm);
+    font-weight: var(--acf-weight-semibold);
+    line-height: var(--acf-leading-snug);
+}
+
+body.format-aicourse .aicourse-ai-tool-desc {
+    color: var(--acf-text-secondary);
+    font-size: var(--acf-font-size-xs);
+    line-height: var(--acf-leading-snug);
+}
+
+body.format-aicourse .aicourse-ai-tool-rail {
+    border-color: transparent;
+    background: transparent;
+}
+
+body.format-aicourse .aicourse-ai-tool-rail:hover {
+    border-color: transparent;
+    background: var(--acf-ai-bg);
+    box-shadow: none;
+    transform: none;
+}
+
+body.format-aicourse .aicourse-ai-suggest {
+    display: flex;
+    gap: var(--acf-space-2);
+    flex-shrink: 0;
+    padding: var(--acf-space-2) var(--acf-space-4) 0;
+    overflow-x: auto;
+    border-block-start: 1px solid var(--acf-border-subtle);
+    background: var(--acf-surface-raised);
+    scrollbar-width: none;
+}
+
+body.format-aicourse .aicourse-ai-suggest[hidden] {
+    display: none;
+}
+
+body.format-aicourse .aicourse-ai-suggest::-webkit-scrollbar {
+    display: none;
+}
+
+body.format-aicourse .aicourse-ai-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--acf-space-1);
+    flex: none;
+    min-block-size: 2.25rem;
+    padding: var(--acf-space-1) var(--acf-space-3);
+    border: 1px solid var(--acf-ai-border);
+    border-radius: var(--acf-radius-pill);
+    background: var(--acf-ai-bg);
+    color: var(--acf-ai-fg);
+    font-family: var(--acf-font-family);
+    font-size: var(--acf-font-size-xs);
+    font-weight: var(--acf-weight-semibold);
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+body.format-aicourse .aicourse-ai-chip svg {
+    inline-size: var(--acf-icon-sm);
+    block-size: var(--acf-icon-sm);
+}
+
+body.format-aicourse .aicourse-ai-chip:hover {
+    border-color: var(--acf-ai-fg);
+}
+
+/* --- Composer --------------------------------------------------------------- */
+body.format-aicourse .aicourse-ai-chatbox-input {
+    flex-shrink: 0;
+    padding: var(--acf-space-3) var(--acf-space-4) var(--acf-space-4);
+    background: var(--acf-surface-raised);
+    color: var(--acf-text-primary);
+}
+
+body.format-aicourse .aicourse-ai-suggest[hidden] + .aicourse-ai-chatbox-input {
+    border-block-start: 1px solid var(--acf-border-subtle);
+}
+
+body.format-aicourse .aicourse-ai-composer {
+    display: flex;
+    align-items: flex-end;
+    gap: var(--acf-space-2);
+    padding-block: var(--acf-space-1) var(--acf-space-1);
+    padding-inline: var(--acf-space-4) var(--acf-space-1);
+    border: 1.5px solid var(--acf-border-default);
+    background: var(--acf-surface-raised);
     transition:
         border-color var(--acf-duration-fast) var(--acf-ease-standard),
         box-shadow var(--acf-duration-fast) var(--acf-ease-standard);
 }
 
-/* The previous rule set `outline: none` and changed only the border hue by one
-   step — a 1px change that fails SC 2.4.13. A real ring is used now. */
-body.format-aicourse .aicourse-ai-chatbox-input textarea:focus {
+/* The ring sits on the whole composer, not the bare textarea, so it reads as one control. */
+body.format-aicourse .aicourse-ai-composer:focus-within {
     border-color: var(--acf-focus-color);
     box-shadow: 0 0 0 3px var(--acf-status-info-bg);
 }
 
-body.format-aicourse .aicourse-ai-chatbox-input textarea:focus-visible {
-    outline: var(--acf-focus-width) solid var(--acf-focus-color);
-    outline-offset: 1px;
+body.format-aicourse .aicourse-ai-composer textarea {
+    flex: 1 1 auto;
+    min-inline-size: 0;
+    min-block-size: 2.5rem;
+    max-block-size: 11rem;
+    padding: var(--acf-space-2) 0;
+    border: none;
+    background: transparent;
+    color: var(--acf-text-primary);
+    font-family: var(--acf-font-family);
+    font-size: var(--acf-font-size-md);
+    line-height: var(--acf-leading-normal);
+    resize: none;
+    box-shadow: none;
 }
 
-body.format-aicourse .aicourse-ai-chatbox-input textarea::placeholder {
+body.format-aicourse .aicourse-ai-composer textarea:focus,
+body.format-aicourse .aicourse-ai-composer textarea:focus-visible {
+    outline: none;
+    box-shadow: none;
+}
+
+body.format-aicourse .aicourse-ai-composer textarea::placeholder {
     color: var(--acf-text-tertiary);
     opacity: 1;
 }
@@ -3686,159 +4692,332 @@ body.format-aicourse .aicourse-ai-send-btn:active {
 }
 
 body.format-aicourse .aicourse-ai-send-btn svg {
-    inline-size: var(--acf-icon-md);
-    block-size: var(--acf-icon-md);
     flex: none;
-    stroke: currentColor;
 }
 
-[dir="rtl"] body.format-aicourse .aicourse-ai-send-btn svg {
-    transform: scaleX(-1);
+body.format-aicourse .aicourse-ai-composer-hint {
+    display: none;
+    margin-block-start: var(--acf-space-2);
+    color: var(--acf-text-tertiary);
+    font-size: var(--acf-font-size-xs);
+    text-align: center;
 }
 
-/* --- Loading dots --------------------------------------------------------- */
-body.format-aicourse .aicourse-ai-dots {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--acf-space-1);
+/* --- Rail (Study view only) -------------------------------------------------- */
+body.format-aicourse .aicourse-ai-rail {
+    display: none;
 }
 
-body.format-aicourse .aicourse-ai-dots span {
-    inline-size: 8px;
-    block-size: 8px;
-    border-radius: var(--acf-radius-full);
-    background: var(--acf-ai-fg);
-    animation: acf-dots-bounce 1.4s var(--acf-ease-standard) infinite both;
-}
-
-body.format-aicourse .aicourse-ai-dots span:nth-child(1) {
-    animation-delay: -0.32s;
-}
-body.format-aicourse .aicourse-ai-dots span:nth-child(2) {
-    animation-delay: -0.16s;
-}
-body.format-aicourse .aicourse-ai-dots span:nth-child(3) {
-    animation-delay: 0s;
-}
-
-/* --- Quick actions -------------------------------------------------------- */
-body.format-aicourse .aicourse-ai-quick-actions {
-    padding: 0 var(--acf-space-1) var(--acf-space-2);
-}
-
-body.format-aicourse .aicourse-ai-quick-label {
+body.format-aicourse .aicourse-ai-rail-label {
     margin-block-end: var(--acf-space-2);
+    color: var(--acf-text-tertiary);
     font-size: var(--acf-font-size-2xs);
-    font-weight: var(--acf-weight-semibold);
+    font-weight: var(--acf-weight-bold);
     letter-spacing: var(--acf-tracking-wider);
     text-transform: uppercase;
-    color: var(--acf-text-tertiary);
 }
 
-body.format-aicourse .aicourse-ai-quick-buttons {
+body.format-aicourse .aicourse-ai-context-card {
     display: flex;
-    flex-wrap: wrap;
-    gap: var(--acf-space-2);
-}
-
-/* Was #6366f1 on rgba(99,102,241,.08) = 3.87:1. --acf-ai-fg on --acf-ai-bg
-   is 7.04:1 light / 7.33:1 dark. */
-body.format-aicourse .aicourse-ai-quick-btn {
-    display: inline-flex;
-    align-items: center;
+    flex-direction: column;
     gap: var(--acf-space-1);
-    min-block-size: 2.25rem;
-    padding: var(--acf-space-1) var(--acf-space-3);
-    border: 1px solid var(--acf-ai-border);
-    border-radius: var(--acf-radius-pill);
-    background: var(--acf-ai-bg);
+    padding: var(--acf-space-4);
+    border: 1px solid var(--acf-border-subtle);
+    border-inline-start: 3px solid var(--acf-ai-fg);
+    background: var(--acf-surface-sunken);
+}
+
+body.format-aicourse .aicourse-ai-context-kind {
     color: var(--acf-ai-fg);
-    font-family: var(--acf-font-family);
     font-size: var(--acf-font-size-xs);
-    font-weight: var(--acf-weight-medium);
-    white-space: nowrap;
-    cursor: pointer;
-    transition:
-        background var(--acf-duration-fast) var(--acf-ease-standard),
-        border-color var(--acf-duration-fast) var(--acf-ease-standard),
-        transform var(--acf-duration-fast) var(--acf-ease-spring);
+    font-weight: var(--acf-weight-semibold);
 }
 
-body.format-aicourse .aicourse-ai-quick-btn:hover {
-    background: var(--acf-ai-bg);
-    border-color: var(--acf-ai-fg);
-    transform: translateY(-1px);
+body.format-aicourse .aicourse-ai-context-title {
+    color: var(--acf-text-primary);
+    font-size: var(--acf-font-size-base);
+    font-weight: var(--acf-weight-bold);
+    line-height: var(--acf-leading-snug);
 }
 
-body.format-aicourse .aicourse-ai-quick-btn:active {
-    transform: translateY(0);
+body.format-aicourse .aicourse-ai-context-course {
+    color: var(--acf-text-secondary);
+    font-size: var(--acf-font-size-sm);
 }
 
-body.format-aicourse .aicourse-ai-quick-btn svg {
-    inline-size: var(--acf-icon-xs);
-    block-size: var(--acf-icon-xs);
-    flex: none;
-    stroke: currentColor;
+body.format-aicourse .aicourse-ai-rail-tools {
+    display: grid;
+    gap: var(--acf-space-1);
 }
 
-/* --- Rating --------------------------------------------------------------- */
-body.format-aicourse .aicourse-ai-rating {
-    display: flex;
-    align-items: center;
-    gap: var(--acf-space-2);
-    margin-block-start: var(--acf-space-2);
-    padding-block-start: var(--acf-space-2);
+body.format-aicourse .aicourse-ai-rail-foot {
+    margin-block-start: auto;
+    padding-block-start: var(--acf-space-4);
     border-block-start: 1px solid var(--acf-border-subtle);
+    color: var(--acf-text-secondary);
+    font-size: var(--acf-font-size-xs);
+    line-height: var(--acf-leading-normal);
 }
 
-body.format-aicourse .aicourse-ai-rate-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-inline-size: 2.25rem;
-    min-block-size: 2.25rem;
-    padding: var(--acf-space-1);
-    border: 1px solid var(--acf-border-default);
-    border-radius: var(--acf-radius-md);
-    background: transparent;
+
+/* While an answer is in flight, controls that would send another question are unavailable. */
+body.format-aicourse .aicourse-ai-busy :is(.aicourse-ai-followup, .aicourse-ai-quick-btn, .aicourse-ai-newchat,
+.aicourse-ai-quiz[data-answer="-1"] .aicourse-ai-quiz-option:not(:disabled)) {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+
+/* --- Full answers in the AI reports (course report and site admin report) ---- */
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-chat-full {
+    margin-block-start: var(--acf-space-2);
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-chat-full > summary {
+    color: var(--acf-ai-fg);
+    font-size: var(--acf-font-size-sm);
+    font-weight: var(--acf-weight-semibold);
+    cursor: pointer;
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-report-answer {
+    margin-block-start: var(--acf-space-2);
+    padding: var(--acf-space-3) var(--acf-space-4);
+    max-inline-size: 48rem;
+    border: 1px solid var(--acf-border-subtle);
+    background: var(--acf-surface-raised);
+    color: var(--acf-text-primary);
     font-size: var(--acf-font-size-md);
-    line-height: var(--acf-leading-none);
-    cursor: pointer;
-    transition:
-        background var(--acf-duration-fast) var(--acf-ease-standard),
-        border-color var(--acf-duration-fast) var(--acf-ease-standard),
-        transform var(--acf-duration-fast) var(--acf-ease-spring);
+    line-height: var(--acf-leading-relaxed);
+    white-space: normal;
+    text-align: start;
 }
 
-body.format-aicourse .aicourse-ai-rate-btn:hover {
-    background: var(--acf-ai-bg);
-    border-color: var(--acf-ai-border);
-    transform: scale(1.08);
+/* An opened full answer gets room for its cards; closed, the column stays narrow. */
+.aicadmin-wrap .aicadmin-text-truncated:has(details[open]),
+body.format-aicourse .aicourse-chat-response:has(.aicourse-chat-full[open]) {
+    max-inline-size: 44rem;
+    min-inline-size: 28rem;
 }
 
-body.format-aicourse .aicourse-ai-rating-done {
-    margin-block-start: var(--acf-space-2);
-    padding-block-start: var(--acf-space-2);
-    border-block-start: 1px solid var(--acf-border-subtle);
-    font-size: var(--acf-font-size-xs);
-    color: var(--acf-ai-fg);
+/* The checklist meter counts the learner's ticks, which the report does not have. */
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-report-answer .aicourse-ai-checklist-meter {
+    display: none;
 }
 
-/* Below the sm breakpoint the chatbox is a full-width bottom sheet. */
+/* ==========================================================================
+   Study view
+   ========================================================================== */
+body.format-aicourse .aicourse-ai-chatbox[data-view="expanded"] {
+    inset: var(--acf-space-6);
+    margin-inline: auto;
+    inline-size: min(80rem, calc(100vw - (2 * var(--acf-space-6))));
+    max-inline-size: none;
+    block-size: auto;
+    max-block-size: none;
+    animation: acf-tutor-zoom var(--acf-duration-slow) var(--acf-ease-out);
+}
+
+body.format-aicourse .aicourse-ai-chatbox[data-view="expanded"] .aicourse-ai-chatbox-header {
+    padding-block: var(--acf-space-4) var(--acf-space-4);
+    padding-inline: var(--acf-space-6) var(--acf-space-4);
+}
+
+body.format-aicourse .aicourse-ai-chatbox[data-view="expanded"] .aicourse-ai-chatbox-title {
+    font-size: var(--acf-font-size-lg);
+}
+
+body.format-aicourse .aicourse-ai-chatbox[data-view="expanded"] .aicourse-ai-chatbox-subtitle {
+    font-size: var(--acf-font-size-sm);
+}
+
+body.format-aicourse .aicourse-ai-chatbox[data-view="expanded"] .aicourse-ai-rail {
+    display: flex;
+    flex: none;
+    flex-direction: column;
+    gap: var(--acf-space-6);
+    inline-size: 19rem;
+    padding: var(--acf-space-6) var(--acf-space-5);
+    overflow-y: auto;
+    border-inline-end: 1px solid var(--acf-border-subtle);
+    background: var(--acf-surface-raised);
+}
+
+/* A centred reading column: wide enough for two-up option grids, narrow enough to read. */
+body.format-aicourse .aicourse-ai-chatbox[data-view="expanded"] .aicourse-ai-chatbox-messages {
+    gap: var(--acf-space-6);
+    padding: var(--acf-space-8) max(var(--acf-space-6), calc((100% - 50rem) / 2));
+}
+
+body.format-aicourse .aicourse-ai-chatbox[data-view="expanded"] .aicourse-ai-chatbox-input {
+    padding: var(--acf-space-4) max(var(--acf-space-6), calc((100% - 50rem) / 2)) var(--acf-space-4);
+}
+
+body.format-aicourse .aicourse-ai-chatbox[data-view="expanded"] .aicourse-ai-message-content {
+    padding: var(--acf-space-4) var(--acf-space-5);
+    font-size: var(--acf-font-size-base);
+}
+
+/* In the Study view answers sit directly on the canvas, so question cards, checklists and callouts
+   read as cards in their own right rather than cards inside a bubble. */
+body.format-aicourse .aicourse-ai-chatbox[data-view="expanded"]
+.aicourse-ai-message-bot:not(.aicourse-ai-message-error):not(.aicourse-ai-loading) .aicourse-ai-message-content {
+    padding: var(--acf-space-1) 0 0;
+    border: none;
+    background: transparent;
+    box-shadow: none;
+}
+
+body.format-aicourse .aicourse-ai-chatbox[data-view="expanded"] .aicourse-ai-message-bot .aicourse-ai-prose > p,
+body.format-aicourse .aicourse-ai-chatbox[data-view="expanded"] .aicourse-ai-message-welcome .aicourse-ai-message-content {
+    font-size: var(--acf-font-size-lg);
+    line-height: var(--acf-leading-relaxed);
+}
+
+body.format-aicourse .aicourse-ai-chatbox[data-view="expanded"] .aicourse-ai-avatar:not(.aicourse-ai-avatar-head) {
+    inline-size: 2.25rem;
+    block-size: 2.25rem;
+}
+
+body.format-aicourse .aicourse-ai-chatbox[data-view="expanded"] .aicourse-ai-quick-actions {
+    padding-inline-start: calc(2.25rem + var(--acf-space-3));
+}
+
+body.format-aicourse .aicourse-ai-chatbox[data-view="expanded"] .aicourse-ai-quick-buttons {
+    grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+    gap: var(--acf-space-3);
+}
+
+body.format-aicourse .aicourse-ai-chatbox[data-view="expanded"] .aicourse-ai-tool-card {
+    padding: var(--acf-space-4);
+}
+
+body.format-aicourse .aicourse-ai-chatbox[data-view="expanded"] .aicourse-ai-tool-card .aicourse-ai-tool-icon {
+    inline-size: 2.75rem;
+    block-size: 2.75rem;
+}
+
+body.format-aicourse .aicourse-ai-chatbox[data-view="expanded"] .aicourse-ai-suggest {
+    display: none;
+}
+
+body.format-aicourse .aicourse-ai-chatbox[data-view="expanded"] .aicourse-ai-composer-hint {
+    display: block;
+}
+
+body.format-aicourse .aicourse-ai-chatbox[data-view="expanded"] .aicourse-ai-quiz {
+    padding: var(--acf-space-5);
+}
+
+body.format-aicourse .aicourse-ai-chatbox[data-view="expanded"] .aicourse-ai-quiz-question {
+    font-size: var(--acf-font-size-lg);
+}
+
+/* Tablet: the rail gives way to the chips so the reading column keeps its width. */
+@media (max-width: 959px) {
+    body.format-aicourse .aicourse-ai-chatbox[data-view="expanded"] .aicourse-ai-rail {
+        display: none;
+    }
+
+    body.format-aicourse .aicourse-ai-chatbox[data-view="expanded"] .aicourse-ai-suggest:not([hidden]) {
+        display: flex;
+        padding-inline: max(var(--acf-space-6), calc((100% - 50rem) / 2));
+    }
+}
+
+/* Phone: compact is a bottom sheet, the Study view is full screen. */
 @media (max-width: 639px) {
     body.format-aicourse .aicourse-ai-chatbox {
         inset-block-end: 0;
         inset-inline: 0;
         inline-size: 100%;
         max-inline-size: 100%;
-        block-size: 76dvh;
-        max-block-size: 76dvh;
+        block-size: 80dvh;
+        max-block-size: 80dvh;
         border-inline: none;
         border-block-end: none;
         border-start-start-radius: var(--acf-radius-2xl);
         border-start-end-radius: var(--acf-radius-2xl);
         border-end-start-radius: 0;
         border-end-end-radius: 0;
+    }
+
+    body.format-aicourse .aicourse-ai-chatbox[data-view="expanded"] {
+        inset: 0;
+        inline-size: 100%;
+        block-size: 100dvh;
+        max-block-size: 100dvh;
+        border: none;
+        border-radius: 0;
+    }
+
+    body.format-aicourse .aicourse-ai-chatbox[data-view="expanded"] .aicourse-ai-chatbox-messages,
+    body.format-aicourse .aicourse-ai-chatbox[data-view="expanded"] .aicourse-ai-chatbox-input {
+        padding-inline: var(--acf-space-4);
+    }
+
+    body.format-aicourse .aicourse-ai-chatbox[data-view="expanded"] .aicourse-ai-suggest:not([hidden]) {
+        padding-inline: var(--acf-space-4);
+    }
+
+    body.format-aicourse .aicourse-ai-headbtn-text,
+    body.format-aicourse .aicourse-ai-chatbox[data-view="expanded"] .aicourse-ai-composer-hint {
+        display: none;
+    }
+
+    body.format-aicourse .aicourse-ai-expand {
+        padding-inline: var(--acf-space-2);
+    }
+
+    body.format-aicourse .aicourse-ai-quick-actions,
+    body.format-aicourse .aicourse-ai-chatbox[data-view="expanded"] .aicourse-ai-quick-actions {
+        padding-inline-start: 0;
+    }
+
+    body.format-aicourse .aicourse-ai-message-content {
+        font-size: var(--acf-font-size-base);
+    }
+}
+
+@keyframes acf-tutor-fade {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes acf-tutor-zoom {
+    from {
+        opacity: 0;
+        transform: scale(0.97);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes acf-tutor-pop {
+    0% {
+        transform: scale(1);
+    }
+    40% {
+        transform: scale(1.025);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+@keyframes acf-tutor-pulse {
+    0%,
+    100% {
+        box-shadow: 0 0 0 0 var(--acf-ai-border);
+    }
+    50% {
+        box-shadow: 0 0 0 6px transparent;
     }
 }
 
@@ -5770,7 +6949,7 @@ body.format-aicourse .aicourse-report-perpage select:focus-visible,
     /* Interactive-only chrome and anything overlaid on the page.
        `!important` #24: several of these are toggled by inline `style`. */
     body.format-aicourse :is(
-    .aicourse-ai-chatbox, .aicourse-icon-picker-modal, .aicourse-bgen-overlay,
+    .aicourse-ai-chatbox, .aicourse-ai-backdrop, .aicourse-icon-picker-modal, .aicourse-bgen-overlay,
     .aicourse-bdel-overlay,
     .aicourse-hero-icons, .aicourse-hero-nav, .aicourse-hero-nav-spacer) {
         /* stylelint-disable-next-line declaration-no-important -- deliberate; see the numbered note above. */
@@ -5924,6 +7103,7 @@ body.format-aicourse .aicourse-report-perpage select:focus-visible,
 
     body.format-aicourse :is(
     .aicourse-activity-number, .aicourse-completion-toggle, .aicourse-ai-quick-btn,
+    .aicourse-ai-quiz-option, .aicourse-ai-followup, .aicourse-ai-headbtn,
     .aicourse-bgen-btn, .aicourse-icon-picker-item,
     .aicourse-hero-nav, .aicourse-hero-home, .aicourse-hero-grades, .aicourse-hero-back,
     .aicourse-hero-ai-btn, .aicourse-ai-send-btn, .aicourse-ai-chatbox-close,

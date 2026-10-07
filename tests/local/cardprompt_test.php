@@ -25,6 +25,7 @@ namespace format_aicourse\local;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \format_aicourse\local\cardprompt
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse\local\cardprompt::class)]
 final class cardprompt_test extends \advanced_testcase {
     /**
      * Card images and colours are cached per request; each test starts clean.
@@ -65,13 +66,18 @@ final class cardprompt_test extends \advanced_testcase {
         $prompt = $out['prompt'];
 
         $this->assertSame('card-2', $out['promptVersion']);
-        $this->assertStringStartsWith('A realistic professional photograph representing Leading change, a Page '
-            . 'activity in an online course in Diploma of Leadership and Management.', $prompt);
+        $this->assertStringStartsWith(
+            'A realistic professional photograph representing Leading change, a Page '
+                . 'activity in an online course in Diploma of Leadership and Management.',
+            $prompt
+        );
         // The activity type gives the scene when the title is not a common one.
         $this->assertSame('page', $out['brief']['sceneKey']);
         $this->assertStringContainsString('an adult learner reading an engaging lesson on a tablet', $prompt);
-        $this->assertStringContainsString('The topic covers: How leaders guide teams through change. Includes links.',
-            $prompt);
+        $this->assertStringContainsString(
+            'The topic covers: How leaders guide teams through change. Includes links.',
+            $prompt
+        );
         $this->assertStringContainsString('The teacher asks for: sunlight through windows.', $prompt);
         $this->assertStringNotContainsString('BSB50420', $prompt);
         $this->assertStringNotContainsString('TEAMS', $prompt);
@@ -159,8 +165,12 @@ final class cardprompt_test extends \advanced_testcase {
             'accentcolour' => '#0F766E',
         ]);
         $section = get_fast_modinfo($course->id)->get_section_info(1);
-        $DB->set_field('course_sections', 'summary', '<p>Managing risk on a building site. More here.</p>',
-            ['id' => $section->id]);
+        $DB->set_field(
+            'course_sections',
+            'summary',
+            '<p>Managing risk on a building site. More here.</p>',
+            ['id' => $section->id]
+        );
         $DB->set_field('course_sections', 'name', 'Week 3', ['id' => $section->id]);
         cardimage::set_colour((int) $course->id, cardimage::TYPE_SECTION, (int) $section->id, '#B91C1C');
         rebuild_course_cache($course->id, true);
@@ -170,8 +180,11 @@ final class cardprompt_test extends \advanced_testcase {
         $out = cardprompt::compose(get_course($course->id), cardimage::TYPE_SECTION, $section, '');
         $prompt = $out['prompt'];
 
-        $this->assertStringStartsWith('A flat vector illustration representing Managing risk on a building site, a '
-            . 'section in an online course in Year 10 Biology.', $prompt);
+        $this->assertStringStartsWith(
+            'A flat vector illustration representing Managing risk on a building site, a '
+                . 'section in an online course in Year 10 Biology.',
+            $prompt
+        );
         $this->assertStringContainsString('a secondary school student actively engaged in Managing risk', $prompt);
         $this->assertStringNotContainsString('Week 3', $prompt);
         $this->assertStringContainsString('flat vector illustration', $out['promptTail']);
@@ -202,9 +215,12 @@ final class cardprompt_test extends \advanced_testcase {
         $out = cardprompt::compose_banner(get_course($course->id), null, 'golden hour');
         $this->assertSame('banner-1', $out['promptVersion']);
         $this->assertSame('banner', $out['brief']['imageKind']);
-        $this->assertStringStartsWith('A polished 3D render for the banner of an online course in Certificate III '
-            . 'in Carpentry. It shows adult learners putting what they learn in Certificate III in Carpentry '
-            . 'into practice', $out['prompt']);
+        $this->assertStringStartsWith(
+            'A polished 3D render for the banner of an online course in Certificate III '
+                . 'in Carpentry. It shows adult learners putting what they learn in Certificate III in Carpentry '
+                . 'into practice',
+            $out['prompt']
+        );
         $this->assertStringContainsString('The course covers: Build framing, stairs and formwork.', $out['prompt']);
         $this->assertStringContainsString('The teacher asks for: golden hour.', $out['prompt']);
         $this->assertStringContainsString('left third quieter', $out['promptTail']);
