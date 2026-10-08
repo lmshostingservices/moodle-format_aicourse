@@ -460,6 +460,10 @@ const settingDiagram = (base) => {
         case 'apikey':
         case 'siteid':
         case 'shareassessmentanswers':
+        case 'defaulttutoraudience':
+        case 'tutorsupportcontacts':
+        case 'tutorsendfirstname':
+        case 'tutormaxcontext':
             // A conversation, which is what the tutor is.
             return plate + topbar() + sidebar('off') + hero('soft', 56, 136)
                 + rect(56, 47, 74, 16, off, 8) + line(62, 53, 50, soft)

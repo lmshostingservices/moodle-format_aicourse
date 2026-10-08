@@ -255,6 +255,18 @@ class get_activity_context extends external_api {
     }
 
     /**
+     * The question prompts of an activity, for the AI Tutor's server-side context.
+     *
+     * Same data, same safety rules as the web service: question text only, never answers.
+     *
+     * @param \cm_info $cm The visibility-checked course module.
+     * @return array List of ['slot' => int, 'text' => string, 'type' => string].
+     */
+    public static function questions_for(\cm_info $cm): array {
+        return self::get_questions($cm);
+    }
+
+    /**
      * The question prompts of a quiz.
      *
      * @param \cm_info $cm The visibility-checked course module.
@@ -267,7 +279,12 @@ class get_activity_context extends external_api {
 
         // Moodle 4.x resolves quiz slots through question_references; 3.x had quiz_slots.questionid.
         if ($DB->get_manager()->table_exists('question_references')) {
-            $sql = "SELECT qs.slot, qs.id AS slotid, q.id, q.name, q.questiontext, q.qtype
+            // 3.2.3: a slot either pins a version (qr.version) or follows the latest one. Every version
+            // row is fetched newest first and only the first per slot is kept below. A recordset,
+            // not get_records_sql(): the first column (slot) repeats once per version, and
+            // get_records_sql() both warned about the duplicate key and kept the LAST row for each
+            // slot -- the oldest version of the question, so an edited question showed its old text.
+            $sql = "SELECT qs.slot, q.id, q.name, q.questiontext, q.qtype
                       FROM {quiz_slots} qs
                       JOIN {question_references} qr
                         ON qr.component = 'mod_quiz'
@@ -278,8 +295,9 @@ class get_activity_context extends external_api {
                       JOIN {question_versions} qv ON qv.questionbankentryid = qbe.id
                       JOIN {question} q ON q.id = qv.questionid
                      WHERE qs.quizid = :quizid
+                       AND (qr.version IS NULL OR qr.version = qv.version)
                   ORDER BY qs.slot ASC, qv.version DESC";
-            $records = $DB->get_records_sql($sql, [
+            $records = $DB->get_recordset_sql($sql, [
                 'contextid' => \context_module::instance($cm->id)->id,
                 'quizid' => $cm->instance,
             ]);
@@ -304,6 +322,9 @@ class get_activity_context extends external_api {
                 'text' => strip_tags((string) ($record->questiontext ?? '')),
                 'type' => $record->qtype,
             ];
+        }
+        if ($records instanceof \moodle_recordset) {
+            $records->close();
         }
 
         return $questions;

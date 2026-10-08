@@ -113,6 +113,7 @@ const STRING_IDS = {
     quizlabel: 'aiassistant_quiz_label',
     quizhint: 'aiassistant_quiz_hint',
     quizcorrect: 'aiassistant_quiz_correct',
+    quiztryagain: 'aiassistant_quiz_tryagain',
     quizsent: 'aiassistant_quiz_sent',
     quizexplain: 'aiassistant_quiz_explain',
     quizanother: 'aiassistant_quiz_another',
@@ -1138,6 +1139,10 @@ const markQuiz = (card, chosen, silent) => {
     options.forEach((option) => {
         option.disabled = true;
     });
+    const retrynote = card.querySelector('.aicourse-ai-quiz-retry');
+    if (retrynote) {
+        retrynote.remove();
+    }
     button.classList.add('is-chosen');
     button.setAttribute('aria-pressed', 'true');
 
@@ -1208,12 +1213,80 @@ const answerQuiz = (button) => {
         return;
     }
     const chosen = parseInt(button.getAttribute('data-index'), 10);
+    const cardindex = (bubble) => Array.prototype.indexOf.call(bubble.querySelectorAll('.aicourse-ai-quiz'), card);
+
+    // 3.2.3: one retry before the answer is revealed. Trying again after a nudge is where most of
+    // the learning in a practice question happens. The first wrong choice is struck out and the
+    // learner is told to have another go (the hint stays open to them); only a second wrong choice
+    // reveals the answer. The try is stored with the conversation, so a reload does not hand the
+    // learner a free second attempt -- or take one away.
+    if (canRetry(card, answer) && chosen !== answer) {
+        rememberInTurn(card, (turn, bubble) => {
+            turn.tried = turn.tried || {};
+            turn.tried[cardindex(bubble)] = chosen;
+        });
+        markTry(card, chosen, false);
+        return;
+    }
     rememberInTurn(card, (turn, bubble) => {
-        const index = Array.prototype.indexOf.call(bubble.querySelectorAll('.aicourse-ai-quiz'), card);
         turn.quiz = turn.quiz || {};
-        turn.quiz[index] = chosen;
+        turn.quiz[cardindex(bubble)] = chosen;
     });
     markQuiz(card, chosen, false);
+};
+
+/**
+ * Whether a practice question still has its one retry.
+ *
+ * Only when the tutor supplied the answer, the card has more than two options (with two, a retry
+ * is the answer), and no wrong choice has been made yet.
+ *
+ * @param {Element} card The .aicourse-ai-quiz card.
+ * @param {Number} answer Index of the correct option, or -1.
+ * @returns {Boolean}
+ */
+const canRetry = (card, answer) => !isNaN(answer) && answer >= 0
+    && card.querySelectorAll(SELECTORS.quizoption).length > 2
+    && !card.hasAttribute('data-tried');
+
+/**
+ * Strike out a first wrong choice and ask the learner to try again.
+ *
+ * @param {Element} card The .aicourse-ai-quiz card.
+ * @param {Number} chosen Index of the option chosen.
+ * @param {Boolean} silent True when replaying a stored conversation: no focus move.
+ * @returns {void}
+ */
+const markTry = (card, chosen, silent) => {
+    const options = card.querySelectorAll(SELECTORS.quizoption);
+    const button = options[chosen];
+    if (!button) {
+        return;
+    }
+    card.setAttribute('data-tried', String(chosen));
+    button.disabled = true;
+    button.classList.add('is-tried');
+    button.setAttribute('aria-pressed', 'true');
+    let note = card.querySelector('.aicourse-ai-quiz-retry');
+    if (!note) {
+        note = document.createElement('p');
+        note.className = 'aicourse-ai-quiz-retry';
+        note.setAttribute('role', 'status');
+        const feedback = card.querySelector('.aicourse-ai-quiz-feedback');
+        if (feedback && feedback.parentNode) {
+            feedback.parentNode.insertBefore(note, feedback);
+        } else {
+            card.appendChild(note);
+        }
+    }
+    note.textContent = strings.quiztryagain;
+    if (!silent) {
+        // The pressed option is now disabled; keep keyboard users on the remaining choices.
+        const next = Array.prototype.find.call(options, (option) => !option.disabled);
+        if (next) {
+            next.focus();
+        }
+    }
 };
 
 /**
@@ -1241,6 +1314,16 @@ const rememberInTurn = (element, change) => {
  * @returns {void}
  */
 const replayTurnState = (bubble, turn) => {
+    if (turn.tried && typeof turn.tried === 'object') {
+        const cards = bubble.querySelectorAll('.aicourse-ai-quiz');
+        Object.keys(turn.tried).forEach((index) => {
+            const card = cards[parseInt(index, 10)];
+            const chosen = parseInt(turn.tried[index], 10);
+            if (card && !isNaN(chosen)) {
+                markTry(card, chosen, true);
+            }
+        });
+    }
     if (turn.quiz && typeof turn.quiz === 'object') {
         const cards = bubble.querySelectorAll('.aicourse-ai-quiz');
         Object.keys(turn.quiz).forEach((index) => {

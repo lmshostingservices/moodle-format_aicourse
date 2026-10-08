@@ -24,6 +24,7 @@ use core_external\external_warnings;
 use core_text;
 use format_aicourse\local\contentindex;
 use format_aicourse\local\permissions;
+use format_aicourse\local\tutorprompt;
 
 /**
  * Web service asking the AI Tutor a question about a course.
@@ -35,7 +36,9 @@ use format_aicourse\local\permissions;
  *  - the call is rate limited per user per course (see \format_aicourse\external\throttle);
  *  - the activity the question is about is resolved through modinfo and its uservisible flag is
  *    honoured, so a hidden or availability-restricted activity contributes no context;
- *  - answers for a submitted assignment are locked to a reflection-only reply.
+ *  - answers for a submitted assignment are locked to a reflection-only reply, and a graded quiz
+ *    attempt in progress or an activity tagged "ai-tutor-off" locks the tutor (3.2.3);
+ *  - quiz question text is read on the server, never taken from the browser (3.2.3).
  *
  * @package    format_aicourse
  * @copyright  2026 LMS-Labs
@@ -45,8 +48,20 @@ class ai_chat extends external_api {
     /** @var string Endpoint of the remote AI Tutor service. */
     protected const API_URL = 'https://lms-labs.com/api/moodle/course-assistant/chat';
 
-    /** @var int Maximum number of characters of course content sent as prompt context. */
+    /** @var int Default maximum number of characters of course content sent as prompt context. */
     protected const MAX_CONTEXT_CHARS = 50000;
+
+    /** @var array|null The last request body built, kept only under PHPUnit. */
+    public static ?array $lastrequest = null;
+
+    /** @var string Activity tag a teacher adds to switch the AI Tutor off for that activity. */
+    public const TAG_OFF = 'ai-tutor-off';
+
+    /** @var int How many recent exchanges are replayed to the model as conversation history. */
+    protected const HISTORY_TURNS = 4;
+
+    /** @var int How far back, in seconds, an earlier exchange still counts as the same conversation. */
+    protected const HISTORY_WINDOW = 3600;
 
     /** @var int Maximum number of characters of per-activity tutor memory retained. */
     protected const MAX_MEMORY_CHARS = 2000;
@@ -184,9 +199,9 @@ class ai_chat extends external_api {
                 $candidate = $modinfo->get_cm($activityid);
                 if ($candidate && $candidate->uservisible) {
                     $cminfo = $candidate;
-                    $activityname = $cminfo->name;
+                    $activityname = self::plain($cminfo->name);
                     $activitytype = $cminfo->modname;
-                    $sectionname = get_section_name($course, $cminfo->sectionnum);
+                    $sectionname = self::plain(get_section_name($course, $cminfo->sectionnum));
                 }
             } catch (\Exception $e) {
                 $warnings[] = [
@@ -198,12 +213,26 @@ class ai_chat extends external_api {
             }
         } else if ($params['sectionid'] > 0) {
             // The client sends a section NUMBER here, not a section id.
-            $sectionname = get_section_name($course, $params['sectionid']);
+            $sectionname = self::plain(get_section_name($course, $params['sectionid']));
         }
 
-        // AI LOCKOUT: a submitted assignment gets a reflection-only reply (audit-grade integrity).
+        $isteacher = has_capability('moodle/course:update', $context);
+
+        // AI LOCKOUT (audit-grade integrity): a submitted assignment, a graded quiz attempt in
+        // progress, or an activity a teacher has tagged "ai-tutor-off" gets a fixed reply and
+        // nothing is sent to the service. 3.2.3 added the last two: ASQA's rules of evidence
+        // (authenticity) do not allow unsupervised AI help during a summative attempt.
+        $lockkey = null;
         if ($cminfo && $cminfo->modname === 'assign' && self::is_assignment_submitted($course, $cminfo)) {
-            $lockedanswer = get_string('aiassistant_locked', 'format_aicourse');
+            $lockkey = 'aiassistant_locked';
+        } else if (
+            $cminfo && !$isteacher
+            && (self::is_graded_quiz_in_progress($cminfo) || self::is_tagged_off($cminfo))
+        ) {
+            $lockkey = 'aiassistant_locked_assessment';
+        }
+        if ($lockkey !== null) {
+            $lockedanswer = get_string($lockkey, 'format_aicourse');
             $chatid = self::log_chat(
                 $course->id,
                 $activityid,
@@ -246,12 +275,18 @@ class ai_chat extends external_api {
             }
         }
 
+        // 3.2.3: the quiz question text is read on the server, not taken from the browser. Text the
+        // browser sends could be anything a learner typed into the developer console, and it is
+        // placed inside the course material the tutor trusts. The client parameters are kept so
+        // older bundles still validate, but they are not used.
+        [$allquestions, $questiontext] = self::server_question_context($cminfo, $questionslot);
+
         $coursecontent = contentindex::get_course_content_for_ai($course);
         $contexttext = self::build_context_text(
             $coursecontent,
-            $params['allquestions'],
+            $allquestions,
             $questionslot,
-            $params['questiontext']
+            $questiontext
         );
 
         // ACF-FIX-2.1.96: give teachers the format's own settings reference.
@@ -263,35 +298,47 @@ class ai_chat extends external_api {
         //
         // Editors only. A learner has no use for it, it would be a large addition to every request
         // they make, and their questions are about the course rather than how it was built.
-        if (has_capability('moodle/course:update', $context)) {
+        if ($isteacher) {
             $reference = \format_aicourse\local\formathelp::get_reference();
             if ($reference !== '') {
                 $contexttext = $reference . "\n\n---\n\n" . $contexttext;
             }
         }
 
-        $postdata = [
+        $audience = self::course_audience($course);
+        $promptinput = [
+            'coursename' => $coursecontent['course_name'],
+            'context' => $contexttext,
+            'question' => $params['question'],
+            'activityname' => (string) $activityname,
+            'activitytype' => (string) $activitytype,
+            'sectionname' => (string) $sectionname,
+            'isfirstmessage' => (bool) $params['isfirstmessage'],
+            // Data minimisation: a primary school child's name is never sent.
+            'studentname' => self::may_send_first_name($audience) ? (string) $USER->firstname : '',
+            'memory' => $memory,
+            'history' => self::recent_history((int) $course->id, (int) $activityid, (int) $USER->id),
+            'isteacher' => $isteacher,
+            'audience' => $audience,
+            'shareanswers' => contentindex::may_share_assessment_answers((int) $course->id),
+            'support' => self::support_contacts(),
+            'courselang' => self::course_language_name($course),
+            'corrections' => self::teacher_corrections((int) $course->id, (int) $activityid),
+        ];
+
+        $postdata = self::build_request($promptinput, [
             'siteUrl' => $siteid,
             'apiKey' => $apikey,
-            'action' => 'ai_tutor_chat',
-            'courseName' => $coursecontent['course_name'],
-            'courseContext' => $contexttext,
-            'question' => $params['question'],
             'userId' => $USER->id,
             'courseId' => $course->id,
-            'activityName' => $activityname,
             'activityType' => $activitytype,
-            'sectionName' => $sectionname,
-            'isFirstMessage' => (bool) $params['isfirstmessage'],
-            'studentName' => $USER->firstname,
-            'pedagogicalGuidelines' => self::get_pedagogical_guidelines(),
-            'priorTutorMemory' => $memory,
-            'mode' => 'learning',
-            // 3.2.0: tells the service the panel renders Markdown and ```quiz blocks.
-            'responseFormat' => 'markdown',
             'questionSlot' => $questionslot > 0 ? $questionslot : null,
-            'questionText' => $params['questiontext'] !== '' ? $params['questiontext'] : null,
-        ];
+            'questionText' => $questiontext !== '' ? $questiontext : null,
+        ]);
+        if (defined('PHPUNIT_TEST') && PHPUNIT_TEST) {
+            // Lets the tests assert what would have been sent; never set outside PHPUnit.
+            self::$lastrequest = $postdata;
+        }
 
         // ACF-FIX-2.1.4: never POST the result of a failed encode. json_encode() returns false
         // (not a string) if any value is not valid UTF-8, and curl->post(false) sends an empty
@@ -340,15 +387,22 @@ class ai_chat extends external_api {
             throw new \moodle_exception('aiassistant_error', 'format_aicourse');
         }
 
-        $answer = (string) ($result['answer'] ?? '');
-
-        // ACF-FIX-2.1.4: prefer an explicit flag from the service. detect_refusal() below matches
-        // English phrases only, so on a site running the tutor in any other language the report's
-        // academic-integrity counters silently read zero. The flag is authoritative when present;
-        // the phrase matching remains as a fallback for service versions that do not send it.
-        $refused = array_key_exists('refused', $result)
-            ? (int) (bool) $result['refused']
-            : self::detect_refusal($answer);
+        // 3.2.3: the tutor ends a refusal with a language-independent marker, removed here before
+        // the learner sees it. Order of authority for the report's integrity counter: the marker,
+        // then the service's own 'refused' flag (ACF-FIX-2.1.4), then English phrase matching.
+        $stripped = tutorprompt::strip_markers((string) ($result['answer'] ?? ''));
+        $answer = $stripped['answer'];
+        if ($answer === '') {
+            debugging('format_aicourse ai_chat empty answer from the service', DEBUG_DEVELOPER);
+            throw new \moodle_exception('aiassistant_error', 'format_aicourse');
+        }
+        if ($stripped['refused']) {
+            $refused = 1;
+        } else if (array_key_exists('refused', $result)) {
+            $refused = (int) (bool) $result['refused'];
+        } else {
+            $refused = self::detect_refusal($answer);
+        }
 
         $chatid = self::log_chat(
             $course->id,
@@ -624,15 +678,21 @@ class ai_chat extends external_api {
         // produces invalid UTF-8, json_encode() below then returns false rather than a string,
         // and the plugin POSTs an empty body -- so the tutor failed with an opaque error on any
         // course containing accented characters, CJK or emoji.
-        if (core_text::strlen($text) > self::MAX_CONTEXT_CHARS) {
-            $text = core_text::substr($text, 0, self::MAX_CONTEXT_CHARS) . "\n...[content truncated]";
+        // 3.2.3: the index holds names as Moodle prints them, HTML-escaped ("Financial Accounting
+        // &amp; Reporting"). The model reads text, not HTML, so entities are decoded.
+        // Decoded only: the index is already plain text, and strip_tags() would eat a "<" in
+        // something like "x < 3".
+        $text = html_entity_decode($text, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+
+        $max = self::max_context_chars();
+        if (core_text::strlen($text) > $max) {
+            $text = core_text::substr($text, 0, $max) . "\n...[content truncated]";
         }
 
+        // The tutor rules (integrity, hint ladder) govern how these are used.
         if ($allquestions !== '') {
             $text .= "\n\nQUIZ QUESTIONS IN THIS ACTIVITY:\n";
             $text .= $allquestions . "\n";
-            $text .= 'IMPORTANT: You know ALL the questions in this quiz. Help students understand '
-                . "concepts without giving direct answers.\n";
         }
 
         if ($questionslot > 0) {
@@ -641,8 +701,6 @@ class ai_chat extends external_api {
             if ($questiontext !== '') {
                 $text .= 'Question topic/context: ' . $questiontext . "\n";
             }
-            $text .= 'IMPORTANT: Do NOT provide the answer to this question. Help the student think '
-                . "through it.\n";
         }
 
         return $text;
@@ -666,8 +724,6 @@ class ai_chat extends external_api {
             'I cannot provide',
             'I cannot give',
             "I can't give you the answer",
-            'I can help you think through',
-            'instead of giving you the answer',
         ];
 
         foreach ($markers as $marker) {
@@ -680,79 +736,293 @@ class ai_chat extends external_api {
     }
 
     /**
-     * The pedagogical guardrails sent with every request.
+     * The request body sent to the AI Tutor service.
      *
-     * @return string The guidelines.
+     * 3.2.3: the whole prompt is composed in the plugin ({@see tutorprompt}) and sent as `prompt`,
+     * with `promptVersion`. The same content is also spread across the fields the service already
+     * reads -- the rules in `pedagogicalGuidelines`, the fenced material, teacher corrections and
+     * conversation in `courseContext` -- so every improvement reaches the learner whether or not
+     * the service has been updated to use `prompt` directly.
+     *
+     * @param array $in The prompt input, see tutorprompt::normalise().
+     * @param array $extra Identity and routing fields: siteUrl, apiKey, userId, courseId,
+     *                     activityType, questionSlot, questionText.
+     * @return array
      */
-    protected static function get_pedagogical_guidelines(): string {
-        $lines = [
-            'CRITICAL PEDAGOGICAL GUIDELINES:',
-            '- You are an AI Tutor with COMPLETE knowledge of every activity in this course.',
-            '- You have read every learning slide, every quiz question and answer, every activity, '
-                . 'every video transcript, every essay rubric, and every explanation in the course '
-                . 'content provided above.',
-            '- When a student asks about a topic, USE your knowledge of the specific slides, '
-                . 'questions, and explanations from their course materials to help them understand. '
-                . 'Reference specific content from their actual course.',
-            '- NEVER provide sample answers, model responses, or complete solutions to assessment tasks.',
-            '- NEVER write content that could be directly submitted as the student\'s own work.',
-            '- NEVER reveal the exact correct answer to quiz/knowledge check questions. Instead, use '
-                . 'the explanations and learning content to guide them toward understanding WHY the '
-                . 'correct answer is correct.',
-            '- Instead, guide students with:',
-            '  1. Structure guidance: What sections to include, how to organize their response',
-            '  2. Concept explanations: Break down key terms and ideas using the actual course content',
-            '  3. Real workplace examples: How this applies in actual job settings, drawing from '
-                . 'course scenarios',
-            '  4. Prompting questions: Questions that help the student think deeper about the '
-                . 'specific topic from their course materials',
-            '  5. Checklists: What to review before submitting',
-            '  6. Cross-referencing: Point students to relevant learning slides, activities, or '
-                . 'materials in their course that cover the topic they are asking about',
-            '- For VET/RTO compliance: Students must demonstrate THEIR OWN competency',
-            '- If a student asks for an answer directly, use the course explanations to help them '
-                . 'UNDERSTAND the concept, do not just give them the answer',
-            '- Be encouraging but maintain academic integrity at all times',
-            '- You know the FULL content of this course — use it to give precise, relevant, '
-                . 'contextual help rather than generic advice',
-            '- Practice questions you write must be NEW questions you author yourself. Never copy, '
-                . 'reword or reveal a question from the course\'s quizzes, knowledge checks or '
-                . 'assessments, and never reveal their answers.',
-            '',
-            // 3.2.0: the tutor panel renders Markdown and a few rich blocks. Without these
-            // instructions the model answered in loose plain text, and a multiple-choice question
-            // arrived as one run-on paragraph.
-            'RESPONSE FORMAT (the student sees your answer rendered as Markdown):',
-            '- BE DIRECT. Do not greet the student, do not restate their request and do not announce '
-                . 'what you are about to do: start with the substance. Keep the whole answer under '
-                . '250 words unless the student asks for more.',
-            '- Use GitHub-flavoured Markdown. Keep paragraphs short (1-3 sentences). Use ## or ### '
-                . 'headings only for answers with several distinct parts. Use **bold** for key terms.',
-            '- Use numbered lists for steps or sequences and bulleted lists for unordered points.',
-            '- For checklists use task-list syntax, one item per line: "- [ ] Item".',
-            '- For a tip, key idea, warning or workplace example use a quote line starting with the '
-                . 'label, e.g. "> **Tip:** ...", "> **Key idea:** ...", "> **Warning:** ...", '
-                . '"> **Example:** ...".',
-            '- Use a Markdown table only when comparing items across the same attributes.',
-            '- MULTIPLE-CHOICE PRACTICE QUESTIONS: whenever you give the student one or more '
-                . 'multiple-choice practice questions, put them in ONE fenced code block with the '
-                . 'language "quiz" containing a JSON array, and nothing else inside the block. Each '
-                . 'item: {"question": "...", "options": ["...", "...", "...", "..."], "answer": "B", '
-                . '"explanation": "why it is correct, in one sentence", "hint": "a nudge that does not '
-                . 'give the answer away"}. "answer" is the LETTER of the correct option: "A" for the first '
-                . 'option, "B" for the second, and so on. Do not put letters such as "A)" in the options. '
-                . 'Do not repeat the questions, options or answers outside the block. Start your reply with '
-                . 'the quiz block itself, with no introduction; one short encouraging line after it is '
-                . 'fine. Keep each explanation to one sentence and each hint under 15 words. The student\'s '
-                . 'screen shows each question as an interactive card and reveals the answer and '
-                . 'explanation only after they choose, so always include "answer" and "explanation" for '
-                . 'practice questions you write. The rule against revealing answers applies to the '
-                . 'course\'s own assessment questions, not to new practice questions you create.',
-            '- Short-answer or scenario practice questions are written as normal Markdown, and you '
-                . 'should invite the student to reply with their answer.',
-            '- Do not wrap your whole answer in a code block, and do not use HTML.',
-        ];
+    protected static function build_request(array $in, array $extra): array {
+        $history = [];
+        foreach ($in['history'] ?? [] as [$q, $a]) {
+            $history[] = ['question' => $q, 'answer' => tutorprompt::strip_markers($a)['answer']];
+        }
 
-        return implode("\n", $lines);
+        return [
+            'siteUrl' => $extra['siteUrl'] ?? '',
+            'apiKey' => $extra['apiKey'] ?? '',
+            'action' => 'ai_tutor_chat',
+            'courseName' => $in['coursename'],
+            // Memory travels in priorTutorMemory, so it is left out here rather than sent twice.
+            'courseContext' => tutorprompt::context(array_merge($in, ['memory' => ''])),
+            'question' => $in['question'],
+            'userId' => $extra['userId'] ?? 0,
+            'courseId' => $extra['courseId'] ?? 0,
+            'activityName' => $in['activityname'] !== '' ? $in['activityname'] : null,
+            'activityType' => $extra['activityType'] ?? null,
+            'sectionName' => $in['sectionname'] !== '' ? $in['sectionname'] : null,
+            'isFirstMessage' => (bool) $in['isfirstmessage'],
+            'studentName' => $in['studentname'] !== '' ? $in['studentname'] : null,
+            'pedagogicalGuidelines' => tutorprompt::guidelines($in),
+            'priorTutorMemory' => $in['memory'],
+            'mode' => $in['isteacher'] ? 'teaching' : 'learning',
+            // 3.2.0: tells the service the panel renders Markdown and ```quiz blocks.
+            'responseFormat' => 'markdown',
+            'questionSlot' => $extra['questionSlot'] ?? null,
+            'questionText' => $extra['questionText'] ?? null,
+            // 3.2.3 additions.
+            'promptVersion' => tutorprompt::VERSION,
+            'prompt' => tutorprompt::build($in),
+            'conversationHistory' => $history,
+            'audience' => $in['audience'],
+            'isTeacher' => (bool) $in['isteacher'],
+            'courseLanguage' => $in['courselang'],
+            'markers' => [
+                'refused' => tutorprompt::REFUSAL_MARKER,
+                'wellbeing' => tutorprompt::WELLBEING_MARKER,
+            ],
+        ];
+    }
+
+    /**
+     * Text as the model should read it: tags removed and HTML entities decoded.
+     *
+     * The prompt is never rendered as HTML, so "&amp;" would reach the model, and be copied into
+     * its answer, as five literal characters.
+     *
+     * @param string $text Text that may hold markup or entities.
+     * @return string
+     */
+    protected static function plain(string $text): string {
+        return html_entity_decode(strip_tags($text), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    }
+
+    /**
+     * The most course content, in characters, that is sent with each question.
+     *
+     * @return int
+     */
+    protected static function max_context_chars(): int {
+        $value = (int) get_config('format_aicourse', 'tutormaxcontext');
+        if ($value <= 0) {
+            return self::MAX_CONTEXT_CHARS;
+        }
+        return max(2000, min(200000, $value));
+    }
+
+    /**
+     * Who a learner should contact for help with their wellbeing.
+     *
+     * @return string
+     */
+    protected static function support_contacts(): string {
+        $value = get_config('format_aicourse', 'tutorsupportcontacts');
+        if ($value === false) {
+            return get_string('tutorsupportcontacts_default', 'format_aicourse');
+        }
+        return trim((string) $value);
+    }
+
+    /**
+     * The learner's last few exchanges in the same course and activity, oldest first.
+     *
+     * Only recent exchanges about the same activity count, and a locked reply is never replayed.
+     *
+     * @param int $courseid The course.
+     * @param int $activityid The course module, or 0.
+     * @param int $userid The learner.
+     * @return array List of [question, answer] pairs.
+     */
+    protected static function recent_history(int $courseid, int $activityid, int $userid): array {
+        global $DB;
+
+        try {
+            $rows = $DB->get_records_select(
+                'format_aicourse_chats',
+                'courseid = :courseid AND userid = :userid AND activityid = :activityid
+                    AND locked = 0 AND timecreated > :since',
+                [
+                    'courseid' => $courseid,
+                    'userid' => $userid,
+                    'activityid' => $activityid,
+                    'since' => time() - self::HISTORY_WINDOW,
+                ],
+                'timecreated DESC, id DESC',
+                'id, question, response',
+                0,
+                self::HISTORY_TURNS
+            );
+        } catch (\dml_exception $e) {
+            return [];
+        }
+
+        $pairs = [];
+        foreach (array_reverse($rows) as $row) {
+            $pairs[] = [
+                core_text::substr((string) $row->question, 0, 600),
+                core_text::substr((string) $row->response, 0, 1500),
+            ];
+        }
+        return $pairs;
+    }
+
+    /**
+     * The quiz questions of the current activity, read on the server.
+     *
+     * Question text only, never answers: the same data and safety rules as get_activity_context.
+     *
+     * @param \cm_info|null $cminfo The visibility-checked course module, or null.
+     * @param int $questionslot The slot the learner is on, or 0.
+     * @return array [string summary of every question, string text of the current question]
+     */
+    protected static function server_question_context(?\cm_info $cminfo, int $questionslot): array {
+        if (!$cminfo) {
+            return ['', ''];
+        }
+        try {
+            $questions = get_activity_context::questions_for($cminfo);
+        } catch (\Throwable $e) {
+            return ['', ''];
+        }
+        $summary = [];
+        $current = '';
+        foreach ($questions as $q) {
+            $text = core_text::substr(trim((string) $q['text']), 0, 200);
+            $summary[] = 'Q' . (int) $q['slot'] . ': ' . $text;
+            if ($questionslot > 0 && (int) $q['slot'] === $questionslot) {
+                $current = $text;
+            }
+        }
+        return [implode(' | ', $summary), $current];
+    }
+
+    /**
+     * Whether the learner's first name may be sent to the service.
+     *
+     * Off for primary school audiences always, and site-wide when the administrator says so.
+     *
+     * @param string $audience The course's tutor audience.
+     * @return bool
+     */
+    protected static function may_send_first_name(string $audience): bool {
+        if ($audience === 'primary') {
+            return false;
+        }
+        $value = get_config('format_aicourse', 'tutorsendfirstname');
+        return $value === false || !empty($value);
+    }
+
+    /**
+     * The course's tutor audience: adult, secondary or primary.
+     *
+     * @param \stdClass $course The course.
+     * @return string
+     */
+    protected static function course_audience(\stdClass $course): string {
+        $value = (string) (course_get_format($course)->get_format_options()['tutoraudience'] ?? 'adult');
+        return in_array($value, tutorprompt::AUDIENCES, true) ? $value : 'adult';
+    }
+
+    /**
+     * The display name of the course's language, e.g. "English".
+     *
+     * @param \stdClass $course The course.
+     * @return string
+     */
+    protected static function course_language_name(\stdClass $course): string {
+        global $CFG;
+        $code = !empty($course->lang) ? $course->lang : ($CFG->lang ?? 'en');
+        $names = get_string_manager()->get_list_of_translations();
+        $name = $names[$code] ?? 'English';
+        // Strip the "(en)" code suffix Moodle adds.
+        return trim(preg_replace('/[\s\x{200E}\x{200F}]*\(.*$/u', '', $name));
+    }
+
+    /**
+     * Up to five teacher corrections for this activity (or the course page), newest first.
+     *
+     * Teachers correct tutor answers in the AI Tutor report. Feeding those corrections back in
+     * closes the loop: the next learner who asks about the same thing gets the teacher's version.
+     *
+     * @param int $courseid The course.
+     * @param int $activityid The course module, or 0 for the course and section pages.
+     * @return array List of [question, correction] pairs.
+     */
+    protected static function teacher_corrections(int $courseid, int $activityid): array {
+        global $DB;
+
+        try {
+            $rows = $DB->get_records_select(
+                'format_aicourse_chats',
+                'courseid = :courseid AND activityid = :activityid AND '
+                    . $DB->sql_isnotempty('format_aicourse_chats', 'correction', true, true),
+                ['courseid' => $courseid, 'activityid' => $activityid],
+                'timecorrected DESC, id DESC',
+                'id, question, correction',
+                0,
+                5
+            );
+        } catch (\dml_exception $e) {
+            return [];
+        }
+        $pairs = [];
+        foreach ($rows as $row) {
+            $pairs[] = [
+                core_text::substr(trim((string) $row->question), 0, 300),
+                core_text::substr(trim((string) $row->correction), 0, 300),
+            ];
+        }
+        return $pairs;
+    }
+
+    /**
+     * Whether the learner is part-way through a graded attempt at this quiz.
+     *
+     * Practice quizzes (maximum grade 0) and teacher previews stay open.
+     *
+     * @param \cm_info $cminfo The visibility-checked course module.
+     * @return bool
+     */
+    protected static function is_graded_quiz_in_progress(\cm_info $cminfo): bool {
+        global $DB, $USER;
+
+        if ($cminfo->modname !== 'quiz') {
+            return false;
+        }
+        try {
+            $grade = (float) $DB->get_field('quiz', 'grade', ['id' => $cminfo->instance]);
+            if ($grade <= 0) {
+                return false;
+            }
+            return $DB->record_exists('quiz_attempts', [
+                'quiz' => $cminfo->instance,
+                'userid' => $USER->id,
+                'state' => 'inprogress',
+                'preview' => 0,
+            ]);
+        } catch (\dml_exception $e) {
+            return false;
+        }
+    }
+
+    /**
+     * Whether a teacher has switched the tutor off for this activity with the tag "ai-tutor-off".
+     *
+     * @param \cm_info $cminfo The course module.
+     * @return bool
+     */
+    public static function is_tagged_off(\cm_info $cminfo): bool {
+        try {
+            return \core_tag_tag::is_item_tagged_with('core', 'course_modules', $cminfo->id, self::TAG_OFF);
+        } catch (\Throwable $e) {
+            return false;
+        }
     }
 }

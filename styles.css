@@ -4336,6 +4336,39 @@ body.format-aicourse .aicourse-ai-message-content.aicourse-ai-plain {
     color: var(--acf-status-danger-fg);
 }
 
+/* 3.2.3: a first wrong choice, struck out while the learner has another go. */
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-quiz-option.is-tried {
+    border-color: var(--acf-status-danger-solid);
+    background: var(--acf-status-danger-bg);
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-quiz-option.is-tried .aicourse-ai-quiz-text {
+    text-decoration: line-through;
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-quiz-option.is-tried .aicourse-ai-quiz-letter {
+    border-color: transparent;
+    background: var(--acf-status-danger-solid);
+    color: var(--acf-neutral-0);
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-quiz-option.is-tried .aicourse-ai-quiz-mark::before {
+    content: "\2715";
+    color: var(--acf-status-danger-fg);
+}
+
+:is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-quiz-retry {
+    margin: var(--acf-space-3) 0 0;
+    padding: var(--acf-space-2) var(--acf-space-3);
+    border-inline-start: 3px solid var(--acf-status-doing-solid);
+    border-radius: var(--acf-radius-sm);
+    background: var(--acf-status-doing-bg);
+    color: var(--acf-text-primary);
+    font-size: var(--acf-font-size-sm);
+    font-weight: var(--acf-weight-semibold);
+    animation: acf-fade-in var(--acf-duration-base) var(--acf-ease-out);
+}
+
 :is(body.format-aicourse, .aicadmin-wrap) .aicourse-ai-quiz-hintwrap {
     margin-block-start: var(--acf-space-3);
 }
@@ -5418,7 +5451,8 @@ body.format-aicourse .courseindex-item {
     display: flex;
     align-items: center;
     gap: var(--acf-space-2);
-    padding: var(--acf-space-1) var(--acf-space-2);
+    /* 3.2.3: taller rows (was --acf-space-1 top and bottom), matching the progress-tracker index. */
+    padding: var(--acf-space-2) var(--acf-space-2);
     border: 1px solid transparent;   /* reserves space so hover cannot shift */
     border-radius: var(--acf-radius-sm);
     transition: background var(--acf-duration-fast) var(--acf-ease-standard);
@@ -9484,7 +9518,9 @@ body.aicourse-player-on .courseindex-item.aicourse-player-row {
     align-items: center;
     gap: var(--acf-space-2);
     margin: 0;
-    padding: 9px var(--acf-space-4) 9px var(--acf-space-3);
+    /* 3.2.3: 13px top and bottom gives a ~50px row, matching the section band. It was 9px, raised
+       to 10px by a later override that has now been folded in here. */
+    padding: 13px var(--acf-space-4) 13px var(--acf-space-3);
     background: var(--acf-index-bg, var(--acf-surface-card));
     border: 0;
     border-block-end: 1px solid var(--acf-player-line);
@@ -10217,8 +10253,10 @@ body.aicourse-player-on {
        padding here would only add to a height that is already decided. */
     --acf-index-band-pad: 0;
     --acf-index-band-leading: 1.25;
-    /* 34px, from 46px -- the quarter that was asked for, near enough that the difference is not
-       visible and the number is a round one. */
+    /* The section band's height, set outright (the chevron below is what actually sizes the band).
+       3.2.3: 50px, from 44px -- rows were still reported as squashed. Activity rows are raised to
+       match in their own rule (padding, since they have no explicit height). */
+    --acf-index-band-height: 50px;
 }
 
 body.aicourse-player-on .courseindex-item.courseindex-section-title {
@@ -12660,34 +12698,6 @@ body.format-aicourse .aicourse-hero-banner .aicourse-progress-ring-bg {
 
 body.format-aicourse .aicourse-hero-banner:not(.aicourse-hero-has-image) .aicourse-progress-ring-bg {
     stroke: var(--acf-track);
-}
-
-/* --- Course index row height ---------------------------------------------
-   Reported as looking cramped. The two row types are raised by DIFFERENT
-   mechanisms, because they are built differently and treating them alike
-   would have broken one of them:
-
-   * A section band's height is set outright by --acf-index-band-height (34px
-     since 2.1.153), with its padding deliberately at zero -- the comment on
-     that token says so. Adding padding here would have stacked on top of the
-     explicit height rather than replacing it, giving a 58px band from a 34px
-     one. The token is raised instead, which is the single number that
-     rule exists to expose.
-
-   * An activity row has no explicit height; it is padding plus its line box.
-     3px a side takes it from ~38px to ~44px, which is also the WCAG 2.2
-     SC 2.5.8 target size, so the row stops being a near-miss on that as well.
-
-   Both are appended rather than edited in place so the reasoning at the
-   original sites stays readable, and both sit later in the file than every
-   rule they need to beat -- checked, not assumed: the section band is set at
-   10866 and the row's padding shorthand at 10047. */
-body.aicourse-player-on {
-    --acf-index-band-height: 44px;
-}
-
-body.aicourse-player-on .courseindex-item.aicourse-player-row {
-    padding-block: 10px;
 }
 
 /* --- Site footer: themes that do not use core's own footer element --------

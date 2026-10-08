@@ -100,6 +100,36 @@ final class get_activity_context_test extends external_testcase {
     }
 
     /**
+     * 3.2.3: an edited question shows its newest wording, not its first, and with no duplicate
+     * key warning. The query returns one row per version, and get_records_sql() kept the oldest.
+     */
+    public function test_execute_returns_the_latest_question_version(): void {
+        global $DB;
+        $quiz = $this->create_quiz();
+        $questionid = $DB->get_field_sql(
+            "SELECT q.id
+               FROM {question} q
+               JOIN {question_versions} qv ON qv.questionid = q.id
+               JOIN {question_references} qr ON qr.questionbankentryid = qv.questionbankentryid
+              WHERE qr.component = 'mod_quiz' AND qr.questionarea = 'slot'
+                AND qr.usingcontextid = :ctx",
+            ['ctx' => \context_module::instance($quiz->cmid)->id]
+        );
+        $questiongenerator = $this->getDataGenerator()->get_plugin_generator('core_question');
+        $question = \question_bank::load_question_data($questionid);
+        $questiongenerator->update_question($question, null, [
+            'questiontext' => ['text' => '<p>Which of these is the newest hazard?</p>', 'format' => FORMAT_HTML],
+        ]);
+        $this->setUser($this->student);
+
+        $result = get_activity_context::execute($this->course->id, $quiz->cmid, 1);
+        $result = external_api::clean_returnvalue(get_activity_context::execute_returns(), $result);
+
+        $this->assertCount(1, $result['context']['questions']);
+        $this->assertStringContainsString('newest hazard', $result['context']['questions'][0]['text']);
+    }
+
+    /**
      * SECURITY REGRESSION: no correctness marker, explanation or feedback may reach the browser.
      */
     public function test_execute_never_returns_a_correct_marker(): void {

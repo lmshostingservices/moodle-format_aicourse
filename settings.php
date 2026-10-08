@@ -102,6 +102,44 @@ if ($hassiteconfig) {
         ]
     ));
 
+    // 3.2.3: the tutor's audience, wellbeing contacts, name sharing and context size.
+    $settings->add(new admin_setting_configselect(
+        'format_aicourse/defaulttutoraudience',
+        get_string('tutoraudience', 'format_aicourse'),
+        get_string('tutoraudience_desc', 'format_aicourse'),
+        'adult',
+        [
+            'adult' => get_string('tutoraudience_adult', 'format_aicourse'),
+            'secondary' => get_string('tutoraudience_secondary', 'format_aicourse'),
+            'primary' => get_string('tutoraudience_primary', 'format_aicourse'),
+        ]
+    ));
+
+    $settings->add(new admin_setting_configtextarea(
+        'format_aicourse/tutorsupportcontacts',
+        get_string('tutorsupportcontacts', 'format_aicourse'),
+        get_string('tutorsupportcontacts_desc', 'format_aicourse'),
+        get_string('tutorsupportcontacts_default', 'format_aicourse'),
+        PARAM_TEXT,
+        60,
+        3
+    ));
+
+    $settings->add(new admin_setting_configcheckbox(
+        'format_aicourse/tutorsendfirstname',
+        get_string('tutorsendfirstname', 'format_aicourse'),
+        get_string('tutorsendfirstname_desc', 'format_aicourse'),
+        1
+    ));
+
+    $settings->add(new admin_setting_configtext(
+        'format_aicourse/tutormaxcontext',
+        get_string('tutormaxcontext', 'format_aicourse'),
+        get_string('tutormaxcontext_desc', 'format_aicourse'),
+        50000,
+        PARAM_INT
+    ));
+
     $settings->add(new admin_setting_heading(
         'format_aicourse/display',
         get_string('displaysettings', 'format_aicourse'),

@@ -2,6 +2,93 @@
 
 All notable changes to this plugin will be documented in this file.
 
+## [3.2.3] - 2026-10-08
+
+No database changes. Three new site settings and one new course setting.
+
+### Improved - the AI Tutor's teaching
+
+The tutor used to receive a short list of guidelines and nothing else about how to teach. It now
+gets a complete set of instructions written by the plugin, in the order a model follows best:
+the rules first, the course material in the middle, the question last, and a short reminder of
+the rules at the very end.
+
+- **Hint ladder.** Asked for an answer, the tutor gives only the next step: first it asks what the
+  learner thinks and points to the section that covers it, then it names the key idea and asks a
+  leading question, then it works a similar example with different details. It never goes past
+  that third step.
+- **Grounded in the course.** The tutor names the section or activity it is using. When the
+  course does not cover a question it says so, and then gives a short answer labelled "General
+  information:" or suggests asking the trainer. It is told never to invent policies, dates, marks
+  or legislation.
+- **Learn by doing.** Answers end with a quick question that checks understanding. When the
+  learner replies, the tutor says what is right, explains what is wrong, and gives one next step.
+- **Safety.** If a learner says they are being hurt, are in danger, or are thinking of harming
+  themselves or someone else, the tutor replies briefly and kindly and points them to the
+  wellbeing contacts set by the administrator. It does not try to counsel them.
+- **Follows the conversation.** The learner's last four exchanges in the same activity within
+  the past hour are sent with each question.
+- **Learns from teachers.** Corrections a teacher writes in the AI Tutor report are sent with
+  later questions about the same activity, and they override anything else.
+- **Knows who it is talking to.** The new course setting **AI Tutor audience** (adult learners,
+  secondary school or primary school) sets the tutor's language and answer length. For primary
+  school, no learner name is ever sent.
+- **Course language.** The tutor replies in the learner's language and keeps the course's key
+  terms in the course language, with a short translation, because assessments use those terms.
+- **Protected against instructions hidden in content.** Course material, the conversation and
+  the question are fenced and labelled as information, never instructions.
+- **Integrity counting that works in any language.** The tutor marks a refusal with a fixed
+  marker, which is removed before the learner sees the answer. The report's refusal count no
+  longer depends on English phrases.
+- Names such as "Financial Accounting & Reporting" reach the tutor as text, not as `&amp;`.
+
+The plugin sends the complete prompt as a new `prompt` field (with `promptVersion: 2`). The same
+content is also spread across the fields the service already reads, so learners get these
+improvements before the service is updated to use `prompt` directly.
+
+### Added - assessment lockouts
+
+- During a **graded quiz attempt**, the tutor is switched off for that quiz. It is still available
+  for practice quizzes (maximum grade 0), for a finished attempt, and for teachers.
+- A teacher can switch the tutor off for any single activity by adding the tag
+  **`ai-tutor-off`** to it. Teachers are not locked out.
+- In both cases a fixed reply is shown and nothing is sent to the AI service.
+
+### Added - practice questions get one retry
+
+A first wrong answer is struck out, and the learner is told to have another go (the hint is still
+available). Only a second wrong answer reveals the correct answer. The retry is saved with the
+conversation, so reloading the page neither gives the learner an extra attempt nor takes one
+away. Questions with only two options reveal the answer straight away.
+
+### Fixed
+
+- **Quiz questions are read on the server.** The tutor used the question text the browser sent,
+  which a learner could edit in the browser's developer tools. That text is now ignored. The web
+  service still accepts it, so older cached pages keep working.
+- **An edited quiz question showed its old wording to the tutor.** The query kept the first
+  version of each question instead of the latest, and with developer debugging on it showed a
+  duplicate-key warning. Questions pinned to a specific version now use that version.
+
+### Changed - course index rows are taller
+
+- In the progress-tracker index, section bands and activity rows are 50px, up from 44px.
+- The plain course index has more padding on each row.
+- The change is made in the original rules. The later override that previously raised the rows
+  has been removed.
+
+### New settings (Site administration > Plugins > Course formats > AI Course Format > AI Tutor)
+
+- **AI Tutor audience**: the default for new courses.
+- **Wellbeing contacts**: who the tutor directs an unsafe learner to. The default lists the
+  Australian services.
+- **Send learners' first names**: on by default.
+- **Course content sent with each question**: 50000 characters by default, from 2000 to 200000.
+
+### Privacy
+
+The privacy metadata lists the two new fields sent to LMS Labs: `conversationHistory` and `prompt`.
+
 ## [3.2.2] - 2026-10-07
 
 No database changes.

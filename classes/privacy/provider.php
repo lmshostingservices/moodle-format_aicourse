@@ -154,6 +154,8 @@ class provider implements
                 'questionSlot' => 'privacy:metadata:lms_labs_ai:questionslot',
                 'questionText' => 'privacy:metadata:lms_labs_ai:questiontext',
                 'priorTutorMemory' => 'privacy:metadata:lms_labs_ai:priortutormemory',
+                'conversationHistory' => 'privacy:metadata:lms_labs_ai:conversationhistory',
+                'prompt' => 'privacy:metadata:lms_labs_ai:prompt',
             ],
             'privacy:metadata:lms_labs_ai'
         );

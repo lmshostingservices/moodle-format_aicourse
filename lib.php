@@ -833,6 +833,12 @@ class format_aicourse extends format_topics {
                 'default' => $d('shareassessmentanswers', 0),
                 'type' => PARAM_INT,
             ],
+            // 3.2.3: who the AI Tutor is talking to -- adult, secondary or primary. It sets the tutor's
+            // language and answer length, and for primary no learner name is ever sent.
+            'tutoraudience' => [
+                'default' => $d('tutoraudience', 'adult'),
+                'type' => PARAM_ALPHA,
+            ],
         ];
 
         if ($foreditform) {
@@ -1191,6 +1197,19 @@ class format_aicourse extends format_topics {
                         [
                             0 => get_string('no'),
                             1 => get_string('yes'),
+                        ],
+                    ],
+                ],
+                'tutoraudience' => [
+                    'label' => get_string('tutoraudience', 'format_aicourse'),
+                    'help' => 'tutoraudience',
+                    'help_component' => 'format_aicourse',
+                    'element_type' => 'select',
+                    'element_attributes' => [
+                        [
+                            'adult' => get_string('tutoraudience_adult', 'format_aicourse'),
+                            'secondary' => get_string('tutoraudience_secondary', 'format_aicourse'),
+                            'primary' => get_string('tutoraudience_primary', 'format_aicourse'),
                         ],
                     ],
                 ],

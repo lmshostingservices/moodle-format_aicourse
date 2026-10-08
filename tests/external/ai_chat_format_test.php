@@ -47,9 +47,7 @@ final class ai_chat_format_test extends external_testcase {
      * academic-integrity rule for practice questions.
      */
     public function test_guidelines_carry_the_response_format(): void {
-        $method = new \ReflectionMethod(ai_chat::class, 'get_pedagogical_guidelines');
-        $method->setAccessible(true);
-        $guidelines = $method->invoke(null);
+        $guidelines = \format_aicourse\local\tutorprompt::guidelines(['coursename' => 'C']);
 
         $this->assertStringContainsString('RESPONSE FORMAT', $guidelines);
         $this->assertStringContainsString('"quiz"', $guidelines);
@@ -57,8 +55,7 @@ final class ai_chat_format_test extends external_testcase {
         $this->assertStringContainsString('the LETTER of the correct option', $guidelines);
         $this->assertStringContainsString('- [ ] Item', $guidelines);
         $this->assertStringContainsString('Never copy, reword or reveal a question', $guidelines);
-        // The original integrity rules are still there.
-        $this->assertStringContainsString('NEVER reveal the exact correct answer', $guidelines);
+        $this->assertStringContainsString('Never give the answer to a quiz, knowledge check or assessment', $guidelines);
     }
 
     /**
@@ -130,11 +127,9 @@ final class ai_chat_format_test extends external_testcase {
      * limited answer is spent on the questions rather than a greeting.
      */
     public function test_guidelines_ask_for_direct_answers(): void {
-        $method = new \ReflectionMethod(ai_chat::class, 'get_pedagogical_guidelines');
-        $method->setAccessible(true);
-        $guidelines = $method->invoke(null);
+        $guidelines = \format_aicourse\local\tutorprompt::guidelines(['coursename' => 'C']);
 
-        $this->assertStringContainsString('Do not greet the student', $guidelines);
+        $this->assertStringContainsString('no greeting', $guidelines);
         $this->assertStringContainsString('Start your reply with the quiz block itself', $guidelines);
         $this->assertStringNotContainsString('one-line introduction before it', $guidelines);
     }
