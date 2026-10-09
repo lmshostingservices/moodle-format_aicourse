@@ -65,6 +65,19 @@ class format_aicourse extends format_topics {
     }
 
     /**
+     * "Site default (Lexend)": the label of a course font menu's follow-the-site choice.
+     *
+     * @param string $setting 'font' or 'headingfont'.
+     * @param string $unset What the site's '' means, e.g. "Theme font".
+     * @return string
+     */
+    protected static function site_font_label(string $setting, string $unset): string {
+        $key = (string) get_config('format_aicourse', $setting);
+        $name = \format_aicourse\local\fonts::is_font($key) ? \format_aicourse\local\fonts::FONTS[$key][0] : $unset;
+        return get_string('font_sitedefault', 'format_aicourse', $name);
+    }
+
+    /**
      * Build the inline custom properties that carry the course's accent colour
      * and hero fade.
      *
@@ -839,6 +852,17 @@ class format_aicourse extends format_topics {
                 'default' => $d('tutoraudience', 'adult'),
                 'type' => PARAM_ALPHA,
             ],
+            // 3.3.1: '' follows the site's font, 'theme' keeps the theme's, else a font key.
+            // Read only through \format_aicourse\local\fonts, which ignores anything not in its list.
+            'font' => [
+                'default' => '',
+                'type' => PARAM_ALPHANUMEXT,
+            ],
+            // Empty follows the site's heading font, 'same' uses the course's body font, else a key.
+            'headingfont' => [
+                'default' => '',
+                'type' => PARAM_ALPHANUMEXT,
+            ],
         ];
 
         if ($foreditform) {
@@ -1198,6 +1222,30 @@ class format_aicourse extends format_topics {
                             0 => get_string('no'),
                             1 => get_string('yes'),
                         ],
+                    ],
+                ],
+                'font' => [
+                    'label' => get_string('coursefont', 'format_aicourse'),
+                    'help' => 'coursefont',
+                    'help_component' => 'format_aicourse',
+                    'element_type' => 'selectgroups',
+                    'element_attributes' => [
+                        \format_aicourse\local\fonts::menu([
+                            '' => self::site_font_label('font', get_string('font_theme', 'format_aicourse')),
+                            \format_aicourse\local\fonts::THEME => get_string('font_theme', 'format_aicourse'),
+                        ], true),
+                    ],
+                ],
+                'headingfont' => [
+                    'label' => get_string('courseheadingfont', 'format_aicourse'),
+                    'help' => 'courseheadingfont',
+                    'help_component' => 'format_aicourse',
+                    'element_type' => 'selectgroups',
+                    'element_attributes' => [
+                        \format_aicourse\local\fonts::menu([
+                            '' => self::site_font_label('headingfont', get_string('headingfont_same', 'format_aicourse')),
+                            \format_aicourse\local\fonts::SAME => get_string('courseheadingfont_same', 'format_aicourse'),
+                        ], true),
                     ],
                 ],
                 'tutoraudience' => [

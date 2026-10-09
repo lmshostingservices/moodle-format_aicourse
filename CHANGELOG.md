@@ -2,6 +2,37 @@
 
 All notable changes to this plugin will be documented in this file.
 
+## [3.3.1] - 2026-10-09
+
+No database changes. Includes everything in 3.2.3 (the AI Tutor upgrade, the assessment lockouts,
+the practice-question retry and taller course index rows), plus Google Fonts.
+
+### Added - Google Fonts
+
+- **35 fonts** in four groups: sans-serif, easy to read (Lexend, Atkinson Hyperlegible, Andika,
+  Quicksand, Fredoka), serif and display.
+- **Site settings** (Colours, fonts & branding):
+  - **Course font**: Theme font (the default) or any font in the list.
+  - **Heading font**: the same as the course font, or a different one.
+  - **Where the fonts apply**: the course content, meaning the course page, the side drawers
+    and the AI Tutor (the default), or the whole page including the navigation bar.
+  - Each font menu shows a live preview of the font underneath it.
+- **Course settings**:
+  - **Course font**: Site default (the menu names the font), Theme font, or any font in the list.
+  - **Heading font**: Site default, the same as the course font, or any font in the list.
+- Headings take the heading font: page headings, the course title in the hero, and the section and
+  activity card titles.
+- **Safe by design**:
+  - Only fonts from the fixed list can be saved or applied. Anything else is refused when it
+    is saved, and ignored when the page is drawn.
+  - Each font loads as a separate request and asks only for weights it has.
+  - Every font falls back to a generic family, so text stays readable if Google Fonts cannot be
+    reached.
+  - Nothing is loaded from Google while the theme font is in use, and nothing is ever loaded on
+    the site front page or in courses that use another format.
+- **Privacy**: the settings say that a visitor's browser loads a chosen font from Google Fonts,
+  which sees the visitor's IP address.
+
 ## [3.2.3] - 2026-10-08
 
 No database changes. Three new site settings and one new course setting.

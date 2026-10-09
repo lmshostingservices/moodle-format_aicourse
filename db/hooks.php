@@ -33,4 +33,10 @@ $callbacks = [
         'callback' => [\format_aicourse\hook\before_footer_html_generation::class, 'callback'],
         'priority' => 500,
     ],
+    // 3.3.1: the course's Google Fonts.
+    [
+        'hook' => \core\hook\output\before_standard_head_html_generation::class,
+        'callback' => [\format_aicourse\hook\before_head_html_generation::class, 'callback'],
+        'priority' => 500,
+    ],
 ];

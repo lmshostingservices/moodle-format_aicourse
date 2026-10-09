@@ -31,6 +31,7 @@ and can write corrections that are fed back to the service.
 - **Teacher report** — per-course AI Tutor report with filters, ratings and the ability to
   correct a response.
 - **Site-wide admin report** — every question across every course, with filters and CSV export.
+- **Google Fonts** — 35 fonts for course text and headings, chosen site-wide or per course.
 - **Course index control** — choose which page types show the course index sidebar.
 
 ## Screenshots

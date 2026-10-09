@@ -65,9 +65,10 @@ const CATEGORIES = [
         match: [/tour/],
     },
     {
-        id: 'colour', order: 6, label: 'Colours & branding', icon: '◐', hue: 'colour',
-        desc: 'Every colour the format paints — headings, icons, cards, the side menu — plus your logo and light/dark mode.',
-        match: [/colour/, /opacity/, /scrim/, /fade/, /overlay/, /playerlogo/, /colourmode/],
+        id: 'colour', order: 6, label: 'Colours, fonts & branding', icon: '◐', hue: 'colour',
+        desc: 'Every colour the format paints — headings, icons, cards, the side menu — plus fonts, your logo and '
+            + 'light/dark mode.',
+        match: [/colour/, /opacity/, /scrim/, /fade/, /overlay/, /playerlogo/, /colourmode/, /font/],
     },
     {
         id: 'index', order: 1, label: 'Course index', icon: '☰', hue: 'index',
@@ -447,6 +448,19 @@ const settingDiagram = (base) => {
             return plate + topbar() + sidebar('off') + hero('soft', 56, 136)
                 + card(56, 45, 136, 62, 'off', 4)
                 + [63, 72, 81, 90].map((y) => rect(162, y, 22, 5, on, 2.5)).join('');
+        case 'font':
+            // Every line of text in the course content takes the font.
+            return plate + topbar() + hero('soft', 56, 136)
+                + [47, 55, 63, 71, 79, 87, 95].map((y, i) => line(56, y, 128 - (i % 3) * 22, on)).join('');
+        case 'headingfont':
+            // Only the headings change; the text between them stays as it is.
+            return plate + topbar() + hero('soft', 56, 136)
+                + line(56, 46, 72, on, 7) + [58, 65, 72].map((y) => line(56, y, 120, soft)).join('')
+                + line(56, 82, 56, on, 7) + [94, 101].map((y) => line(56, y, 110, soft)).join('');
+        case 'fontscope':
+            // The whole page, navigation bar included, against the course content alone.
+            return plate + topbar(on) + sidebar('on') + hero('soft', 56, 136)
+                + [50, 60, 70, 80, 90].map((y, i) => line(56, y, 128 - (i % 2) * 30, on)).join('');
         case 'accentcolour':
             return plate + topbar() + sidebar('on') + hero('on', 56, 136) + grid('on', 2);
         case 'indexheadingcolour':

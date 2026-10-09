@@ -174,6 +174,39 @@ if ($hassiteconfig) {
         ]
     ));
 
+    // 3.3.1: Google Fonts for course text and headings. The menus are a fixed list
+    // (\format_aicourse\local\fonts); setting_font stores nothing else.
+    $settings->add(new admin_setting_heading(
+        'format_aicourse/fontheading',
+        get_string('fontheading', 'format_aicourse'),
+        get_string('fontheading_desc', 'format_aicourse')
+    ));
+
+    $settings->add(new \format_aicourse\admin\setting_font(
+        'format_aicourse/font',
+        get_string('font', 'format_aicourse'),
+        get_string('font_desc', 'format_aicourse'),
+        get_string('font_theme', 'format_aicourse')
+    ));
+
+    $settings->add(new \format_aicourse\admin\setting_font(
+        'format_aicourse/headingfont',
+        get_string('headingfont', 'format_aicourse'),
+        get_string('headingfont_desc', 'format_aicourse'),
+        get_string('headingfont_same', 'format_aicourse')
+    ));
+
+    $settings->add(new admin_setting_configselect(
+        'format_aicourse/fontscope',
+        get_string('fontscope', 'format_aicourse'),
+        get_string('fontscope_desc', 'format_aicourse'),
+        'content',
+        [
+            'content' => get_string('fontscope_content', 'format_aicourse'),
+            'page' => get_string('fontscope_page', 'format_aicourse'),
+        ]
+    ));
+
     // ACF-FIX-2.1.23: site-wide accent colour. Everything the format tints —
     // the hero background, card borders, icon wells, the focus ring — derives
     // from --acf-brand, which normally inherits the theme's primary. This
