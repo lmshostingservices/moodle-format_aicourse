@@ -51,7 +51,7 @@ page; and the layout at a 430&nbsp;px mobile viewport with no horizontal scrolli
 
 | | |
 |---|---|
-| Moodle | 4.4 or later (tested to 5.0) |
+| Moodle | 4.4 or later (tested on 4.4, 5.2 and 5.3) |
 | PHP | 8.1 or later (as required by Moodle 4.4) |
 | Database | Any database supported by Moodle |
 | Optional | An LMS-Labs subscription, for the AI Tutor only |

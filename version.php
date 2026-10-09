@@ -25,18 +25,18 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component    = 'format_aicourse';
-$plugin->version      = 2026100900;
+$plugin->version      = 2026100901;
 // Moodle 4.4 (2024042200) is the true minimum: db/hooks.php registers a callback for
 // \core\hook\output\before_standard_footer_html_generation, which was only introduced in
 // Moodle 4.4 (see lib/upgrade.txt, "=== 4.4 ==="). The plugin's hero banner and AI Tutor
 // injection depend entirely on that hook. \core_external\external_api (used in lib.php)
 // arrived earlier, in Moodle 4.2, so 4.4 covers it as well.
 $plugin->requires     = 2024042200;
-// 2.1.191: the upper bound follows Moodle 5.2, which is where this plugin is now being run.
+// 3.3.2: the upper bound is Moodle 5.3, the newest version it is tested on (2.1.191 set it to 5.2).
 // $supported is advisory -- Moodle warns rather than refuses outside the range -- but a site
 // admin installing on 5.2 was being told the plugin did not support their version, which is the
 // wrong thing to say about a release that is tested on it.
-$plugin->supported    = [404, 502];
+$plugin->supported    = [404, 503];
 $plugin->maturity     = MATURITY_STABLE;
-$plugin->release      = '3.3.1';
+$plugin->release      = '3.3.2';
 $plugin->dependencies = [];

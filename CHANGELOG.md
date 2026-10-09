@@ -2,6 +2,12 @@
 
 All notable changes to this plugin will be documented in this file.
 
+## [3.3.2] - 2026-10-09
+
+No code changes from 3.3.1. The supported Moodle range now runs to **5.3**: the full test suite
+(245 tests) passes on Moodle 5.3 with no deprecations, notices or warnings, and the tutor, Study
+view, fonts, course index, reports and settings were checked in the browser.
+
 ## [3.3.1] - 2026-10-09
 
 No database changes. Includes everything in 3.2.3 (the AI Tutor upgrade, the assessment lockouts,
