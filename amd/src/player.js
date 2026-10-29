@@ -802,7 +802,7 @@ export const init = async(passed) => {
     // The argument is still honoured so an older cached page, or anything else calling this
     // directly, keeps working.
     const config = passed || readConfig();
-    if (!config || !config.activities) {
+    if (!hasActivities(config)) {
         return;
     }
 
@@ -930,3 +930,11 @@ export const init = async(passed) => {
         recheck.observe(index);
     }
 };
+
+/**
+ * Recognise a usable player configuration before creating page controls.
+ *
+ * @param {Object|null} config Player configuration.
+ * @returns {Boolean} Whether activity data is present.
+ */
+const hasActivities = (config) => !!(config && config.activities);

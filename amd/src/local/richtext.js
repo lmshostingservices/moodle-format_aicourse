@@ -273,19 +273,12 @@ export const plain = (text) => String(text || '')
     .trim();
 
 /**
- * Normalise a quiz object from whatever shape the model produced.
+ * Normalise the model's supported option arrays and keyed objects.
  *
  * @param {Object} raw Parsed JSON.
- * @returns {Object|null} {question, options[], answer (index or -1), explanation, hint}.
+ * @returns {Array} Non-empty option strings.
  */
-const normaliseQuiz = (raw) => {
-    if (!raw || typeof raw !== 'object') {
-        return null;
-    }
-    const question = String(raw.question || raw.q || raw.prompt || raw.stem || '').trim();
-    if (typeof raw.question === 'object' && raw.question !== null) {
-        return null;
-    }
+const normaliseOptions = (raw) => {
     let options = raw.options || raw.choices || raw.answers || [];
     if (!Array.isArray(options)) {
         // A keyed object ({"A": "...", "B": "..."}) is usable; a string or a number is not.
@@ -300,10 +293,25 @@ const normaliseQuiz = (raw) => {
         // Drop a leading "A) " the model may have added itself.
         return String(text).replace(/^\s*\(?[A-Ha-h][).:]\s+/, '').trim();
     }).filter((text) => text !== '');
-    if (!question || options.length < 2 || options.length > MAX_OPTIONS) {
-        return null;
+    return options;
+};
+
+/**
+ * Resolve a model answer to an option index.
+ *
+ * @param {Object} raw Parsed JSON.
+ * @param {Array} options Normalised options.
+ * @returns {Number} Index, or -1 when no answer matches.
+ */
+const normaliseAnswer = (raw, options) => {
+    let answer;
+    if (raw.answer !== undefined) {
+        answer = raw.answer;
+    } else if (raw.correct !== undefined) {
+        answer = raw.correct;
+    } else {
+        answer = raw.correctIndex;
     }
-    let answer = raw.answer !== undefined ? raw.answer : (raw.correct !== undefined ? raw.correct : raw.correctIndex);
     if (typeof answer === 'string') {
         const trimmed = answer.trim();
         if (/^[A-Ha-h]$/.test(trimmed)) {
@@ -317,10 +325,31 @@ const normaliseQuiz = (raw) => {
     if (!Number.isInteger(answer) || answer < 0 || answer >= options.length) {
         answer = -1;
     }
+    return answer;
+};
+
+/**
+ * Normalise one model question without changing its accepted shapes.
+ *
+ * @param {Object} raw Parsed JSON.
+ * @returns {Object|null} Normalised question.
+ */
+const normaliseQuiz = (raw) => {
+    if (!raw || typeof raw !== 'object') {
+        return null;
+    }
+    const question = String(raw.question || raw.q || raw.prompt || raw.stem || '').trim();
+    if (typeof raw.question === 'object' && raw.question !== null) {
+        return null;
+    }
+    const options = normaliseOptions(raw);
+    if (!question || options.length < 2 || options.length > MAX_OPTIONS) {
+        return null;
+    }
     return {
         question: question,
         options: options,
-        answer: answer,
+        answer: normaliseAnswer(raw, options),
         explanation: String(raw.explanation || raw.rationale || raw.feedback || '').trim(),
         hint: String(raw.hint || '').trim(),
     };
@@ -426,7 +455,10 @@ const parseBlocks = (lines) => {
 
         // Fenced code, including fenced "quiz".
         const fence = FENCE.exec(line);
-        if (fence) {
+        const readFence = () => {
+            if (!fence) {
+                return false;
+            }
             const marker = fence[1];
             const lang = (fence[2] || '').toLowerCase();
             const body = [];
@@ -446,13 +478,16 @@ const parseBlocks = (lines) => {
                 if (quizzes.incomplete) {
                     // Never show a learner raw, broken JSON.
                     blocks.push({type: 'notice'});
-                    continue;
+                    return true;
                 }
                 if (quizzes.length) {
-                    continue;
+                    return true;
                 }
             }
             blocks.push({type: 'code', lang: lang, text: text});
+            return true;
+        };
+        if (readFence()) {
             continue;
         }
 
@@ -497,7 +532,10 @@ const parseBlocks = (lines) => {
         // "Question 2:" label, or an answer / explanation line follows. Otherwise ("There are two
         // kinds of hazard: a) physical b) chemical") they are rendered as a lettered list.
         const firstoption = OPTION.exec(line);
-        if (firstoption && firstoption[1].toUpperCase() === 'A') {
+        const readOptions = () => {
+            if (!firstoption || firstoption[1].toUpperCase() !== 'A') {
+                return false;
+            }
             const options = [];
             let j = i;
             while (j < lines.length && options.length < MAX_OPTIONS) {
@@ -513,36 +551,40 @@ const parseBlocks = (lines) => {
                 j++;
             }
             if (options.length >= 2) {
-                let answer = -1;
-                const explain = [];
-                let k = j;
-                const skipBlank = () => {
-                    while (k < lines.length && isBlank(lines[k])) {
-                        k++;
-                    }
-                };
-                skipBlank();
-                const answerline = ANSWERLINE.exec(lines[k] || '');
-                let restofline = '';
-                if (answerline) {
-                    answer = LETTERS.indexOf(answerline[1].toUpperCase());
-                    // "Answer: B - because ..." carries its explanation on the same line.
-                    const sameline = /(?:because|since|\s[\u2013\u2014-])\s+(.+)$/i.exec(answerline[2]);
-                    restofline = sameline ? sameline[0].replace(/^\s*[\u2013\u2014-]\s*/, '') : '';
-                    k++;
+                const readExplanation = () => {
+                    let answer = -1;
+                    const explain = [];
+                    let k = j;
+                    const skipBlank = () => {
+                        while (k < lines.length && isBlank(lines[k])) {
+                            k++;
+                        }
+                    };
                     skipBlank();
-                }
-                const explainline = EXPLAINLINE.exec(lines[k] || '');
-                if (explainline) {
-                    explain.push(explainline[1]);
-                    k++;
-                    while (k < lines.length && !isBlank(lines[k]) && !startsBlock(lines[k], lines[k + 1])) {
-                        explain.push(lines[k].trim());
+                    const answerline = ANSWERLINE.exec(lines[k] || '');
+                    let restofline = '';
+                    if (answerline) {
+                        answer = LETTERS.indexOf(answerline[1].toUpperCase());
+                        // "Answer: B - because ..." carries its explanation on the same line.
+                        const sameline = /(?:because|since|\s[\u2013\u2014-])\s+(.+)$/i.exec(answerline[2]);
+                        restofline = sameline ? sameline[0].replace(/^\s*[\u2013\u2014-]\s*/, '') : '';
                         k++;
+                        skipBlank();
                     }
-                } else if (restofline) {
-                    explain.push(restofline);
-                }
+                    const explainline = EXPLAINLINE.exec(lines[k] || '');
+                    if (explainline) {
+                        explain.push(explainline[1]);
+                        k++;
+                        while (k < lines.length && !isBlank(lines[k]) && !startsBlock(lines[k], lines[k + 1])) {
+                            explain.push(lines[k].trim());
+                            k++;
+                        }
+                    } else if (restofline) {
+                        explain.push(restofline);
+                    }
+                    return {answer, explain, k, answerline, explainline};
+                };
+                const {answer, explain, k, answerline, explainline} = readExplanation();
                 // Only an answer line ("Answer: B") is a key. An explanation on its own is not
                 // evidence of a quiz: "Why:" and "Explanation:" follow ordinary lists too.
                 const keyed = !!answerline;
@@ -551,51 +593,56 @@ const parseBlocks = (lines) => {
                 // line, or its last line, so an introduction above stays outside the card), or the
                 // last item of a list ("1. What is PPE?" followed by indented options).
                 const previous = blocks[blocks.length - 1];
-                let stem = '';
-                let takeStem = () => null;
-                if (previous && (previous.type === 'para' || previous.type === 'heading')) {
-                    const qlines = previous.text.split('\n');
-                    let start = qlines.length - 1;
-                    qlines.forEach((qline, index) => {
-                        if (/^\s*(?:[*_]{1,2})?\s*(?:question|q)\s*\d*\s*[:.)]/i.test(qline)) {
-                            start = index;
-                        }
-                    });
-                    stem = qlines.slice(start).join('\n');
-                    takeStem = () => {
-                        if (start > 0) {
-                            previous.text = qlines.slice(0, start).join('\n');
-                        } else {
-                            blocks.pop();
-                        }
-                    };
-                } else if (previous && previous.type === 'list' && previous.items.length) {
-                    stem = previous.items[previous.items.length - 1].text;
-                    takeStem = () => {
-                        previous.items.pop();
-                        if (!previous.items.length) {
-                            blocks.pop();
-                        }
-                    };
-                }
+                const readStem = () => {
+                    let stem = '';
+                    let takeStem = () => null;
+                    if (previous && (previous.type === 'para' || previous.type === 'heading')) {
+                        const qlines = previous.text.split('\n');
+                        let start = qlines.length - 1;
+                        qlines.forEach((qline, index) => {
+                            if (/^\s*(?:[*_]{1,2})?\s*(?:question|q)\s*\d*\s*[:.)]/i.test(qline)) {
+                                start = index;
+                            }
+                        });
+                        stem = qlines.slice(start).join('\n');
+                        takeStem = () => {
+                            if (start > 0) {
+                                previous.text = qlines.slice(0, start).join('\n');
+                            } else {
+                                blocks.pop();
+                            }
+                        };
+                    } else if (previous && previous.type === 'list' && previous.items.length) {
+                        stem = previous.items[previous.items.length - 1].text;
+                        takeStem = () => {
+                            previous.items.pop();
+                            if (!previous.items.length) {
+                                blocks.pop();
+                            }
+                        };
+                    }
+                    return {stem, takeStem};
+                };
+                const {stem, takeStem} = readStem();
 
                 // Without a key, a card needs every sign of a real practice question: a stem that
                 // is a paragraph or list item (not a heading) asking a question or labelled
                 // "Question 2:", at least three short options, and the answer talking about a
                 // quiz unless the stem is labelled. Anything less stays a lettered list, which is
                 // still well formatted, rather than turning an explanation into a quiz.
-                const labelled = /^\s*(?:[*_]{1,2})?\s*question\s*\d+\s*(?:[*_]{1,2})?\s*[:.)]/i.test(stem);
-                const asks = /\?\s*(?:[*_]{1,2})?\s*$/.test(stem);
-                const short = options.every((option) => option.length <= OPTION_MAX && !/[.!?]\s+[A-Z]/.test(option));
-                const fromheading = !!previous && previous.type === 'heading';
-                // "Hazards must be reported. A) True B) False" is a statement, not a "?" question.
-                const truefalse = options.length === 2 && /^true\.?$/i.test(options[0]) && /^false\.?$/i.test(options[1]);
-                // Two options (True / False) only for a labelled question or a quiz answer.
-                const enough = options.length >= ((quizcue || (labelled && asks)) ? 2 : 3);
-                const isquiz = keyed || (!!stem && !fromheading && enough && short
-                    && (asks || labelled || truefalse) && (labelled || quizcue));
+                const isPractice = () => {
+                    const labelled = /^\s*(?:[*_]{1,2})?\s*question\s*\d+\s*(?:[*_]{1,2})?\s*[:.)]/i.test(stem);
+                    const asks = /\?\s*(?:[*_]{1,2})?\s*$/.test(stem);
+                    const short = options.every((option) => option.length <= OPTION_MAX && !/[.!?]\s+[A-Z]/.test(option));
+                    const fromheading = !!previous && previous.type === 'heading';
+                    // Two options (True / False) only for a labelled question or a quiz answer.
+                    const truefalse = options.length === 2 && /^true\.?$/i.test(options[0]) && /^false\.?$/i.test(options[1]);
+                    const enough = options.length >= ((quizcue || (labelled && asks)) ? 2 : 3);
+                    return keyed || (!!stem && !fromheading && enough && short
+                        && (asks || labelled || truefalse) && (labelled || quizcue));
+                };
 
-                if (isquiz) {
+                if (isPractice()) {
                     takeStem();
                     blocks.push({type: 'quiz', quiz: {
                         question: stem,
@@ -609,11 +656,18 @@ const parseBlocks = (lines) => {
                     blocks.push({type: 'letters', upper: firstoption[1] === firstoption[1].toUpperCase(), items: options});
                     i = j;
                 }
-                continue;
+                return true;
             }
+            return false;
+        };
+        if (readOptions()) {
+            continue;
         }
 
-        if (LISTITEM.test(line)) {
+        const readList = () => {
+            if (!LISTITEM.test(line)) {
+                return false;
+            }
             const items = [];
             while (i < lines.length) {
                 const current = lines[i];
@@ -644,6 +698,9 @@ const parseBlocks = (lines) => {
                 break;
             }
             blocks.push({type: 'list', items: items});
+            return true;
+        };
+        if (readList()) {
             continue;
         }
 
@@ -966,7 +1023,12 @@ const renderBlocks = (blocks) => {
             case 'list': {
                 // Split the top level wherever the kind changes, so a numbered list followed by
                 // a checklist renders as two cards rather than one muddled list.
-                const kind = (node) => (/^\[[ xX]\]\s+/.test(node.text) ? 'task' : (node.ordered ? 'ol' : 'ul'));
+                const kind = (node) => {
+                    if (/^\[[ xX]\]\s+/.test(node.text)) {
+                        return 'task';
+                    }
+                    return node.ordered ? 'ol' : 'ul';
+                };
                 let run = [];
                 buildListTree(block.items).forEach((node) => {
                     if (run.length && kind(run[0]) !== kind(node)) {

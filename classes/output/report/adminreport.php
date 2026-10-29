@@ -286,7 +286,7 @@ class adminreport implements named_templatable, renderable {
     /**
      * Turn a value => label map into template option objects.
      *
-     * @param array<string,string> $labels Value => label.
+     * @param array $labels Map of option values to labels.
      * @param string $selected Currently selected value.
      * @return array<int, stdClass>
      */

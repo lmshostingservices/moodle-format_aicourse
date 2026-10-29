@@ -1356,7 +1356,7 @@ const copyAnswer = (button) => {
     const content = bubble && bubble.querySelector('.aicourse-ai-message-content');
     const text = (bubble && rawText.get(bubble)) || (content ? content.innerText : '');
     const label = button.querySelector('.aicourse-ai-copy-text');
-    const done = () => {
+    const markCopied = () => {
         button.classList.add('is-copied');
         if (label) {
             label.textContent = strings.copied;
@@ -1369,7 +1369,7 @@ const copyAnswer = (button) => {
         }, 1800);
     };
     if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(text).then(done).catch(() => null);
+        navigator.clipboard.writeText(text).then(markCopied).catch(() => null);
         return;
     }
     const scratch = document.createElement('textarea');
@@ -1381,7 +1381,7 @@ const copyAnswer = (button) => {
     scratch.select();
     try {
         if (document.execCommand('copy')) {
-            done();
+            markCopied();
         }
     } catch (error) {
         // Clipboard unavailable; nothing else to do.
@@ -1391,8 +1391,22 @@ const copyAnswer = (button) => {
 };
 
 /**
- * Handle a click anywhere in the page. Delegation is required because the panel is injected into
- * the page after load on activity and section pages, and answers are added after that.
+ * Send the quick prompt selected by a panel button.
+ *
+ * @param {Element} quickTarget The selected prompt button.
+ * @returns {void}
+ */
+const sendQuickPrompt = (quickTarget) => {
+    const key = quickTarget.getAttribute('data-prompt');
+    const prompt = key ? strings['prompt' + key] : '';
+    if (prompt) {
+        const activity = config.activityname || strings.thisactivity;
+        sendText(prompt.replace('{activity}', () => activity));
+    }
+};
+
+/**
+ * Handle a delegated panel click.
  *
  * @param {Event} event The click event.
  * @returns {void}
@@ -1447,13 +1461,7 @@ const handleClick = (event) => {
     const quickTarget = target.closest(SELECTORS.quickbtn);
     if (quickTarget) {
         event.preventDefault();
-        const key = quickTarget.getAttribute('data-prompt');
-        const prompt = key ? strings['prompt' + key] : '';
-        if (prompt) {
-            // A function replacement, so "$&" or "$1" in an activity name is not interpreted.
-            const activity = config.activityname || strings.thisactivity;
-            sendText(prompt.replace('{activity}', () => activity));
-        }
+        sendQuickPrompt(quickTarget);
         return;
     }
 

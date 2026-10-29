@@ -11566,7 +11566,7 @@ body.aicourse-player-on .aicourse-player-meta a {
    somebody else's markup. */
 @media (max-width: 767px) {
     body.format-aicourse :is(.format-aicourse-container, .aicourse-cards-container,
-    .aicourse-activity-cards-container, .aicourse-hero-banner) {
+.aicourse-activity-cards-container, .aicourse-hero-banner) {
         max-inline-size: 100%;
         overflow-x: clip;
     }
@@ -12763,8 +12763,7 @@ footer[role="contentinfo"]) {
 }
 
 body.format-aicourse.aicourse-hidefooter-all:not(.editing):not(.editingon):not(.editing-mode) > footer,
-body.format-aicourse.aicourse-hidefooter-students:not(.aicourse-is-grader):not(.editing):not(.editingon):not(.editing-mode)
- > footer {
+body.format-aicourse.aicourse-hidefooter-students:not(.aicourse-is-grader):not(.editing):not(.editingon):not(.editing-mode) > footer {
     display: none;
 }
 

@@ -283,6 +283,26 @@ const meter = (x, y, w, pct, f, track) => rect(x, y, w, 3, track, 1.5)
  * @returns {String} SVG child markup.
  */
 const settingDiagram = (base) => {
+    const aliases = {
+        playerindex: 'showcourseindex',
+        indexstate: 'showcourseindex',
+        herobannerfade: 'showherobanner',
+        heroimageoverlay: 'showherobanner',
+        scrimstrength: 'showherobanner',
+        cardlayout: 'displayascards',
+        cardactivitylimit: 'showactivitiesoncards',
+        hidetimetotal: 'hidetimeindex',
+        minutesperquestion: 'minutes',
+        minutesfallback: 'minutes',
+        apikey: 'enabletutor',
+        siteid: 'enabletutor',
+        shareassessmentanswers: 'enabletutor',
+        defaulttutoraudience: 'enabletutor',
+        tutorsupportcontacts: 'enabletutor',
+        tutorsendfirstname: 'enabletutor',
+        tutormaxcontext: 'enabletutor',
+    };
+    const key = aliases[base] || base;
     const on = 'rgb(var(--c) / 0.85)';
     const soft = 'rgb(var(--c) / 0.3)';
     const off = 'rgb(var(--c) / 0.14)';
@@ -363,10 +383,8 @@ const settingDiagram = (base) => {
     const grid = (state, rows) => card(56, 45, 68, 62, state, rows)
         + card(130, 45, 62, 62, state, rows);
 
-    switch (base) {
+    switch (key) {
         case 'showcourseindex':
-        case 'playerindex':
-        case 'indexstate':
             return plate + topbar() + sidebar('on') + hero('soft', 56, 136) + grid('off', 2);
         case 'hidegeneral':
             // The General band, present and then not: the thing the setting removes is the thing
@@ -375,9 +393,6 @@ const settingDiagram = (base) => {
                 + rect(56, 45, 136, 12, soft, 3) + line(61, 49, 40, on, 4)
                 + card(56, 62, 68, 45, 'on', 2) + card(130, 62, 62, 45, 'on', 2);
         case 'showherobanner':
-        case 'herobannerfade':
-        case 'heroimageoverlay':
-        case 'scrimstrength':
             return plate + topbar() + sidebar('off') + hero('on', 56, 136) + grid('off', 2);
         case 'heroattop':
             return plate + hero('on', 0, 200) + topbar(off) + sidebar('off') + grid('off', 2);
@@ -386,10 +401,8 @@ const settingDiagram = (base) => {
                 + '<path d="M196 46 v50 M191 90 l5 6 5-6" stroke="' + on
                 + '" stroke-width="2.2" fill="none" stroke-linecap="round"/>';
         case 'displayascards':
-        case 'cardlayout':
             return plate + topbar() + sidebar('off') + hero('soft', 56, 136) + grid('on', 3);
         case 'showactivitiesoncards':
-        case 'cardactivitylimit':
             // One wide card so the ROWS are the subject: this setting is about what is inside a
             // card, not about how many cards there are.
             return plate + topbar() + sidebar('off') + hero('soft', 56, 136)
@@ -426,8 +439,22 @@ const settingDiagram = (base) => {
                 + line(8, 103, 34, INK) + line(50, 103, 26, INK2);
         case 'immersive':
             return plate + topbar(on) + sidebar('off') + hero('soft', 56, 136) + grid('off', 2);
+        default:
+            return settingDetailDiagram(key, {plate, topbar, sidebar, hero, grid, card, on, soft, off});
+    }
+};
+
+/**
+ * Draw typography, time estimates and tutor settings using the same page primitives.
+ *
+ * @param {String} base Canonical setting name.
+ * @param {Object} context Shared drawing primitives and colours.
+ * @returns {String} SVG child markup.
+ */
+const settingDetailDiagram = (base, context) => {
+    const {plate, topbar, sidebar, hero, grid, card, on, soft, off} = context;
+    switch (base) {
         case 'hidetimeindex':
-        case 'hidetimetotal':
             // The time pills are the subject, so the sidebar is drawn open and they are the only
             // thing in it carrying the accent.
             return plate + topbar() + rect(0, 9, 50, 103, off, 0)
@@ -443,8 +470,6 @@ const settingDiagram = (base) => {
                 + card(56, 45, 136, 62, 'off', 4)
                 + [63, 72, 81].map((y) => rect(168, y, 16, 5, on, 2.5)).join('');
         case 'minutes':
-        case 'minutesperquestion':
-        case 'minutesfallback':
             return plate + topbar() + sidebar('off') + hero('soft', 56, 136)
                 + card(56, 45, 136, 62, 'off', 4)
                 + [63, 72, 81, 90].map((y) => rect(162, y, 22, 5, on, 2.5)).join('');
@@ -471,13 +496,6 @@ const settingDiagram = (base) => {
                 + [76, 88].map((y) => icon(5, y, soft) + line(15, y + 2, 20, soft)).join('')
                 + hero('soft', 56, 136) + grid('off', 2);
         case 'enabletutor':
-        case 'apikey':
-        case 'siteid':
-        case 'shareassessmentanswers':
-        case 'defaulttutoraudience':
-        case 'tutorsupportcontacts':
-        case 'tutorsendfirstname':
-        case 'tutormaxcontext':
             // A conversation, which is what the tutor is.
             return plate + topbar() + sidebar('off') + hero('soft', 56, 136)
                 + rect(56, 47, 74, 16, off, 8) + line(62, 53, 50, soft)

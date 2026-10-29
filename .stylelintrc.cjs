@@ -23,7 +23,7 @@ module.exports = {
                 'acf-sum': "<acf-product> [ [ '+' | '-' ] <acf-product> ]*",
                 'acf-product': "<acf-value> [ [ '*' | '/' ] <acf-value> ]*",
                 'acf-value': '<number> | <length> | <percentage> | <acf-math()> | ( <acf-sum> )',
-                color: '| Canvas | CanvasText | LinkText | ButtonText | ButtonFace | GrayText | ' +
+                color: '| Canvas | CanvasText | LinkText | ButtonText | ButtonFace | ButtonBorder | GrayText | ' +
                     'Highlight | HighlightText | Mark | MarkText | Field | FieldText | ' +
                     'AccentColor | AccentColorText | SelectedItem | SelectedItemText',
             },
