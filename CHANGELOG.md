@@ -2,6 +2,15 @@
 
 All notable changes to this plugin will be documented in this file.
 
+## [3.3.3] - 2026-10-29
+
+### Fixed
+
+- **Generate AI banner, card images and the AI Tutor failed** with "Call to undefined function
+  format_aicourse\external\course_get_format()". Web service requests do not load
+  `course/lib.php`, so `generate_banner_image`, `generate_card_image` and `ai_chat` now load it
+  before reading the course format options. No database changes.
+
 ## [3.3.2] - 2026-10-09
 
 No code changes from 3.3.1. The supported Moodle range now runs to **5.3**: the full test suite

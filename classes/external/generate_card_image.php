@@ -79,7 +79,9 @@ class generate_card_image extends generate_banner_image {
      * @return array
      */
     public static function execute($courseid, $targettype = '', $targetid = 0, $prompt = ''): array {
-        global $USER;
+        global $CFG, $USER;
+        // course_get_format() lives in course/lib.php, which web service requests do not load.
+        require_once($CFG->dirroot . '/course/lib.php');
 
         $params = self::validate_parameters(self::execute_parameters(), [
             'courseid' => $courseid,

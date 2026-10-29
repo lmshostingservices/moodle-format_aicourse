@@ -82,6 +82,8 @@ class generate_banner_image extends external_api {
      */
     public static function execute(int $courseid, string $extraprompt = '', int $sectionid = 0): array {
         global $CFG, $USER;
+        // course_get_format() lives in course/lib.php, which web service requests do not load.
+        require_once($CFG->dirroot . '/course/lib.php');
 
         $params = self::validate_parameters(self::execute_parameters(), [
             'courseid' => $courseid,
