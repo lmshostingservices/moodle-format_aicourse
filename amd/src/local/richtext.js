@@ -445,12 +445,12 @@ const parseBlocks = (lines) => {
         || /^\s*>/.test(line) || LISTITEM.test(line) || OPTION.test(line)
         || (line.indexOf('|') !== -1 && next !== undefined && TABLEDELIM.test(next));
 
-    while (i < lines.length) {
+    const readLine = () => {
         const line = lines[i];
 
         if (isBlank(line)) {
             i++;
-            continue;
+            return;
         }
 
         // Fenced code, including fenced "quiz".
@@ -488,20 +488,20 @@ const parseBlocks = (lines) => {
             return true;
         };
         if (readFence()) {
-            continue;
+            return;
         }
 
         const heading = HEADING.exec(line);
         if (heading) {
             blocks.push({type: 'heading', level: heading[1].length, text: heading[2]});
             i++;
-            continue;
+            return;
         }
 
         if (RULE.test(line)) {
             blocks.push({type: 'rule'});
             i++;
-            continue;
+            return;
         }
 
         if (/^\s*>/.test(line)) {
@@ -511,7 +511,7 @@ const parseBlocks = (lines) => {
                 i++;
             }
             blocks.push({type: 'quote', lines: body});
-            continue;
+            return;
         }
 
         if (line.indexOf('|') !== -1 && TABLEDELIM.test(lines[i + 1] || '')) {
@@ -524,7 +524,7 @@ const parseBlocks = (lines) => {
                 i++;
             }
             blocks.push({type: 'table', head: head, rows: rows});
-            continue;
+            return;
         }
 
         // Plain-text options: A) .. B) .. in sequence, blank lines allowed between. They become a
@@ -661,7 +661,7 @@ const parseBlocks = (lines) => {
             return false;
         };
         if (readOptions()) {
-            continue;
+            return;
         }
 
         const readList = () => {
@@ -701,7 +701,7 @@ const parseBlocks = (lines) => {
             return true;
         };
         if (readList()) {
-            continue;
+            return;
         }
 
         // Paragraph: runs until a blank line or the start of another block.
@@ -712,6 +712,9 @@ const parseBlocks = (lines) => {
             i++;
         }
         blocks.push({type: 'para', text: para.join('\n')});
+    };
+    while (i < lines.length) {
+        readLine();
     }
 
     return blocks;
