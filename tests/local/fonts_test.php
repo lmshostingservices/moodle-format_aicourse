@@ -19,6 +19,9 @@ namespace format_aicourse\local;
 use format_aicourse\admin\setting_font;
 use format_aicourse\hook\before_head_html_generation;
 
+#[\PHPUnit\Framework\Attributes\CoversClass(fonts::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(before_head_html_generation::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(setting_font::class)]
 /**
  * Tests for the Google Fonts feature.
  *
@@ -30,9 +33,6 @@ use format_aicourse\hook\before_head_html_generation;
  * @covers     \format_aicourse\hook\before_head_html_generation
  * @covers     \format_aicourse\admin\setting_font
  */
-#[\PHPUnit\Framework\Attributes\CoversClass(fonts::class)]
-#[\PHPUnit\Framework\Attributes\CoversClass(before_head_html_generation::class)]
-#[\PHPUnit\Framework\Attributes\CoversClass(setting_font::class)]
 final class fonts_test extends \advanced_testcase {
     /**
      * Every entry is well formed: 35 fonts, a known group, 400 and 700 always, a generic fallback.

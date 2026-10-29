@@ -214,7 +214,7 @@ class adminfilter {
     /**
      * The report URL for these criteria.
      *
-     * @param array<string, mixed> $overrides Parameters to add or replace.
+     * @param array<string,mixed> $overrides Parameters to add or replace.
      * @return moodle_url
      */
     public function get_url(array $overrides = []): moodle_url {

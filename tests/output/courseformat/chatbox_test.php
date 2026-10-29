@@ -25,6 +25,7 @@
 
 namespace format_aicourse\output\courseformat;
 
+#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse\output\courseformat\chatbox::class)]
 /**
  * Tests for the AI Tutor panel (3.2.0).
  *
@@ -34,8 +35,38 @@ namespace format_aicourse\output\courseformat;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \format_aicourse\output\courseformat\chatbox
  */
-#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse\output\courseformat\chatbox::class)]
 final class chatbox_test extends \advanced_testcase {
+    /**
+     * Tutor controls have their target when the paired page components are rendered together.
+     *
+     * Standalone Mustache examples omit controls whose panel belongs to another component.
+     */
+    public function test_hero_controls_reference_the_rendered_chatbox(): void {
+        global $PAGE;
+        $this->resetAfterTest();
+        [$course, $cm] = $this->make_course();
+        $this->setUser($this->getDataGenerator()->create_and_enrol($course, 'student'));
+        $PAGE->set_cm($cm, $course);
+        $output = $PAGE->get_renderer('core');
+        $panel = $output->render_from_template(
+            'format_aicourse/chatbox',
+            (new chatbox($course))->export_for_template($output)
+        );
+        foreach (['hero', 'activity_hero'] as $template) {
+            $html = $output->render_from_template('format_aicourse/' . $template, [
+                'showtutor' => true,
+                'courseid' => $course->id,
+                'sesskey' => sesskey(),
+                'aiassistantlabel' => 'AI Tutor',
+            ]) . $panel;
+            $document = new \DOMDocument();
+            $document->loadHTML($html, LIBXML_NOERROR | LIBXML_NOWARNING);
+            $xpath = new \DOMXPath($document);
+            $this->assertSame(1, $xpath->query('//*[@aria-controls="aicourse-ai-chatbox"]')->length);
+            $this->assertSame(1, $xpath->query('//*[@id="aicourse-ai-chatbox"]')->length);
+        }
+    }
+
     /**
      * Build a course with an activity whose names carry characters that HTML escapes.
      *

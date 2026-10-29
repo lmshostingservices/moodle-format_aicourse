@@ -23,6 +23,10 @@ require_once($CFG->dirroot . '/course/lib.php');
 require_once($CFG->dirroot . '/backup/util/includes/backup_includes.php');
 require_once($CFG->dirroot . '/backup/util/includes/restore_includes.php');
 
+#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse\local\cardimage::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse\observer::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\backup_format_aicourse_plugin::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\restore_format_aicourse_plugin::class)]
 /**
  * Tests for card images and card colours (2.5.0).
  *
@@ -35,10 +39,6 @@ require_once($CFG->dirroot . '/backup/util/includes/restore_includes.php');
  * @covers     \backup_format_aicourse_plugin
  * @covers     \restore_format_aicourse_plugin
  */
-#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse\local\cardimage::class)]
-#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse\observer::class)]
-#[\PHPUnit\Framework\Attributes\CoversClass(\backup_format_aicourse_plugin::class)]
-#[\PHPUnit\Framework\Attributes\CoversClass(\restore_format_aicourse_plugin::class)]
 final class cardimage_test extends \advanced_testcase {
     /**
      * A real, tiny PNG.

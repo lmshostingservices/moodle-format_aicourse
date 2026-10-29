@@ -293,7 +293,6 @@ class activityhero implements named_templatable, renderable {
      *
      * @param stdClass $data Context being built, modified in place.
      * @param array|null $currentsection Section descriptor with 'num' and 'name', or null.
-     * @param mixed $currentsection The section the activity sits in, for the section label.
      * @param bool $ownsbanner Whether the image on screen belongs to this page's own target.
      * @return void
      */

@@ -141,7 +141,7 @@ class ai_chat extends external_api {
         string $allquestions = ''
     ): array {
         global $CFG, $DB, $USER;
-        // course_get_format() lives in course/lib.php, which web service requests do not load.
+        // Course_get_format() lives in course/lib.php, which web service requests do not load.
         require_once($CFG->dirroot . '/course/lib.php');
 
         $params = self::validate_parameters(self::execute_parameters(), [

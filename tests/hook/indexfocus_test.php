@@ -27,6 +27,7 @@ namespace format_aicourse\hook;
 
 use core\hook\output\before_standard_footer_html_generation;
 
+#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse\hook\before_footer_html_generation::class)]
 /**
  * Tests that the course index focus module is queued on the right pages.
  *
@@ -36,7 +37,6 @@ use core\hook\output\before_standard_footer_html_generation;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \format_aicourse\hook\before_footer_html_generation
  */
-#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse\hook\before_footer_html_generation::class)]
 final class indexfocus_test extends \advanced_testcase {
     /**
      * Run the footer hook for the current $PAGE and return the queued JavaScript.

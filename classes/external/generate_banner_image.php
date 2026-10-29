@@ -78,11 +78,13 @@ class generate_banner_image extends external_api {
      * Generate and store a banner image for the course.
      *
      * @param int $courseid Id of the course.
+     * @param string $extraprompt Additional art direction.
+     * @param int $sectionid Section id, or zero for the course banner.
      * @return array The URL of the stored image and the credits it cost.
      */
     public static function execute(int $courseid, string $extraprompt = '', int $sectionid = 0): array {
         global $CFG, $USER;
-        // course_get_format() lives in course/lib.php, which web service requests do not load.
+        // Course_get_format() lives in course/lib.php, which web service requests do not load.
         require_once($CFG->dirroot . '/course/lib.php');
 
         $params = self::validate_parameters(self::execute_parameters(), [

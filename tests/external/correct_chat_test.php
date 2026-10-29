@@ -32,6 +32,7 @@ defined('MOODLE_INTERNAL') || die();
 global $CFG;
 require_once($CFG->dirroot . '/course/format/aicourse/tests/external/external_testcase.php');
 
+#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse\external\correct_chat::class)]
 /**
  * Tests for the format_aicourse_correct_chat external function.
  *
@@ -47,7 +48,6 @@ require_once($CFG->dirroot . '/course/format/aicourse/tests/external/external_te
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \format_aicourse\external\correct_chat
  */
-#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse\external\correct_chat::class)]
 final class correct_chat_test extends external_testcase {
     /**
      * Store one chat row owned by the fixture student.

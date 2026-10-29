@@ -33,6 +33,7 @@ require_once($CFG->dirroot . '/course/format/aicourse/lib.php');
 
 use format_aicourse\local\icons;
 
+#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse\local\icons::class)]
 /**
  * Unit tests for the AI Course Format helper functions.
  *
@@ -42,7 +43,6 @@ use format_aicourse\local\icons;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \format_aicourse\local\icons
  */
-#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse\local\icons::class)]
 final class format_aicourse_test extends \advanced_testcase {
     /**
      * A section with no icon set must report an empty icon.

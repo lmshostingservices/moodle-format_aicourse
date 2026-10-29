@@ -33,6 +33,8 @@ defined('MOODLE_INTERNAL') || die();
 global $CFG;
 require_once($CFG->dirroot . '/course/format/aicourse/tests/external/external_testcase.php');
 
+#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse\external\delete_banner_image::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse\external\get_banner_status::class)]
 /**
  * Tests for the section banner behaviour of the banner external functions.
  *
@@ -46,8 +48,6 @@ require_once($CFG->dirroot . '/course/format/aicourse/tests/external/external_te
  * @covers     \format_aicourse\external\delete_banner_image
  * @covers     \format_aicourse\external\get_banner_status
  */
-#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse\external\delete_banner_image::class)]
-#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse\external\get_banner_status::class)]
 final class section_banner_test extends external_testcase {
     /**
      * Store an image against a banner target.

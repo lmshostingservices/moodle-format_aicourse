@@ -30,6 +30,7 @@ defined('MOODLE_INTERNAL') || die();
 global $CFG;
 require_once($CFG->dirroot . '/course/lib.php');
 
+#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse\local\banner::class)]
 /**
  * Tests for banner resolution: section image, then course image, then course overview image.
  *
@@ -39,7 +40,6 @@ require_once($CFG->dirroot . '/course/lib.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \format_aicourse\local\banner
  */
-#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse\local\banner::class)]
 final class banner_test extends \advanced_testcase {
     /** @var \stdClass Course under test. */
     private $course;

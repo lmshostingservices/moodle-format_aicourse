@@ -31,6 +31,7 @@ global $CFG;
 require_once($CFG->dirroot . '/course/format/aicourse/lib.php');
 require_once($CFG->dirroot . '/user/externallib.php');
 
+#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse\local\herocollapse::class)]
 /**
  * Tests for the collapsed state of the top band.
  *
@@ -40,7 +41,6 @@ require_once($CFG->dirroot . '/user/externallib.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \format_aicourse\local\herocollapse
  */
-#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse\local\herocollapse::class)]
 final class herocollapse_test extends \advanced_testcase {
     /**
      * A user who has never touched the toggle gets the band open.

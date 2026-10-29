@@ -33,6 +33,7 @@ defined('MOODLE_INTERNAL') || die();
 global $CFG;
 require_once($CFG->dirroot . '/course/format/aicourse/tests/external/external_testcase.php');
 
+#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse\external\ai_chat::class)]
 /**
  * Tests for the AI Tutor's request, markers, history, corrections, audience and lockouts.
  *
@@ -45,7 +46,6 @@ require_once($CFG->dirroot . '/course/format/aicourse/tests/external/external_te
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \format_aicourse\external\ai_chat
  */
-#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse\external\ai_chat::class)]
 final class ai_chat_tutor_test extends external_testcase {
     /**
      * Credentials, a clean request slot.

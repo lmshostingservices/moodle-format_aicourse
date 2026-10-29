@@ -34,6 +34,13 @@ global $CFG;
 require_once($CFG->dirroot . '/course/format/aicourse/tests/external/external_testcase.php');
 require_once($CFG->dirroot . '/course/format/aicourse/tests/local/cardimage_test.php');
 
+#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse\external\upload_card_image::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse\external\delete_card_image::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse\external\set_card_colour::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse\external\generate_card_image::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse\external\get_card_image_status::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse\external\generate_all_card_images::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse\task\generate_card_image::class)]
 /**
  * Tests for the card image and card colour external functions.
  *
@@ -52,13 +59,6 @@ require_once($CFG->dirroot . '/course/format/aicourse/tests/local/cardimage_test
  * @covers     \format_aicourse\external\generate_all_card_images
  * @covers     \format_aicourse\task\generate_card_image
  */
-#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse\external\upload_card_image::class)]
-#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse\external\delete_card_image::class)]
-#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse\external\set_card_colour::class)]
-#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse\external\generate_card_image::class)]
-#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse\external\get_card_image_status::class)]
-#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse\external\generate_all_card_images::class)]
-#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse\task\generate_card_image::class)]
 final class card_image_test extends external_testcase {
     /** @var \stdClass A page in section 1. */
     private $page;

@@ -25,6 +25,7 @@
 
 namespace format_aicourse\local;
 
+#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse\local\answertext::class)]
 /**
  * Tests for the report previews of AI Tutor answers.
  *
@@ -34,7 +35,6 @@ namespace format_aicourse\local;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \format_aicourse\local\answertext
  */
-#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse\local\answertext::class)]
 final class answertext_test extends \advanced_testcase {
     /**
      * Markdown markers are removed and the text reads as a sentence.

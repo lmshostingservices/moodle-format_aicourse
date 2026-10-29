@@ -16,6 +16,7 @@
 
 namespace format_aicourse\local;
 
+#[\PHPUnit\Framework\Attributes\CoversClass(tutorprompt::class)]
 /**
  * Tests for the AI Tutor's prompt composer.
  *
@@ -25,7 +26,6 @@ namespace format_aicourse\local;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \format_aicourse\local\tutorprompt
  */
-#[\PHPUnit\Framework\Attributes\CoversClass(tutorprompt::class)]
 final class tutorprompt_test extends \basic_testcase {
     /**
      * A typical learner input.

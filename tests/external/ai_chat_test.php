@@ -32,6 +32,7 @@ defined('MOODLE_INTERNAL') || die();
 global $CFG;
 require_once($CFG->dirroot . '/course/format/aicourse/tests/external/external_testcase.php');
 
+#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse\external\ai_chat::class)]
 /**
  * Tests for the format_aicourse_ai_chat external function.
  *
@@ -45,7 +46,6 @@ require_once($CFG->dirroot . '/course/format/aicourse/tests/external/external_te
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \format_aicourse\external\ai_chat
  */
-#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse\external\ai_chat::class)]
 final class ai_chat_test extends external_testcase {
     /**
      * Create an assignment in the fixture course and mark it submitted for the student.

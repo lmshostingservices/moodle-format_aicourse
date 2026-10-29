@@ -24,6 +24,7 @@
 
 namespace format_aicourse\local;
 
+#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse\local\permissions::class)]
 /**
  * Tests for format_aicourse\local\permissions.
  *
@@ -32,7 +33,6 @@ namespace format_aicourse\local;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \format_aicourse\local\permissions
  */
-#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse\local\permissions::class)]
 final class permissions_test extends \advanced_testcase {
     /**
      * A teacher is a grader, a student is not.

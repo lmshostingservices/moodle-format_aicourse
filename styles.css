@@ -5523,7 +5523,7 @@ body.format-aicourse .courseindex-item .text-truncate {
    colour the rest of the index uses and be legible on every site. */
 body.format-aicourse .courseindex-item:is(.pageitem, [data-selected="true"]):not(#_acf_never):not(#_acf_never),
 body.format-aicourse .courseindex-item:is(.pageitem, [data-selected="true"]):not(#_acf_never):not(#_acf_never)
-    :is(a, span, .text-truncate, .courseindex-link, .courseindex-sectionname, .inplaceeditable, .quickeditlink):not(.badge) {
+:is(a, span, .text-truncate, .courseindex-link, .courseindex-sectionname, .inplaceeditable, .quickeditlink):not(.badge) {
     /* stylelint-disable-next-line declaration-no-important -- pinned to the background above. */
     color: var(--acf-text-primary) !important;
     font-weight: var(--acf-weight-semibold);
@@ -9764,9 +9764,9 @@ body.aicourse-player-on .courseindex-item.aicourse-player-row:focus-within
 @supports (mask-image: url("")) {
     .aicourse-player-row-icon img {
         background: currentColor;
-        /* A 1x1 fully transparent GIF. The smallest thing that reliably replaces an <img>'s
+        /* A 1x1 fully transparent image. The smallest thing that reliably replaces an <img>'s
            content without removing the element. */
-        content: url("data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7");
+        content: url([[pix:format_aicourse|transparent]]);
         mask-image: var(--acf-player-icon);
         mask-repeat: no-repeat;
         mask-position: center;
@@ -9961,9 +9961,9 @@ body.aicourse-player-on .courseindex-item.courseindex-section-title .courseindex
    it duplicated the tick at the end of the row, and it told a learner nothing about what the
    activity actually is. */
 .aicourse-player-row-icon {
-/* The activity icon at the head of the row, in the accent so the row is identifiable by shape and
-   colour before it is read. Core's completion circle is hidden with it: it duplicated the tick at
-   the end of the row and told a learner nothing about what the activity is. */
+    /* The activity icon at the head of the row, in the accent so the row is identifiable by shape and
+       colour before it is read. Core's completion circle is hidden with it: it duplicated the tick at
+       the end of the row and told a learner nothing about what the activity is. */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -9998,8 +9998,8 @@ body.aicourse-player-on .courseindex-item.aicourse-player-row .completioninfo {
 
 /* The time pill: the same bordered, clock-marked treatment as an activity card's. */
 .aicourse-player-row-time {
-/* The time, quiet and right-aligned. No pill here: a bordered chip on every row rebuilds the
-   boxed look the rows just shed. */
+    /* The time, quiet and right-aligned. No pill here: a bordered chip on every row rebuilds the
+       boxed look the rows just shed. */
     display: inline-flex;
     align-items: center;
     gap: 3px;
@@ -10030,8 +10030,8 @@ body.aicourse-player-on .courseindex-item.aicourse-player-row .completioninfo {
    check when done, because colour alone would fail WCAG 1.4.1. The green is the same
    --acf-status-done token the cards and the hero ring use. */
 .aicourse-player-tick {
-/* The tick. Shape as well as colour: an outlined circle when incomplete and a filled one with a
-   check when done, because colour alone would fail WCAG 1.4.1. */
+    /* The tick. Shape as well as colour: an outlined circle when incomplete and a filled one with a
+       check when done, because colour alone would fail WCAG 1.4.1. */
     flex: none;
     display: grid;
     place-items: center;
@@ -11305,8 +11305,14 @@ body#page-admin-setting-formatsettingaicourse #adminsettings .form-item.acfs-fla
 }
 
 @keyframes acfs-flash {
-    0%, 12% { background: rgb(var(--c) / 0.16); }
-    100%    { background: transparent; }
+    0%,
+    12% {
+        background: rgb(var(--c) / 0.16);
+    }
+
+    100% {
+        background: transparent;
+    }
 }
 
 /* An SVG with a viewBox and no width/height attribute falls back to 300x150.
@@ -11318,8 +11324,7 @@ body#page-admin-setting-formatsettingaicourse #adminsettings .form-item.acfs-fla
    18px. A guard that has to be excluded from by name will always be one name behind. Naming the
    places an unsized icon actually appears is both narrower and self-maintaining. */
 body#page-admin-setting-formatsettingaicourse
-:is(.acfs-head, .acfs-search, .acfs-chevwrap, .acfs-jump, button, a, label) >
-svg:not([width]):not([height]) {
+:is(.acfs-head, .acfs-search, .acfs-chevwrap, .acfs-jump, button, a, label) > svg:not([width]):not([height]) {
     inline-size: 1em;
     block-size: 1em;
 }
@@ -11404,9 +11409,9 @@ body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image
    Two rules were setting this, with different radii and different fills -- the duplicate-declaration
    trap again -- so they are consolidated here into one that sets nothing. */
 body.format-aicourse .aicourse-hero-banner.aicourse-hero-has-image .aicourse-hero-nav {
-/* ACF-FIX-2.1.186b: the chevron has NO surface of its own. See the consolidated note further down
-   -- this block used to give it a scrim, a border and a blur, and the block below gave it a second,
-   different one. Only the colour survives here. */
+    /* ACF-FIX-2.1.186b: the chevron has NO surface of its own. See the consolidated note further down
+       -- this block used to give it a scrim, a border and a blur, and the block below gave it a second,
+       different one. Only the colour survives here. */
     background: transparent;
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
@@ -11998,12 +12003,12 @@ body#page-admin-setting-formatsettingaicourse #adminsettings .acfs-intro h3 {
 body#page-admin-setting-formatsettingaicourse {
     /* The chevron, drawn here so no theme can remove it. Two colours, because a
        dark #343a40 arrow is invisible on a dark control. */
-    --acfs-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5l5-5' fill='none' stroke='%23475569' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    --acfs-chevron: url([[pix:format_aicourse|settings-chevron]]);
 }
 
 @media (prefers-color-scheme: dark) {
     body#page-admin-setting-formatsettingaicourse:not([data-acfs-theme="light"]) {
-        --acfs-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5l5-5' fill='none' stroke='%23b3c0d1' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+        --acfs-chevron: url([[pix:format_aicourse|settings-chevron-dark]]);
     }
 }
 
@@ -12759,7 +12764,7 @@ footer[role="contentinfo"]) {
 
 body.format-aicourse.aicourse-hidefooter-all:not(.editing):not(.editingon):not(.editing-mode) > footer,
 body.format-aicourse.aicourse-hidefooter-students:not(.aicourse-is-grader):not(.editing):not(.editingon):not(.editing-mode)
-> footer {
+ > footer {
     display: none;
 }
 

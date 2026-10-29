@@ -93,7 +93,7 @@ Feature: Course home page rendering in the AI Course Format
     Given I am on the "Course 1" course page logged in as teacher1
     And I navigate to "Settings" in current page administration
     And I set the following fields to these values:
-      | Show activities on cards | Yes |
+      | List the activities on each section card | Yes |
     And I press "Save and display"
     And I am on the "Course 1" course page logged in as student1
     Then "//*[contains(@class, 'acf-list')]" "xpath_element" should exist

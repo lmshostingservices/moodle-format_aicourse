@@ -30,6 +30,7 @@ defined('MOODLE_INTERNAL') || die();
 global $CFG;
 require_once($CFG->dirroot . '/course/lib.php');
 
+#[\PHPUnit\Framework\Attributes\CoversMethod(\format_aicourse\local\callbacks::class, 'pluginfile')]
 /**
  * Tests that a hidden section's banner is not served to people who cannot see the section.
  *
@@ -43,7 +44,6 @@ require_once($CFG->dirroot . '/course/lib.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \format_aicourse\local\callbacks::pluginfile
  */
-#[\PHPUnit\Framework\Attributes\CoversMethod(\format_aicourse\local\callbacks::class, 'pluginfile')]
 final class section_banner_access_test extends \advanced_testcase {
     /**
      * A learner must not be able to fetch a hidden section's banner by its URL.

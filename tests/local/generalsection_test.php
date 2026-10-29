@@ -16,6 +16,9 @@
 
 namespace format_aicourse\local;
 
+#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse\local\activityinfo::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse\local\progress::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse::class)]
 /**
  * Tests for the General section rule and the shared course totals.
  *
@@ -27,9 +30,6 @@ namespace format_aicourse\local;
  * @covers     \format_aicourse\local\progress
  * @covers     \format_aicourse
  */
-#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse\local\activityinfo::class)]
-#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse\local\progress::class)]
-#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse::class)]
 final class generalsection_test extends \advanced_testcase {
     /**
      * A course in this format that hides General from everyone, with an Announcements forum.

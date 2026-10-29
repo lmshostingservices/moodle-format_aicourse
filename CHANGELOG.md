@@ -2,6 +2,20 @@
 
 All notable changes to this plugin will be documented in this file.
 
+## [3.3.4] - 2026-10-29
+
+### Fixed
+
+- Make coverage annotations readable by both legacy and current Moodle checkers without
+  changing the PHPUnit attributes or the tests they cover.
+- Complete PHPDoc parameter lists and update the browser test to the current settings label.
+- Validate modern CSS maths, container queries and system colours with explicit grammar
+  extensions while retaining Moodle's lint rules. Correct stylesheet formatting and serve
+  the existing transparent/chevron artwork as local Moodle image assets.
+- Make standalone template examples independent of their parent page and add a paired
+  hero/chatbox rendering test that checks the actual tutor controls' accessible target.
+- Retain the 3.3.3 fix loading course/lib.php for AI banner, card-image and tutor requests.
+
 ## [3.3.3] - 2026-10-29
 
 ### Fixed

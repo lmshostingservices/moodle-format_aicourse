@@ -34,6 +34,9 @@ require_once($CFG->dirroot . '/course/lib.php');
 require_once($CFG->dirroot . '/backup/util/includes/backup_includes.php');
 require_once($CFG->dirroot . '/backup/util/includes/restore_includes.php');
 
+#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\backup_format_aicourse_plugin::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\restore_format_aicourse_plugin::class)]
 /**
  * Tests that a section banner survives saving section settings, and duplicating a course.
  *
@@ -45,9 +48,6 @@ require_once($CFG->dirroot . '/backup/util/includes/restore_includes.php');
  * @covers     \backup_format_aicourse_plugin
  * @covers     \restore_format_aicourse_plugin
  */
-#[\PHPUnit\Framework\Attributes\CoversClass(\format_aicourse::class)]
-#[\PHPUnit\Framework\Attributes\CoversClass(\backup_format_aicourse_plugin::class)]
-#[\PHPUnit\Framework\Attributes\CoversClass(\restore_format_aicourse_plugin::class)]
 final class section_banner_persistence_test extends \advanced_testcase {
     /**
      * Store an image against a section.
