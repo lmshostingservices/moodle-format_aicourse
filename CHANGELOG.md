@@ -15,6 +15,8 @@ All notable changes to this plugin will be documented in this file.
 - Make standalone template examples independent of their parent page and add a paired
   hero/chatbox rendering test that checks the actual tutor controls' accessible target.
 - Retain the 3.3.3 fix loading course/lib.php for AI banner, card-image and tutor requests.
+- Split tutor formatting and settings drawing into smaller helpers without changing their
+  rendered output, and rebuild their AMD modules with Moodle's native toolchain.
 
 ## [3.3.3] - 2026-10-29
 
