@@ -13628,10 +13628,18 @@ body.format-aicourse.aicourse-notime-activitycards .acf-card--activity .acf-card
 
 body.format-aicourse .acf-list {
     display: grid;
+    /* One column that may shrink below its content, so long activity names ellipsise
+       instead of pushing the list (and its time labels) out of the card. */
+    grid-template-columns: minmax(0, 1fr);
+    min-inline-size: 0;
     gap: 2px;
     margin: 10px 0 0;
     padding: 0;
     list-style: none;
+}
+
+body.format-aicourse .acf-list > li {
+    min-inline-size: 0;
 }
 
 body.format-aicourse .acf-list__link,

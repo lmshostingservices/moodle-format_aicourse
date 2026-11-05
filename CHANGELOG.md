@@ -2,6 +2,15 @@
 
 All notable changes to this plugin will be documented in this file.
 
+## [3.3.4] - 2026-11-05
+
+### Fixed
+
+- **Long activity names broke the module cards** when "Show activities on cards" is on. The activity
+  list grid sized its column to the longest name, so names did not ellipsise and the time labels
+  spilled into the neighbouring card. The list now uses a shrinkable single column. CSS only, no
+  database changes.
+
 ## [3.3.3] - 2026-10-29
 
 ### Fixed
