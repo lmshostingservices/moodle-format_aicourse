@@ -306,6 +306,8 @@ class generate_banner_image extends external_api {
         // updated service uses prompt (or rewrites the scene from brief and appends promptTail); an
         // older one ignores these fields and composes from the ones above, as before.
         $postdata['imageKind'] = 'banner';
+        // The banner task runs from cron, where course/lib.php is not loaded either.
+        require_once($CFG->dirroot . '/course/lib.php');
         $postdata['imageStyle'] = \format_aicourse\local\cardimage::clean_style(
             course_get_format($course)->get_format_options()['cardimagestyle'] ?? ''
         );

@@ -1,0 +1,56 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template format_aicourse/section_icon
+
+    The icon box of a section card. Included twice by format_aicourse/section_card: once wrapped in
+    the icon picker <button> when edit mode is on, and once bare when it is off.
+
+    Three states are possible: the teacher's chosen icon, a pencil placeholder (edit mode, no icon
+    chosen yet) and a neutral question mark (view mode, no icon chosen). All three are decorative
+    and therefore carry aria-hidden="true" focusable="false"; the accessible name lives on the icon
+    picker button in edit mode, and there is nothing to announce in view mode.
+
+    Classes required for JS:
+    * aicourse-card-icon-wrap - the icon picker swaps aicourse-icon-selected / aicourse-icon-empty
+      on this element after a successful save.
+
+    Data attributes required for JS:
+    * None.
+
+    Context variables required for this template:
+    * hasicon bool True when the teacher has chosen an icon for this section.
+    * isediting bool True when the teacher has edit mode turned on.
+    * iconsvg string PRE-ESCAPED SVG child markup from \format_aicourse\local\icons::get_library().
+      This is plugin-defined constant markup, never user input, so it is rendered with a triple
+      mustache; it is only used when hasicon is true.
+
+    Example context (json):
+    {
+        "hasicon": true,
+        "isediting": false,
+        "iconsvg": "<circle cx=\"12\" cy=\"12\" r=\"9\"/>"
+    }
+}}
+<div class="aicourse-card-icon-wrap {{#hasicon}}aicourse-icon-selected{{/hasicon}}{{^hasicon}}aicourse-icon-empty{{/hasicon}}">
+{{#hasicon}}
+<div class="aicourse-card-icon"><svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">{{{iconsvg}}}</svg></div>
+{{/hasicon}}
+{{^hasicon}}
+<div class="aicourse-card-icon">{{#isediting}}<svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>{{/isediting}}{{^isediting}}<svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><text x="12" y="16" text-anchor="middle" font-size="14" font-weight="500" fill="currentColor">?</text></svg>{{/isediting}}</div>
+{{/hasicon}}
+</div>

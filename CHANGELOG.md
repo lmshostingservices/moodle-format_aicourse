@@ -2,6 +2,12 @@
 
 All notable changes to this plugin will be documented in this file.
 
+## [3.3.6] - 2026-11-09
+- Load Moodle's course library before the scheduled banner-image task reads course-format data.
+
+## [3.3.5] - 2026-11-07
+- Load Moodle's course library before generating course banner images in scheduled tasks.
+
 ## [3.3.4] - 2026-11-05
 
 ### Fixed
