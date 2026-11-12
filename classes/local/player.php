@@ -340,30 +340,49 @@ class player {
      * @return string URL, or an empty string.
      */
     protected static function get_client_logo_url(): string {
-        global $DB, $PAGE, $USER;
         if (!class_exists('\\local_cohortbranding\\manager')) {
             return '';
         }
         try {
-            $branding = null;
-            $courseid = (int)($PAGE->course->id ?? 0);
-            if ($courseid > SITEID && class_exists('\\local_clientportal\\api')) {
-                $clientid = \local_clientportal\api::course_client($courseid);
-                if ($clientid) {
-                    $cohortid = (int)$DB->get_field('local_clientportal_client', 'cohortid', ['id' => $clientid]);
-                    $branding = $cohortid ? \local_cohortbranding\manager::get_branding_by_cohort($cohortid) : null;
-                }
-            }
-            if ((!$branding || empty($branding->enabled)) && isloggedin() && !isguestuser()) {
-                $branding = \local_cohortbranding\manager::get_user_branding((int)$USER->id);
-            }
-            if ($branding && !empty($branding->enabled) && !empty($branding->logourl)) {
+            $branding = self::get_course_client_branding() ?? self::get_user_branding();
+            if ($branding && !empty($branding->logourl)) {
                 return (string)\local_cohortbranding\manager::validate_url((string)$branding->logourl);
             }
         } catch (\Throwable $e) {
             unset($e);
         }
         return '';
+    }
+
+    /**
+     * Branding of the Client Portal client that owns the current course, when it is switched on.
+     *
+     * @return object|null
+     */
+    protected static function get_course_client_branding(): ?object {
+        global $DB, $PAGE;
+        $courseid = (int)($PAGE->course->id ?? 0);
+        if ($courseid <= SITEID || !class_exists('\\local_clientportal\\api')) {
+            return null;
+        }
+        $clientid = \local_clientportal\api::course_client($courseid);
+        $cohortid = $clientid ? (int)$DB->get_field('local_clientportal_client', 'cohortid', ['id' => $clientid]) : 0;
+        $branding = $cohortid ? \local_cohortbranding\manager::get_branding_by_cohort($cohortid) : null;
+        return $branding && !empty($branding->enabled) ? $branding : null;
+    }
+
+    /**
+     * The signed-in person's own Cohort Branding, when it is switched on.
+     *
+     * @return object|null
+     */
+    protected static function get_user_branding(): ?object {
+        global $USER;
+        if (!isloggedin() || isguestuser()) {
+            return null;
+        }
+        $branding = \local_cohortbranding\manager::get_user_branding((int)$USER->id);
+        return $branding && !empty($branding->enabled) ? $branding : null;
     }
 
     /**
