@@ -2,6 +2,11 @@
 
 All notable changes to this plugin will be documented in this file.
 
+## [3.3.7] - 2026-11-13
+
+### Changed
+- The course player shows the client's logo: in a Client Portal client's own course, that client's Cohort Branding logo for everyone in the course; otherwise the signed-in person's Cohort Branding logo, the same one the theme header shows. The uploaded player logo and the site logo follow as before.
+
 ## [3.3.6] - 2026-11-09
 - Load Moodle's course library before the scheduled banner-image task reads course-format data.
 

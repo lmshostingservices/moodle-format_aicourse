@@ -334,6 +334,39 @@ class player {
     }
 
     /**
+     * The client's logo from Cohort Branding: the owning client of this course (Client Portal), or else the signed-in
+     * person's own cohort branding.
+     *
+     * @return string URL, or an empty string.
+     */
+    protected static function get_client_logo_url(): string {
+        global $DB, $PAGE, $USER;
+        if (!class_exists('\\local_cohortbranding\\manager')) {
+            return '';
+        }
+        try {
+            $branding = null;
+            $courseid = (int)($PAGE->course->id ?? 0);
+            if ($courseid > SITEID && class_exists('\\local_clientportal\\api')) {
+                $clientid = \local_clientportal\api::course_client($courseid);
+                if ($clientid) {
+                    $cohortid = (int)$DB->get_field('local_clientportal_client', 'cohortid', ['id' => $clientid]);
+                    $branding = $cohortid ? \local_cohortbranding\manager::get_branding_by_cohort($cohortid) : null;
+                }
+            }
+            if ((!$branding || empty($branding->enabled)) && isloggedin() && !isguestuser()) {
+                $branding = \local_cohortbranding\manager::get_user_branding((int)$USER->id);
+            }
+            if ($branding && !empty($branding->enabled) && !empty($branding->logourl)) {
+                return (string)\local_cohortbranding\manager::validate_url((string)$branding->logourl);
+            }
+        } catch (\Throwable $e) {
+            unset($e);
+        }
+        return '';
+    }
+
+    /**
      * The site logo, if the theme provides one.
      *
      * Returned rather than assumed present: a site with no logo configured gets a course name and
@@ -348,6 +381,14 @@ class player {
         // player is often branded differently from the site around it -- a client's mark rather
         // than the institution's -- and until now the only way to get a logo here was to change
         // the whole site's.
+        // 3.3.7: a client's own logo comes first. With the Client Portal a client's courses carry the
+        // client's branding for everyone in them (trainers and site staff too); otherwise the signed-in
+        // person's Cohort Branding logo, the same one the theme header shows.
+        $client = self::get_client_logo_url();
+        if ($client !== '') {
+            return $client;
+        }
+
         $uploaded = self::get_uploaded_logo_url();
         if ($uploaded !== '') {
             return $uploaded;
