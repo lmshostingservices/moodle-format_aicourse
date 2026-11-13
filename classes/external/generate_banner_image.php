@@ -390,6 +390,19 @@ class generate_banner_image extends external_api {
             );
         }
 
+        // Client Portal (when installed) bills the course's client for the banner (5 credits unless the reply says).
+        if (method_exists('\\local_clientportal\\api', 'record_lmslabs_call')) {
+            global $USER;
+            \local_clientportal\api::record_lmslabs_call(
+                (int) $USER->id,
+                (int) \context_course::instance($course->id)->id,
+                'format_aicourse',
+                $result,
+                \format_aicourse\external\generate_card_image::CREDIT_COST,
+                'Banner image'
+            );
+        }
+
         // ACF-FIX-2.0: strict base64 decoding — the old call silently accepted garbage.
         $imagedata = base64_decode($result['imageBase64'], true);
         if ($imagedata === false || $imagedata === '') {
