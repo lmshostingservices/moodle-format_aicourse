@@ -389,6 +389,18 @@ class ai_chat extends external_api {
             throw new \moodle_exception('aiassistant_error', 'format_aicourse');
         }
 
+        // Client Portal (when installed) bills the client for what the service says this answer cost.
+        if (method_exists('\\local_clientportal\\api', 'record_lmslabs_call')) {
+            \local_clientportal\api::record_lmslabs_call(
+                (int) $USER->id,
+                (int) \context_course::instance($course->id)->id,
+                'format_aicourse',
+                $result,
+                0,
+                'AI tutor'
+            );
+        }
+
         // 3.2.3: the tutor ends a refusal with a language-independent marker, removed here before
         // the learner sees it. Order of authority for the report's integrity counter: the marker,
         // then the service's own 'refused' flag (ACF-FIX-2.1.4), then English phrase matching.

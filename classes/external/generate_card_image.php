@@ -266,6 +266,20 @@ class generate_card_image extends generate_banner_image {
             );
         }
 
+        // Client Portal (when installed) bills the course's client; the request id counts a repeated request once.
+        if (method_exists('\\local_clientportal\\api', 'record_lmslabs_call')) {
+            global $USER;
+            \local_clientportal\api::record_lmslabs_call(
+                (int) $USER->id,
+                (int) \context_course::instance($course->id)->id,
+                'format_aicourse',
+                $result,
+                static::CREDIT_COST,
+                'Card image',
+                (string) $postdata['requestId']
+            );
+        }
+
         $bytes = base64_decode($result['imageBase64'], true);
         if ($bytes === false) {
             throw new \moodle_exception('error_cardimageinvalid', 'format_aicourse');
