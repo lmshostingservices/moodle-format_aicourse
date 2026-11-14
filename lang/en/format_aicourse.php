@@ -859,7 +859,7 @@ Moodle\'s version is a plain list of links. The **player sidebar** turns it into
 It still behaves like Moodle\'s course index underneath — sections still collapse, drag and drop still works while editing, and the page you are on is still highlighted.
 
 * **Plain course index** — Moodle\'s normal list.
-* **Player sidebar** — the richer version described above.';
+* **Player sidebar** (the default) — the richer version described above.';
 $string['playerindex_off'] = 'Plain course index';
 $string['playerindex_on'] = 'Player sidebar';
 $string['playerindex_site'] = 'Use the site default';

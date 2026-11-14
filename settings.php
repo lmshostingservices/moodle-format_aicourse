@@ -641,12 +641,12 @@ if ($hassiteconfig) {
         ]
     ));
 
-    // ACF-FIX-2.1.52: the player sidebar.
+    // ACF-FIX-2.1.52: the player sidebar. 3.3.9: on by default.
     $settings->add(new admin_setting_configselect(
         'format_aicourse/defaultplayerindex',
         get_string('playerindex', 'format_aicourse'),
         get_string('playerindex_desc', 'format_aicourse'),
-        0,
+        1,
         [
             0 => get_string('playerindex_off', 'format_aicourse'),
             1 => get_string('playerindex_on', 'format_aicourse'),

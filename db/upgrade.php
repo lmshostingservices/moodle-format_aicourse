@@ -199,5 +199,15 @@ function xmldb_format_aicourse_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026092900, 'format', 'aicourse');
     }
 
+    if ($oldversion < 2026111400) {
+        // 3.3.9: the player sidebar becomes the default course index. Sites still on the old
+        // shipped default (plain index) move to the player sidebar; courses that chose their own
+        // setting, and the "apply to ALL existing courses" override, are left alone.
+        if ((string) get_config('format_aicourse', 'defaultplayerindex') !== '1') {
+            set_config('defaultplayerindex', 1, 'format_aicourse');
+        }
+        upgrade_plugin_savepoint(true, 2026111400, 'format', 'aicourse');
+    }
+
     return true;
 }
