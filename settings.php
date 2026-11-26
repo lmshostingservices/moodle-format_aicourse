@@ -33,7 +33,7 @@ if ($hassiteconfig) {
         html_writer::link(
             $reporturl,
             get_string('admin_report_view', 'format_aicourse'),
-            ['class' => 'btn btn-primary', 'target' => '_self']
+            ['class' => 'mds-btn btn btn-primary mds-btn--size-md', 'target' => '_self']
         )
     ));
 
@@ -71,6 +71,39 @@ if ($hassiteconfig) {
         get_string('apikey', 'format_aicourse'),
         get_string('apikey_desc', 'format_aicourse'),
         ''
+    ));
+
+    // 3.4.0: Bring your own AI. Where the tutor and the image generator run is chosen once for
+    // every LMS Labs plugin in AI Grader Central Config (local_aiconfig); this shows the result.
+    $settings->add(new admin_setting_heading(
+        'format_aicourse/byokheading',
+        get_string('byok_heading', 'format_aicourse'),
+        ''
+    ));
+    $settings->add(new admin_setting_description(
+        'format_aicourse/byokstatus',
+        get_string('byok_status', 'format_aicourse'),
+        \format_aicourse\local\responsibleai::byok_status_html()
+    ));
+
+    // 3.4.0: Responsible AI (EU AI Act). Article references are in the strings and in
+    // docs/eu-ai-act.md.
+    $settings->add(new admin_setting_heading(
+        'format_aicourse/responsibleaiheading',
+        get_string('responsibleai_heading', 'format_aicourse'),
+        get_string('responsibleai_heading_desc', 'format_aicourse')
+    ));
+    $settings->add(new admin_setting_configcheckbox(
+        'format_aicourse/aipaused',
+        get_string('responsibleai_pause', 'format_aicourse'),
+        get_string('responsibleai_pause_desc', 'format_aicourse'),
+        0
+    ));
+    $settings->add(new admin_setting_configcheckbox(
+        'format_aicourse/ainotice',
+        get_string('responsibleai_noticesetting', 'format_aicourse'),
+        get_string('responsibleai_noticesetting_desc', 'format_aicourse'),
+        1
     ));
 
     // ACF-FIX-2.1: assessment answer keys are opt in, and default to OFF.
@@ -186,7 +219,9 @@ if ($hassiteconfig) {
         'format_aicourse/font',
         get_string('font', 'format_aicourse'),
         get_string('font_desc', 'format_aicourse'),
-        get_string('font_theme', 'format_aicourse')
+        get_string('font_theme', 'format_aicourse'),
+        // 3.4.0: the Moodle Design System typeface, bundled with the plugin.
+        \format_aicourse\local\fonts::MDS
     ));
 
     $settings->add(new \format_aicourse\admin\setting_font(

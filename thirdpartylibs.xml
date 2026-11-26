@@ -1,11 +1,31 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!--
-  This plugin bundles no third party libraries.
-
-  amd/build/courseformat.min.js and its source map are the compiled output of the plugin's
-  own amd/src/courseformat.js and are not third party code. All icons are inline SVG authored
-  for this plugin, all styles are in the plugin's own styles.css, and nothing is loaded from a
-  CDN at runtime. This file is therefore intentionally empty.
+  amd/build is compiled from the plugin's own amd/src. styles.css contains the design tokens and
+  component styles of the Moodle Design System (scoped to this plugin), and pix/mds/ its icons.
 -->
 <libraries>
+  <library>
+    <location>fonts</location>
+    <name>Noto Sans (variable, latin and latin-ext)</name>
+    <description>The Moodle Design System typeface, served by the site.</description>
+    <version>5.3.0 (@fontsource-variable/noto-sans)</version>
+    <license>OFL</license>
+    <licenseversion>1.1</licenseversion>
+    <repository>https://github.com/notofonts/latin-greek-cyrillic</repository>
+    <copyrights>
+      <copyright>2022 The Noto Project Authors</copyright>
+    </copyrights>
+  </library>
+  <library>
+    <location>pix/mds</location>
+    <name>Moodle Design System icons</name>
+    <description>Icons from the Moodle Design System component styles (alert, close button, switch).</description>
+    <version>5.6.0 (@moodlehq/design-system)</version>
+    <license>GPL</license>
+    <licenseversion>3.0</licenseversion>
+    <repository>https://github.com/moodlehq/design-system</repository>
+    <copyrights>
+      <copyright>Moodle Pty Ltd</copyright>
+    </copyrights>
+  </library>
 </libraries>

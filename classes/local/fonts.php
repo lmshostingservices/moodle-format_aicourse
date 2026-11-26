@@ -51,6 +51,15 @@ class fonts {
     /** @var string Course heading value: headings use the course's body font. */
     public const SAME = 'same';
 
+    /** @var string The Moodle Design System typeface, the site default since 3.4.0. */
+    public const MDS = 'notosans';
+
+    /**
+     * @var string[] Fonts served from this plugin's fonts/ folder (styles.css @font-face), never from
+     * Google Fonts, so choosing them sends nothing to a third party.
+     */
+    public const BUNDLED = [self::MDS];
+
     /** @var string[] The groups, in menu order. */
     public const GROUPS = ['sans', 'readable', 'serif', 'display'];
 
@@ -76,7 +85,7 @@ class fonts {
         'plusjakartasans' => ['Plus Jakarta Sans', [400, 500, 600, 700], 'sans-serif', 'sans'],
         'ibmplexsans' => ['IBM Plex Sans', [400, 500, 600, 700], 'sans-serif', 'sans'],
         'figtree' => ['Figtree', [400, 500, 600, 700], 'sans-serif', 'sans'],
-        'notosans' => ['Noto Sans', [400, 500, 700], 'sans-serif', 'sans'],
+        'notosans' => ['Noto Sans', [300, 400, 500, 600, 700], 'sans-serif', 'sans'],
         // Easy to read: dyslexia-friendly, low-vision and early-reader fonts.
         'lexend' => ['Lexend', [400, 500, 600, 700], 'sans-serif', 'readable'],
         'atkinsonhyperlegible' => ['Atkinson Hyperlegible', [400, 700], 'sans-serif', 'readable'],
@@ -122,7 +131,7 @@ class fonts {
         if (!$grouped) {
             $menu = $first;
             foreach (self::FONTS as $key => $font) {
-                $menu[$key] = $font[0];
+                $menu[$key] = self::label($key);
             }
             return $menu;
         }
@@ -134,11 +143,34 @@ class fonts {
             $label = get_string('font_group_' . $group, 'format_aicourse');
             foreach (self::FONTS as $key => $font) {
                 if ($font[3] === $group) {
-                    $menu[$label][$key] = $font[0];
+                    $menu[$label][$key] = self::label($key);
                 }
             }
         }
         return $menu;
+    }
+
+    /**
+     * The menu label for a font: its family, marked when it is the built-in MDS typeface.
+     *
+     * @param string $key A font key.
+     * @return string
+     */
+    public static function label(string $key): string {
+        if ($key === self::MDS) {
+            return get_string('font_mds', 'format_aicourse');
+        }
+        return self::FONTS[$key][0] ?? '';
+    }
+
+    /**
+     * Whether a font is bundled with the plugin rather than loaded from Google Fonts.
+     *
+     * @param string $key A font key.
+     * @return bool
+     */
+    public static function is_bundled(string $key): bool {
+        return in_array($key, self::BUNDLED, true);
     }
 
     /**
@@ -160,10 +192,10 @@ class fonts {
      *
      * @param string $key A font key.
      * @param string $text When set, only these characters are requested (for a preview).
-     * @return string The URL, or '' for an unknown key.
+     * @return string The URL, or '' for an unknown or bundled key.
      */
     public static function stylesheet_url(string $key, string $text = ''): string {
-        if (!self::is_font($key)) {
+        if (!self::is_font($key) || self::is_bundled($key)) {
             return '';
         }
         [$family, $weights] = self::FONTS[$key];
@@ -219,7 +251,10 @@ class fonts {
      */
     public static function links(array $keys): string {
         $html = '';
-        $keys = array_values(array_unique(array_filter($keys, [self::class, 'is_font'])));
+        $keys = array_values(array_unique(array_filter(
+            $keys,
+            fn($key) => self::is_font((string) $key) && !self::is_bundled((string) $key)
+        )));
         if (!$keys) {
             return '';
         }
@@ -245,6 +280,10 @@ class fonts {
         if ($choice['body'] !== '') {
             $stack = self::stack($choice['body']);
             $css .= implode(', ', $roots) . ' {--acf-font-family: ' . $stack . '; font-family: ' . $stack . ';}' . "\n";
+        } else {
+            // 3.4.0: styles.css defaults the plugin's own components to Noto Sans (MDS). A site or
+            // course that chose the theme font gets the theme font there too.
+            $css .= 'body.format-aicourse {--acf-font-family: inherit;}' . "\n";
         }
         if ($choice['heading'] !== '' && $choice['heading'] !== $choice['body']) {
             $stack = self::stack($choice['heading']);

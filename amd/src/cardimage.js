@@ -90,7 +90,7 @@ const STRING_KEYS = [
     'cardimage_all_scope_all', 'cardimage_all_scope_sections', 'cardimage_all_scope_activities',
     'cardimage_all_onlymissing', 'cardimage_all_counting', 'cardimage_all_none',
     'cardimage_all_desc', 'cardimage_all_capped', 'cardimage_all_queued', 'cardimage_menu',
-    'cardimage_dialogtitle', 'byok_nocredits', 'save', 'cancel',
+    'cardimage_dialogtitle', 'byok_nocredits', 'save', 'cancel', 'ai_marked',
 ];
 
 /**
@@ -455,6 +455,67 @@ const el = (tag, attrs = {}, children = []) => {
 };
 
 /**
+ * Give a core modal the Moodle Design System finish: MDS buttons in the footer, the MDS close
+ * button in the header and the plugin's 16px overlay surface.
+ *
+ * @param {Object} modal A core/modal instance.
+ * @returns {Object} The same modal.
+ */
+const mdsModal = (modal) => {
+    const root = modal.getRoot()[0];
+    root.classList.add('acf-mds-modal');
+    root.querySelectorAll('.modal-footer .btn').forEach((button) => {
+        button.classList.add('mds-btn', 'mds-btn--size-md');
+    });
+    // Moodle 5 (Bootstrap 5) renders .btn-close; Moodle 4.4-4.5 render .close with a "×" span.
+    // Both become the MDS Close button, whose icon is drawn by CSS.
+    const close = root.querySelector('.modal-header .btn-close, .modal-header .close');
+    if (close) {
+        close.classList.add('btn-close', 'mds-close-button', 'mds-close-button--md');
+        close.classList.remove('close');
+        close.replaceChildren();
+    }
+    return modal;
+};
+
+/**
+ * An MDS text area: label, field and supporting text, as the design system renders it.
+ *
+ * @param {Object} opts id, label, placeholder, hint, maxlength, rows.
+ * @returns {{wrap: HTMLElement, field: HTMLTextAreaElement}}
+ */
+const mdsTextarea = (opts) => {
+    const field = el('textarea', {
+        'id': opts.id,
+        'class': 'mds-textarea-field form-control',
+        'rows': String(opts.rows || 3),
+        'maxlength': String(opts.maxlength),
+        'placeholder': opts.placeholder,
+        'aria-describedby': opts.id + '-hint',
+    });
+    const wrap = el('div', {'class': 'mds-textarea'}, [
+        el('div', {'class': 'mds-textarea-label-row'}, [
+            el('label', {'class': 'mds-textarea-label', 'for': opts.id, 'text': opts.label}),
+        ]),
+        el('div', {'class': 'mds-textarea-field-wrapper'}, [field]),
+        el('div', {'class': 'mds-textarea-footer'}, [
+            el('p', {'class': 'mds-textarea-supporting-text', 'id': opts.id + '-hint', 'text': opts.hint}),
+        ]),
+    ]);
+    return {wrap, field};
+};
+
+/**
+ * An MDS badge.
+ *
+ * @param {String} text Label.
+ * @param {String} variant primary, secondary, success, danger, warning or info.
+ * @returns {HTMLElement}
+ */
+const mdsBadge = (text, variant = 'secondary') =>
+    el('span', {'class': 'mds-badge badge mds-badge--' + variant + ' mds-badge--subtle', 'text': text});
+
+/**
  * Ask the AI for a card image, with the teacher's own description.
  *
  * @param {HTMLElement} media The card's media element.
@@ -462,33 +523,30 @@ const el = (tag, attrs = {}, children = []) => {
 const generate = async(media) => {
     const target = targetOf(media);
     const promptid = 'aicourse-cardimage-prompt-' + target.type + target.id;
-    const hintid = promptid + '-hint';
-    const textarea = el('textarea', {
-        'id': promptid,
-        'class': 'form-control',
-        'rows': '3',
-        'maxlength': String(PROMPT_MAX),
-        'placeholder': str.cardimage_promptph,
-        'aria-describedby': hintid,
+    const {wrap, field: textarea} = mdsTextarea({
+        id: promptid,
+        label: str.cardimage_promptlabel,
+        placeholder: str.cardimage_promptph,
+        hint: str.cardimage_prompthint,
+        maxlength: PROMPT_MAX,
     });
     const body = el('div', {'class': 'aicourse-cardimage-dialog'}, [
         el('p', {'class': 'aicourse-cardimage-for', 'text': fill('cardimage_titlefor', target.name)}),
-        el('label', {'for': promptid, 'class': 'form-label fw-semibold', 'text': str.cardimage_promptlabel}),
-        textarea,
-        el('p', {'id': hintid, 'class': 'form-text text-muted small mt-1', 'text': str.cardimage_prompthint}),
+        wrap,
         el('div', {'class': 'aicourse-cardimage-meta'}, [
-            el('span', {'class': 'aicourse-cardimage-style', 'text': fill('cardimage_style', config.style)}),
-            el('span', {'class': 'aicourse-cardimage-cost', 'text': costText()}),
+            mdsBadge(fill('cardimage_style', config.style), 'secondary'),
+            mdsBadge(costText(), config.ownai ? 'info' : 'secondary'),
+            mdsBadge(str.ai_marked, 'primary'),
         ]),
     ]);
 
-    const modal = await ModalSaveCancel.create({
+    const modal = mdsModal(await ModalSaveCancel.create({
         title: str.cardimage_title,
         body,
         buttons: {save: str.cardimage_generate},
         removeOnClose: true,
         show: true,
-    });
+    }));
     modal.getRoot().on(ModalEvents.shown, () => textarea.focus());
     modal.getRoot().on(ModalEvents.save, async() => {
         const pending = new Pending('format_aicourse/cardimage:generate');
@@ -549,7 +607,7 @@ const chooseColour = async(media) => {
     ]);
     const body = el('div', {'class': 'aicourse-cardimage-dialog'}, [
         el('p', {'class': 'aicourse-cardimage-for', 'text': fill('cardimage_titlefor', target.name)}),
-        el('p', {'class': 'text-muted small', 'text': str.cardimage_colour_desc}),
+        el('p', {'class': 'aicourse-cardimage-help', 'text': str.cardimage_colour_desc}),
         grid,
         el('label', {'class': 'aicourse-cardcolour-customrow'}, [
             custom,
@@ -569,13 +627,13 @@ const chooseColour = async(media) => {
         applyColour(target.type, target.id, chosen);
     });
 
-    const modal = await ModalSaveCancel.create({
+    const modal = mdsModal(await ModalSaveCancel.create({
         title: str.cardimage_colour,
         body,
         buttons: {save: str.save},
         removeOnClose: true,
         show: true,
-    });
+    }));
     let saved = false;
     modal.getRoot().on(ModalEvents.save, async() => {
         saved = true;
@@ -642,28 +700,57 @@ const generateAll = async() => {
     let scope = 'all';
     let onlymissing = true;
     const summary = el('p', {'class': 'aicourse-cardimage-summary', 'aria-live': 'polite', 'text': str.cardimage_all_counting});
-    const radios = ['all', 'sections', 'activities'].map((value) => el('label', {'class': 'aicourse-cardimage-radio'}, [
-        el('input', {'type': 'radio', 'name': 'aicourse-cardimage-scope', 'value': value, 'checked': value === scope}),
-        el('span', {'text': str['cardimage_all_scope_' + value]}),
-    ]));
-    const missing = el('input', {'type': 'checkbox', 'checked': true});
+    // 3.4.0: the scope is chosen with MDS Choicebox cards, the filter with an MDS Switch.
+    const radios = ['all', 'sections', 'activities'].map((value) => {
+        const id = 'aicourse-cardimage-scope-' + value;
+        return el('div', {'class': 'aicourse-cardimage-choice'}, [
+            el('input', {'type': 'radio', 'class': 'mds-choicebox-input visually-hidden', 'id': id,
+                'name': 'aicourse-cardimage-scope', 'value': value, 'checked': value === scope}),
+            el('label', {'class': 'mds-choicebox', 'for': id}, [
+                el('span', {'class': 'mds-choicebox-indicator', 'aria-hidden': 'true'}),
+                el('span', {'class': 'mds-choicebox-labels'}, [
+                    el('span', {'class': 'mds-choicebox-label', 'text': str['cardimage_all_scope_' + value]}),
+                ]),
+            ]),
+        ]);
+    });
+    const missing = el('input', {'type': 'checkbox', 'role': 'switch', 'class': 'mds-switch-input',
+        'id': 'aicourse-cardimage-missing', 'checked': true});
+    const missingSwitch = el('div', {'class': 'mds-switch mds-switch--variant-enable mds-switch--label-end'}, [
+        missing,
+        el('label', {'class': 'mds-switch-control', 'for': 'aicourse-cardimage-missing'}, [
+            el('span', {'class': 'mds-switch-indicator', 'aria-hidden': 'true'}, [
+                el('span', {'class': 'mds-switch-focus-ring'}, [
+                    el('span', {'class': 'mds-switch-track'}, [
+                        el('span', {'class': 'mds-switch-thumb'}, [
+                            el('span', {'class': 'mds-switch-icon'}, [
+                                el('span', {'class': 'mds-switch-icon-item mds-switch-icon-item--unchecked'}),
+                                el('span', {'class': 'mds-switch-icon-item mds-switch-icon-item--checked'}),
+                            ]),
+                        ]),
+                    ]),
+                ]),
+            ]),
+            el('span', {'class': 'mds-switch-label', 'text': str.cardimage_all_onlymissing}),
+        ]),
+    ]);
     const body = el('div', {'class': 'aicourse-cardimage-dialog'}, [
         el('p', {'text': fill('cardimage_all_desc', config.style)}),
         el('fieldset', {'class': 'aicourse-cardimage-fieldset'}, [
-            el('legend', {'class': 'form-label fw-semibold', 'text': str.cardimage_all_scope}),
-            ...radios,
+            el('legend', {'class': 'aicourse-cardimage-legend', 'text': str.cardimage_all_scope}),
+            el('div', {'class': 'aicourse-cardimage-choices'}, radios),
         ]),
-        el('label', {'class': 'aicourse-cardimage-radio'}, [missing, el('span', {'text': str.cardimage_all_onlymissing})]),
+        missingSwitch,
         summary,
     ]);
 
-    const modal = await ModalSaveCancel.create({
+    const modal = mdsModal(await ModalSaveCancel.create({
         title: str.cardimage_all_title,
         body,
         buttons: {save: str.cardimage_generate},
         removeOnClose: true,
         show: true,
-    });
+    }));
     const saveButton = () => modal.getFooter()[0].querySelector('[data-action="save"]');
     let latest = null;
 
@@ -787,7 +874,7 @@ const buildCmDialog = (cmid, data) => {
         tool('ai', fill('cardimage_aifor', data.name), str.cardimage_ai, costText(),
             svg('<path d="M9.94 14.06 8 20l-1.94-5.94L0 12l6.06-1.94L8 4l1.94 6.06L16 12z" '
                 + 'transform="translate(2 0) scale(.9)"/><path d="M20 3v4"/><path d="M22 5h-4"/>'),
-            ' acf-tools__btn--ai'),
+            ' acf-cmdialog__tool--ai'),
         tool('colour', fill('cardimage_colourfor', data.name), str.cardimage_colour, str.cardimage_colour_desc,
             svg('<circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" '
                 + 'fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" '
@@ -797,7 +884,7 @@ const buildCmDialog = (cmid, data) => {
         tool('remove', fill('cardimage_removefor', data.name), str.cardimage_remove, '',
             svg('<path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>'
                 + '<path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>'),
-            ' acf-tools__btn--remove'),
+            ' acf-cmdialog__tool--remove'),
     ]);
 
     // .acf-cmrow is what colourHost(), toolScope() and mediaForTool() look for, so every tool
@@ -826,7 +913,7 @@ const openCmDialog = async(cmid) => {
         removeOnClose: true,
         show: true,
     });
-    modal.getRoot()[0].classList.add('aicourse-cardimage-dialog');
+    mdsModal(modal).getRoot()[0].classList.add('aicourse-cardimage-dialog');
 };
 
 /**

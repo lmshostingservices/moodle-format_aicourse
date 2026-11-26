@@ -128,6 +128,8 @@ class generate_banner_image extends external_api {
         // teacher saw a spinner, then a failure minutes later, for something knowable instantly.
         // The unit tests caught it. The check runs in both places: here so the teacher is told
         // at once, and again in the task because configuration can change between the two.
+        // 3.4.0: the administrator's site-wide pause (Responsible AI) stops every AI call.
+        \format_aicourse\local\responsibleai::require_not_paused();
         credentials::require_for('image');
 
         // ACF-FIX-2.1.42: queue the work, do not do it here.
@@ -249,6 +251,7 @@ class generate_banner_image extends external_api {
 
         $context = \context_course::instance($course->id);
 
+        \format_aicourse\local\responsibleai::require_not_paused();
         [$siteid, $apikey] = credentials::require_for('image');
 
         $postdata = [
@@ -435,6 +438,10 @@ class generate_banner_image extends external_api {
             debugging('format_aicourse rejected banner mimetype ' . $imageinfo['mime'], DEBUG_DEVELOPER);
             throw new \moodle_exception('error_bannerinvalidimage', 'format_aicourse');
         }
+
+        // 3.4.0: EU AI Act Article 50(2). The stored file says, in its own metadata, that it was
+        // made by AI (IPTC digital source type "trainedAlgorithmicMedia"), wherever it is copied.
+        $imagedata = \format_aicourse\local\responsibleai::mark_image($imagedata, \format_aicourse\byok::source('image'));
 
         $fs = get_file_storage();
 

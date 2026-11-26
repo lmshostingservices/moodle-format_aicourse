@@ -70,6 +70,7 @@
     * contextkind string "Activity", "Section" or "Course".
     * contexttitle string Name of the activity or section being studied, or the course name.
     * tools array The five study tools: key, label, desc and one is<key> icon flag each.
+    * ainotice bool 3.4.0: show the learner AI notice (EU AI Act Article 50(1)); on by default.
 
     Example context (json):
     {
@@ -81,6 +82,7 @@
         "coursename": "Work Health and Safety",
         "contextkind": "Activity",
         "contexttitle": "Week 1 quiz",
+        "ainotice": true,
         "tools": [
             {"key": "practice", "label": "Practice questions", "desc": "Test yourself", "ispractice": true}
         ]
@@ -92,14 +94,14 @@
 <div class="aicourse-ai-chatbox-heading">
 <span class="aicourse-ai-avatar aicourse-ai-avatar-head" aria-hidden="true"><svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2M20 14h2M15 13v2M9 13v2"/></svg></span>
 <div class="aicourse-ai-chatbox-titles">
-<div class="aicourse-ai-chatbox-title" id="aicourse-ai-chatbox-title">{{#str}} aiassistant, format_aicourse {{/str}}</div>
+<div class="aicourse-ai-chatbox-title" id="aicourse-ai-chatbox-title">{{#str}} aiassistant, format_aicourse {{/str}} <span class="mds-badge badge mds-badge--primary mds-badge--subtle mds-badge--pill aicourse-ai-badge" data-ai-system="true">{{#str}} responsibleai_badge, format_aicourse {{/str}}</span></div>
 {{#contexttitle}}<div class="aicourse-ai-chatbox-subtitle" dir="auto">{{contexttitle}}</div>{{/contexttitle}}
 </div>
 </div>
 <div class="aicourse-ai-chatbox-actions">
-<button type="button" class="aicourse-ai-headbtn aicourse-ai-newchat" aria-label="{{#cleanstr}} aiassistant_newchat, format_aicourse {{/cleanstr}}" title="{{#cleanstr}} aiassistant_newchat, format_aicourse {{/cleanstr}}"><svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
-<button type="button" class="aicourse-ai-headbtn aicourse-ai-expand" aria-pressed="false" aria-label="{{#cleanstr}} aiassistant_expand, format_aicourse {{/cleanstr}}" title="{{#cleanstr}} aiassistant_expand, format_aicourse {{/cleanstr}}" data-expandlabel="{{#cleanstr}} aiassistant_expand, format_aicourse {{/cleanstr}}" data-collapselabel="{{#cleanstr}} aiassistant_collapse, format_aicourse {{/cleanstr}}"><svg class="aicourse-ai-icon-expand" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg><svg class="aicourse-ai-icon-collapse" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7"/></svg><span class="aicourse-ai-headbtn-text">{{#str}} aiassistant_studyview, format_aicourse {{/str}}</span></button>
-<button type="button" class="aicourse-ai-chatbox-close" id="aicourse-ai-close" aria-label="{{closelabel}}"><span aria-hidden="true">&times;</span></button>
+<button type="button" class="aicourse-ai-headbtn aicourse-ai-newchat mds-btn btn btn-ghost mds-btn--size-md mds-btn--icon-only" aria-label="{{#cleanstr}} aiassistant_newchat, format_aicourse {{/cleanstr}}" title="{{#cleanstr}} aiassistant_newchat, format_aicourse {{/cleanstr}}"><svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
+<button type="button" class="aicourse-ai-headbtn aicourse-ai-expand mds-btn btn btn-secondary mds-btn--size-sm" aria-pressed="false" aria-label="{{#cleanstr}} aiassistant_expand, format_aicourse {{/cleanstr}}" title="{{#cleanstr}} aiassistant_expand, format_aicourse {{/cleanstr}}" data-expandlabel="{{#cleanstr}} aiassistant_expand, format_aicourse {{/cleanstr}}" data-collapselabel="{{#cleanstr}} aiassistant_collapse, format_aicourse {{/cleanstr}}"><svg class="aicourse-ai-icon-expand" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg><svg class="aicourse-ai-icon-collapse" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7"/></svg><span class="aicourse-ai-headbtn-text">{{#str}} aiassistant_studyview, format_aicourse {{/str}}</span></button>
+<button type="button" class="aicourse-ai-chatbox-close mds-close-button btn-close mds-close-button--md" id="aicourse-ai-close" aria-label="{{closelabel}}"></button>
 </div>
 </div>
 <div class="aicourse-ai-chatbox-body">
@@ -121,6 +123,7 @@
 </div>
 </div>
 <div class="aicourse-ai-rail-foot">{{#str}} aiassistant_integrity_note, format_aicourse {{/str}}</div>
+
 </aside>
 <div class="aicourse-ai-main">
 <div class="aicourse-ai-chatbox-messages" id="aicourse-ai-messages" role="log" aria-live="polite" aria-relevant="additions" dir="auto">
@@ -146,9 +149,22 @@
 <div class="aicourse-ai-composer">
 <label class="accesshide" for="aicourse-ai-input">{{inputlabel}}</label>
 <textarea id="aicourse-ai-input" dir="auto" rows="1" placeholder="{{placeholder}}"></textarea>
-<button type="button" id="aicourse-ai-send" class="aicourse-ai-send-btn" aria-label="{{sendlabel}}" title="{{sendlabel}}"><svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
+<button type="button" id="aicourse-ai-send" class="aicourse-ai-send-btn mds-btn btn btn-primary mds-btn--size-md mds-btn--icon-only" aria-label="{{sendlabel}}" title="{{sendlabel}}"><svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
 </div>
 <div class="aicourse-ai-composer-hint" aria-hidden="true">{{#str}} aiassistant_composer_hint, format_aicourse {{/str}}</div>
+<div class="aicourse-ai-transparency">
+{{#ainotice}}<p class="aicourse-ai-disclosure" data-ai-notice="true"><svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg><span>{{#str}} responsibleai_notice, format_aicourse {{/str}}</span></p>{{/ainotice}}
+<details class="aicourse-ai-about">
+<summary class="aicourse-ai-about-summary">{{#str}} responsibleai_about, format_aicourse {{/str}}</summary>
+<ul class="aicourse-ai-about-list">
+<li>{{#str}} responsibleai_about_what, format_aicourse {{/str}}</li>
+<li>{{#str}} responsibleai_about_limits, format_aicourse {{/str}}</li>
+<li>{{#str}} responsibleai_about_bias, format_aicourse {{/str}}</li>
+<li>{{#str}} responsibleai_about_data, format_aicourse {{/str}}</li>
+<li>{{#str}} responsibleai_about_report, format_aicourse {{/str}}</li>
+</ul>
+</details>
+</div>
 </div>
 </div>
 </div>

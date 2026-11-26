@@ -98,7 +98,8 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function($, Str
         bannerdelConfirm: 'Remove image',
         bannerdelRemoving: 'Removing',
         bannerdelError: 'Failed to remove banner. Please try again.',
-        bannerdelRemoved: 'Banner image removed'
+        bannerdelRemoved: 'Banner image removed',
+        aiMarked: 'Marked as AI-generated'
     };
 
     // [local key, string request] - order is preserved by Str.get_strings().
@@ -151,7 +152,8 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function($, Str
         ['bannerdelConfirm', {key: 'bannerdel_confirm', component: 'format_aicourse'}],
         ['bannerdelRemoving', {key: 'bannerdel_removing', component: 'format_aicourse'}],
         ['bannerdelError', {key: 'bannerdel_error', component: 'format_aicourse'}],
-        ['bannerdelRemoved', {key: 'bannerdel_removed', component: 'format_aicourse'}]
+        ['bannerdelRemoved', {key: 'bannerdel_removed', component: 'format_aicourse'}],
+        ['aiMarked', {key: 'ai_marked', component: 'format_aicourse'}]
     ];
 
     /**
@@ -1772,13 +1774,8 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function($, Str
                     + escapeHtml(STR.bannergenTitle) + '</h2>'
                     + '<p class="aicourse-bgen-subtitle">' + escapeHtml(STR.bannergenSubtitle) + '</p>'
                     + '</div>'
-                    + '<button type="button" class="aicourse-bgen-close" aria-label="'
-                    + escapeHtml(STR.close) + '">'
-                    + '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" '
-                    + 'fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" '
-                    + 'focusable="false"><line x1="18" y1="6" x2="6" y2="18"/>'
-                    + '<line x1="6" y1="6" x2="18" y2="18"/></svg>'
-                    + '</button>'
+                    + '<button type="button" class="aicourse-bgen-close mds-close-button btn-close '
+                    + 'mds-close-button--md" aria-label="' + escapeHtml(STR.close) + '"></button>'
                     + '</div>'
                     + '<div class="aicourse-bgen-body">'
 
@@ -1792,25 +1789,31 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function($, Str
                     // the moment there is text in the box, which is exactly when someone rereads
                     // the field to check what it was for. aria-describedby carries the hint so a
                     // screen reader gets it once, after the label, rather than as part of it.
-                    + '<div class="aicourse-bgen-extra">'
-                    + '<label class="aicourse-bgen-extra-label" for="aicourse-bgen-extra">'
-                    + escapeHtml(STR.bannergenExtralabel) + '</label>'
-                    + '<textarea id="aicourse-bgen-extra" class="aicourse-bgen-extra-input" rows="2" '
-                    + 'maxlength="300" aria-describedby="aicourse-bgen-extra-hint" placeholder="'
-                    + escapeHtml(STR.bannergenExtraph) + '"></textarea>'
-                    + '<p class="aicourse-bgen-extra-hint" id="aicourse-bgen-extra-hint">'
-                    + escapeHtml(STR.bannergenExtrahint) + '</p>'
+                    // 3.4.0: an MDS Text area.
+                    + '<div class="aicourse-bgen-extra mds-textarea">'
+                    + '<div class="mds-textarea-label-row"><label class="mds-textarea-label" '
+                    + 'for="aicourse-bgen-extra">' + escapeHtml(STR.bannergenExtralabel) + '</label></div>'
+                    + '<div class="mds-textarea-field-wrapper">'
+                    + '<textarea id="aicourse-bgen-extra" class="aicourse-bgen-extra-input mds-textarea-field '
+                    + 'form-control" rows="2" maxlength="300" aria-describedby="aicourse-bgen-extra-hint" '
+                    + 'placeholder="' + escapeHtml(STR.bannergenExtraph) + '"></textarea></div>'
+                    + '<div class="mds-textarea-footer"><p class="mds-textarea-supporting-text" '
+                    + 'id="aicourse-bgen-extra-hint">' + escapeHtml(STR.bannergenExtrahint) + '</p></div>'
                     + '</div>'
+                    // 3.4.0: cost (or "your own AI"), and the EU AI Act marking note, as MDS badges.
                     + '<div class="aicourse-bgen-cost-box">'
-                    + '<div class="aicourse-bgen-cost-amount">'
-                    + escapeHtml(OWN_IMAGE ? STR.byokNocredits : STR.bannergenCost) + '</div>'
-                    + '<div class="aicourse-bgen-cost-detail">'
-                    + escapeHtml(OWN_IMAGE ? STR.byokImagedetail : STR.bannergenCostdetail) + '</div>'
+                    + '<span class="mds-badge badge mds-badge--' + (OWN_IMAGE ? 'info' : 'secondary')
+                    + ' mds-badge--subtle">' + escapeHtml(OWN_IMAGE ? STR.byokNocredits : STR.bannergenCost) + '</span>'
+                    + '<span class="mds-badge badge mds-badge--primary mds-badge--subtle">'
+                    + escapeHtml(STR.aiMarked) + '</span>'
+                    + '<p class="aicourse-bgen-cost-detail">'
+                    + escapeHtml(OWN_IMAGE ? STR.byokImagedetail : STR.bannergenCostdetail) + '</p>'
                     + '</div>'
                     + '<div class="aicourse-bgen-actions">'
-                    + '<button type="button" class="aicourse-bgen-btn aicourse-bgen-btn-cancel">'
-                    + escapeHtml(STR.cancel) + '</button>'
-                    + '<button type="button" class="aicourse-bgen-btn aicourse-bgen-btn-generate">'
+                    + '<button type="button" class="aicourse-bgen-btn aicourse-bgen-btn-cancel mds-btn btn '
+                    + 'btn-secondary mds-btn--size-md">' + escapeHtml(STR.cancel) + '</button>'
+                    + '<button type="button" class="aicourse-bgen-btn aicourse-bgen-btn-generate mds-btn btn '
+                    + 'btn-primary mds-btn--size-md">'
                     + '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" '
                     + 'fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" '
                     + 'focusable="false"><path d="M15 4V2"/><path d="M15 16v-2"/><path d="M8 9h2"/>'
@@ -1835,7 +1838,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function($, Str
                     + '<div class="aicourse-bgen-preview-wrap">'
                     + '<img id="aicourse-bgen-preview-img" src="" alt="'
                     + escapeHtml(STR.bannergenPreviewalt) + '" class="aicourse-bgen-preview-img" />'
-                    + '<div class="aicourse-bgen-preview-badge">'
+                    + '<div class="aicourse-bgen-preview-badge mds-badge badge mds-badge--success">'
                     + '<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" '
                     + 'fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true" '
                     + 'focusable="false"><polyline points="20 6 9 17 4 12"/></svg> '
@@ -1844,7 +1847,8 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function($, Str
                     + '</div>'
                     + '<p class="aicourse-bgen-success-msg">' + escapeHtml(STR.bannergenSuccess) + '</p>'
                     + '<div class="aicourse-bgen-actions">'
-                    + '<button type="button" class="aicourse-bgen-btn aicourse-bgen-btn-done">'
+                    + '<button type="button" class="aicourse-bgen-btn aicourse-bgen-btn-done mds-btn btn '
+                    + 'btn-primary mds-btn--size-md">'
                     + escapeHtml(STR.jsDone) + '</button>'
                     + '</div>'
                     + '</div>'
@@ -1860,9 +1864,10 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function($, Str
                     + '<p class="aicourse-bgen-error-title">' + escapeHtml(STR.bannergenFailedtitle) + '</p>'
                     + '<p class="aicourse-bgen-error-msg" id="aicourse-bgen-errmsg" role="alert"></p>'
                     + '<div class="aicourse-bgen-actions">'
-                    + '<button type="button" class="aicourse-bgen-btn aicourse-bgen-btn-cancel">'
-                    + escapeHtml(STR.close) + '</button>'
-                    + '<button type="button" class="aicourse-bgen-btn aicourse-bgen-btn-retry">'
+                    + '<button type="button" class="aicourse-bgen-btn aicourse-bgen-btn-cancel mds-btn btn '
+                    + 'btn-secondary mds-btn--size-md">' + escapeHtml(STR.close) + '</button>'
+                    + '<button type="button" class="aicourse-bgen-btn aicourse-bgen-btn-retry mds-btn btn '
+                    + 'btn-primary mds-btn--size-md">'
                     + escapeHtml(STR.bannergenRetry) + '</button>'
                     + '</div>'
                     + '</div>'
@@ -2164,8 +2169,10 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function($, Str
                     + 'style="display:none"></div>'
                     + '<div class="aicourse-bdel-actions">'
                     + '<button type="button" class="aicourse-bgen-btn aicourse-bgen-btn-cancel '
-                    + 'aicourse-bdel-btn-cancel">' + escapeHtml(STR.cancel) + '</button>'
-                    + '<button type="button" class="aicourse-bgen-btn aicourse-bdel-btn-confirm">'
+                    + 'aicourse-bdel-btn-cancel mds-btn btn btn-secondary mds-btn--size-md">'
+                    + escapeHtml(STR.cancel) + '</button>'
+                    + '<button type="button" class="aicourse-bgen-btn aicourse-bdel-btn-confirm mds-btn btn '
+                    + 'btn-danger mds-btn--size-md">'
                     + escapeHtml(STR.bannerdelConfirm) + '</button>'
                     + '</div>'
                     + '</div>'

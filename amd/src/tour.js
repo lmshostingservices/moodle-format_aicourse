@@ -256,10 +256,10 @@ class Tour {
                 '<p class="aicourse-tour-body"></p>' +
                 '<div class="aicourse-tour-dots" aria-hidden="true"></div>' +
                 '<div class="aicourse-tour-actions">' +
-                    '<button type="button" class="aicourse-tour-skip"></button>' +
+                    '<button type="button" class="aicourse-tour-skip mds-btn btn btn-ghost mds-btn--size-sm"></button>' +
                     '<span class="aicourse-tour-spacer"></span>' +
-                    '<button type="button" class="aicourse-tour-back"></button>' +
-                    '<button type="button" class="aicourse-tour-next"></button>' +
+                    '<button type="button" class="aicourse-tour-back mds-btn btn btn-secondary mds-btn--size-sm"></button>' +
+                    '<button type="button" class="aicourse-tour-next mds-btn btn btn-primary mds-btn--size-sm"></button>' +
                 '</div>' +
             '</div>';
         document.body.appendChild(this.root);
@@ -623,8 +623,8 @@ export const init = (passed) => {
             '<h2 class="aicourse-tour-offer-title"></h2>' +
             '<p class="aicourse-tour-offer-body"></p>' +
             '<div class="aicourse-tour-offer-actions">' +
-                '<button type="button" class="aicourse-tour-offer-dismiss"></button>' +
-                '<button type="button" class="aicourse-tour-offer-start"></button>' +
+                '<button type="button" class="aicourse-tour-offer-dismiss mds-btn btn btn-ghost mds-btn--size-sm"></button>' +
+                '<button type="button" class="aicourse-tour-offer-start mds-btn btn btn-primary mds-btn--size-sm"></button>' +
             '</div>';
         offer.querySelector('.aicourse-tour-offer-title').textContent = title;
         offer.querySelector('.aicourse-tour-offer-body').textContent = body;

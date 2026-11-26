@@ -34,6 +34,18 @@ and can write corrections that are fed back to the service.
 - **Google Fonts** — 35 fonts for course text and headings, chosen site-wide or per course.
 - **Course index control** — choose which page types show the course index sidebar.
 
+## Design, responsible AI and your own AI (3.4.0)
+
+- **Moodle Design System.** Every component follows the Moodle Design System, with Noto Sans
+  bundled and the LMS Labs premium finish, in light and dark mode.
+- **EU AI Act support.** The AI Tutor tells learners they are using AI, every AI image is marked
+  as AI-generated inside the file, learners get an "About this AI" note, and administrators can
+  pause all AI at once. See [docs/eu-ai-act.md](docs/eu-ai-act.md). (Technical guidance, not legal
+  advice.)
+- **Bring your own AI.** With AI Grader Central Config 1.1, run the tutor and images on Moodle AI or
+  your own Anthropic, OpenAI or Gemini key instead of LMS Labs credits. See
+  [docs/byok.md](docs/byok.md).
+
 ## Screenshots
 
 Screenshots are published on the plugin's page in the Moodle Plugins Directory rather than

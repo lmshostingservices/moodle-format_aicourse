@@ -150,6 +150,10 @@ class permissions {
      * @return bool True when the AI Tutor should be offered to users.
      */
     public static function is_tutor_enabled(): bool {
+        // 3.4.0: the Responsible AI pause hides the tutor everywhere; the course keeps working.
+        if (responsibleai::paused()) {
+            return false;
+        }
         $val = get_config('format_aicourse', 'enabletutor');
         return ($val === false) || !empty($val);
     }

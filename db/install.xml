@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="course/format/aicourse/db" VERSION="20260929" COMMENT="XMLDB file for AI Course Format chat history and memory">
+<XMLDB PATH="course/format/aicourse/db" VERSION="20261126" COMMENT="XMLDB file for AI Course Format chat history and memory">
   <TABLES>
     <TABLE NAME="format_aicourse_chats" COMMENT="AI Course Assistant chat history">
       <FIELDS>
@@ -17,6 +17,7 @@
         <FIELD NAME="correctedby" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="User who provided correction"/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Timestamp when question was asked"/>
         <FIELD NAME="timecorrected" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="Timestamp when correction was made"/>
+        <FIELD NAME="aisource" TYPE="char" LENGTH="10" NOTNULL="false" DEFAULT="credits" SEQUENCE="false" COMMENT="Where the answer was generated: credits (LMS Labs), moodle (Moodle AI) or ownkey (site's own key); none when no AI was called"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>

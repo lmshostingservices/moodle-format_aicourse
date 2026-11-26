@@ -2,6 +2,52 @@
 
 All notable changes to this plugin will be documented in this file.
 
+## [3.4.1] - 2026-11-27
+
+Brings the Moodle Design System and Responsible AI (EU AI Act) work together with 3.4.0's Bring your
+own AI. Sites on 3.4.0 get the database step below on upgrade.
+
+### Changed: Moodle Design System
+
+- **Every component now follows the Moodle Design System (MDS)**, with the LMS Labs premium finish.
+  The stylesheet's design tokens are now the MDS tokens (@moodlehq/design-system 5.6.0): MDS colours,
+  Noto Sans and the MDS type scale (nothing below 14px except 12px eyebrows), the 4/8 spacing scale,
+  MDS radii (8px controls, 12px cards, 16px overlays; this replaces the square corners of 2.1.106),
+  MDS feedback colours for status, and the MDS focus outline with a soft halo. Dark mode remaps the
+  MDS semantic tokens.
+- **Standard controls are MDS components with MDS markup**: Buttons (card tools and admin buttons,
+  "Generate card images", tour, tutor send, copy and rating, report and admin buttons, dialog
+  buttons), Close button, Badges, Alert, Text area, Switch and Choicebox. The components' own CSS
+  ships scoped to the plugin, with its icons in pix/mds/.
+- The AI Tutor's header is an MDS surface with an AI badge; the banner generate and remove dialogs
+  are MDS overlays that follow light and dark mode (the fixed dark dialog is retired); the card image
+  dialogs use MDS choicebox cards, an MDS switch and MDS badges.
+- **Noto Sans is bundled** (fonts/, SIL OFL 1.1) and is the new default font. It is served by your
+  site, so the default sends nothing to Google. Upgrades move sites on "Theme font" to Noto Sans;
+  choose "Theme font" again to go back.
+
+### Added: Responsible AI (EU AI Act)
+
+- Learner AI notice under the tutor's message box and an AI badge on its title (Article 50(1)).
+- Every AI banner and card image is marked as AI-generated in its file metadata (IPTC
+  `trainedAlgorithmicMedia`, XMP), and AI answers carry `data-ai-generated` markup (Article 50(2)).
+- "About this AI" literacy panel in the tutor (Article 4).
+- "Pause all AI" site setting: stops every AI call, hides the tutor, blocks image generation; editors
+  see an alert (supports Article 26(5)).
+- The chat log records where each answer was generated (`aisource`: credits, moodle or ownkey).
+- docs/eu-ai-act.md: classification, dates, duties, feature matrix and instructions for use.
+
+### Database
+
+- New field `format_aicourse_chats.aisource` (upgrade step 2026112700).
+
+### Changed: Bring your own AI
+
+- Uses 3.4.0's engine (`classes/local/byok/engine.php`) for the tutor and images. Each tutor answer
+  records where it was made, and the settings page shows where AI runs now, read live from AI Grader
+  Central Config. A parity test (tests/local/byok_parity_test.php) checks the engine's tutor prompt
+  and scene writer against output of the LMS Labs service's own code.
+
 ## [3.4.0] - 2026-11-26
 - **Bring your own AI.** On a site with a Bring your own AI licence, where AI Connect sends text or
   images for this format to the site's own AI (its own API keys or the Moodle AI subsystem), the

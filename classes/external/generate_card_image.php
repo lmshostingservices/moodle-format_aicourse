@@ -103,6 +103,8 @@ class generate_card_image extends generate_banner_image {
 
         throttle::check('bannerimage', (int) $course->id, (int) $USER->id, throttle::BANNER_MAX, throttle::BANNER_WINDOW);
 
+        // 3.4.0: the administrator's site-wide pause (Responsible AI) stops every AI call.
+        \format_aicourse\local\responsibleai::require_not_paused();
         credentials::require_for('image');
 
         // The authoritative cap: the textarea's maxlength is a convenience and is not trusted.
@@ -218,6 +220,7 @@ class generate_card_image extends generate_banner_image {
 
         // Re-checked here: the section or activity may have been deleted since queueing.
         $target = cardimage::require_target($course, $type, $id);
+        \format_aicourse\local\responsibleai::require_not_paused();
         [$siteid, $apikey] = credentials::require_for('image');
 
         $postdata = ['siteUrl' => $siteid, 'apiKey' => $apikey] + self::build_payload($course, $type, $target, $prompt);
@@ -286,6 +289,9 @@ class generate_card_image extends generate_banner_image {
         if ($bytes === false) {
             throw new \moodle_exception('error_cardimageinvalid', 'format_aicourse');
         }
+
+        // 3.4.0: EU AI Act Article 50(2): the file is marked as AI-generated in its own metadata.
+        $bytes = \format_aicourse\local\responsibleai::mark_image($bytes, \format_aicourse\byok::source('image'));
 
         return cardimage::store((int) $course->id, $type, (int) $target->id, $bytes, 'ai');
     }

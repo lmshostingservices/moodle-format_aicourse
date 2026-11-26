@@ -182,6 +182,9 @@ class ai_chat extends external_api {
             throw new \moodle_exception('error_questionrequired', 'format_aicourse');
         }
 
+        // 3.4.0: the administrator's site-wide pause (Responsible AI) stops every AI call.
+        \format_aicourse\local\responsibleai::require_not_paused();
+
         [$siteid, $apikey] = credentials::require_for('text');
 
         $warnings = [];
@@ -243,7 +246,8 @@ class ai_chat extends external_api {
                 $lockedanswer,
                 0,
                 1,
-                $warnings
+                $warnings,
+                'none'
             );
 
             return [
@@ -342,6 +346,62 @@ class ai_chat extends external_api {
             self::$lastrequest = $postdata;
         }
 
+        // 3.4.0: record where the answer is made (credits, Moodle AI or the site's own key) with it.
+        // post_to_service() runs Bring your own AI work on the site's own AI (\format_aicourse\byok).
+        $aisource = \format_aicourse\byok::source('text');
+        $result = self::post_to_service($postdata);
+
+        // 3.2.3: the tutor ends a refusal with a language-independent marker, removed here before
+        // the learner sees it. Order of authority for the report's integrity counter: the marker,
+        // then the service's own 'refused' flag (ACF-FIX-2.1.4), then English phrase matching.
+        $stripped = tutorprompt::strip_markers((string) ($result['answer'] ?? ''));
+        $answer = $stripped['answer'];
+        if ($answer === '') {
+            debugging('format_aicourse ai_chat empty answer from the service', DEBUG_DEVELOPER);
+            throw new \moodle_exception('aiassistant_error', 'format_aicourse');
+        }
+        if ($stripped['refused']) {
+            $refused = 1;
+        } else if (array_key_exists('refused', $result)) {
+            $refused = (int) (bool) $result['refused'];
+        } else {
+            $refused = self::detect_refusal($answer);
+        }
+
+        $chatid = self::log_chat(
+            $course->id,
+            $activityid,
+            $questionslot > 0 ? $questionslot : null,
+            $params['question'],
+            $answer,
+            $refused,
+            0,
+            $warnings,
+            $aisource
+        );
+
+        if ($activityid > 0) {
+            self::update_memory($course->id, $activityid, $memory, $params['question'], $warnings);
+        }
+
+        return [
+            'answer' => $answer,
+            'chatid' => $chatid,
+            'truncated' => self::is_truncated($result, $answer),
+            'warnings' => $warnings,
+        ];
+    }
+
+    /**
+     * Send a tutor request to the LMS Labs service (the credits path) and return its decoded reply.
+     *
+     * @param array $postdata The request.
+     * @return array The service's reply, with success set.
+     * @throws \moodle_exception On any failure.
+     */
+    protected static function post_to_service(array $postdata): array {
+        global $CFG;
+
         // ACF-FIX-2.1.4: never POST the result of a failed encode. json_encode() returns false
         // (not a string) if any value is not valid UTF-8, and curl->post(false) sends an empty
         // body, which the remote service answers with an opaque error. Fail loudly instead.
@@ -397,44 +457,7 @@ class ai_chat extends external_api {
             throw new \moodle_exception('aiassistant_error', 'format_aicourse');
         }
 
-        // 3.2.3: the tutor ends a refusal with a language-independent marker, removed here before
-        // the learner sees it. Order of authority for the report's integrity counter: the marker,
-        // then the service's own 'refused' flag (ACF-FIX-2.1.4), then English phrase matching.
-        $stripped = tutorprompt::strip_markers((string) ($result['answer'] ?? ''));
-        $answer = $stripped['answer'];
-        if ($answer === '') {
-            debugging('format_aicourse ai_chat empty answer from the service', DEBUG_DEVELOPER);
-            throw new \moodle_exception('aiassistant_error', 'format_aicourse');
-        }
-        if ($stripped['refused']) {
-            $refused = 1;
-        } else if (array_key_exists('refused', $result)) {
-            $refused = (int) (bool) $result['refused'];
-        } else {
-            $refused = self::detect_refusal($answer);
-        }
-
-        $chatid = self::log_chat(
-            $course->id,
-            $activityid,
-            $questionslot > 0 ? $questionslot : null,
-            $params['question'],
-            $answer,
-            $refused,
-            0,
-            $warnings
-        );
-
-        if ($activityid > 0) {
-            self::update_memory($course->id, $activityid, $memory, $params['question'], $warnings);
-        }
-
-        return [
-            'answer' => $answer,
-            'chatid' => $chatid,
-            'truncated' => self::is_truncated($result, $answer),
-            'warnings' => $warnings,
-        ];
+        return $result;
     }
 
     /**
@@ -549,6 +572,7 @@ class ai_chat extends external_api {
      * @param int $refused 1 when the tutor refused to answer.
      * @param int $locked 1 when the answer was a post-submission reflection reply.
      * @param array $warnings Warning list, appended to by reference.
+     * @param string $aisource Where the answer was generated: credits, moodle, ownkey or none (3.4.0).
      * @return int Id of the stored row, or 0 when it could not be stored.
      */
     protected static function log_chat(
@@ -559,7 +583,8 @@ class ai_chat extends external_api {
         string $answer,
         int $refused,
         int $locked,
-        array &$warnings
+        array &$warnings,
+        string $aisource = 'credits'
     ): int {
         global $DB, $USER;
 
@@ -574,6 +599,7 @@ class ai_chat extends external_api {
             $record->rating = 0;
             $record->refused = $refused;
             $record->locked = $locked;
+            $record->aisource = $aisource;
             $record->timecreated = time();
 
             return (int) $DB->insert_record('format_aicourse_chats', $record);

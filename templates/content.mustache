@@ -55,6 +55,7 @@
         "regionlabel": "Course sections",
         "courseid": 2,
         "isediting": false,
+        "aipaused": false,
         "uselistroles": true,
         "generalsection": {
             "hasoutput": true,
@@ -107,9 +108,18 @@
 {{> format_aicourse/general_section }}
 {{/generalsection}}
 <h2 class="accesshide">{{regionlabel}}</h2>
+{{#aipaused}}
+<div class="mds-alert alert mds-alert--warning alert-warning acf-ai-paused" role="status">
+<span class="mds-alert-icon-wrap" aria-hidden="true"><span class="mds-alert-icon"></span></span>
+<div class="mds-alert-content"><div class="mds-alert-text">
+<p class="mds-alert-title">{{#str}} responsibleai_paused_title, format_aicourse {{/str}}</p>
+<p class="mds-alert-message">{{#str}} responsibleai_paused_message, format_aicourse {{/str}}</p>
+</div></div>
+</div>
+{{/aipaused}}
 {{#isediting}}
 <div class="acf-toolbar">
-<button type="button" class="acf-btn acf-btn--ai" data-action="aicourse-cardimage-all"><svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.94 14.06 8 20l-1.94-5.94L0 12l6.06-1.94L8 4l1.94 6.06L16 12z" transform="translate(2 0) scale(.9)"/><path d="M20 3v4"/><path d="M22 5h-4"/></svg>{{#str}} cardimage_all_button, format_aicourse {{/str}}</button>
+<button type="button" class="acf-btn acf-btn--ai mds-btn btn btn-outline-primary mds-btn--size-md" data-action="aicourse-cardimage-all"><svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.94 14.06 8 20l-1.94-5.94L0 12l6.06-1.94L8 4l1.94 6.06L16 12z" transform="translate(2 0) scale(.9)"/><path d="M20 3v4"/><path d="M22 5h-4"/></svg>{{#str}} cardimage_all_button, format_aicourse {{/str}}</button>
 </div>
 {{/isediting}}
 <div class="acf-grid acf-grid--sections"{{#uselistroles}} role="list"{{/uselistroles}} data-for="course_sectionlist">

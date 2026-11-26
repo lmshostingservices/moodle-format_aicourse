@@ -209,5 +209,21 @@ function xmldb_format_aicourse_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026111400, 'format', 'aicourse');
     }
 
+    if ($oldversion < 2026112700) {
+        // 3.4.1: the decision log records where each tutor answer was generated (EU AI Act,
+        // Article 12 / 26(6) support), now that Bring your own AI can route it off lms-labs.com.
+        $table = new xmldb_table('format_aicourse_chats');
+        $field = new xmldb_field('aisource', XMLDB_TYPE_CHAR, '10', null, null, null, 'credits', 'timecorrected');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        // 3.4.1: Noto Sans, the Moodle Design System typeface, bundled with the plugin, becomes
+        // the default font. Sites that chose a font keep it; "Theme font" stays one click away.
+        if ((string) get_config('format_aicourse', 'font') === '') {
+            set_config('font', \format_aicourse\local\fonts::MDS, 'format_aicourse');
+        }
+        upgrade_plugin_savepoint(true, 2026112700, 'format', 'aicourse');
+    }
+
     return true;
 }

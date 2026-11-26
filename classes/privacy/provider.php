@@ -93,6 +93,7 @@ class provider implements
                 'correctedby' => 'privacy:metadata:format_aicourse_chats:correctedby',
                 'timecreated' => 'privacy:metadata:format_aicourse_chats:timecreated',
                 'timecorrected' => 'privacy:metadata:format_aicourse_chats:timecorrected',
+                'aisource' => 'privacy:metadata:format_aicourse_chats:aisource',
             ],
             'privacy:metadata:format_aicourse_chats'
         );
@@ -300,6 +301,7 @@ class provider implements
                     'correction' => $record->correction,
                     'timecreated' => transform::datetime($record->timecreated),
                     'timecorrected' => $record->timecorrected ? transform::datetime($record->timecorrected) : null,
+                    'aisource' => $record->aisource ?? 'credits',
                 ];
             }
         );

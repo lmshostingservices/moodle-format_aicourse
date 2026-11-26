@@ -53,6 +53,12 @@ const CATEGORIES = [
         match: [/minutes/, /timing/, /hidetime/],
     },
     {
+        id: 'responsible', order: 8.5, label: 'Responsible AI & your own AI', icon: '◇', hue: 'responsible',
+        desc: 'EU AI Act support: the learner AI notice, the site-wide AI pause and AI image marking. '
+            + 'Plus where AI runs: LMS Labs credits, Moodle AI or your own key.',
+        match: [/responsibleai/, /aipaused/, /ainotice/, /byok/],
+    },
+    {
         id: 'tutor', order: 8, label: 'AI Tutor', icon: '✦', hue: 'tutor',
         desc: 'The chat bubble that answers learners\' questions. Its connection to the '
             + 'external AI service, and what course content is sent there.',

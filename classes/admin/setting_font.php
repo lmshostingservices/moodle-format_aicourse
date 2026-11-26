@@ -41,9 +41,16 @@ class setting_font extends \admin_setting_configselect {
      * @param string $visiblename Label.
      * @param string $description Help text.
      * @param string $firstlabel Label of the '' choice (theme font, or same as the body font).
+     * @param string $default The default: '' or a font key (3.4.0: the body font defaults to Noto Sans).
      */
-    public function __construct(string $name, string $visiblename, string $description, string $firstlabel) {
-        parent::__construct($name, $visiblename, $description, '', fonts::menu(['' => $firstlabel], true));
+    public function __construct(
+        string $name,
+        string $visiblename,
+        string $description,
+        string $firstlabel,
+        string $default = ''
+    ) {
+        parent::__construct($name, $visiblename, $description, $default, fonts::menu(['' => $firstlabel], true));
     }
 
     /**
@@ -83,7 +90,11 @@ class setting_font extends \admin_setting_configselect {
             // kilobytes. Added once however many font settings the page shows.
             self::$previewloaded = true;
             foreach (array_keys(fonts::FONTS) as $key) {
-                $links .= '<link rel="stylesheet" href="' . s(fonts::stylesheet_url($key, $sample)) . '">';
+                $url = fonts::stylesheet_url($key, $sample);
+                if ($url !== '') {
+                    // Bundled fonts (Noto Sans) come from styles.css and need no link.
+                    $links .= '<link rel="stylesheet" href="' . s($url) . '">';
+                }
             }
             $PAGE->requires->js_call_amd('format_aicourse/fontpreview', 'init');
         }

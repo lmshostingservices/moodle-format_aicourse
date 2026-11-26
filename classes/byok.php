@@ -50,6 +50,21 @@ class byok {
     }
 
     /**
+     * Where a kind of work runs now: credits (LMS Labs), moodle (Moodle AI) or ownkey (the site's own key).
+     *
+     * Recorded with each tutor answer and shown on the settings page.
+     *
+     * @param string $kind text or image.
+     * @return string credits, moodle or ownkey.
+     */
+    public static function source(string $kind): string {
+        if (!class_exists('\local_aiconfig\byok\router')) {
+            return 'credits';
+        }
+        return \local_aiconfig\byok\router::source(self::COMPONENT, $kind);
+    }
+
+    /**
      * Point the engine at the site's own AI.
      */
     protected static function hooks(): void {

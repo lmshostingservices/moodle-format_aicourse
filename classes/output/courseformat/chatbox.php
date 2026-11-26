@@ -127,6 +127,8 @@ class chatbox implements named_templatable, renderable {
             $data->coursename = '';
         }
         $data->tools = self::get_tools();
+        // 3.4.0: the learner AI notice (EU AI Act Article 50(1)).
+        $data->ainotice = \format_aicourse\local\responsibleai::show_notice();
 
         return $data;
     }

@@ -188,10 +188,10 @@
         <input id="aicourse-search" type="search" name="search" class="aicourse-filter-input"
             placeholder="{{#str}} aireport_search, format_aicourse {{/str}}" value="{{search}}">
 
-        <button type="submit" class="aicourse-correction-btn btn btn-primary">
+        <button type="submit" class="aicourse-correction-btn mds-btn btn btn-primary mds-btn--size-sm">
             {{#str}} aireport_apply, format_aicourse {{/str}}
         </button>
-        <a href="{{reseturl}}" class="aicourse-correction-btn btn btn-secondary">
+        <a href="{{reseturl}}" class="aicourse-correction-btn mds-btn btn btn-secondary mds-btn--size-sm">
             {{#str}} admin_report_reset, format_aicourse {{/str}}
         </a>
     </fieldset>
@@ -290,7 +290,7 @@
             </td>
             <td>
                 {{#cancorrect}}
-                <button type="button" class="aicourse-correction-btn" data-action="togglecorrection"
+                <button type="button" class="aicourse-correction-btn mds-btn btn btn-ghost mds-btn--size-sm" data-action="togglecorrection"
                     data-chatid="{{id}}" aria-expanded="false" aria-controls="aicourse-correction-{{id}}">
                     {{#str}} aireport_correct, format_aicourse {{/str}}
                 </button>
@@ -302,11 +302,11 @@
                         data-region="correctiontext" data-chatid="{{id}}"
                         placeholder="{{#str}} aireport_correction_placeholder, format_aicourse {{/str}}">{{correction}}</textarea>
                     <div class="aicourse-correction-actions">
-                        <button type="button" class="aicourse-correction-btn btn btn-primary"
+                        <button type="button" class="aicourse-correction-btn mds-btn btn btn-primary mds-btn--size-sm"
                             data-action="savecorrection" data-chatid="{{id}}">
                             {{#str}} aireport_save, format_aicourse {{/str}}
                         </button>
-                        <button type="button" class="aicourse-correction-btn btn btn-secondary"
+                        <button type="button" class="aicourse-correction-btn mds-btn btn btn-secondary mds-btn--size-sm"
                             data-action="togglecorrection" data-chatid="{{id}}"
                             aria-controls="aicourse-correction-{{id}}">
                             {{#str}} aireport_cancel, format_aicourse {{/str}}

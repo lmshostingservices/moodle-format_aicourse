@@ -230,6 +230,8 @@ class content extends topics_content implements named_templatable, renderable {
             'regionlabel' => get_string('coursesectionsregion', 'format_aicourse'),
             'courseid' => (int) $course->id,
             'isediting' => $isediting,
+            // 3.4.0: editors are told when an administrator has paused AI (Responsible AI).
+            'aipaused' => $isediting && \format_aicourse\local\responsibleai::paused(),
             'uselistroles' => !$isediting,
             'generalsection' => null,
             'sections' => [],

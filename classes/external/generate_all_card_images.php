@@ -143,6 +143,7 @@ class generate_all_card_images extends external_api {
             throw new \moodle_exception('error_guestnotallowed', 'format_aicourse');
         }
         throttle::check('cardimagebatch', (int) $course->id, (int) $USER->id, 1, self::BATCH_WINDOW);
+        \format_aicourse\local\responsibleai::require_not_paused();
         credentials::require_for('image');
 
         foreach ($targets as [$type, $id]) {

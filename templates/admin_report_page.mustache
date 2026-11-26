@@ -94,7 +94,7 @@
         "pagingbar": ""
     }
 }}
-<div class="aicadmin-wrap">
+<div class="aicadmin-wrap acf-mds-root">
 
     <div class="aicadmin-stats">
         {{#stats}}
@@ -171,10 +171,10 @@
                     </div>
 
                     <div class="aicadmin-filter-btns form-group mb-2">
-                        <button type="submit" class="aicadmin-btn aicadmin-btn-primary btn btn-primary">
+                        <button type="submit" class="aicadmin-btn mds-btn btn btn-primary mds-btn--size-md">
                             {{#str}} aireport_apply, format_aicourse {{/str}}
                         </button>
-                        <a href="{{reseturl}}" class="aicadmin-btn aicadmin-btn-outline btn btn-secondary">
+                        <a href="{{reseturl}}" class="aicadmin-btn mds-btn btn btn-secondary mds-btn--size-md">
                             {{#str}} admin_report_reset, format_aicourse {{/str}}
                         </a>
                     </div>
@@ -190,7 +190,7 @@
         <div class="aicadmin-result-bar-tools">
             <div>{{{perpageselect}}}</div>
             {{#hasexport}}
-            <a href="{{csvurl}}" class="aicadmin-btn aicadmin-btn-csv btn btn-success" download>
+            <a href="{{csvurl}}" class="aicadmin-btn mds-btn btn btn-outline-primary mds-btn--size-md" download>
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" stroke-width="2.5" aria-hidden="true" focusable="false">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>

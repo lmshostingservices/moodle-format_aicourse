@@ -157,6 +157,7 @@ class cardmedia {
             'cost' => \format_aicourse\external\generate_card_image::CREDIT_COST,
             // Bring your own AI: images on the site's own AI use no LMS Labs credits.
             'ownai' => \format_aicourse\byok::uses('image'),
+            'paused' => \format_aicourse\local\responsibleai::paused(),
             'style' => cardimage::style_options()[$style],
             'cms' => (object) $cms,
             'running' => $running,

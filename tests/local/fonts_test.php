@@ -90,6 +90,13 @@ final class fonts_test extends \advanced_testcase {
      */
     public function test_resolution(): void {
         $this->resetAfterTest();
+        // 3.4.0: a new install defaults to Noto Sans, the bundled Moodle Design System typeface.
+        $this->assertSame(['body' => 'notosans', 'heading' => 'notosans', 'scope' => 'content'], fonts::for_course([]));
+        $this->assertTrue(fonts::is_bundled(fonts::MDS));
+        $this->assertSame('', fonts::stylesheet_url(fonts::MDS), 'The bundled font is never fetched from Google');
+        $this->assertSame('', fonts::links([fonts::MDS]));
+
+        set_config('font', '', 'format_aicourse');
         $this->assertSame(['body' => '', 'heading' => '', 'scope' => 'content'], fonts::for_course([]));
 
         set_config('font', 'lexend', 'format_aicourse');
@@ -120,7 +127,11 @@ final class fonts_test extends \advanced_testcase {
      * The CSS for each scope, and nothing at all while the theme's font applies.
      */
     public function test_css(): void {
-        $this->assertSame('', fonts::css(['body' => '', 'heading' => '', 'scope' => 'content']));
+        // 3.4.0: the theme's font resets the plugin's own Noto Sans default, and nothing else.
+        $this->assertSame(
+            "body.format-aicourse {--acf-font-family: inherit;}\n",
+            fonts::css(['body' => '', 'heading' => '', 'scope' => 'content'])
+        );
 
         $css = fonts::css(['body' => 'lexend', 'heading' => 'playfairdisplay', 'scope' => 'content']);
         $this->assertStringContainsString('body.format-aicourse #page, body.format-aicourse .drawer, '
@@ -138,7 +149,8 @@ final class fonts_test extends \advanced_testcase {
 
         // Headings alone: the body text keeps the theme's font.
         $css = fonts::css(['body' => '', 'heading' => 'oswald', 'scope' => 'content']);
-        $this->assertStringNotContainsString('--acf-font-family', $css);
+        $this->assertStringContainsString('--acf-font-family: inherit;', $css);
+        $this->assertStringNotContainsString('--acf-font-family: "', $css);
         $this->assertStringContainsString('"Oswald", sans-serif', $css);
     }
 
@@ -182,8 +194,17 @@ final class fonts_test extends \advanced_testcase {
         $this->assertStringContainsString('family=Lora', $html);
         $this->assertStringNotContainsString('family=Lexend', $html);
 
+        // The theme's font: no Google request, and the plugin's Noto Sans default is reset.
         course_get_format($course)->update_course_format_options(['id' => $course->id, 'font' => fonts::THEME]);
-        $this->assertSame('', $run(get_course($course->id)));
+        $html = $run(get_course($course->id));
+        $this->assertStringNotContainsString('fonts.googleapis.com', $html);
+        $this->assertStringContainsString('--acf-font-family: inherit;', $html);
+
+        // Noto Sans (MDS) is served by the plugin, so it adds CSS but no external link.
+        course_get_format($course)->update_course_format_options(['id' => $course->id, 'font' => fonts::MDS]);
+        $html = $run(get_course($course->id));
+        $this->assertStringNotContainsString('fonts.googleapis.com', $html);
+        $this->assertStringContainsString('"Noto Sans", sans-serif', $html);
 
         $topics = $this->getDataGenerator()->create_course(['format' => 'topics']);
         $this->assertSame('', $run(get_course($topics->id)));
