@@ -74,4 +74,20 @@ class credentials {
 
         return [$siteid, $apikey];
     }
+
+    /**
+     * Fetch the credentials for a kind of work, failing only when that work needs LMS Labs and they are missing.
+     *
+     * Work that runs on the site's own AI (Bring your own AI) needs no LMS Labs credentials.
+     *
+     * @param string $service text or image.
+     * @return array Two element array of [string siteid, string apikey].
+     * @throws \moodle_exception When the work goes to LMS Labs and either credential is missing.
+     */
+    public static function require_for(string $service): array {
+        if (\format_aicourse\byok::uses($service)) {
+            return self::get();
+        }
+        return self::require_configured();
+    }
 }

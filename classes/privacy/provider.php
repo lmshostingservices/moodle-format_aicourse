@@ -160,6 +160,16 @@ class provider implements
             'privacy:metadata:lms_labs_ai'
         );
 
+        // Bring your own AI: the tutor's prompt and question go to the site's own AI provider instead.
+        $collection->add_external_location_link(
+            'byok_aiprovider',
+            [
+                'question' => 'privacy:metadata:byok_aiprovider:question',
+                'courseContext' => 'privacy:metadata:byok_aiprovider:coursecontext',
+            ],
+            'privacy:metadata:byok_aiprovider'
+        );
+
         return $collection;
     }
 

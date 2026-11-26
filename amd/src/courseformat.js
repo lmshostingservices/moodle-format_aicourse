@@ -38,6 +38,9 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function($, Str
     // Credit cost of one banner generation. Kept in one place so the lang string can use {$a}.
     var BANNER_CREDIT_COST = 5;
 
+    // Bring your own AI: true when banners are made by the site's own AI, so no credits are shown.
+    var OWN_IMAGE = false;
+
     // ACF-FIX-2.0 (i18n): every user-visible literal now comes from core/str. The values here
     // are last-resort fallbacks only - they are overwritten by loadStrings() before any of the
     // UI that uses them is built. Keys marked "existing" already live in the plugin lang file.
@@ -77,6 +80,8 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function($, Str
             'course name. Leave it empty for the standard banner.',
         bannergenCost: '5 credits',
         bannergenCostdetail: 'One-time generation cost',
+        byokNocredits: 'No LMS Labs credits',
+        byokImagedetail: 'Made by your own AI',
         bannergenGenerate: 'Generate banner',
         bannergenLoadingtitle: 'Generating your banner',
         bannergenLoadingsub: 'AI is crafting a photorealistic banner for your course. ' +
@@ -127,6 +132,8 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function($, Str
         ['bannergenDesc', {key: 'bannergen_desc', component: 'format_aicourse'}],
         ['bannergenCost', {key: 'bannergen_cost', component: 'format_aicourse', param: BANNER_CREDIT_COST}],
         ['bannergenCostdetail', {key: 'bannergen_costdetail', component: 'format_aicourse'}],
+        ['byokNocredits', {key: 'byok_nocredits', component: 'format_aicourse'}],
+        ['byokImagedetail', {key: 'byok_imagedetail', component: 'format_aicourse'}],
         ['bannergenExtralabel', {key: 'bannergen_extralabel', component: 'format_aicourse'}],
         ['bannergenExtraph', {key: 'bannergen_extraph', component: 'format_aicourse'}],
         ['bannergenExtrahint', {key: 'bannergen_extrahint', component: 'format_aicourse'}],
@@ -693,9 +700,15 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function($, Str
         /**
          * Entry point. Called from format.php, the footer hook and
          * format_aicourse_extend_navigation_course() - hence the guard.
+         *
+         * @param {Object} [options] ownimage: banners are made by the site's own AI (Bring your own AI).
          */
-        init: function() {
+        init: function(options) {
             var self = this;
+
+            if (options && options.ownimage) {
+                OWN_IMAGE = true;
+            }
 
             // BUG-ACF-SCROLL-DELAY (v1.7.40): scrollToTop() was called here on every page
             // load, causing up to 1 second of smooth-scrolling during which all click
@@ -1789,9 +1802,10 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification'], function($, Str
                     + escapeHtml(STR.bannergenExtrahint) + '</p>'
                     + '</div>'
                     + '<div class="aicourse-bgen-cost-box">'
-                    + '<div class="aicourse-bgen-cost-amount">' + escapeHtml(STR.bannergenCost) + '</div>'
+                    + '<div class="aicourse-bgen-cost-amount">'
+                    + escapeHtml(OWN_IMAGE ? STR.byokNocredits : STR.bannergenCost) + '</div>'
                     + '<div class="aicourse-bgen-cost-detail">'
-                    + escapeHtml(STR.bannergenCostdetail) + '</div>'
+                    + escapeHtml(OWN_IMAGE ? STR.byokImagedetail : STR.bannergenCostdetail) + '</div>'
                     + '</div>'
                     + '<div class="aicourse-bgen-actions">'
                     + '<button type="button" class="aicourse-bgen-btn aicourse-bgen-btn-cancel">'

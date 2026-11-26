@@ -182,7 +182,11 @@ echo '</div>';
 echo '</div>';
 
 // Initialize AMD module for icon picker and progress animations.
-$PAGE->requires->js_call_amd('format_aicourse/courseformat', 'init');
+$PAGE->requires->js_call_amd(
+    'format_aicourse/courseformat',
+    'init',
+    [['ownimage' => \format_aicourse\byok::uses('image')]]
+);
 
 // ACF-FIX-2.1.183: the section-card module is queued HERE, beside courseformat, and not in the
 // footer hook.

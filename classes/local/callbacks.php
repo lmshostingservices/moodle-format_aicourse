@@ -375,6 +375,10 @@ class callbacks {
         // Body classes are handled by page_set_course() (early) and CSS .pagetype-* selectors.
 
         // Load JS module (this is safe - it queues JS, doesn't modify output).
-        $PAGE->requires->js_call_amd('format_aicourse/courseformat', 'init');
+        $PAGE->requires->js_call_amd(
+            'format_aicourse/courseformat',
+            'init',
+            [['ownimage' => \format_aicourse\byok::uses('image')]]
+        );
     }
 }

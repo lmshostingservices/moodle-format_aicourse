@@ -182,7 +182,7 @@ class ai_chat extends external_api {
             throw new \moodle_exception('error_questionrequired', 'format_aicourse');
         }
 
-        [$siteid, $apikey] = credentials::require_configured();
+        [$siteid, $apikey] = credentials::require_for('text');
 
         $warnings = [];
         $activityid = $params['activityid'];
@@ -359,20 +359,28 @@ class ai_chat extends external_api {
         // user gets a blank failure instead of a handled one.
         \core_php_time_limit::raise(120);
 
-        require_once($CFG->libdir . '/filelib.php');
-        $curl = new \curl();
-        $curl->setopt([
-            'CURLOPT_TIMEOUT' => 60,
-            'CURLOPT_CONNECTTIMEOUT' => 15,
-        ]);
-        $curl->setHeader(['Content-Type: application/json', 'Accept: application/json']);
-        $response = $curl->post(self::API_URL, $payload);
-        $httpcode = $curl->info['http_code'] ?? 0;
+        if (\format_aicourse\byok::uses('text')) {
+            // Bring your own AI: the tutor route runs here, on the site's own AI, with no LMS Labs credits.
+            [$httpcode, $ownanswer] = \format_aicourse\byok::chat($postdata);
+            $response = json_encode($ownanswer);
+            $curlerror = '';
+        } else {
+            require_once($CFG->libdir . '/filelib.php');
+            $curl = new \curl();
+            $curl->setopt([
+                'CURLOPT_TIMEOUT' => 60,
+                'CURLOPT_CONNECTTIMEOUT' => 15,
+            ]);
+            $curl->setHeader(['Content-Type: application/json', 'Accept: application/json']);
+            $response = $curl->post(self::API_URL, $payload);
+            $httpcode = $curl->info['http_code'] ?? 0;
+            $curlerror = $curl->error;
+        }
 
         if ((int) $httpcode !== 200) {
             // ACF-FIX-2.0: the remote error body is logged, never returned to the browser.
             debugging(
-                'format_aicourse ai_chat HTTP ' . $httpcode . ' ' . $curl->error . ' '
+                'format_aicourse ai_chat HTTP ' . $httpcode . ' ' . $curlerror . ' '
                     . substr((string) $response, 0, 500),
                 DEBUG_DEVELOPER
             );

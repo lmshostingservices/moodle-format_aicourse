@@ -2,6 +2,15 @@
 
 All notable changes to this plugin will be documented in this file.
 
+## [3.4.0] - 2026-11-26
+- **Bring your own AI.** On a site with a Bring your own AI licence, where AI Connect sends text or
+  images for this format to the site's own AI (its own API keys or the Moodle AI subsystem), the
+  AI Tutor and the AI banner and card images now run inside Moodle, straight to that provider, and
+  use no LMS Labs credits. The tutor prompt, scene writer, image prompts and crop are a port of
+  the LMS Labs service and were checked against its code on 1,750 cases. The banner and card
+  dialogues say "No LMS Labs credits" when the site's own AI makes the image. Sites without the
+  licence work exactly as before.
+
 ## [3.3.9] - 2026-11-14
 - **The player sidebar is now the default course index.** New installs default to it, and the
   upgrade switches the site default ("Course player sidebar") to on. Courses set to "Use the site
