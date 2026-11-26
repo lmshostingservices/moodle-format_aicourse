@@ -130,7 +130,7 @@ class generate_all_card_images extends external_api {
         $result = [
             'count' => $count,
             'skipped' => $total - $count,
-            'credits' => $count * generate_card_image::CREDIT_COST,
+            'credits' => \format_aicourse\byok::uses('image') ? 0 : $count * generate_card_image::CREDIT_COST,
             'queued' => false,
             'targets' => [],
         ];
@@ -143,7 +143,7 @@ class generate_all_card_images extends external_api {
             throw new \moodle_exception('error_guestnotallowed', 'format_aicourse');
         }
         throttle::check('cardimagebatch', (int) $course->id, (int) $USER->id, 1, self::BATCH_WINDOW);
-        credentials::require_configured();
+        credentials::require_for('image');
 
         foreach ($targets as [$type, $id]) {
             $task = new \format_aicourse\task\generate_card_image();

@@ -67,7 +67,7 @@ const SELECTORS = {
 };
 
 /** @var {Object} Page configuration read from #aicourse-cardimage-data. */
-let config = {courseid: 0, cost: 5, style: '', cms: {}};
+let config = {courseid: 0, cost: 5, ownai: false, style: '', cms: {}};
 
 /** @var {Object} Strings, loaded once. */
 let str = {};
@@ -90,7 +90,7 @@ const STRING_KEYS = [
     'cardimage_all_scope_all', 'cardimage_all_scope_sections', 'cardimage_all_scope_activities',
     'cardimage_all_onlymissing', 'cardimage_all_counting', 'cardimage_all_none',
     'cardimage_all_desc', 'cardimage_all_capped', 'cardimage_all_queued', 'cardimage_menu',
-    'cardimage_dialogtitle', 'save', 'cancel',
+    'cardimage_dialogtitle', 'byok_nocredits', 'save', 'cancel',
 ];
 
 /**
@@ -119,6 +119,13 @@ const loadStrings = async() => {
  * @returns {String}
  */
 const fill = (key, a) => String(str[key] || '').replace('{$a}', String(a));
+
+/**
+ * The cost line for one generated image: credits, or none when the site's own AI makes it.
+ *
+ * @returns {String}
+ */
+const costText = () => (config.ownai ? str.byok_nocredits : fill('cardimage_cost', config.cost));
 
 /**
  * Call one of this plugin's web services.
@@ -471,7 +478,7 @@ const generate = async(media) => {
         el('p', {'id': hintid, 'class': 'form-text text-muted small mt-1', 'text': str.cardimage_prompthint}),
         el('div', {'class': 'aicourse-cardimage-meta'}, [
             el('span', {'class': 'aicourse-cardimage-style', 'text': fill('cardimage_style', config.style)}),
-            el('span', {'class': 'aicourse-cardimage-cost', 'text': fill('cardimage_cost', config.cost)}),
+            el('span', {'class': 'aicourse-cardimage-cost', 'text': costText()}),
         ]),
     ]);
 
@@ -675,7 +682,9 @@ const generateAll = async() => {
                 return;
             }
             const [line, button] = await Promise.all([
-                getString('cardimage_all_summary', 'format_aicourse', {count: result.count, credits: result.credits}),
+                config.ownai
+                    ? getString('cardimage_all_summary_byok', 'format_aicourse', result.count)
+                    : getString('cardimage_all_summary', 'format_aicourse', {count: result.count, credits: result.credits}),
                 getString('cardimage_all_confirm', 'format_aicourse', result.count),
             ]);
             summary.textContent = line + (result.skipped ? ' ' + fill('cardimage_all_capped', result.count) : '');
@@ -775,7 +784,7 @@ const buildCmDialog = (cmid, data) => {
         tool('upload', fill('cardimage_uploadfor', data.name), str.cardimage_upload, '',
             svg('<rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/>'
                 + '<path d="m21 15-3.09-3.09a2 2 0 0 0-2.82 0L6 21"/>')),
-        tool('ai', fill('cardimage_aifor', data.name), str.cardimage_ai, fill('cardimage_cost', config.cost),
+        tool('ai', fill('cardimage_aifor', data.name), str.cardimage_ai, costText(),
             svg('<path d="M9.94 14.06 8 20l-1.94-5.94L0 12l6.06-1.94L8 4l1.94 6.06L16 12z" '
                 + 'transform="translate(2 0) scale(.9)"/><path d="M20 3v4"/><path d="M22 5h-4"/>'),
             ' acf-tools__btn--ai'),

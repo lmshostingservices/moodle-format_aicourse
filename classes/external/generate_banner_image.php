@@ -128,7 +128,7 @@ class generate_banner_image extends external_api {
         // teacher saw a spinner, then a failure minutes later, for something knowable instantly.
         // The unit tests caught it. The check runs in both places: here so the teacher is told
         // at once, and again in the task because configuration can change between the two.
-        credentials::require_configured();
+        credentials::require_for('image');
 
         // ACF-FIX-2.1.42: queue the work, do not do it here.
         //
@@ -249,7 +249,7 @@ class generate_banner_image extends external_api {
 
         $context = \context_course::instance($course->id);
 
-        [$siteid, $apikey] = credentials::require_configured();
+        [$siteid, $apikey] = credentials::require_for('image');
 
         $postdata = [
             'siteUrl' => $siteid,
@@ -326,19 +326,35 @@ class generate_banner_image extends external_api {
         // limit before cURL ever returns.
         \core_php_time_limit::raise(300);
 
-        require_once($CFG->libdir . '/filelib.php');
-        $curl = new \curl();
-        $curl->setopt([
-            'CURLOPT_TIMEOUT' => 180,
-            // Distinct from the read timeout: a service that is down should fail fast rather than
-            // holding the user on the spinner for the full three minutes.
-            'CURLOPT_CONNECTTIMEOUT' => 30,
-        ]);
-        $curl->setHeader(['Content-Type: application/json', 'Accept: application/json']);
-        $response = $curl->post(self::API_URL, json_encode($postdata));
-        $httpcode = (int) ($curl->info['http_code'] ?? 0);
+        if (\format_aicourse\byok::uses('image')) {
+            // Bring your own AI: the image route runs here, on the site's own AI, with no LMS Labs credits.
+            [$httpcode, $ownresult, $owncause] = \format_aicourse\byok::image($postdata);
+            if ($httpcode !== 200) {
+                throw new \moodle_exception(
+                    'error_bannerfailed_detail',
+                    'format_aicourse',
+                    '',
+                    \format_aicourse\byok::message($owncause, $ownresult)
+                );
+            }
+            $response = json_encode($ownresult);
+            $curlerror = '';
+        } else {
+            require_once($CFG->libdir . '/filelib.php');
+            $curl = new \curl();
+            $curl->setopt([
+                'CURLOPT_TIMEOUT' => 180,
+                // Distinct from the read timeout: a service that is down should fail fast rather than
+                // holding the user on the spinner for the full three minutes.
+                'CURLOPT_CONNECTTIMEOUT' => 30,
+            ]);
+            $curl->setHeader(['Content-Type: application/json', 'Accept: application/json']);
+            $response = $curl->post(self::API_URL, json_encode($postdata));
+            $httpcode = (int) ($curl->info['http_code'] ?? 0);
+            $curlerror = (string) $curl->error;
+        }
 
-        if ($curl->error || $httpcode !== 200) {
+        if ($curlerror || $httpcode !== 200) {
             // ACF-FIX-2.1.26: say WHY.
             //
             // This used to log the remote body at DEBUG_DEVELOPER and show the user
@@ -350,7 +366,7 @@ class generate_banner_image extends external_api {
             // moodle/course:update, so the only people who can reach this line are course
             // editors. The remote body is truncated and stripped of tags before display.
             debugging(
-                'format_aicourse generate_banner_image HTTP ' . $httpcode . ' ' . $curl->error . ' '
+                'format_aicourse generate_banner_image HTTP ' . $httpcode . ' ' . $curlerror . ' '
                     . substr((string) $response, 0, 500),
                 DEBUG_DEVELOPER
             );
@@ -358,7 +374,7 @@ class generate_banner_image extends external_api {
                 'error_bannerfailed_detail',
                 'format_aicourse',
                 '',
-                self::describe_failure($httpcode, (string) $curl->error, (string) $response)
+                self::describe_failure($httpcode, $curlerror, (string) $response)
             );
         }
 

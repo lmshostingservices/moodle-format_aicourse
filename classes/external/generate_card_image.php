@@ -103,7 +103,7 @@ class generate_card_image extends generate_banner_image {
 
         throttle::check('bannerimage', (int) $course->id, (int) $USER->id, throttle::BANNER_MAX, throttle::BANNER_WINDOW);
 
-        credentials::require_configured();
+        credentials::require_for('image');
 
         // The authoritative cap: the textarea's maxlength is a convenience and is not trusted.
         $prompttext = \core_text::substr(trim($params['prompt']), 0, self::PROMPT_MAX);
@@ -218,7 +218,7 @@ class generate_card_image extends generate_banner_image {
 
         // Re-checked here: the section or activity may have been deleted since queueing.
         $target = cardimage::require_target($course, $type, $id);
-        [$siteid, $apikey] = credentials::require_configured();
+        [$siteid, $apikey] = credentials::require_for('image');
 
         $postdata = ['siteUrl' => $siteid, 'apiKey' => $apikey] + self::build_payload($course, $type, $target, $prompt);
         // 3.0.0: one key per queued job, so the service never charges twice for the same card if a
@@ -226,16 +226,32 @@ class generate_card_image extends generate_banner_image {
         $postdata['requestId'] = $requestid !== '' ? $requestid : \core\uuid::generate();
 
         \core_php_time_limit::raise(300);
-        require_once($CFG->libdir . '/filelib.php');
-        $curl = new \curl();
-        $curl->setopt(['CURLOPT_TIMEOUT' => 180, 'CURLOPT_CONNECTTIMEOUT' => 30]);
-        $curl->setHeader(['Content-Type: application/json', 'Accept: application/json']);
-        $response = $curl->post(static::API_URL, json_encode($postdata));
-        $httpcode = (int) ($curl->info['http_code'] ?? 0);
+        if (\format_aicourse\byok::uses('image')) {
+            // Bring your own AI: the image route runs here, on the site's own AI, with no LMS Labs credits.
+            [$httpcode, $ownresult, $owncause] = \format_aicourse\byok::image($postdata);
+            if ($httpcode !== 200) {
+                throw new \moodle_exception(
+                    'error_bannerfailed_detail',
+                    'format_aicourse',
+                    '',
+                    \format_aicourse\byok::message($owncause, $ownresult)
+                );
+            }
+            $response = json_encode($ownresult);
+            $curlerror = '';
+        } else {
+            require_once($CFG->libdir . '/filelib.php');
+            $curl = new \curl();
+            $curl->setopt(['CURLOPT_TIMEOUT' => 180, 'CURLOPT_CONNECTTIMEOUT' => 30]);
+            $curl->setHeader(['Content-Type: application/json', 'Accept: application/json']);
+            $response = $curl->post(static::API_URL, json_encode($postdata));
+            $httpcode = (int) ($curl->info['http_code'] ?? 0);
+            $curlerror = (string) $curl->error;
+        }
 
-        if ($curl->error || $httpcode !== 200) {
+        if ($curlerror || $httpcode !== 200) {
             debugging(
-                'format_aicourse generate_card_image HTTP ' . $httpcode . ' ' . $curl->error . ' '
+                'format_aicourse generate_card_image HTTP ' . $httpcode . ' ' . $curlerror . ' '
                     . substr((string) $response, 0, 500),
                 DEBUG_DEVELOPER
             );
@@ -243,7 +259,7 @@ class generate_card_image extends generate_banner_image {
                 'error_bannerfailed_detail',
                 'format_aicourse',
                 '',
-                self::describe_failure($httpcode, (string) $curl->error, (string) $response)
+                self::describe_failure($httpcode, $curlerror, (string) $response)
             );
         }
 
