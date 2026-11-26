@@ -366,7 +366,7 @@ Keep visualConcept, setting, action and composition to one short sentence each; 
                 ['maxtokens' => 4096, 'temperature' => 0.7]
             );
             if (!is_string($answer) || self::jtrim($answer) === '') {
-                throw new \coding_exception('Tutor provider returned no visible answer');
+                throw new \RuntimeException('Tutor provider returned no visible answer');
             }
             // The site's provider does not say why it stopped; the service reports that as UNKNOWN, not truncated.
             $metadata = ['mode' => $mode, 'scope' => $scope, 'isSafetyCritical' => $issafetycritical];
@@ -791,7 +791,7 @@ Keep visualConcept, setting, action and composition to one short sentence each; 
             }
         }
         if ($bad) {
-            throw new \coding_exception('Invalid course visual concept');
+            throw new \RuntimeException('Invalid course visual concept');
         }
         $clean = function (string $v): string {
             $v = preg_replace('/[\r\n"“”]/u', ' ', $v);
@@ -876,7 +876,7 @@ Keep visualConcept, setting, action and composition to one short sentence each; 
         [$w, $h, $quality] = $card ? [1536, 864, 84] : [1400, 420, 82];
         $src = @imagecreatefromstring($raw);
         if ($src === false) {
-            throw new \coding_exception('Input buffer contains unsupported image format');
+            throw new \RuntimeException('Input buffer contains unsupported image format');
         }
         $sw = imagesx($src);
         $sh = imagesy($src);
